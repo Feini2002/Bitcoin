@@ -10,13 +10,13 @@
 # 自定义域若在 wrangler deploy 时不自动下发，请到 Cloudflare 控制台为该 Worker 添加 Custom Domain: yuqing.feiniwork.com
 
 name = "yuqing"
-main = "yuqing-worker.js"
+main = "yuqing/yuqing-worker.js"
 compatibility_date = "2024-12-01"
 workers_dev = true
 
 [vars]
 YUQING_LLM_PROVIDER = "auto"
-# 舆情 LLM 统一走同一 Gemini 模型（与 yuqing-worker.js 中 YUQING_GEMINI_MODEL_DEFAULT 对齐；控制台可改）
+# 舆情 LLM 统一走同一 Gemini 模型（与 yuqing/yuqing-worker.js 中 YUQING_GEMINI_MODEL_DEFAULT 对齐；控制台可改）
 YUQING_LLM_MODEL_FLASH = "gemini-3.1-flash-lite-preview"
 YUQING_LLM_MODEL_PRO = "gemini-3.1-flash-lite-preview"
 YUQING_LLM_MODEL_TRENDS = "gemini-3.1-flash-lite-preview"

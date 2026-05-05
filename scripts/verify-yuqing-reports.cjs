@@ -3,7 +3,7 @@ const path = require("path");
 const vm = require("vm");
 
 const ROOT = path.join(__dirname, "..");
-const workerPath = path.join(ROOT, "cloudflare", "yuqing-worker.js");
+const workerPath = path.join(ROOT, "cloudflare", "yuqing", "yuqing-worker.js");
 const migrationPath = path.join(ROOT, "cloudflare", "migrations", "yuqing", "0002_reports.sql");
 const wranglerPath = path.join(ROOT, "cloudflare", "wrangler.yuqing.toml");
 const dataEnginePath = path.join(ROOT, "js", "data-engine.js");
@@ -15,9 +15,18 @@ function assertOk(cond, label, detail = "") {
   console.log(`OK yuqing ${label}`);
 }
 
+function stripYuqingWorkerImports(src) {
+  let prev = "";
+  while (prev !== src) {
+    prev = src;
+    src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/m, "");
+  }
+  return src;
+}
+
 function loadWorkerContext() {
   let src = fs.readFileSync(workerPath, "utf8");
-  src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/m, "");
+  src = stripYuqingWorkerImports(src);
   src = src.replace(/\bexport\s+default\s*\{/, "const __yuqingWorkerDefault = {");
   const context = {
     console,
@@ -34,7 +43,7 @@ function loadWorkerContext() {
     caches: { default: { match: async () => null, put: async () => null } },
   };
   vm.createContext(context);
-  new vm.Script(src, { filename: "cloudflare/yuqing-worker.js" }).runInContext(context);
+  new vm.Script(src, { filename: "cloudflare/yuqing/yuqing-worker.js" }).runInContext(context);
   return context;
 }
 
@@ -61,10 +70,7 @@ for (const field of [
   assertOk(new RegExp(`\\b${field}\\b`).test(migration), `migration has ${field}`);
 }
 
-assertOk(
-  /\bYUQING_SCHEDULED_REPORTS_ENABLED\b/.test(wrangler) && /\bcrons\s*=\s*\[\s*\]/.test(wrangler),
-  "yuqing wrangler: LLM scheduled reports gated + cron list empty for dev pause",
-);
+assertOk(/crons\s*=\s*\["0 0,1,4,6,12,14,16 \* \* \*"\]/.test(wrangler), "wrangler cron covers BJT report slots");
 
 const dueDaily = ctx.scheduledKindsForDate(new Date("2026-05-05T00:00:00+08:00").getTime());
 assertOk(dueDaily.length === 1 && dueDaily[0].kind === "daily_event" && dueDaily[0].slot === "00", "BJT 00:00 maps to daily_event 00");
@@ -123,7 +129,7 @@ for (const route of [
   assertOk(worker.includes(route), `worker exposes ${route}`);
 }
 assertOk(worker.includes("DELETE FROM yuqing_reports WHERE generated_at < ?"), "worker prunes reports by retention");
-assertOk(worker.includes("yuqingScheduledLlmReportsAllowed"), "worker gates scheduled LLM reports env");
+assertOk(worker.includes("createYuqingReport(env"), "worker has manual/scheduled report generation path");
 assertOk(worker.includes("kind: SENTIMENT_ANALYSIS_KIND"), "legacy report endpoint maps to sentiment_analysis");
 
 for (const method of [

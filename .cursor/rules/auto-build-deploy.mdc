@@ -23,7 +23,7 @@ alwaysApply: true
 
 1. **Pages（静态站）**：在仓库根目录执行 **`npm run deploy:pages`**（内含上传后与控制台「Deployments」对齐的 **`prune:pages`**：`production` / `preview` **各自仅保留最新 5 条**，更早记录由脚本调用 `wrangler pages deployment delete` 删除）。单独修剪时可运行 **`npm run prune:pages`**；仿真：`node scripts/prune-pages-deployments.cjs --dry-run`。保留数量可用环境变量 **`BIT_PAGES_KEEP`**，项目名称 **`BIT_PAGES_PROJECT`**（默认 `bit-trading-desk`）。
 2. **btc 行情 Worker + D1 绑定代码**：若本次修改了 `cloudflare/binance-klines-worker.js`、`cloudflare/wrangler.toml`，或 btc 专用 D1 的 `cloudflare/schema.sql` 且需同步远程表结构：在 **`cloudflare`** 目录执行 **`npx wrangler deploy`**，并按 `.cursorrules` 对远程 D1 执行 `wrangler d1 execute ... --remote`（若适用）。
-3. **yuqing Worker**：若修改了 `cloudflare/yuqing-worker.js`、`cloudflare/wrangler.yuqing.toml` 或 `cloudflare/migrations/yuqing/**`：在 **`cloudflare`** 目录执行 **`npx wrangler deploy --config wrangler.yuqing.toml`**（及所需 D1 remote 执行）。
+3. **yuqing Worker**：若修改了 **`cloudflare/yuqing/**`**（入口 `yuqing-worker.js`、`yuqing-facts.js`、`shijian/`、`fenxi/` 等）、`cloudflare/wrangler.yuqing.toml` 或 `cloudflare/migrations/yuqing/**`：在 **`cloudflare`** 目录执行 **`npx wrangler deploy --config wrangler.yuqing.toml`**（及所需 D1 remote 执行）。
 
 说明：Pages 不提供 D1 绑定；数据层始终在对应 Worker。部署顺序建议：先 Workers（含 D1 迁移），再 Pages。
 

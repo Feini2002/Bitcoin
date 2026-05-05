@@ -6,6 +6,8 @@
  * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini|auto（默认 auto）；默认模型见 YUQING_GEMINI_MODEL_DEFAULT，可被 YUQING_LLM_MODEL_* 覆盖；密钥仅存 Worker Secret
  *
  * 兼容旧 api.feiniwork.com 的路径：/finnhub-bulk、/finnhub/*（建议使用 /api/yuqing/*）
+ *
+ * 目录：与本文件同包的 `yuqing-facts.js`（事实池）、`shijian/`（事件一览拆分）、`fenxi/`（舆情分析拆分）。
  */
 
 import {
@@ -17,8 +19,10 @@ import {
   loadRecentItems,
   pruneOldItems,
 } from "./yuqing-facts.js";
+import { YUQING_FENXI_PAGE, fenxiModuleShell } from "./fenxi/index.js";
+import { YUQING_SHIJIAN_PAGE, shijianModuleShell } from "./shijian/index.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.8-trends-three-modules";
+const WORKER_BUILD = "yuqing-worker/1.2.0-dir-layout-shell";
 
 /** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
 const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
@@ -2202,6 +2206,11 @@ export default {
         time: new Date().toISOString(),
         maintenance: maintenanceEnabled(env),
         scheduledLlmCronSkipped: YUQING_SKIP_SCHEDULED_LLM_REPORTS,
+        codeLayout: {
+          shijian: YUQING_SHIJIAN_PAGE,
+          fenxi: YUQING_FENXI_PAGE,
+          shell: `${shijianModuleShell()}/${fenxiModuleShell()}`,
+        },
         llm: {
           provider: p,
           enabled: p === "gemini" && !!getGeminiKey(env),

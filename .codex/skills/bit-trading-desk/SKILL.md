@@ -23,7 +23,7 @@ Get-Content -Encoding UTF8 .cursorrules
 - `js/chart/`: chart widgets, multi-timeframe tiles, indicator panes, indicator math.
 - `js/orderflow/`: footprint/orderflow engine and canvas rendering.
 - `scripts/`: deterministic diagnostics and verification scripts.
-- `cloudflare/`: worker and D1 schema for remote/public data paths.
+- `cloudflare/`: worker and D1 schema for remote/public data paths; **`cloudflare/yuqing/`** bundles the sentiment / daily-report Worker (`yuqing-worker.js`, `yuqing-facts.js`, `shijian/`, `fenxi/`).
 - `旧参考文件/`: reference material only; do not migrate or delete unless explicitly asked.
 
 ## Cursor Rules To Preserve

@@ -44,11 +44,21 @@ for (const file of files) {
       .replace(/\bexport\s+const\s+__footprintTestHooks\s*=/, "const __footprintTestHooks =")
       .replace(/\bexport\s+default\s*\{/, "const __workerDefault = {");
   }
-  if (relNorm === "cloudflare/yuqing-worker.js") {
-    src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/m, "");
+  if (relNorm === "cloudflare/yuqing/yuqing-worker.js") {
+    let ys = src;
+    let prev = "";
+    while (prev !== ys) {
+      prev = ys;
+      ys = ys.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/m, "");
+    }
+    src = ys;
     src = src.replace(/\bexport\s+default\s*\{/, "const __yuqingWorkerDefault = {");
   }
-  if (relNorm === "cloudflare/yuqing-facts.js") {
+  if (
+    relNorm === "cloudflare/yuqing/yuqing-facts.js" ||
+    relNorm.startsWith("cloudflare/yuqing/shijian/") ||
+    relNorm.startsWith("cloudflare/yuqing/fenxi/")
+  ) {
     src = src.replace(/^\s*export\s+/gm, "");
   }
   try {
