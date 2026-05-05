@@ -3,7 +3,7 @@
    ======================================================= */
 
 const DAILY_EVENT_KIND = "daily_event";
-const DAILY_EVENT_FORCE_MOCK = true;
+const DAILY_EVENT_FORCE_MOCK = false;
 let __yuqingDailyClock = null;
 let __yuqingDailyAbort = null;
 
@@ -321,46 +321,58 @@ function dailyTopStories(row) {
   return stories.length ? stories : [{}];
 }
 
+function dailyImpactDirectionMeta(direction) {
+  const s = String(direction || "").trim().toLowerCase();
+  if (s === "up" || s.includes("利多") || s.includes("bull")) return { cls: "up", label: "利多" };
+  if (s === "down" || s.includes("利空") || s.includes("bear")) return { cls: "down", label: "利空" };
+  return { cls: "shock", label: "震荡" };
+}
+
 function renderDailyTopStory(story, idx = 0) {
+  const item = story && typeof story === "object" ? story : {};
   let structureHtml = "";
-  if (Array.isArray(story.structure)) {
-    structureHtml = story.structure.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
-  } else if (story.structure && typeof story.structure === "object") {
+  if (Array.isArray(item.structure)) {
+    structureHtml = item.structure.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
+  } else if (item.structure && typeof item.structure === "object") {
     structureHtml = [
-      story.structure.trigger ? `<span>${dailyEscapeHtml(story.structure.trigger)}</span>` : "",
-      story.structure.conflict ? `<span>${dailyEscapeHtml(story.structure.conflict)}</span>` : "",
-      story.structure.divergence ? `<span>${dailyEscapeHtml(story.structure.divergence)}</span>` : "",
+      item.structure.trigger ? `<span>${dailyEscapeHtml(item.structure.trigger)}</span>` : "",
+      item.structure.conflict ? `<span>${dailyEscapeHtml(item.structure.conflict)}</span>` : "",
+      item.structure.divergence ? `<span>${dailyEscapeHtml(item.structure.divergence)}</span>` : "",
     ].join("");
+  } else if (item.structure) {
+    structureHtml = `<span>${dailyEscapeHtml(item.structure)}</span>`;
   }
+  if (!structureHtml) structureHtml = `<span class="muted-text">等待事实池补充诱因、矛盾和预期差信息。</span>`;
 
   let impactsHtml = "";
-  if (Array.isArray(story.impacts)) {
-    impactsHtml = story.impacts.map((imp) => {
-      const dirCls = imp.direction === "up" ? "up" : imp.direction === "down" ? "down" : "shock";
-      const dirLbl = imp.direction === "up" ? "利多" : imp.direction === "down" ? "利空" : "震荡";
-      return `<div class="daily-impact-row"><span class="daily-impact-badge ${dirCls}">[${dailyEscapeHtml(imp.asset || "资产")}] ${dirLbl}</span><span class="daily-impact-logic">${dailyEscapeHtml(imp.logic)}</span></div>`;
+  if (Array.isArray(item.impacts)) {
+    impactsHtml = item.impacts.map((raw) => {
+      const imp = raw && typeof raw === "object" ? raw : { asset: "资产", direction: "shock", logic: raw };
+      const meta = dailyImpactDirectionMeta(imp.direction);
+      return `<div class="daily-impact-row"><span class="daily-impact-badge ${meta.cls}">[${dailyEscapeHtml(imp.asset || "资产")}] ${meta.label}</span><span class="daily-impact-logic">${dailyEscapeHtml(imp.logic || imp.reason || "等待价格和资金流确认。")}</span></div>`;
     }).join("");
-  } else if (Array.isArray(story.transmission)) {
-    impactsHtml = story.transmission.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
+  } else if (Array.isArray(item.transmission)) {
+    impactsHtml = item.transmission.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
   }
+  if (!impactsHtml) impactsHtml = `<span class="muted-text">等待资产传导确认。</span>`;
 
-  const watchHtml = story.nextWatch ? `<div class="news-story-watch daily-story-contract-line"><b>后续观察</b><span>${dailyEscapeHtml(story.nextWatch)}</span></div>` : "";
+  const watchHtml = item.nextWatch ? `<div class="news-story-watch daily-story-contract-line"><b>后续观察</b><span>${dailyEscapeHtml(item.nextWatch)}</span></div>` : "";
 
-  const sourceTag = story.sourceUrl
-    ? `<a href="${dailyEscapeHtml(story.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(story.sourceName || "来源")}</a>`
-    : story.sourceName
-      ? `<span>${dailyEscapeHtml(story.sourceName)}</span>`
+  const sourceTag = item.sourceUrl
+    ? `<a href="${dailyEscapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(item.sourceName || "来源")}</a>`
+    : item.sourceName
+      ? `<span>${dailyEscapeHtml(item.sourceName)}</span>`
       : "";
   return `
     <article class="news-story">
       <div class="news-story-rank">${idx + 1}</div>
       <div class="news-story-body">
         <div class="news-story-meta">
-          <span>${dailyEscapeHtml(story.category || "今日头条")}</span>
+          <span>${dailyEscapeHtml(item.category || "今日头条")}</span>
           ${sourceTag}
         </div>
-        <h3>${dailyEscapeHtml(story.title || "暂无头条")}</h3>
-        <div class="news-story-watch daily-story-contract-line"><b>事实锁定</b><span>${dailyEscapeHtml(story.fact || "")}</span></div>
+        <h3>${dailyEscapeHtml(item.title || "暂无头条")}</h3>
+        <div class="news-story-watch daily-story-contract-line"><b>事实锁定</b><span>${dailyEscapeHtml(item.fact || "等待事实池补充。")}</span></div>
         <div class="news-story-watch daily-story-contract-line"><b>结构拆解</b><div class="daily-column-lines">${structureHtml}</div></div>
         <div class="news-story-impact">
           <b>传导预判</b>
@@ -377,7 +389,9 @@ function renderDailyTopStories(row) {
 }
 
 function renderDailyBriefs(row) {
-  return (row.report.dynamicBriefs || [])
+  const report = row && row.report ? row.report : {};
+  const briefs = Array.isArray(report.dynamicBriefs) ? report.dynamicBriefs : [];
+  return briefs
     .map(
       (item, idx) => {
         const sourceTag = item.sourceUrl
@@ -433,13 +447,18 @@ function renderDailyAi(row) {
 }
 
 function renderDailyTrend(row) {
-  const t = row.report.trendRead || {};
+  const report = row && row.report ? row.report : {};
+  const t = report.trendRead || {};
+  const macroTrend = report.macroTrend || "";
+  const strengthening = macroTrend
+    ? [macroTrend, ...(t.strengthening || []).filter((x) => x !== macroTrend).slice(0, 1)]
+    : t.strengthening;
   const block = (title, rows, cls) => `<div class="news-trend-block ${cls}">
     <h4>${dailyEscapeHtml(title)}</h4>
     ${(rows || []).map((x) => `<p>${dailyEscapeHtml(x)}</p>`).join("")}
   </div>`;
   return [
-    block("正在强化的信号", t.strengthening, "ok"),
+    block("正在强化的信号", strengthening, "ok"),
     block("正在裂变的信号", t.cracking, "warn"),
     block("0-72小时观察结论", [t.conclusion], "info"),
   ].join("");

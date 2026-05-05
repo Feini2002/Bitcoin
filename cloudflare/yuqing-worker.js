@@ -294,6 +294,140 @@ function itemSummary(it, fallback = "事实池未提供摘要，需结合来源�
   return String((it && (it.summary || it.title)) || fallback).slice(0, 260);
 }
 
+function cleanReportText(value, fallback = "", max = 260) {
+  const s = String(value == null ? "" : value).trim();
+  return (s || fallback).slice(0, max);
+}
+
+function normalizeImpactDirection(value) {
+  const s = String(value || "").trim().toLowerCase();
+  if (s === "up" || s.includes("bull") || s.includes("long") || s.includes("buy") || s.includes("利多") || s.includes("上行")) return "up";
+  if (s === "down" || s.includes("bear") || s.includes("short") || s.includes("sell") || s.includes("利空") || s.includes("下行")) return "down";
+  return "shock";
+}
+
+function normalizeStoryStructure(raw, fallbackFact) {
+  if (Array.isArray(raw)) {
+    return {
+      trigger: cleanReportText(raw[0], "直接诱因仍需结合事实池继续核对。", 180),
+      conflict: cleanReportText(raw[1], "深层矛盾尚未形成明确单边解释。", 180),
+      divergence: cleanReportText(raw[2], "预期差需要等待价格、资金流和官方口径确认。", 180),
+    };
+  }
+  if (raw && typeof raw === "object") {
+    return {
+      trigger: cleanReportText(raw.trigger || raw.cause || raw.reason, "直接诱因仍需结合事实池继续核对。", 180),
+      conflict: cleanReportText(raw.conflict || raw.tension || raw.structure, "深层矛盾尚未形成明确单边解释。", 180),
+      divergence: cleanReportText(raw.divergence || raw.gap || raw.disagreement, "预期差需要等待价格、资金流和官方口径确认。", 180),
+    };
+  }
+  return {
+    trigger: cleanReportText(raw, fallbackFact || "事实池已记录该事件，但诱因仍需继续核对。", 180),
+    conflict: "市场需要区分短线情绪冲击与真实基本面变化。",
+    divergence: "关注叙事、价格和资金流是否出现同向确认。",
+  };
+}
+
+function normalizeDailyImpacts(raw, fallbackAsset = "BTC") {
+  const arr = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? [raw] : [];
+  const out = [];
+  for (const it of arr.slice(0, 4)) {
+    if (it == null) continue;
+    if (typeof it === "string") {
+      out.push({ asset: fallbackAsset, direction: "shock", logic: cleanReportText(it, "等待价格和资金流确认。", 160) });
+      continue;
+    }
+    if (typeof it !== "object") continue;
+    out.push({
+      asset: cleanReportText(it.asset || it.symbol || fallbackAsset, fallbackAsset, 32),
+      direction: normalizeImpactDirection(it.direction || it.bias || it.impact),
+      logic: cleanReportText(it.logic || it.reason || it.why, "等待价格、资金流和衍生品结构确认。", 180),
+    });
+  }
+  if (out.length) return out;
+  return [{ asset: fallbackAsset, direction: "shock", logic: "等待价格、资金流和衍生品结构确认。" }];
+}
+
+function normalizeDailyTopStoryInput(raw, fallback) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const fact = cleanReportText(src.fact || src.summary || src.body || (fallback && fallback.fact), "事实池已有事件，但摘要仍需补强。", 260);
+  const fallbackAsset = fallback && fallback.impacts && fallback.impacts[0] ? fallback.impacts[0].asset : "BTC";
+  return {
+    category: cleanReportText(src.category || src.type || (fallback && fallback.category), "综合事件", 32),
+    title: cleanReportText(src.title || src.headline || (fallback && fallback.title), "未命名事件", 140),
+    fact,
+    structure: normalizeStoryStructure(src.structure || src.deconstruction || src.analysis, fact),
+    impacts: normalizeDailyImpacts(src.impacts || src.impact || src.transmission, fallbackAsset),
+    nextWatch: cleanReportText(src.nextWatch || src.next_watch || src.watch || (fallback && fallback.nextWatch), "关注官方确认、资金流与价格结构是否同向。", 180),
+    sourceName: cleanReportText(src.sourceName || src.source || (fallback && fallback.sourceName), "", 64),
+    sourceUrl: cleanReportText(src.sourceUrl || src.url || (fallback && fallback.sourceUrl), "", 240),
+  };
+}
+
+function normalizeDailyTopStoriesFromLlm(raw, fallbackRows) {
+  const candidates = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? [raw] : [];
+  const fallbackStories = dailyTopStoriesFromFacts(fallbackRows);
+  const out = [];
+  for (let i = 0; i < candidates.length && out.length < 3; i += 1) {
+    out.push(normalizeDailyTopStoryInput(candidates[i], fallbackStories[out.length]));
+  }
+  while (out.length < 3 && fallbackStories[out.length]) out.push(fallbackStories[out.length]);
+  return out.length ? out : fallbackStories;
+}
+
+function normalizeDailyBriefsFromLlm(raw, fallbackRows) {
+  const candidates = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? [raw] : [];
+  const fallbackBriefs = dailyBriefsFromFacts(fallbackRows);
+  const out = [];
+  for (let i = 0; i < candidates.length && out.length < 5; i += 1) {
+    const src = candidates[i] && typeof candidates[i] === "object" ? candidates[i] : {};
+    const fallback = fallbackBriefs[out.length] || {};
+    const body = cleanReportText(src.body || src.fact || src.summary || fallback.body, "事件细节等待事实池补强。", 220);
+    out.push({
+      category: cleanReportText(src.category || src.type || fallback.category, "综合", 32),
+      title: cleanReportText(src.title || src.headline || fallback.title, "未命名动态", 120),
+      body,
+      description: cleanReportText(src.description || src.detail || fallback.description || body, body, 240),
+      analysis: cleanReportText(src.analysis || src.watch || fallback.analysis, "后续观察官方确认、主流媒体跟进和相关资产二次反应。", 220),
+      watch: cleanReportText(src.watch || src.analysis || fallback.watch, "后续观察官方确认、主流媒体跟进和相关资产二次反应。", 220),
+      sourceName: cleanReportText(src.sourceName || src.source || fallback.sourceName, "", 64),
+      sourceUrl: cleanReportText(src.sourceUrl || src.url || fallback.sourceUrl, "", 240),
+    });
+  }
+  while (out.length < 5 && fallbackBriefs[out.length]) out.push(fallbackBriefs[out.length]);
+  return out.length ? out : fallbackBriefs;
+}
+
+function renderTopStoriesMarkdown(stories, macroTrend) {
+  const lines = [];
+  const macro = cleanReportText(macroTrend, "", 420);
+  if (macro) lines.push(`### 宏观主线\n\n${macro}`);
+  (stories || []).forEach((story, idx) => {
+    const impacts = (story.impacts || [])
+      .map((imp) => `[${imp.asset}] ${imp.direction === "up" ? "利多" : imp.direction === "down" ? "利空" : "震荡"}：${imp.logic}`)
+      .join("；");
+    lines.push(
+      [
+        `### ${idx + 1}. ${story.title}`,
+        `- 事实：${story.fact}`,
+        `- 诱因：${story.structure && story.structure.trigger ? story.structure.trigger : ""}`,
+        `- 矛盾：${story.structure && story.structure.conflict ? story.structure.conflict : ""}`,
+        `- 预期差：${story.structure && story.structure.divergence ? story.structure.divergence : ""}`,
+        `- 传导：${impacts || "等待资产传导确认。"}`,
+        `- 后续观察：${story.nextWatch || "继续跟踪官方确认和价格反应。"}`,
+      ].join("\n"),
+    );
+  });
+  return lines.join("\n\n").trim();
+}
+
+function renderBriefsMarkdown(briefs) {
+  return (briefs || [])
+    .map((item, idx) => `### ${idx + 1}. ${item.title}\n\n${item.body}\n\n${item.analysis || item.watch || ""}`)
+    .join("\n\n")
+    .trim();
+}
+
 function marketScoreFromSources(sources) {
   const fng = sources && sources.fng && sources.fng.ok ? Number(sources.fng.value) : 50;
   return Math.max(0, Math.min(100, Number.isFinite(fng) ? fng : 50));
@@ -1124,9 +1258,13 @@ async function geminiGenerateContent(env, modelId, prompt, opts) {
 }
 
 function extractJsonFence(text) {
-  const m = String(text || "").match(/```json\s*([\s\S]*?)\s*```/);
-  if (!m) return String(text || "").trim();
-  return String(m[1] || "").trim();
+  const s = String(text || "").trim();
+  const m = s.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (m) return String(m[1] || "").trim();
+  const start = s.indexOf("{");
+  const end = s.lastIndexOf("}");
+  if (start >= 0 && end > start) return s.slice(start, end + 1).trim();
+  return s;
 }
 
 /** ---- 兜底 dashboard（无 LLM） ---- */
@@ -1155,15 +1293,6 @@ function fallbackDashboard(realMarketData, fngScore, fngClass) {
       "多资产涨跌组合已拉取；跨资产传导与背离解读请在 Cloudflare 配置 YUQING_LLM_PROVIDER=gemini 并填写密钥后由模型生成。",
     anomalyAlert: "无明显背离",
     actionSuggestion: "建议先观察数据与新闻模块输出，勿据此单独做出交易决策。",
-  };
-}
-
-function parseNewsSplit(combined) {
-  const s = String(combined || "");
-  const parts = s.split("===SPLIT===");
-  return {
-    news: (parts[0] || "").trim(),
-    timeline: (parts.length > 1 ? parts.slice(1).join("===SPLIT===") : "").trim(),
   };
 }
 
@@ -1333,28 +1462,30 @@ async function buildReport(env, bodyIn) {
           const combined = await geminiGenerateContent(env, model, prompt, { googleSearch: macroUseSearch });
           const inner = extractJsonFence(combined);
           const parsed = JSON.parse(inner);
-          
-          newsMd = JSON.stringify(parsed.topStories || []);
-          timelineMd = JSON.stringify(parsed.dynamicBriefs || []);
-          const macroTrend = parsed.macroTrend || "";
+          const topStories = normalizeDailyTopStoriesFromLlm(parsed.topStories, nonAiFacts);
+          const dynamicBriefs = normalizeDailyBriefsFromLlm(parsed.dynamicBriefs, nonAiFacts);
+          const macroTrend = cleanReportText(parsed.macroTrend, "", 420);
+          newsMd = renderTopStoriesMarkdown(topStories, macroTrend);
+          timelineMd = renderBriefsMarkdown(dynamicBriefs);
 
           if (modules.news) {
             sections.news = {
               data: {
-                topStories: parsed.topStories || [],
-                dynamicBriefs: parsed.dynamicBriefs || [],
+                topStories,
+                dynamicBriefs,
                 macroTrend: macroTrend
               },
-              markdown: "",
-              items: [],
+              markdown: newsMd,
+              items: topStories,
               status: "ready",
               message: null
             };
           } else sections.news = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
           if (modules.timeline) {
             sections.timeline = {
-              markdown: "",
-              items: [],
+              data: { dynamicBriefs },
+              markdown: timelineMd,
+              items: dynamicBriefs,
               status: "ready",
               message: null,
             };
@@ -1603,10 +1734,14 @@ function dailyAiIntelFromFacts(rows) {
 
 function trendReadFromDailyInputs(legacy, factCount) {
   const trendsMd = legacy && legacy.sections && legacy.sections.trends && legacy.sections.trends.markdown;
+  const newsData = legacy && legacy.sections && legacy.sections.news && legacy.sections.news.data;
+  const macroTrend = cleanReportText(newsData && newsData.macroTrend, "", 420);
   const hasLlm = !!String(trendsMd || "").trim();
   return {
-    strengthening: hasLlm
-      ? [String(trendsMd).split("\n").find((x) => x.trim() && !x.startsWith("#")) || "LLM 已生成趋势研判，详见原始报告。"]
+    strengthening: macroTrend
+      ? [macroTrend]
+      : hasLlm
+        ? [String(trendsMd).split("\n").find((x) => x.trim() && !x.startsWith("#")) || "LLM 已生成趋势研判，详见原始报告。"]
       : [`最近72小时内已有 ${factCount} 条候选，优先观察哪些主题正在连续出现。`],
     cracking: hasLlm
       ? ["详细裂变信号由云端 LLM 报告生成，当前页面保留摘要入口。"]
@@ -1658,21 +1793,24 @@ async function buildDailyEventReport(env, opts) {
   
   let topStories = dailyTopStoriesFromFacts(nonAiFacts);
   let dynamicBriefs = dailyBriefsFromFacts(nonAiFacts);
+  let macroTrend = "";
   
   if (legacy && legacy.sections && legacy.sections.news && legacy.sections.news.data) {
     const data = legacy.sections.news.data;
     if (Array.isArray(data.topStories) && data.topStories.length > 0) {
-      topStories = data.topStories;
+      topStories = normalizeDailyTopStoriesFromLlm(data.topStories, nonAiFacts);
     }
     if (Array.isArray(data.dynamicBriefs) && data.dynamicBriefs.length > 0) {
-      dynamicBriefs = data.dynamicBriefs;
+      dynamicBriefs = normalizeDailyBriefsFromLlm(data.dynamicBriefs, nonAiFacts);
     }
+    macroTrend = cleanReportText(data.macroTrend, "", 420);
   }
   
   const report = {
     title: "事件日报",
     subtitle: "日常新闻早午晚报",
     marketTemperature: marketTemperatureFromSources(agg.sources, dashboard),
+    macroTrend,
     topStory: topStories[0],
     topStories,
     dynamicBriefs,
