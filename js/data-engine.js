@@ -764,7 +764,6 @@ const DataEngine = {
       times: ["00:00", "08:00", "12:00", "20:00"],
       analysisTimes: ["09:00", "14:00", "22:00"],
       timezone: "Asia/Shanghai",
-      adminSecretHint: "",
       updatedAt: null,
       phase: "worker_d1_reports",
     };

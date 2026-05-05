@@ -166,11 +166,6 @@ function pageSettings() {
               <strong>14:00</strong>
               <strong>22:00</strong>
             </div>
-            <label class="settings-yuqing-secret">
-              <span>管理密钥</span>
-              <input id="settings-yuqing-admin-secret" type="password" autocomplete="off" value="${escapeHtml(yuqingSchedule.adminSecretHint || "")}" placeholder="可选：备忘 Cloudflare Worker 上的 CRON_SECRET（仅存本机）" />
-              <small class="settings-yuqing-secret-hint">此值仅写入浏览器 localStorage，不会在保存草稿时发往 Worker；受保护的接口（如事实池 ingest）须由服务端 Cron 携带 <code>X-Yuqing-Cron-Secret</code>。</small>
-            </label>
           </div>
           <div class="settings-yuqing-side">
             <div class="cloud-status-card">
@@ -589,8 +584,7 @@ function collectSettingsYuqingScheduleDraft() {
   const times = [1, 2, 3, 4]
     .map((idx) => String(document.getElementById(`settings-yuqing-time-${idx}`)?.value || "").trim())
     .filter(Boolean);
-  const adminSecretHint = String(document.getElementById("settings-yuqing-admin-secret")?.value || "").trim();
-  return { enabled, times, adminSecretHint };
+  return { enabled, times };
 }
 
 function refreshSettingsYuqingNext(cfg) {
@@ -639,15 +633,13 @@ function initSettingsYuqingSchedule() {
           ? DataEngine.defaultYuqingScheduleDraft()
           : readSettingsYuqingScheduleDraft();
       const enabled = document.getElementById("settings-yuqing-enabled");
-      const secret = document.getElementById("settings-yuqing-admin-secret");
       if (enabled) enabled.checked = !!d.enabled;
       [1, 2, 3, 4].forEach((idx) => {
         const input = document.getElementById(`settings-yuqing-time-${idx}`);
         if (input) input.value = d.times[idx - 1] || "";
       });
-      if (secret) secret.value = "";
       if (typeof DataEngine !== "undefined" && typeof DataEngine.writeYuqingScheduleDraft === "function") {
-        DataEngine.writeYuqingScheduleDraft({ ...d, adminSecretHint: "" });
+        DataEngine.writeYuqingScheduleDraft(d);
       }
       refreshSettingsYuqingNext(d);
       showMsg("已恢复默认 00/08/12/20 事件日报时点。");
