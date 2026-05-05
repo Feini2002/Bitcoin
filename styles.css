@@ -5767,6 +5767,7 @@ html[data-theme="dark"] .theme-option--active {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--sp-4);
+  align-items: start;
 }
 
 .news-intel-grid .span-4 { grid-column: span 4; }
@@ -6253,7 +6254,7 @@ html[data-theme="dark"] .theme-option--active {
 
 .news-ai-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 46px;
+  grid-template-columns: 34px minmax(0, 1fr) minmax(58px, 70px);
   gap: var(--sp-3);
   align-items: start;
 }
@@ -6428,6 +6429,39 @@ html[data-theme="dark"] .theme-option--active {
   color: var(--text-2);
   font-size: var(--fz-md);
   line-height: 1.65;
+}
+
+.daily-temperature-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.daily-temperature-meta span {
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  color: var(--muted);
+  font-size: var(--fz-xs);
+  line-height: 1.45;
+}
+
+.daily-story-contract-line {
+  align-items: start;
+}
+
+.daily-story-contract-line > span,
+.daily-story-contract-line .daily-column-lines span {
+  display: block;
+  min-width: 0;
+  padding-left: 10px;
+  border-left: 2px solid rgba(56,189,248,0.35);
+  color: var(--text-2);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .daily-column-lines {
