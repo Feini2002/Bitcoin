@@ -36,7 +36,7 @@ If a validation fails, inspect the failure, patch the cause, and rerun the relev
 
 ## Browser Check
 
-For frontend changes, open the affected hash route on your deployed/static host (`/index.html#...`) with the in-app browser:
+For frontend changes, open the affected hash route on production Pages (`https://bitcoin.feiniwork.com/index.html#...`) with the in-app browser:
 
 - `#chart` for行情/indicator work
 - `#orderflow` for footprint/orderflow work

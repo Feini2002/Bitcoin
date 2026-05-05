@@ -16,7 +16,7 @@ alwaysApply: true
 - 通用：`npm run lint`
 - 若触及指标/图表数学：另跑 `node scripts/verify-indicator-math.cjs`
 - 若触及足迹/订单流/footprint Worker：`npm run verify:footprint`
-- 若触及静态入口或希望在 CI 中联调 Worker：`npm run verify:api`（可选 `BITDESK_SMOKE_ORIGIN`）
+- 若触及静态入口或 Worker 联调：`npm run verify:api`（默认请求已部署行情 Worker；必要时用 `BITDESK_SMOKE_ORIGIN` 覆盖根 URL）
 - 以 `AGENTS.md` 验证矩阵为准，能跑尽跑
 
 ## Cloudflare 部署（Agent 默认执行）

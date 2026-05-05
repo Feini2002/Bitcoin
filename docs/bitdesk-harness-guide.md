@@ -1,6 +1,6 @@
 # BitDesk 专属 Harness 增强说明
 
-本系统是轻量交易数据监测台：**静态前端**（Pages 或任意 CDN）通过 **Cloudflare Worker + D1** 拉取 K 线、footprint、衍生品与舆情接口；数据与服务端逻辑均在云上。
+本系统是轻量交易数据监测台：**前端托管于 Cloudflare Pages**（生产域名 `https://bitcoin.feiniwork.com/`），经 **Cloudflare Worker + D1** 拉取 K 线、footprint、衍生品与舆情接口；数据与服务端逻辑均在云上。
 
 ## 当前逻辑地图
 
@@ -18,14 +18,14 @@
 - 所有 JS 改动：`npm run lint`
 - 指标/图表数学：`node scripts/verify-indicator-math.cjs`
 - 足迹聚合/订单流/Cloudflare footprint：`npm run verify:footprint`
-- 静态壳 / 可选远端 Worker：`npm run verify:api`（可选 `BITDESK_SMOKE_ORIGIN=https://btc.feiniwork.com`）
+- 静态壳 + 已部署行情 Worker：`npm run verify:api`（默认探测 `https://btc.feiniwork.com`，可用 `BITDESK_SMOKE_ORIGIN` 覆盖 Worker 根 URL）
 - 跨模块改动：`npm run verify:all`
 - 真实行情链路诊断：`npm run diagnose`（可选 `BITDESK_KLINE_API_BASE`）
 - 收尾摘要：`npm run diff:summary`
 
 ## 前端截图检查
 
-前端改动后在已上线 Pages 或任意静态宿主打开受影响路由，例如：
+前端改动后在生产站点核验受影响路由（域名 `https://bitcoin.feiniwork.com/`），例如：
 
 - 行情：`/index.html#chart`
 - 订单流：`/index.html#orderflow`

@@ -1,13 +1,13 @@
 /**
- * 静态前端壳自检：校验仓库入口文件齐备；可选对已部署 Worker 发 HTTPS GET。
+ * 前端静态壳自检：校验仓库入口文件齐备；并对已部署行情 Worker 发 HTTPS GET（默认根 URL 与 js/config.js 一致）。
  * - 校验 index.html / js/app.js / styles.css 存在且入口 HTML 引用主脚本。
- * - 可选：`BITDESK_SMOKE_ORIGIN=https://你的 Worker 根` 时对 `${ORIGIN}/api/d1/status` 发 GET，
- *   验证线上行情 Worker 可读（离线或未设变量则跳过）。
+ * - `BITDESK_SMOKE_ORIGIN` 仅用于覆盖 Worker 根 URL（须为线上 HTTPS）；未设置时默认 `https://btc.feiniwork.com`。
  */
 const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
+const DEFAULT_SMOKE_ORIGIN = "https://btc.feiniwork.com";
 
 function assertShellFile(rel, checker) {
   const p = path.join(ROOT, rel);
@@ -39,11 +39,11 @@ async function main() {
   assertShellFile("js/app.js", () => "present");
   assertShellFile("styles.css", () => "present");
 
-  const origin = (process.env.BITDESK_SMOKE_ORIGIN || "").trim();
-  if (!origin) {
-    console.log("SKIP remote Worker probe (set BITDESK_SMOKE_ORIGIN to hit /api/d1/status)");
-    return;
-  }
+  const raw = process.env.BITDESK_SMOKE_ORIGIN;
+  const origin = (raw != null && String(raw).trim() !== "" ? String(raw).trim() : DEFAULT_SMOKE_ORIGIN).replace(
+    /\/$/,
+    "",
+  );
   await optionalWorkerProbe(origin);
 }
 

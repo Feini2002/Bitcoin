@@ -62,10 +62,10 @@ When API behavior, laws, prices, schedules, or current market facts matter, veri
 Choose the smallest useful verification set:
 
 - Deployment gate: this system is fully deployed; after modifying any repository content, run `npm.cmd run build` before deployment. In this static app, `build` is the full verification gate (`verify:all`).
-- Server/data path changes: `npm run verify:api` for static-shell checks (`BITDESK_SMOKE_ORIGIN` optional Worker probe), and `npm run diagnose` for Binance vs deployed Worker `/api/d1/klines` reachability (see `BITDESK_KLINE_API_BASE`).
+- Server/data path changes: `npm run verify:api` for static-shell checks plus deployed Worker `/api/d1/status` (default origin aligns with `js/config.js`; override with `BITDESK_SMOKE_ORIGIN` if needed), and `npm run diagnose` for Binance vs Worker `/api/d1/klines` reachability (see `BITDESK_KLINE_API_BASE`).
 - Indicator math changes: `node scripts/verify-indicator-math.cjs`.
 - Footprint/orderflow changes: `npm run verify:footprint`.
-- Frontend UI changes: inspect the affected route on deployed Pages (or another static host) when practical.
+- Frontend UI changes: inspect the affected route on production Pages (`https://bitcoin.feiniwork.com/`) when practical.
 - Cloudflare worker/schema changes: validate syntax/config in the checked-out repo before suggesting deployment.
 - After any change, deploy affected surfaces: `npm.cmd run deploy:pages` for frontend/static/docs/rules/scripts/shared logic; `npx.cmd wrangler deploy` from `cloudflare/` for Worker changes; run both when both surfaces are affected, Worker first.
 

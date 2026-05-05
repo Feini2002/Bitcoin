@@ -21,13 +21,13 @@
 - 通用改动后运行 `npm run lint`。
 - 指标数学或行情图表改动后运行 `node scripts/verify-indicator-math.cjs`。
 - 足迹图、订单流或 Cloudflare footprint 改动后运行 `npm run verify:footprint`。
-- Worker/静态壳相关改动后运行 `npm run verify:api`（无需常驻 HTTP）；需要探测 Binance 与 `BITDESK_KLINE_API_BASE` 指向的行情 Worker `/api/d1/klines` 时再运行 `npm run diagnose`。
+- Worker/静态壳相关改动后运行 `npm run verify:api`（默认探测已部署行情 Worker `/api/d1/status`，可用 `BITDESK_SMOKE_ORIGIN` 覆盖根 URL）；需要探测 Binance 与 `BITDESK_KLINE_API_BASE` 指向的行情 Worker `/api/d1/klines` 时再运行 `npm run diagnose`。
 - 改动跨多个区域时运行 `npm run verify:all`。
 - 收尾时默认不运行 `npm run diff:summary`；最终回复里手工列出改动文件即可。只有用户明确要求差异摘要，或需要借助该脚本排查改动范围时再运行。
 
 ## Frontend Checks
 
-- 前端 UI 改动后在已部署 Pages 或使用任意静态宿主打开受影响 hash，例如 `/index.html#chart`、`/index.html#orderflow`、`/index.html#settings`。
+- 前端 UI 改动后在生产站点 `https://bitcoin.feiniwork.com/` 核验受影响 hash，例如 `/index.html#chart`、`/index.html#orderflow`、`/index.html#settings`。
 
 ## Cloudflare Deployments
 
