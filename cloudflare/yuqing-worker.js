@@ -18,7 +18,10 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.5-scheduled-llm-off";
+const WORKER_BUILD = "yuqing-worker/1.1.5-skip-scheduled-llm";
+
+/** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
+const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
 
 const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 const FINNHUB_ORIGIN = "https://finnhub.io";
@@ -38,17 +41,6 @@ const DEFAULT_MARKET_API_BASE = "https://btc.feiniwork.com";
 function maintenanceEnabled(env) {
   const raw = env && env.MAINTENANCE_MODE != null ? String(env.MAINTENANCE_MODE).trim().toLowerCase() : "";
   return raw === "1" || raw === "true";
-}
-
-/**
- * 仅当 Workers Cron 仍存在时用于「最后再关一层」门禁：是否为 true（1/true/yes）才允许 scheduled 触发事件日报 / 舆情二次研判（二者均走 LLM）。
- * 开发阶段在 wrangler.yuqing.toml 将 `YUQING_SCHEDULED_REPORTS_ENABLED=false` 且 `crons=[]`，避免定点 Token/Fetch；手动 `/api/yuqing/reports/generate` 仍可用。
- * BTC K 线等无 LLM 任务在 binance-klines-worker，不受此开关影响。
- */
-function yuqingScheduledLlmReportsAllowed(env) {
-  const raw =
-    env && env.YUQING_SCHEDULED_REPORTS_ENABLED != null ? String(env.YUQING_SCHEDULED_REPORTS_ENABLED).trim().toLowerCase() : "";
-  return raw === "1" || raw === "true" || raw === "yes";
 }
 
 function corsHeaders(extra = {}) {
@@ -2160,10 +2152,10 @@ export default {
         workerBuild: WORKER_BUILD,
         time: new Date().toISOString(),
         maintenance: maintenanceEnabled(env),
+        scheduledLlmCronSkipped: YUQING_SKIP_SCHEDULED_LLM_REPORTS,
         llm: {
           provider: p,
           enabled: p === "gemini" && !!getGeminiKey(env),
-          scheduledReportsAllowed: yuqingScheduledLlmReportsAllowed(env),
           models: {
             flash: env && env.YUQING_LLM_MODEL_FLASH ? String(env.YUQING_LLM_MODEL_FLASH) : "gemini-2.0-flash",
             pro: env && env.YUQING_LLM_MODEL_PRO ? String(env.YUQING_LLM_MODEL_PRO) : "",
@@ -2428,11 +2420,11 @@ export default {
     return json({ ok: false, error: "Not found" }, 404);
   },
 
-  /** Cloudflare Cron：北京时间事件日报 00/08/12/20，舆情分析 09/14/22（均需 LLM）；开发阶段可关见 YUQING_SCHEDULED_REPORTS_ENABLED。 */
+  /** Cloudflare Cron：北京时间事件日报 00/08/12/20，舆情分析 09/14/22。 */
   async scheduled(event, env) {
     try {
-      if (!yuqingScheduledLlmReportsAllowed(env)) {
-        console.log("yuqing scheduled: skip LLM cron (YUQING_SCHEDULED_REPORTS_ENABLED is not true)");
+      if (YUQING_SKIP_SCHEDULED_LLM_REPORTS) {
+        console.log("[yuqing scheduled] YUQING_SKIP_SCHEDULED_LLM_REPORTS=true, skip LLM report jobs");
         return;
       }
       if (!d1Bound(env)) return;
