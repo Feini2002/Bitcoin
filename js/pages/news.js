@@ -588,7 +588,11 @@ async function deleteAnalysisArchiveEntry(id) {
     renderNewsIntoDom();
     return;
   }
-  if (!window.confirm("确定删除此条回档？云端 D1 中的对应记录将一并删除且不可恢复。")) return;
+  const ok =
+    typeof confirmYuqingArchiveDelete === "function"
+      ? await confirmYuqingArchiveDelete()
+      : window.confirm("确定删除此条回档？云端 D1 中的对应记录将一并删除且不可恢复。");
+  if (!ok) return;
   try {
     await DataEngine.deleteYuqingReportItem(rid);
     analysisState.history = (analysisState.history || []).filter((x) => x && x.id !== rid);

@@ -490,6 +490,16 @@ input, textarea, select { font: inherit; color: inherit; }
   color: var(--info);
 }
 .btn.primary:hover { background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(167,139,250,0.25)); }
+.btn.danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.42);
+  color: #dc2626;
+}
+.btn.danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #b91c1c;
+}
 
 /* ================================================================
    Page: 环境评估员 (深度)
@@ -4225,6 +4235,21 @@ html[data-theme="dark"] .settings-panel {
   box-shadow: 0 0 0 2px rgba(56,189,248,0.12);
 }
 
+.settings-yuqing-secret-hint {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.settings-yuqing-secret-hint code {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  font-weight: 600;
+}
+
 .settings-yuqing-side {
   display: flex;
   flex-direction: column;
@@ -6775,6 +6800,81 @@ html[data-theme="dark"] .theme-option--active {
 
 .news-archive-delete .ph {
   font-size: 18px;
+}
+
+/* 回档删除确认：全屏虚化 + 与舆情抽屉一致的圆角浅色卡片 */
+.yuqing-delete-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  box-sizing: border-box;
+}
+
+.yuqing-delete-modal-root[hidden] {
+  display: none !important;
+}
+
+.yuqing-delete-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.yuqing-delete-modal-sheet {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--radius);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+}
+
+.yuqing-delete-modal-kicker {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.yuqing-delete-modal-title {
+  margin: 10px 0 0;
+  font-size: var(--fz-lg);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.yuqing-delete-modal-detail {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fz-sm);
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.yuqing-delete-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: var(--sp-4);
+}
+
+html[data-theme="dark"] .yuqing-delete-modal-sheet {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
 .news-archive-item {

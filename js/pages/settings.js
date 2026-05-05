@@ -168,7 +168,8 @@ function pageSettings() {
             </div>
             <label class="settings-yuqing-secret">
               <span>管理密钥</span>
-              <input id="settings-yuqing-admin-secret" type="password" autocomplete="off" value="${escapeHtml(yuqingSchedule.adminSecretHint || "")}" placeholder="本机保存，请勿写入仓库" />
+              <input id="settings-yuqing-admin-secret" type="password" autocomplete="off" value="${escapeHtml(yuqingSchedule.adminSecretHint || "")}" placeholder="可选：备忘 Cloudflare Worker 上的 CRON_SECRET（仅存本机）" />
+              <small class="settings-yuqing-secret-hint">此值仅写入浏览器 localStorage，不会在保存草稿时发往 Worker；受保护的接口（如事实池 ingest）须由服务端 Cron 携带 <code>X-Yuqing-Cron-Secret</code>。</small>
             </label>
           </div>
           <div class="settings-yuqing-side">
