@@ -840,7 +840,7 @@ function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "执行双轨搜索：\n" +
     "一轨（72小时热点）：过去72小时内影响最大的宏观/科技/地缘事件。\n" +
     "二轨（一周时间重量级）：若过去一周内存在重量级程度明显碾压所有72小时新闻的事件（标准：千亿级以上市值公司战略级发布、国家级政策转向、系统性金融风险、头部科技公司年度大会、地缘政治危机），优先纳入并标注[持续追踪]。\n\n" +
-    "【条数判断规则】若搜索时段内同时存在多个重量级事件，且互不属于同一宏观背景的独立事件，可扩展至最多3条——但必须在心里先问自己：这些事件是真正独立的，还是同一宏观力量的不同表现？若是后者，合并为1条处理。如果没有重量级事件，则输出1条头条。\n\n" +
+    "【条数判断规则】今日头条固定输出3条高价值事件。若多个事件属于同一宏观背景，也要拆成不同的资产传导维度；若事实不足，选择最新72小时内可验证性更高的事件补足，不要输出脚手架解释。\n\n" +
     "每条头条按以下结构严格输出（请确保每个区块之间有一个空行）：\n\n" +
     "### [事件类别] 事件核心标题\n\n" +
     "**【事实锁定】**\n" +
@@ -878,7 +878,7 @@ function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "若类别=加密市场：**链上数据信号**：优先检索链上数据与监管披露文件，而非媒体报道 | **叙事与资金面背离**：当前叙事与实际资金流向是否一致？\n" +
     "若类别=企业动态：**决策背后动机**：... | **竞对反应预测**：...\n" +
     "若类别=政策监管：**明文说了什么**：... | **字里行间的信号**：与过去6-12个月的政策节奏相比有何变化？\n\n" +
-    "所有类别最后必须紧跟着加在上一行末尾：**⏰ 48-72h观察点**：接下来2-3天内，出现什么信号意味着这件事升级，出现什么信号意味着结束。严禁换行。\n\n" +
+    "所有类别最后必须紧跟着加在上一行末尾：**简单分析**：用一句话说明事件可能影响、升级信号与降温信号；不要出现「48-72h」等窗口标签，搜索范围已限定最新72小时。严禁换行。\n\n" +
     "5条新闻输出完毕后，附一段独立的**宏观趋势总结**：概括这5条新闻共同指向的近期宏观结构性变化。"
   );
 }
@@ -898,11 +898,11 @@ function buildProTrendsPrompt(newsText, timelineText, aiText, flashDataJsonText)
     aiText +
     "\n\n---\n基于以上全部内容，请直接输出以下三部分（不要带有前缀和解释，不需要额外搜索）：\n\n" +
     "### 📶 正在强化的信号\n\n" +
-    "哪些趋势在过去24-72小时内得到了新的数据/事件确认，正在变得更加确定？评估时注意区分：这是真正的范式转移信号，还是短期均值回归噪音？（2-3条，每条必须独立成段，段落间留空行）\n\n" +
+    "哪些趋势在过去0-72小时内得到了新的数据/事件确认，正在变得更加确定？评估时注意区分：这是真正的范式转移信号，还是短期均值回归噪音？（2-3条，每条必须独立成段，段落间留空行）\n\n" +
     "### ⚡ 正在裂变的信号\n\n" +
     "哪些此前普遍接受的判断，正在被新出现的数据或事件所挑战？重点关注叙事与资金面/基本面出现背离的领域。（1-2条，每条必须独立成段，无则明确说明「暂无明显裂变信号」）\n\n" +
-    "### 🎯 48-72h观察清单\n\n" +
-    "接下来2-3天内，有哪些具体事件、数据发布、或价格节点值得重点盯住？给出3-5个具体的观察项，格式必须是：\n\n" +
+    "### 🎯 0-72小时观察清单\n\n" +
+    "围绕最近72小时内已经出现的事件，有哪些具体事件、数据发布或价格节点值得继续盯住？给出3-5个具体的观察项，格式必须是：\n\n" +
     "- **事件/数据名称**：观察什么？若结果是X，意味着Y，市场将如何反应。若结果是Z，意味着W，市场将如何反应。\n\n" +
     "（每一项作为列表的一项，步骤不可拆分换行）"
   );
@@ -939,10 +939,10 @@ function buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData,
     facts +
     "\n---\n\n" +
     "请在**不编造未出现在事实池中的外链或通讯社名称**的前提下，按要求输出两个模块，格式与旧版一致。\n" +
-    "若事实池信息不足，请在文首用一行说明「事实池不足，以下为弱置信归纳」，并显著降低结论强度。\n\n" +
+    "若事实池信息不足，请显著降低结论强度，但不要输出脚手架解释或面向开发者的说明。\n\n" +
     "【输出要求】输出完毕“今日头条”模块后，必须输出一个单独的行 `===SPLIT===` 作为分隔符，然后再输出“动态速览”的内容。不要输出额外的前言解释。\n\n" +
     "## 今日头条\n\n" +
-    "从事实池中挑选 1-3 条对跨资产定价影响最大的事件；每条须能在事实池中找到对应标题或来源支撑。\n\n" +
+    "从事实池中挑选 3 条对跨资产定价影响最大的高价值事件；每条须能在事实池中找到对应标题或来源支撑，且尽量覆盖不同资产传导维度。\n\n" +
     "### [事件类别] 事件核心标题\n\n" +
     "**【事实锁定】**\n" +
     "一句话说明时间、主体、动作与影响（勿添加事实池没有的细节）。\n\n" +
@@ -954,9 +954,9 @@ function buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData,
     "- **高/中/低概率情景**各一行。\n\n" +
     "===SPLIT===\n\n" +
     "## 动态速览\n\n" +
-    "从事实池中再选至多 5 条 secondary 事件（可与头条同源主题但粒度不同），每条:\n" +
+    "从事实池中再选至多 5 条 secondary 事件（可与头条同源主题但粒度不同），每条只写事件、描述、简单分析:\n" +
     "### [类别] 标题\n" +
-    "**事件**：2-3 句。**⏰ 48-72h观察点**：一条，附于段末。\n\n" +
+    "**事件**：一句话说明发生了什么。**描述**：补充主体、动作和影响。**简单分析**：说明可能影响与后续验证信号，不出现具体时间窗口标签。\n\n" +
     "最后附一段 **宏观趋势总结**：必须显式写明「主要由事实池中哪些类型的条目驱动」。"
   );
 }
@@ -1419,19 +1419,7 @@ async function loadFactsBundle(env, limit = 70) {
   return { factRows, nonAiFacts, aiFacts };
 }
 
-function dailyTopStoryFromFacts(rows) {
-  const primary = rows && rows.length ? rows[0] : null;
-  if (!primary) {
-    return {
-      category: "信息底座",
-      title: "本轮事实池暂无高置信新闻",
-      fact: "云端事实池暂未提供足够新闻条目，本页仅保留市场温度与来源状态。",
-      structure: ["等待下一次自动日报或手动扫描补充事实。"],
-      transmission: ["高概率情景：继续以市场监测页的客观数据作为主要参考。"],
-      sourceName: "Yuqing D1",
-      sourceUrl: "",
-    };
-  }
+function dailyStoryFromFact(primary) {
   return {
     category: primary.category || "综合事件",
     title: primary.title || "未命名事件",
@@ -1439,25 +1427,55 @@ function dailyTopStoryFromFacts(rows) {
     structure: [
       `来源：${primary.source || primary.sourceType || "事实池"}`,
       primary.url ? "已保留原文链接，适合继续核对。" : "事实池未提供可跳转原文，需降低置信度。",
-      "事件一览只做信息底座，不直接给交易结论。",
+      "继续关注官方口径、市场价格与资金流是否同向确认。",
     ],
     transmission: [
-      "若事件持续发酵，交给舆情分析页结合行情与衍生品做二次研判。",
-      "若后续缺少新事实或官方来源确认，按低权重背景信息处理。",
+      "高概率情景：事件影响被纳入现有定价，相关资产维持震荡消化。",
+      "中概率情景：若出现新的官方确认或数据冲击，主题资产短线重新定价。",
+      "低概率情景：后续缺少新增事实，事件权重回落为背景变量。",
     ],
     sourceName: primary.source || primary.sourceType || "Yuqing D1",
     sourceUrl: primary.url || "",
   };
 }
 
+function dailyTopStoriesFromFacts(rows) {
+  const out = [];
+  for (const it of (rows || []).slice(0, 3)) {
+    out.push(dailyStoryFromFact(it));
+  }
+  if (!out.length) {
+    out.push({
+      category: "综合事件",
+      title: "等待高价值事件更新",
+      fact: "当前事实池尚未形成足够明确的跨资产事件主线。",
+      structure: ["优先等待官方来源、金融日历和主流新闻源补充。"],
+      transmission: ["高概率情景：市场继续由行情与资金流主导。"],
+      sourceName: "Yuqing D1",
+      sourceUrl: "",
+    });
+  }
+  return out;
+}
+
+function dailyTopStoryFromFacts(rows) {
+  return dailyTopStoriesFromFacts(rows)[0];
+}
+
 function dailyBriefsFromFacts(rows) {
   const out = [];
-  for (const it of (rows || []).slice(1, 7)) {
+  const secondary = (rows || []).length > 3 ? (rows || []).slice(3, 8) : (rows || []).slice(0, 5);
+  for (const it of secondary) {
+    const analysis = it.url
+      ? "后续重点看官方确认、主流媒体跟进和相关资产是否出现二次反应。"
+      : "缺少原文时先降低权重，等待来源补强后再提高结论强度。";
     out.push({
       category: it.category || "综合",
       title: it.title || "未命名动态",
       body: itemSummary(it),
-      watch: it.url ? "已保留来源链接；重点看是否出现后续官方确认或市场二次反应。" : "事实池暂无原文链接，先作为低权重动态观察。",
+      description: itemSummary(it),
+      analysis,
+      watch: analysis,
       sourceName: it.source || it.sourceType || "",
       sourceUrl: it.url || "",
     });
@@ -1466,8 +1484,10 @@ function dailyBriefsFromFacts(rows) {
     out.push({
       category: "系统状态",
       title: "等待下一轮事实采集",
-      body: "当前 D1 事实池条目不足，日报只展示保守摘要。",
-      watch: "可手动点击重新扫描，或等待下一个 00/08/12/20 自动时点。",
+      body: "暂未出现新的次级事件。",
+      description: "主要市场变量仍由行情、资金流和上一轮高价值事件延续影响。",
+      analysis: "等待下一轮采集刷新后，再判断是否出现新的主题扩散。",
+      watch: "等待下一轮采集刷新后，再判断是否出现新的主题扩散。",
       sourceName: "Yuqing Worker",
       sourceUrl: "",
     });
@@ -1508,11 +1528,11 @@ function trendReadFromDailyInputs(legacy, factCount) {
   return {
     strengthening: hasLlm
       ? [String(trendsMd).split("\n").find((x) => x.trim() && !x.startsWith("#")) || "LLM 已生成趋势研判，详见原始报告。"]
-      : [`事实池已有 ${factCount} 条候选，适合先判断哪些主题在连续出现。`],
+      : [`最近72小时内已有 ${factCount} 条候选，优先观察哪些主题正在连续出现。`],
     cracking: hasLlm
-      ? ["详细裂变信号由云端 LLM 报告生成，本页保留摘要入口。"]
-      : ["事实不足或 LLM 未启用时，不主动制造分歧结论。"],
-    conclusion: "事件一览作为信息底座；交易含义请进入舆情分析查看二次研判。",
+      ? ["详细裂变信号由云端 LLM 报告生成，当前页面保留摘要入口。"]
+      : ["若事实密度不足，先降低分歧判断权重，等待更多来源确认。"],
+    conclusion: "0-72小时观察：跟踪高价值事件是否获得官方口径、资金流与价格结构的共同确认。",
   };
 }
 
@@ -1556,11 +1576,13 @@ async function buildDailyEventReport(env, opts) {
     { type: "route", label: "舆情分析", href: "#/news-analysis", route: "news-analysis" },
   ];
   const sources = uniqueSourceRows(factRows);
+  const topStories = dailyTopStoriesFromFacts(nonAiFacts);
   const report = {
-    title: "赛博前哨站",
+    title: "事件日报",
     subtitle: "日常新闻早午晚报",
     marketTemperature: marketTemperatureFromSources(agg.sources, dashboard),
-    topStory: dailyTopStoryFromFacts(nonAiFacts),
+    topStory: topStories[0],
+    topStories,
     dynamicBriefs: dailyBriefsFromFacts(nonAiFacts),
     aiIntel: dailyAiIntelFromFacts(aiFacts),
     trendRead: trendReadFromDailyInputs(legacy, factRows.length),
@@ -1570,7 +1592,7 @@ async function buildDailyEventReport(env, opts) {
       sourceCoverage: Math.min(100, Math.max(20, sources.length * 14 + Math.min(30, factRows.length))),
       usedSearch: !!(legacy && legacy.grounding && legacy.grounding.usedSearch && (legacy.grounding.usedSearch.news || legacy.grounding.usedSearch.ai)),
       ingestRows: ingestResult ? Number(ingestResult.insertedRows || 0) : 0,
-      caveat: "事件一览只做信息底座，不构成交易建议。",
+      caveat: "覆盖率按来源数量、事实密度与可追溯程度估算。",
     },
   };
   return {
