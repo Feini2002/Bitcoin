@@ -18,7 +18,7 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.7-trend-cracking-fix";
+const WORKER_BUILD = "yuqing-worker/1.1.8-trends-three-modules";
 
 /** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
 const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
@@ -1025,20 +1025,33 @@ function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
   );
 }
 
-function buildProTrendsPrompt(newsText, timelineText, aiText, flashDataJsonText) {
+function buildProTrendsPrompt(newsText, timelineText, aiText, flashDataJsonText, scope = "full") {
   const flashContext = flashDataJsonText
-    ? "\n【基础市场行情状态（供参考）】\n" + flashDataJsonText + "\n"
+    ? scope === "daily_event_above_trend"
+      ? "\n【模块一：市场温度计 / 风险偏好（dashboard JSON，与事件一览温度卡同源）】\n" + flashDataJsonText + "\n"
+      : "\n【基础市场行情状态（供参考）】\n" + flashDataJsonText + "\n"
     : "";
+  const newsBlock = "\n【今日头条】\n" + (newsText || "（暂无）");
+  const timelineBlock = "\n【动态速览】\n" + (timelineText || "（暂无）");
+  const aiBlock =
+    scope === "daily_event_above_trend"
+      ? ""
+      : "\n【AI情报站】\n" + (aiText || "（暂无）");
+  const head =
+    scope === "daily_event_above_trend"
+      ? "下列内容来自「事件一览」同一次生成流水线中、页面展示顺序上位于「趋势线索」**之上**且**已经产出**的三块：市场温度计（dashboard JSON）、今日头条、动态速览。你是趋势编辑，必须**只根据这三块**做二次综合；不得引用、猜测或依赖尚未提供的「AI 情报站」等其他模块；不得联网检索。\n"
+      : "这是今日已生成的其他模块内容，请仔细阅读分析：";
+  const bridge =
+    scope === "daily_event_above_trend"
+      ? "\n\n---\n基于**以上三节**（温度计 JSON、今日头条、动态速览），请直接输出以下三部分（不要带有前缀和解释，不需要额外搜索）：\n\n"
+      : "\n\n---\n基于以上全部内容，请直接输出以下三部分（不要带有前缀和解释，不需要额外搜索）：\n\n";
   return (
-    "这是今日已生成的其他模块内容，请仔细阅读分析：" +
+    head +
     flashContext +
-    "\n【今日头条】\n" +
-    newsText +
-    "\n【动态速览】\n" +
-    timelineText +
-    "\n【AI情报站】\n" +
-    aiText +
-    "\n\n---\n基于以上全部内容，请直接输出以下三部分（不要带有前缀和解释，不需要额外搜索）：\n\n" +
+    newsBlock +
+    timelineBlock +
+    aiBlock +
+    bridge +
     "### 📶 正在强化的信号\n\n" +
     "哪些趋势在过去0-72小时内得到了新的数据/事件确认，正在变得更加确定？评估时注意区分：这是真正的范式转移信号，还是短期均值回归噪音？（2-3条，每条必须独立成段，段落间留空行）\n\n" +
     "### ⚡ 正在裂变的信号\n\n" +
@@ -1300,6 +1313,9 @@ async function buildReport(env, bodyIn) {
     ...(bodyIn && bodyIn.modules && typeof bodyIn.modules === "object" ? bodyIn.modules : {}),
   };
 
+  /** 默认 true（趋势综合含 AI 情报）。事件一览日报传 false：趋势仅综合「温度计 dashboard + 今日头条 + 动态速览」三块。 */
+  const trendsUseAiIntel = !(bodyIn && bodyIn.trendsUseAiIntel === false);
+
   const force = !!(bodyIn && bodyIn.force);
   const generatedAt = new Date().toISOString();
   const timeStr = new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
@@ -1353,6 +1369,7 @@ async function buildReport(env, bodyIn) {
         timeline: modules.timeline,
         ai: modules.ai,
         trends: modules.trends,
+        trendsUseAiIntel,
       }),
     );
     const hit = await caches.default.match(new Request(cacheUrl.toString()));
@@ -1496,11 +1513,9 @@ async function buildReport(env, bodyIn) {
         }
       })();
 
-    await Promise.all([macroP || Promise.resolve(), aiP || Promise.resolve()]);
-
-    if (modules.trends) {
+    const runTrends = async () => {
       try {
-        const prompt = buildProTrendsPrompt(newsMd, timelineMd, aiMd, flashDataJsonText);
+        const prompt = buildProTrendsPrompt(newsMd, timelineMd, aiMd, flashDataJsonText, trendsUseAiIntel ? "full" : "daily_event_above_trend");
         const model = trendsModel(env, mode);
         trendsMd = await geminiGenerateContent(env, model, prompt, { googleSearch: false, temperature: 0.35 });
         sections.trends = { markdown: trendsMd, status: trendsMd ? "ready" : "error", message: null };
@@ -1509,7 +1524,17 @@ async function buildReport(env, bodyIn) {
         warnings.push({ code: "trendsLlm", message: msg });
         sections.trends = { markdown: "", status: "error", message: msg };
       }
+    };
+
+    if (!trendsUseAiIntel && modules.trends && needMacro) {
+      await (macroP || Promise.resolve());
+      await Promise.all([runTrends(), aiP || Promise.resolve()]);
     } else {
+      await Promise.all([macroP || Promise.resolve(), aiP || Promise.resolve()]);
+      if (modules.trends) await runTrends();
+    }
+
+    if (!modules.trends) {
       sections.trends = { markdown: "", status: "planned", message: "模块已关闭" };
     }
 
@@ -1582,6 +1607,7 @@ async function buildReport(env, bodyIn) {
           timeline: modules.timeline,
           ai: modules.ai,
           trends: modules.trends,
+          trendsUseAiIntel,
         }),
       );
       await caches.default.put(
@@ -1772,6 +1798,7 @@ async function buildDailyEventReport(env, opts) {
       force: true,
       allowSearch: !!(opts && opts.forceSearch),
       forceSearch: !!(opts && opts.forceSearch),
+      trendsUseAiIntel: false,
       modules: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
     });
     if (legacy && Array.isArray(legacy.warnings)) sourceErrors.push(...legacy.warnings);

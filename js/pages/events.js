@@ -400,7 +400,7 @@ function renderYuqingDailyReport(row) {
       </div>
       <div class="news-command-actions">
         <div class="daily-clock-pill"><i class="ph ph-clock"></i><span id="daily-clock">--</span></div>
-        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="即时调用 Gemini 检索并写入报告库（可在右侧抽屉「实时扫描」中回看）">
+        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="单次请求 Worker：串联生成温度计、今日头条、动态速览、趋势线索与同条日报中的 AI 情报站，并写入 D1（约在 3 分钟内完成）">
           <i class="ph ph-rocket-launch"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
         </button>
         <button type="button" class="btn primary" id="daily-open-archive">
@@ -572,7 +572,7 @@ async function loadDailyReport(reportId = "") {
 async function generateDailyReport() {
   if (typeof DataEngine === "undefined" || typeof DataEngine.generateYuqingStructuredReport !== "function") return;
   dailyEventState.loading = true;
-  dailyEventState.status = "正在触发手动搜索与日报分析...";
+  dailyEventState.status = "正在触发单次全流程日报（温度计→头条→速览→趋势→情报站），请耐心等待…";
   renderYuqingDailyIntoDom();
   let openArchiveAfter = false;
   try {
@@ -580,7 +580,7 @@ async function generateDailyReport() {
     if (data && data.report) {
       dailyEventState.report = data.report;
       dailyEventState.source = "cloud";
-      dailyEventState.status = "手动搜索已写入 D1";
+      dailyEventState.status = "单次请求已完成：趋势仅综合页面上方三块（温度计/头条/速览），并已写入报告库（含 AI 情报站）";
       try {
         history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(data.report.id)}`);
       } catch (_) {}
