@@ -61,7 +61,10 @@ for (const field of [
   assertOk(new RegExp(`\\b${field}\\b`).test(migration), `migration has ${field}`);
 }
 
-assertOk(/crons\s*=\s*\["0 0,1,4,6,12,14,16 \* \* \*"\]/.test(wrangler), "wrangler cron covers BJT report slots");
+assertOk(
+  /\bYUQING_SCHEDULED_REPORTS_ENABLED\b/.test(wrangler) && /\bcrons\s*=\s*\[\s*\]/.test(wrangler),
+  "yuqing wrangler: LLM scheduled reports gated + cron list empty for dev pause",
+);
 
 const dueDaily = ctx.scheduledKindsForDate(new Date("2026-05-05T00:00:00+08:00").getTime());
 assertOk(dueDaily.length === 1 && dueDaily[0].kind === "daily_event" && dueDaily[0].slot === "00", "BJT 00:00 maps to daily_event 00");
@@ -120,7 +123,7 @@ for (const route of [
   assertOk(worker.includes(route), `worker exposes ${route}`);
 }
 assertOk(worker.includes("DELETE FROM yuqing_reports WHERE generated_at < ?"), "worker prunes reports by retention");
-assertOk(worker.includes("createYuqingReport(env"), "worker has manual/scheduled report generation path");
+assertOk(worker.includes("yuqingScheduledLlmReportsAllowed"), "worker gates scheduled LLM reports env");
 assertOk(worker.includes("kind: SENTIMENT_ANALYSIS_KIND"), "legacy report endpoint maps to sentiment_analysis");
 
 for (const method of [
