@@ -47,16 +47,16 @@ const DAILY_EVENT_MOCK_REPORT = {
       category: "地缘政治",
       title: "[持续追踪] 能源通道安全与停火谈判进入同一观察窗口",
       fact: "多方围绕海运安全、能源供应与地区停火条件密集接触，原油、航运与避险资产的风险溢价重新被市场关注。",
-      structure: [
-        "直接触发原因：能源通道安全议题与地区停火谈判在同一时间窗发酵。",
-        "深层结构性矛盾：供应稳定、地缘安全承诺与国内政治压力之间仍难一次性达成平衡。",
-        "声明与行动差异：公开表态偏向降温，但市场更关注实际护航、制裁与供应链保险成本。",
+      structure: {
+        trigger: "直接触发原因：能源通道安全议题与地区停火谈判在同一时间窗发酵。",
+        conflict: "深层结构性矛盾：供应稳定、地缘安全承诺与国内政治压力之间仍难一次性达成平衡。",
+        divergence: "声明与行动差异：公开表态偏向降温，但市场更关注实际护航、制裁与供应链保险成本。"
+      },
+      impacts: [
+        { asset: "原油", direction: "up", logic: "谈判继续但未失控升级，油价风险溢价维持。" },
+        { asset: "BTC", direction: "shock", logic: "风险偏好受抑，短线需要资金流二次确认。" }
       ],
-      transmission: [
-        "高概率情景：谈判继续但未失控升级，油价风险溢价维持，风险资产以震荡消化为主。",
-        "中概率情景：出现局部摩擦或制裁升级，美元、黄金和能源链条短线获得防御买盘。",
-        "低概率情景：停火与通道安全同时取得明确进展，风险偏好修复但需要资金流二次确认。",
-      ],
+      nextWatch: "出现局部摩擦或制裁升级，美元、黄金和能源链条短线获得防御买盘。",
       sourceName: "全球要闻",
       sourceUrl: "",
     },
@@ -65,16 +65,16 @@ const DAILY_EVENT_MOCK_REPORT = {
         category: "地缘政治",
         title: "[持续追踪] 能源通道安全与停火谈判进入同一观察窗口",
         fact: "多方围绕海运安全、能源供应与地区停火条件密集接触，原油、航运与避险资产的风险溢价重新被市场关注。",
-        structure: [
-          "直接触发原因：能源通道安全议题与地区停火谈判在同一时间窗发酵。",
-          "深层结构性矛盾：供应稳定、地缘安全承诺与国内政治压力之间仍难一次性达成平衡。",
-          "声明与行动差异：公开表态偏向降温，但市场更关注实际护航、制裁与供应链保险成本。",
+        structure: {
+          trigger: "直接触发原因：能源通道安全议题与地区停火谈判在同一时间窗发酵。",
+          conflict: "深层结构性矛盾：供应稳定、地缘安全承诺与国内政治压力之间仍难一次性达成平衡。",
+          divergence: "声明与行动差异：公开表态偏向降温，但市场更关注实际护航、制裁与供应链保险成本。"
+        },
+        impacts: [
+          { asset: "原油", direction: "up", logic: "谈判继续但未失控升级，油价风险溢价维持。" },
+          { asset: "BTC", direction: "shock", logic: "风险偏好受抑，短线需要资金流二次确认。" }
         ],
-        transmission: [
-          "高概率情景：谈判继续但未失控升级，油价风险溢价维持，风险资产以震荡消化为主。",
-          "中概率情景：出现局部摩擦或制裁升级，美元、黄金和能源链条短线获得防御买盘。",
-          "低概率情景：停火与通道安全同时取得明确进展，风险偏好修复但需要资金流二次确认。",
-        ],
+        nextWatch: "出现局部摩擦或制裁升级，美元、黄金和能源链条短线获得防御买盘。",
         sourceName: "全球要闻",
         sourceUrl: "",
       },
@@ -82,16 +82,16 @@ const DAILY_EVENT_MOCK_REPORT = {
         category: "宏观经济",
         title: "美国通胀预期回落，但服务项粘性仍压住降息交易",
         fact: "通胀预期回落带动降息交易修复，但服务通胀和薪资韧性让市场不敢把宽松路径一次性定满。",
-        structure: [
-          "直接触发原因：通胀预期与利率期货重新指向更友好的政策窗口。",
-          "深层结构性矛盾：商品通胀降温快于服务项，居民薪资与企业定价仍在延缓政策转向。",
-          "声明与行动差异：市场提前交易降息，央行官员仍强调数据依赖，美元和美债没有完全同步松动。",
+        structure: {
+          trigger: "直接触发原因：通胀预期与利率期货重新指向更友好的政策窗口。",
+          conflict: "深层结构性矛盾：商品通胀降温快于服务项，居民薪资与企业定价仍在延缓政策转向。",
+          divergence: "声明与行动差异：市场提前交易降息，央行官员仍强调数据依赖，美元和美债没有完全同步松动。"
+        },
+        impacts: [
+          { asset: "纳指", direction: "up", logic: "宽松交易温和延续，成长股获得估值支撑。" },
+          { asset: "美元", direction: "down", logic: "降息预期重燃，美元指数面临下行压力。" }
         ],
-        transmission: [
-          "高概率情景：宽松交易温和延续，成长股和 BTC 获得估值支撑但波动仍高。",
-          "中概率情景：若美债拍卖或官员讲话偏鹰，美元反弹会压制风险资产弹性。",
-          "低概率情景：若数据连续确认降温，风险偏好扩散到小盘与高贝塔资产。",
-        ],
+        nextWatch: "美债拍卖或官员讲话偏鹰，美元反弹会压制风险资产弹性。",
         sourceName: "宏观日历",
         sourceUrl: "",
       },
@@ -99,16 +99,16 @@ const DAILY_EVENT_MOCK_REPORT = {
         category: "科技产业",
         title: "AI 资本开支与企业级 Agent 落地继续牵引科技权重",
         fact: "大型科技公司把 AI 功能从演示能力推进到云服务、办公流程和企业权限系统，市场继续给算力与软件链条定价。",
-        structure: [
-          "直接触发原因：云厂商与软件平台持续发布企业级 AI 工作流、数据连接和自动化执行能力。",
-          "深层结构性矛盾：资本开支仍在抬升，但收入兑现、客户留存和单位推理成本需要持续验证。",
-          "声明与行动差异：公司口径强调效率提升，投资者更关注订单、毛利率和真实付费转化。",
+        structure: {
+          trigger: "直接触发原因：云厂商与软件平台持续发布企业级 AI 工作流、数据连接和自动化执行能力。",
+          conflict: "深层结构性矛盾：资本开支仍在抬升，但收入兑现、客户留存和单位推理成本需要持续验证。",
+          divergence: "声明与行动差异：公司口径强调效率提升，投资者更关注订单、毛利率和真实付费转化。"
+        },
+        impacts: [
+          { asset: "AI链条", direction: "up", logic: "纳指权重继续获得叙事支撑，但指数广度不足会限制全面风险偏好。" },
+          { asset: "SaaS", direction: "shock", logic: "软件公司若客户案例和定价体系快速清晰，AI 叙事从概念热度转向收入验证。" }
         ],
-        transmission: [
-          "高概率情景：纳指权重继续获得叙事支撑，但指数广度不足会限制全面风险偏好。",
-          "中概率情景：若 CAPEX 上修伴随利润率压力，AI 链条内部会出现分化。",
-          "低概率情景：若客户案例和定价体系快速清晰，AI 叙事从概念热度转向收入验证。",
-        ],
+        nextWatch: "CAPEX 上修伴随利润率压力，AI 链条内部会出现分化。",
         sourceName: "科技产业",
         sourceUrl: "",
       },
@@ -322,8 +322,30 @@ function dailyTopStories(row) {
 }
 
 function renderDailyTopStory(story, idx = 0) {
-  const structure = (story.structure || []).map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
-  const transmission = (story.transmission || []).map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
+  let structureHtml = "";
+  if (Array.isArray(story.structure)) {
+    structureHtml = story.structure.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
+  } else if (story.structure && typeof story.structure === "object") {
+    structureHtml = [
+      story.structure.trigger ? `<span>${dailyEscapeHtml(story.structure.trigger)}</span>` : "",
+      story.structure.conflict ? `<span>${dailyEscapeHtml(story.structure.conflict)}</span>` : "",
+      story.structure.divergence ? `<span>${dailyEscapeHtml(story.structure.divergence)}</span>` : "",
+    ].join("");
+  }
+
+  let impactsHtml = "";
+  if (Array.isArray(story.impacts)) {
+    impactsHtml = story.impacts.map((imp) => {
+      const dirCls = imp.direction === "up" ? "up" : imp.direction === "down" ? "down" : "shock";
+      const dirLbl = imp.direction === "up" ? "利多" : imp.direction === "down" ? "利空" : "震荡";
+      return `<div class="daily-impact-row"><span class="daily-impact-badge ${dirCls}">[${dailyEscapeHtml(imp.asset || "资产")}] ${dirLbl}</span><span class="daily-impact-logic">${dailyEscapeHtml(imp.logic)}</span></div>`;
+    }).join("");
+  } else if (Array.isArray(story.transmission)) {
+    impactsHtml = story.transmission.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
+  }
+
+  const watchHtml = story.nextWatch ? `<div class="news-story-watch daily-story-contract-line"><b>后续观察</b><span>${dailyEscapeHtml(story.nextWatch)}</span></div>` : "";
+
   const sourceTag = story.sourceUrl
     ? `<a href="${dailyEscapeHtml(story.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(story.sourceName || "来源")}</a>`
     : story.sourceName
@@ -339,11 +361,12 @@ function renderDailyTopStory(story, idx = 0) {
         </div>
         <h3>${dailyEscapeHtml(story.title || "暂无头条")}</h3>
         <div class="news-story-watch daily-story-contract-line"><b>事实锁定</b><span>${dailyEscapeHtml(story.fact || "")}</span></div>
-        <div class="news-story-watch daily-story-contract-line"><b>结构拆解</b><div class="daily-column-lines">${structure}</div></div>
+        <div class="news-story-watch daily-story-contract-line"><b>结构拆解</b><div class="daily-column-lines">${structureHtml}</div></div>
         <div class="news-story-impact">
           <b>传导预判</b>
-          <div class="daily-column-lines">${transmission}</div>
+          <div class="daily-column-lines">${impactsHtml}</div>
         </div>
+        ${watchHtml}
       </div>
     </article>
   `;

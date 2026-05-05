@@ -19,7 +19,7 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.0";
+const WORKER_BUILD = "yuqing-worker/1.1.1";
 
 const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 const FINNHUB_ORIGIN = "https://finnhub.io";
@@ -813,6 +813,7 @@ function buildProAIPrompt(timeStr) {
 
 function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
   const mkData = realMarketData;
+  const bt = "```";
   return (
     "当前时间：" +
     timeStr +
@@ -834,52 +835,70 @@ function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
     mkData["黄金"].change +
     "%。\n" +
     "---\n\n" +
-    "请使用Google Search工具搜集最新资讯，并严格按照以下Markdown格式输出两个模块的正文。\n\n" +
-    "【输出要求】输出完毕“今日头条”模块后，必须输出一个单独的行 `===SPLIT===` 作为分隔符，然后再输出“动态速览”的内容。不要输出额外的前言解释。\n\n" +
-    "## 今日头条\n\n" +
+    "请使用Google Search工具搜集最新资讯，并严格按照以下 JSON 格式输出，不要带有前缀和解释，请仅输出一个 JSON 块：\n\n" +
+    "【结构要求】\n" +
+    "输出必须包含三个字段：topStories（头条事件，必须3条）、dynamicBriefs（动态速览，必须5条）、macroTrend（宏观趋势总结）。\n\n" +
+    "## 1. topStories (今日头条)\n" +
     "执行双轨搜索：\n" +
     "一轨（72小时热点）：过去72小时内影响最大的宏观/科技/地缘事件。\n" +
     "二轨（一周时间重量级）：若过去一周内存在重量级程度明显碾压所有72小时新闻的事件（标准：千亿级以上市值公司战略级发布、国家级政策转向、系统性金融风险、头部科技公司年度大会、地缘政治危机），优先纳入并标注[持续追踪]。\n\n" +
     "【条数判断规则】今日头条固定输出3条高价值事件。若多个事件属于同一宏观背景，也要拆成不同的资产传导维度；若事实不足，选择最新72小时内可验证性更高的事件补足，不要输出脚手架解释。\n\n" +
-    "每条头条按以下结构严格输出（请确保每个区块之间有一个空行）：\n\n" +
-    "### [事件类别] 事件核心标题\n\n" +
-    "**【事实锁定】**\n" +
-    "一句话说明事件时间、人物、动作和影响（段落内不要有换行）。\n\n" +
-    "**【结构拆解】**\n" +
-    "- **直接触发原因**：简述表面诱因。\n" +
-    "- **深层结构性矛盾**：简述深层矛盾。\n" +
-    "- **声明与行动的差异**：交叉对比各方的官方声明与其实际行动。\n\n" +
-    "**【传导预判】**\n" +
-    "- **高概率情景**：预判传导结果。\n" +
-    "- **中概率情景**：预判传导结果。\n" +
-    "- **低概率情景**：预判传导结果。\n\n" +
-    "===SPLIT===\n\n" +
-    "## 动态速览\n\n" +
+    "对于每一个头条对象，包含以下字段：\n" +
+    '- "category"：事件类别，如 [地缘政治] / [宏观经济] / [科技产业] / [加密市场] / [企业动态] / [政策监管]\n' +
+    '- "title"：事件核心标题\n' +
+    '- "fact"：一句话说明事件时间、人物、动作和影响\n' +
+    '- "structure"：包含三个字段的对象：\n' +
+    '  - "trigger"：简述表面诱因\n' +
+    '  - "conflict"：简述深层矛盾\n' +
+    '  - "divergence"：交叉对比各方的官方声明与其实际行动\n' +
+    '- "impacts"：受影响资产数组（通常1-3个），每个对象包含：\n' +
+    '  - "asset"：资产名称（如 "BTC", "纳指", "美元", "黄金" 等）\n' +
+    '  - "direction"：利多/利空/震荡（必须是 "up", "down", 或 "shock" 之一）\n' +
+    '  - "logic"：传导逻辑预判（一句话说明为什么）\n' +
+    '- "nextWatch"：一句话说明后续观察什么数据或事件节点\n\n' +
+    "## 2. dynamicBriefs (动态速览)\n" +
     "**【第一步：强制搜索】** 执行双轨检索：\n" +
     "- 24小时轨：Google News国际头条、X/Twitter热搜话题、TechCrunch/华尔街日报科技财经版。至少获取8条候选。\n" +
     "- 72小时重量级轨：若存在过去24-72小时内发生的重量级事件（资产冲击力评分预估≥8分），允许纳入候选池并标注[持续追踪]。\n\n" +
-    "**【第二步：内部评分（禁止跳过）】** 对每条候选新闻按以下权重打分1-10：\n" +
-    "- 资产价格潜在冲击力（权重50%）：该事件是否会在48小时内影响股价/汇率/大宗商品/加密资产？影响量级越大分越高。注意：宏观经济类和加密类事件，必须优先检索监管机构披露文件、央行官方声明原文，而非大众财经媒体的二手解读。\n" +
-    "- 社交热度与讨论激增（权重30%）：X平台、主流媒体的当前讨论密度和增速\n" +
-    "- 信息时效性（权重20%）：超过18小时的旧闻若非持续演变型事件，得分降半。但若某事件资产冲击力得分≥8，时效性扣分上限封顶20%，不得因时效性被直接淘汰。\n\n" +
-    "**【第三步：去重与验真（禁止跳过）】**\n" +
-    "- 同一宏观背景下的多条新闻仅保留综合分最高的一条\n" +
-    "- 地缘政治类事件：必须交叉验证对立各方的官方声明与其实际行动之间的差异，若只有一方声明而无法核实对立方行动，须在输出中注明\n" +
-    "- 每条必须有可验证的来源，严禁使用训练数据中的陈旧案例\n\n" +
-    "**【第四步：按类型输出5条，每条格式如下】**\n\n" +
-    "先判断每条新闻属于哪个类别：[地缘政治] / [宏观经济] / [科技产业] / [加密市场] / [企业动态] / [政策监管]\n\n" +
-    "输出格式（注意：在“### [类别] 事件标题”之后，必须保证不包含任何Markdown子标题符号，全部使用加粗文本作为重点）：\n" +
-    "### [类别] 事件标题\n" +
-    "**事件**：2-3句说明具体发生了什么。（然后紧接着本行继续输出）" +
-    "（根据类别，套用以下对应的专属分析框架，用加粗替代标题，且必须保持在同一行内）：\n\n" +
-    "若类别=地缘政治：**博弈方与核心利益**：各方官方声明 vs 实际行动的差异是什么 | **升级/降级信号**：...\n" +
-    "若类别=宏观经济：**已定价的内容**：... | **市场尚未定价的风险**：剥离叙事后，基本面与资金面是否存在背离？背离程度如何？\n" +
-    "若类别=科技产业：**产业链影响范围**：... | **资本逻辑**：这是范式转移还是均值回归噪音？给出判断依据。\n" +
-    "若类别=加密市场：**链上数据信号**：优先检索链上数据与监管披露文件，而非媒体报道 | **叙事与资金面背离**：当前叙事与实际资金流向是否一致？\n" +
-    "若类别=企业动态：**决策背后动机**：... | **竞对反应预测**：...\n" +
-    "若类别=政策监管：**明文说了什么**：... | **字里行间的信号**：与过去6-12个月的政策节奏相比有何变化？\n\n" +
-    "所有类别最后必须紧跟着加在上一行末尾：**简单分析**：用一句话说明事件可能影响、升级信号与降温信号；不要出现「48-72h」等窗口标签，搜索范围已限定最新72小时。严禁换行。\n\n" +
-    "5条新闻输出完毕后，附一段独立的**宏观趋势总结**：概括这5条新闻共同指向的近期宏观结构性变化。"
+    "**【第二步：去重与打分】** 对候选新闻评估资产价格潜在冲击力、社交热度和时效性，挑选出5条。\n\n" +
+    "对于每一个速览对象，包含以下字段：\n" +
+    '- "category"：类别\n' +
+    '- "title"：事件标题\n' +
+    '- "body"：一句话说明具体发生了什么\n' +
+    '- "description"：补充主体、动作和影响\n' +
+    '- "analysis"：说明可能影响与后续验证信号，不出现具体时间窗口标签\n\n' +
+    "## 3. macroTrend (宏观趋势总结)\n" +
+    "一段话概括上述新闻共同指向的近期宏观结构性变化。\n\n" +
+    bt + "json\n" +
+    "{\n" +
+    '  "topStories": [\n' +
+    "    {\n" +
+    '      "category": "...",\n' +
+    '      "title": "...",\n' +
+    '      "fact": "...",\n' +
+    '      "structure": {\n' +
+    '        "trigger": "...",\n' +
+    '        "conflict": "...",\n' +
+    '        "divergence": "..."\n' +
+    "      },\n" +
+    '      "impacts": [\n' +
+    '        { "asset": "...", "direction": "up", "logic": "..." }\n' +
+    "      ],\n" +
+    '      "nextWatch": "..."\n' +
+    "    }\n" +
+    "  ],\n" +
+    '  "dynamicBriefs": [\n' +
+    "    {\n" +
+    '      "category": "...",\n' +
+    '      "title": "...",\n' +
+    '      "body": "...",\n' +
+    '      "description": "...",\n' +
+    '      "analysis": "..."\n' +
+    "    }\n" +
+    "  ],\n" +
+    '  "macroTrend": "..."\n' +
+    "}\n" +
+    bt + "\n"
   );
 }
 
@@ -911,6 +930,7 @@ function buildProTrendsPrompt(newsText, timelineText, aiText, flashDataJsonText)
 /** 今日头条/动态速览：以 D1 事实池为主，不默认调用搜索。 */
 function buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData, groundedFactsMarkdown) {
   const mkData = realMarketData;
+  const bt = "```";
   const facts =
     String(groundedFactsMarkdown || "").trim() ||
     "(事实池当前为空或过少：请仅依据下方资产数字做保守归纳，不得捏造具体媒体或链接。)";
@@ -938,26 +958,65 @@ function buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData,
     "\n" +
     facts +
     "\n---\n\n" +
-    "请在**不编造未出现在事实池中的外链或通讯社名称**的前提下，按要求输出两个模块，格式与旧版一致。\n" +
+    "请在**不编造未出现在事实池中的外链或通讯社名称**的前提下，按要求输出 JSON。\n" +
     "若事实池信息不足，请显著降低结论强度，但不要输出脚手架解释或面向开发者的说明。\n\n" +
-    "【输出要求】输出完毕“今日头条”模块后，必须输出一个单独的行 `===SPLIT===` 作为分隔符，然后再输出“动态速览”的内容。不要输出额外的前言解释。\n\n" +
-    "## 今日头条\n\n" +
+    "【结构要求】\n" +
+    "严格输出一个 JSON 块，包含三个字段：topStories（头条事件，必须3条）、dynamicBriefs（动态速览，至多5条）、macroTrend（宏观趋势总结）。\n\n" +
+    "## 1. topStories (今日头条)\n" +
     "从事实池中挑选 3 条对跨资产定价影响最大的高价值事件；每条须能在事实池中找到对应标题或来源支撑，且尽量覆盖不同资产传导维度。\n\n" +
-    "### [事件类别] 事件核心标题\n\n" +
-    "**【事实锁定】**\n" +
-    "一句话说明时间、主体、动作与影响（勿添加事实池没有的细节）。\n\n" +
-    "**【结构拆解】**\n" +
-    "- **直接触发原因**\n" +
-    "- **深层结构性矛盾**\n" +
-    "- **声明与行动的差异**（若事实池无对证信息则写「事实池未提供对证材料」）\n\n" +
-    "**【传导预判】**\n" +
-    "- **高/中/低概率情景**各一行。\n\n" +
-    "===SPLIT===\n\n" +
-    "## 动态速览\n\n" +
-    "从事实池中再选至多 5 条 secondary 事件（可与头条同源主题但粒度不同），每条只写事件、描述、简单分析:\n" +
-    "### [类别] 标题\n" +
-    "**事件**：一句话说明发生了什么。**描述**：补充主体、动作和影响。**简单分析**：说明可能影响与后续验证信号，不出现具体时间窗口标签。\n\n" +
-    "最后附一段 **宏观趋势总结**：必须显式写明「主要由事实池中哪些类型的条目驱动」。"
+    "对于每一个头条对象，包含以下字段：\n" +
+    '- "category"：事件类别\n' +
+    '- "title"：事件核心标题\n' +
+    '- "fact"：一句话说明时间、主体、动作与影响（勿添加事实池没有的细节）\n' +
+    '- "structure"：包含三个字段的对象：\n' +
+    '  - "trigger"：直接触发原因\n' +
+    '  - "conflict"：深层结构性矛盾\n' +
+    '  - "divergence"：声明与行动的差异（若无对证信息则写「事实池未提供对证材料」）\n' +
+    '- "impacts"：受影响资产数组，每个对象包含：\n' +
+    '  - "asset"：资产名称（如 "BTC", "纳指" 等）\n' +
+    '  - "direction"：利多/利空/震荡（必须是 "up", "down", 或 "shock" 之一）\n' +
+    '  - "logic"：传导逻辑预判\n' +
+    '- "nextWatch"：后续观察什么数据或事件节点\n\n' +
+    "## 2. dynamicBriefs (动态速览)\n" +
+    "从事实池中再选至多 5 条 secondary 事件（可与头条同源主题但粒度不同）。\n" +
+    "包含字段：\n" +
+    '- "category"：类别\n' +
+    '- "title"：标题\n' +
+    '- "body"：一句话说明发生了什么\n' +
+    '- "description"：补充主体、动作和影响\n' +
+    '- "analysis"：说明可能影响与后续验证信号\n\n' +
+    "## 3. macroTrend (宏观趋势总结)\n" +
+    "概括事实池驱动的近期宏观结构性变化，必须显式写明「主要由事实池中哪些类型的条目驱动」。\n\n" +
+    bt + "json\n" +
+    "{\n" +
+    '  "topStories": [\n' +
+    "    {\n" +
+    '      "category": "...",\n' +
+    '      "title": "...",\n' +
+    '      "fact": "...",\n' +
+    '      "structure": {\n' +
+    '        "trigger": "...",\n' +
+    '        "conflict": "...",\n' +
+    '        "divergence": "..."\n' +
+    "      },\n" +
+    '      "impacts": [\n' +
+    '        { "asset": "...", "direction": "up", "logic": "..." }\n' +
+    "      ],\n" +
+    '      "nextWatch": "..."\n' +
+    "    }\n" +
+    "  ],\n" +
+    '  "dynamicBriefs": [\n' +
+    "    {\n" +
+    '      "category": "...",\n' +
+    '      "title": "...",\n' +
+    '      "body": "...",\n' +
+    '      "description": "...",\n' +
+    '      "analysis": "..."\n' +
+    "    }\n" +
+    "  ],\n" +
+    '  "macroTrend": "..."\n' +
+    "}\n" +
+    bt + "\n"
   );
 }
 
@@ -1272,17 +1331,31 @@ async function buildReport(env, bodyIn) {
             : buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData, factsMdMacro);
           const model = proseModel(env, mode);
           const combined = await geminiGenerateContent(env, model, prompt, { googleSearch: macroUseSearch });
-          const split = parseNewsSplit(combined);
-          newsMd = split.news;
-          timelineMd = split.timeline;
+          const inner = extractJsonFence(combined);
+          const parsed = JSON.parse(inner);
+          
+          newsMd = JSON.stringify(parsed.topStories || []);
+          timelineMd = JSON.stringify(parsed.dynamicBriefs || []);
+          const macroTrend = parsed.macroTrend || "";
+
           if (modules.news) {
-            sections.news = { markdown: newsMd, items: [], status: newsMd ? "ready" : "error", message: null };
+            sections.news = {
+              data: {
+                topStories: parsed.topStories || [],
+                dynamicBriefs: parsed.dynamicBriefs || [],
+                macroTrend: macroTrend
+              },
+              markdown: "",
+              items: [],
+              status: "ready",
+              message: null
+            };
           } else sections.news = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
           if (modules.timeline) {
             sections.timeline = {
-              markdown: timelineMd,
+              markdown: "",
               items: [],
-              status: timelineMd ? "ready" : "error",
+              status: "ready",
               message: null,
             };
           } else sections.timeline = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
@@ -1424,16 +1497,15 @@ function dailyStoryFromFact(primary) {
     category: primary.category || "综合事件",
     title: primary.title || "未命名事件",
     fact: itemSummary(primary),
-    structure: [
-      `来源：${primary.source || primary.sourceType || "事实池"}`,
-      primary.url ? "已保留原文链接，适合继续核对。" : "事实池未提供可跳转原文，需降低置信度。",
-      "继续关注官方口径、市场价格与资金流是否同向确认。",
+    structure: {
+      trigger: `来源：${primary.source || primary.sourceType || "事实池"}`,
+      conflict: primary.url ? "已保留原文链接，适合继续核对。" : "事实池未提供可跳转原文，需降低置信度。",
+      divergence: "继续关注官方口径、市场价格与资金流是否同向确认。"
+    },
+    impacts: [
+      { asset: "BTC", direction: "shock", logic: "事件影响被纳入现有定价，相关资产维持震荡消化。" }
     ],
-    transmission: [
-      "高概率情景：事件影响被纳入现有定价，相关资产维持震荡消化。",
-      "中概率情景：若出现新的官方确认或数据冲击，主题资产短线重新定价。",
-      "低概率情景：后续缺少新增事实，事件权重回落为背景变量。",
-    ],
+    nextWatch: "若出现新的官方确认或数据冲击，主题资产短线重新定价。",
     sourceName: primary.source || primary.sourceType || "Yuqing D1",
     sourceUrl: primary.url || "",
   };
@@ -1449,8 +1521,15 @@ function dailyTopStoriesFromFacts(rows) {
       category: "综合事件",
       title: "等待高价值事件更新",
       fact: "当前事实池尚未形成足够明确的跨资产事件主线。",
-      structure: ["优先等待官方来源、金融日历和主流新闻源补充。"],
-      transmission: ["高概率情景：市场继续由行情与资金流主导。"],
+      structure: {
+        trigger: "优先等待官方来源、金融日历和主流新闻源补充。",
+        conflict: "无",
+        divergence: "无"
+      },
+      impacts: [
+        { asset: "BTC", direction: "shock", logic: "市场继续由行情与资金流主导。" }
+      ],
+      nextWatch: "关注增量信息。",
       sourceName: "Yuqing D1",
       sourceUrl: "",
     });
@@ -1576,14 +1655,27 @@ async function buildDailyEventReport(env, opts) {
     { type: "route", label: "舆情分析", href: "#/news-analysis", route: "news-analysis" },
   ];
   const sources = uniqueSourceRows(factRows);
-  const topStories = dailyTopStoriesFromFacts(nonAiFacts);
+  
+  let topStories = dailyTopStoriesFromFacts(nonAiFacts);
+  let dynamicBriefs = dailyBriefsFromFacts(nonAiFacts);
+  
+  if (legacy && legacy.sections && legacy.sections.news && legacy.sections.news.data) {
+    const data = legacy.sections.news.data;
+    if (Array.isArray(data.topStories) && data.topStories.length > 0) {
+      topStories = data.topStories;
+    }
+    if (Array.isArray(data.dynamicBriefs) && data.dynamicBriefs.length > 0) {
+      dynamicBriefs = data.dynamicBriefs;
+    }
+  }
+  
   const report = {
     title: "事件日报",
     subtitle: "日常新闻早午晚报",
     marketTemperature: marketTemperatureFromSources(agg.sources, dashboard),
     topStory: topStories[0],
     topStories,
-    dynamicBriefs: dailyBriefsFromFacts(nonAiFacts),
+    dynamicBriefs,
     aiIntel: dailyAiIntelFromFacts(aiFacts),
     trendRead: trendReadFromDailyInputs(legacy, factRows.length),
     sources,

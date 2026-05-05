@@ -5674,6 +5674,41 @@ html[data-theme="dark"] .theme-option--active {
 /* ================================================================
    Page: 舆情总览 · 情报日报 Mock Preview
    ================================================================ */
+/* ============== 事件一览：Daily Impact 行与 Badge ============== */
+.daily-impact-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+}
+.daily-impact-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+.daily-impact-badge.up {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+}
+.daily-impact-badge.down {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 15%, transparent);
+}
+.daily-impact-badge.shock {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 15%, transparent);
+}
+.daily-impact-logic {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
 .news-intel-shell {
   display: flex;
   flex-direction: column;
