@@ -1,0 +1,27 @@
+{
+  "name": "bit-trading-desk",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm run verify:all",
+    "lint": "node scripts/check-syntax.cjs",
+    "test": "node scripts/verify-indicator-math.cjs && npm run verify:market-snapshot && npm run verify:footprint",
+    "verify:chart-snapshot": "npm run verify:market-snapshot",
+    "verify:market-snapshot": "node scripts/verify-market-snapshot-program.cjs && node scripts/verify-market-snapshot-worker.cjs",
+    "diagnose": "node scripts/diagnose-klines.cjs",
+    "verify:footprint": "node scripts/verify-footprint-aggregation.cjs && node scripts/verify-footprint-worker.cjs && node scripts/verify-liquidation-radar.cjs && node scripts/verify-heatmap-pressure-matrix.cjs",
+    "verify:heatmap": "node scripts/verify-liquidation-radar.cjs && node scripts/verify-heatmap-pressure-matrix.cjs && npm run verify:market-snapshot",
+    "verify:derivatives": "node scripts/verify-derivatives-worker.cjs && npm run verify:market-snapshot",
+    "verify:yuqing": "node scripts/verify-yuqing-reports.cjs",
+    "diagnose:derivatives": "node scripts/diagnose-derivatives-sync.cjs",
+    "verify:api": "node scripts/smoke-api.cjs",
+    "verify:all": "npm run lint && npm test && npm run verify:api && npm run verify:derivatives && npm run verify:yuqing && npm run verify:fib",
+    "verify:fib": "node scripts/verify-fibonacci-stats.cjs",
+    "diff:summary": "node scripts/diff-summary.cjs",
+    "prune:pages": "node scripts/prune-pages-deployments.cjs",
+    "deploy:pages": "npx wrangler pages deploy . --project-name=bit-trading-desk --commit-dirty=true && node scripts/prune-pages-deployments.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}

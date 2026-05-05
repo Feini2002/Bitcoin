@@ -1,0 +1,21 @@
+name = "market-snapshot"
+main = "market-snapshot-worker.js"
+compatibility_date = "2024-12-01"
+workers_dev = true
+
+# Dedicated D1 for generated market monitoring snapshots.
+# Replace database_id after:
+#   npx wrangler d1 create bitdesk_snapshots
+[[d1_databases]]
+binding = "SNAPSHOT_DB"
+database_name = "bitdesk_snapshots"
+database_id = "ab01fdd7-1e48-46de-a0e1-0a5013470361"
+
+# Read-only source binding for the existing btc market data D1.
+[[d1_databases]]
+binding = "BTC_DB"
+database_name = "btc"
+database_id = "de758bb8-c7f5-41c7-a6ea-32c0ddf74d57"
+
+# Secret required for write routes:
+#   npx wrangler secret put SNAPSHOT_WRITE_TOKEN --config="快照程序分析/wrangler.snapshot.toml"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "BitDesk Harness Workflow"
+  short_description: "BitDesk 开发验证闭环与 Codex 工作流"
+  default_prompt: "Use $bitdesk-harness-workflow to modify BitDesk code with the right validation, browser checks, and diff summary."

@@ -1,0 +1,2187 @@
+/**
+ * Cloudflare Worker：舆情日报（yuqing.feiniwork.com）
+ *
+ * - 聚合非 LLM：FNG、CoinGecko BTC、Finnhub 批量 ETF/股票报价
+ * - 后端编排日报：由原 ribao-cloudflare/index.html 迁移的 Prompt 与分析流程
+ * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini；密钥仅存 Worker Secret
+ *
+ * 兼容旧 api.feiniwork.com 的路径：/finnhub-bulk、/finnhub/*（建议使用 /api/yuqing/*）
+ */
+
+import {
+  d1Bound,
+  filterAiFactsFromNewsItems,
+  formatFactsMarkdown,
+  ingestFactPool,
+  loadHistoryStats,
+  loadItemsPage,
+  loadRecentItems,
+  pruneOldItems,
+} from "./yuqing-facts.js";
+
+const WORKER_BUILD = "yuqing-worker/1.1.0";
+
+const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
+const FINNHUB_ORIGIN = "https://finnhub.io";
+const ALT_FNG = "https://api.alternative.me/fng/";
+const COINGECKO_BTC = "https://api.coingecko.com/api/v3/simple/price";
+
+const FETCH_TIMEOUT_SOURCES_MS = 12_000;
+const FETCH_TIMEOUT_LLM_MS = 118_000;
+const REPORT_RETENTION_DAYS = 7;
+const DAILY_EVENT_KIND = "daily_event";
+const SENTIMENT_ANALYSIS_KIND = "sentiment_analysis";
+const DAILY_EVENT_SLOTS_BJT = new Set(["00:00", "08:00", "12:00", "20:00"]);
+const SENTIMENT_ANALYSIS_SLOTS_BJT = new Set(["09:00", "14:00", "22:00"]);
+const DEFAULT_MARKET_API_BASE = "https://btc.feiniwork.com";
+
+/** 设为 true（环境变量字符串 "1"|"true"）时全线 503（用于紧急下线） */
+function maintenanceEnabled(env) {
+  const raw = env && env.MAINTENANCE_MODE != null ? String(env.MAINTENANCE_MODE).trim().toLowerCase() : "";
+  return raw === "1" || raw === "true";
+}
+
+function corsHeaders(extra = {}) {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Expose-Headers": "X-Worker-Build, X-Yuqing-Worker",
+    ...extra,
+  };
+}
+
+function json(body, status = 200, extraHeaders = {}) {
+  const headers = {
+    ...corsHeaders(extraHeaders.headers || {}),
+    "Content-Type": "application/json; charset=utf-8",
+    "X-Worker-Build": WORKER_BUILD,
+    "X-Yuqing-Worker": "1",
+    ...extraHeaders,
+  };
+  return new Response(JSON.stringify(body), { status, headers });
+}
+
+async function fetchWithTimeout(url, opts, timeoutMs = FETCH_TIMEOUT_SOURCES_MS) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...(opts || {}), signal: ctrl.signal });
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
+function pad2(n) {
+  return String(Number(n) || 0).padStart(2, "0");
+}
+
+function bjtParts(input) {
+  const d = input instanceof Date ? input : new Date(input || Date.now());
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const m = {};
+  for (const p of parts) {
+    if (p.type !== "literal") m[p.type] = p.value;
+  }
+  return {
+    year: String(m.year || "1970"),
+    month: String(m.month || "01"),
+    day: String(m.day || "01"),
+    hour: String(m.hour || "00"),
+    minute: String(m.minute || "00"),
+    second: String(m.second || "00"),
+  };
+}
+
+function bjtDateKey(input) {
+  const p = bjtParts(input);
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+function bjtTimeKey(input) {
+  const p = bjtParts(input);
+  return `${p.hour}:${p.minute}`;
+}
+
+function bjtSlotLabel(kind, input) {
+  const t = bjtTimeKey(input);
+  if (kind === DAILY_EVENT_KIND && DAILY_EVENT_SLOTS_BJT.has(t)) return t.slice(0, 2);
+  if (kind === SENTIMENT_ANALYSIS_KIND && SENTIMENT_ANALYSIS_SLOTS_BJT.has(t)) return t.slice(0, 2);
+  return `manual-${t}`;
+}
+
+function scheduledKindsForDate(input) {
+  const t = bjtTimeKey(input);
+  const out = [];
+  if (DAILY_EVENT_SLOTS_BJT.has(t)) out.push({ kind: DAILY_EVENT_KIND, slot: t.slice(0, 2) });
+  if (SENTIMENT_ANALYSIS_SLOTS_BJT.has(t)) out.push({ kind: SENTIMENT_ANALYSIS_KIND, slot: t.slice(0, 2) });
+  return out;
+}
+
+function normalizeReportKind(raw) {
+  const s = String(raw || "").trim().toLowerCase();
+  if (s === DAILY_EVENT_KIND || s === "daily" || s === "event" || s === "events") return DAILY_EVENT_KIND;
+  return SENTIMENT_ANALYSIS_KIND;
+}
+
+function normalizeTriggerType(raw) {
+  const s = String(raw || "").trim().toLowerCase();
+  if (s === "scheduled" || s === "dependency") return s;
+  return "manual";
+}
+
+function safeJsonParse(text, fallback) {
+  if (text == null || text === "") return fallback;
+  try {
+    return JSON.parse(String(text));
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function safeJsonStringify(value, fallback) {
+  try {
+    return JSON.stringify(value == null ? fallback : value);
+  } catch (_) {
+    return JSON.stringify(fallback);
+  }
+}
+
+function reportId(kind, generatedAt) {
+  const stamp = String(generatedAt || new Date().toISOString()).replace(/[^0-9TZ]/g, "").slice(0, 16);
+  let suffix = "";
+  try {
+    suffix = crypto.randomUUID().slice(0, 8);
+  } catch (_) {
+    suffix = Math.random().toString(36).slice(2, 10);
+  }
+  return `${kind}:${stamp}:${suffix}`;
+}
+
+function decodeReportRow(row) {
+  if (!row) return null;
+  const grounding = safeJsonParse(row.grounding_json || row.groundingJson, {});
+  const report = safeJsonParse(row.report_json || row.reportJson, {});
+  return {
+    id: String(row.id || ""),
+    kind: String(row.kind || ""),
+    reportDate: String(row.report_date || row.reportDate || ""),
+    slot: String(row.slot || ""),
+    triggerType: String(row.trigger_type || row.triggerType || ""),
+    generatedAt: String(row.generated_at || row.generatedAt || ""),
+    status: String(row.status || "ready"),
+    sourceRefs: safeJsonParse(row.source_refs_json || row.sourceRefsJson, []),
+    grounding,
+    marketSnapshot: safeJsonParse(row.market_snapshot_json || row.marketSnapshotJson, {}),
+    report,
+    quality: report && report.quality ? report.quality : grounding && grounding.quality ? grounding.quality : {},
+    sourceErrors: safeJsonParse(row.source_errors_json || row.sourceErrorsJson, []),
+  };
+}
+
+async function insertYuqingReport(db, payload) {
+  await db
+    .prepare(
+      `INSERT OR REPLACE INTO yuqing_reports
+       (id, kind, report_date, slot, trigger_type, generated_at, status, source_refs_json, grounding_json, market_snapshot_json, report_json, source_errors_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      payload.id,
+      payload.kind,
+      payload.reportDate,
+      payload.slot,
+      payload.triggerType,
+      payload.generatedAt,
+      payload.status || "ready",
+      safeJsonStringify(payload.sourceRefs, []),
+      safeJsonStringify(payload.grounding, {}),
+      safeJsonStringify(payload.marketSnapshot, {}),
+      safeJsonStringify(payload.report, {}),
+      safeJsonStringify(payload.sourceErrors, []),
+    )
+    .run();
+}
+
+async function loadLatestYuqingReport(db, kind) {
+  const row = await db
+    .prepare(`SELECT * FROM yuqing_reports WHERE kind = ? ORDER BY generated_at DESC LIMIT 1`)
+    .bind(kind)
+    .first();
+  return decodeReportRow(row);
+}
+
+async function loadYuqingReportById(db, id) {
+  const row = await db.prepare(`SELECT * FROM yuqing_reports WHERE id = ? LIMIT 1`).bind(String(id || "")).first();
+  return decodeReportRow(row);
+}
+
+async function loadYuqingReportHistory(db, kind, days) {
+  const d = Math.min(30, Math.max(1, Number(days) || REPORT_RETENTION_DAYS));
+  const cutoff = new Date(Date.now() - d * 86400000).toISOString();
+  const res = await db
+    .prepare(`SELECT * FROM yuqing_reports WHERE kind = ? AND generated_at >= ? ORDER BY generated_at DESC LIMIT 80`)
+    .bind(kind, cutoff)
+    .all();
+  return ((res && res.results) || []).map(decodeReportRow).filter(Boolean);
+}
+
+async function pruneYuqingReports(db, days = REPORT_RETENTION_DAYS) {
+  const cutoff = new Date(Date.now() - days * 86400000).toISOString();
+  await db.prepare(`DELETE FROM yuqing_reports WHERE generated_at < ?`).bind(cutoff).run();
+}
+
+function reportListSummary(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    kind: row.kind,
+    reportDate: row.reportDate,
+    slot: row.slot,
+    triggerType: row.triggerType,
+    generatedAt: row.generatedAt,
+    status: row.status,
+    title: row.report && (row.report.title || row.report.headline || row.report.summaryTitle),
+    quality: row.report && row.report.quality ? row.report.quality : row.grounding && row.grounding.quality,
+  };
+}
+
+function sourceRefsFromFacts(items, max = 10) {
+  return (items || []).slice(0, max).map((it) => ({
+    type: "fact",
+    id: it.id || "",
+    label: it.title || it.source || "事实条目",
+    source: it.source || "",
+    category: it.category || "",
+    url: it.url || "",
+  }));
+}
+
+function uniqueSourceRows(items) {
+  const map = new Map();
+  for (const it of items || []) {
+    const key = String(it.source || it.sourceType || "Unknown");
+    const cur = map.get(key) || {
+      name: key,
+      type: it.sourceType || it.category || "fact_pool",
+      reliability: Number(it.confidence || 0) >= 0.75 ? "高" : Number(it.confidence || 0) >= 0.55 ? "中高" : "中",
+      count: 0,
+      url: it.url || "",
+    };
+    cur.count += 1;
+    if (!cur.url && it.url) cur.url = it.url;
+    map.set(key, cur);
+  }
+  return [...map.values()].slice(0, 8);
+}
+
+function itemDateLabel(ts) {
+  const n = Number(ts);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return new Date(n).toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" });
+}
+
+function itemSummary(it, fallback = "事实池未提供摘要，需结合来源标题保守阅读。") {
+  return String((it && (it.summary || it.title)) || fallback).slice(0, 260);
+}
+
+function marketScoreFromSources(sources) {
+  const fng = sources && sources.fng && sources.fng.ok ? Number(sources.fng.value) : 50;
+  return Math.max(0, Math.min(100, Number.isFinite(fng) ? fng : 50));
+}
+
+function marketTemperatureFromSources(sources, dashboard) {
+  const score = marketScoreFromSources(sources);
+  const label =
+    dashboard && dashboard.marketRegime
+      ? String(dashboard.marketRegime)
+      : score >= 70
+        ? "信息温度偏热"
+        : score <= 35
+          ? "信息温度偏冷"
+          : "信息温度中性";
+  const summary =
+    dashboard && dashboard.sentimentSummary
+      ? String(dashboard.sentimentSummary)
+      : "仅作为阅读时的市场背景温度，详细交易影响交给舆情分析页处理。";
+  return { score, label, summary };
+}
+
+function marketApiBase(env) {
+  const raw = env && env.BIT_DATA_API_BASE ? String(env.BIT_DATA_API_BASE) : DEFAULT_MARKET_API_BASE;
+  return raw.replace(/\/$/, "");
+}
+
+async function fetchJsonOptional(url, timeoutMs = 12_000) {
+  try {
+    const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } }, timeoutMs);
+    const text = await res.text();
+    const data = text ? safeJsonParse(text, null) : null;
+    if (!res.ok) return { ok: false, status: res.status, error: data && (data.error || data.message) ? String(data.error || data.message) : text.slice(0, 180) };
+    return { ok: true, status: res.status, data };
+  } catch (e) {
+    return { ok: false, status: 0, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+function compactMarketEndpoint(key, result) {
+  if (!result || !result.ok) return result;
+  const data = result.data || {};
+  if (key === "klines") {
+    const rows = Array.isArray(data.klines) ? data.klines : [];
+    const first = rows[0] || null;
+    const last = rows.length ? rows[rows.length - 1] : null;
+    const firstClose = first && first.c != null ? Number(first.c) : null;
+    const lastClose = last && last.c != null ? Number(last.c) : null;
+    const changePct =
+      firstClose && lastClose && Number.isFinite(firstClose) && Number.isFinite(lastClose)
+        ? Number((((lastClose - firstClose) / firstClose) * 100).toFixed(4))
+        : null;
+    return {
+      url: result.url,
+      ok: true,
+      status: result.status,
+      data: {
+        symbol: data.symbol,
+        interval: data.interval,
+        count: data.count || rows.length,
+        latestT: data.latestT || (last && last.t) || null,
+        lastSync: data.lastSync || null,
+        firstClose,
+        lastClose,
+        changePct,
+      },
+    };
+  }
+  if (key === "liquidations") {
+    const rows = Array.isArray(data.rows) ? data.rows : Array.isArray(data.buckets) ? data.buckets : [];
+    const totalLong = rows.reduce((sum, r) => sum + (Number(r.long_notional || r.longNotional) || 0), 0);
+    const totalShort = rows.reduce((sum, r) => sum + (Number(r.short_notional || r.shortNotional) || 0), 0);
+    return {
+      url: result.url,
+      ok: true,
+      status: result.status,
+      data: {
+        symbol: data.symbol || "BTCUSDT",
+        range: data.range || "30d",
+        count: data.count || rows.length,
+        latestEventAt: data.latestEventAt || data.freshness?.latestEventAt || null,
+        totalLongNotional: Number(totalLong.toFixed(2)),
+        totalShortNotional: Number(totalShort.toFixed(2)),
+        collector: data.collector
+          ? {
+              status: data.collector.status,
+              latestEventAt: data.collector.latestEventAt,
+              latestEventAgeMs: data.collector.latestEventAgeMs,
+            }
+          : null,
+      },
+    };
+  }
+  if (key === "derivatives") {
+    return {
+      url: result.url,
+      ok: true,
+      status: result.status,
+      data: {
+        symbol: data.symbol,
+        range: data.range,
+        generatedAt: data.generatedAt,
+        dataFreshness: data.dataFreshness || null,
+        analysisMatrix: data.analysisMatrix || null,
+        sourceHealthSummary: data.sourceHealthSummary || null,
+      },
+    };
+  }
+  if (key === "derivativesSnapshot") {
+    return {
+      url: result.url,
+      ok: true,
+      status: result.status,
+      data: {
+        scope: data.scope,
+        generatedAt: data.generatedAt,
+        snapshotVersion: data.snapshotVersion,
+        profile: data.profile,
+        summary: data.summary || data.llmSummary || null,
+        matrix: data.matrix || data.analysisMatrix || null,
+        dataFreshness: data.dataFreshness || null,
+      },
+    };
+  }
+  return result;
+}
+
+async function fetchMarketContext(env) {
+  const base = marketApiBase(env);
+  const endpoints = {
+    klines: `${base}/api/d1/klines?symbol=BTCUSDT&interval=1h&limit=96&sync=0`,
+    derivatives: `${base}/api/d1/derivatives?symbol=BTCUSDT&range=30d&sync=0`,
+    liquidations: `${base}/api/d1/liquidations?symbol=BTCUSDT&range=30d&includeActive=1`,
+    derivativesSnapshot: `${base}/api/ai/derivatives-snapshot?profile=brief`,
+  };
+  const entries = await Promise.all(
+    Object.entries(endpoints).map(async ([key, url]) => [key, compactMarketEndpoint(key, { url, ...(await fetchJsonOptional(url, 15_000)) })]),
+  );
+  const byKey = Object.fromEntries(entries);
+  const errors = Object.entries(byKey)
+    .filter(([, v]) => !v.ok)
+    .map(([key, v]) => ({ source: key, message: v.error || `HTTP ${v.status}` }));
+  return {
+    ok: errors.length === 0,
+    base,
+    generatedAt: new Date().toISOString(),
+    endpoints,
+    data: byKey,
+    errors,
+  };
+}
+
+function shouldUseIncrementalSearch(input) {
+  const reasons = [];
+  const factCount = Number(input && input.factCount) || 0;
+  const dailyAgeMs = Number(input && input.dailyAgeMs) || 0;
+  const marketErrors = Array.isArray(input && input.marketErrors) ? input.marketErrors : [];
+  if (!input || !input.dailyReport) reasons.push("事件日报缺失");
+  if (dailyAgeMs > 15 * 3600 * 1000) reasons.push("上游日报超过 15 小时");
+  if (factCount < 18) reasons.push("事实池条目不足");
+  if (marketErrors.length) reasons.push("市场快照存在缺口");
+  if (input && input.forceSearch) reasons.push("用户强制增量搜索");
+  return { useSearch: reasons.length > 0, reasons };
+}
+
+const RL_WINDOW_MS = 60 * 1000;
+
+async function checkRateLimit(request, tier, limit) {
+  const ip =
+    request.headers.get("CF-Connecting-IP") ||
+    request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() ||
+    "unknown";
+  const cacheKeyUrl = `https://yuqing-rl-internal/${tier}/${ip}`;
+  const now = Date.now();
+  try {
+    const cached = await caches.default.match(cacheKeyUrl);
+    let win = { start: now, count: 1 };
+    if (cached) {
+      const data = await cached.json();
+      if (now - data.start <= RL_WINDOW_MS) {
+        if (data.count >= limit) {
+          return json(
+            { ok: false, error: `请求过于频繁（${tier}），请稍后重试。` },
+            429,
+          );
+        }
+        win = { start: data.start, count: data.count + 1 };
+      }
+    }
+    await caches.default.put(
+      cacheKeyUrl,
+      new Response(JSON.stringify(win), { headers: { "Cache-Control": "max-age=60" } }),
+    );
+  } catch (_) {}
+  return null;
+}
+
+/** ---- 数据源 ---- */
+
+function fngLabel(v) {
+  const n = Number(v) || 0;
+  if (n <= 24) return "极度恐慌";
+  if (n <= 44) return "恐慌";
+  if (n <= 55) return "中性";
+  if (n <= 75) return "贪婪";
+  return "极度贪婪";
+}
+
+async function fetchFng() {
+  const url = ALT_FNG + "?limit=1&format=json";
+  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`FNG HTTP ${res.status}`);
+  const j = await res.json();
+  const item = j && Array.isArray(j.data) ? j.data[0] : null;
+  if (!item) throw new Error("FNG empty");
+  const value = parseInt(item.value, 10);
+  return {
+    ok: true,
+    value,
+    label: fngLabel(value),
+    updatedAt: new Date().toISOString(),
+    rawClassification: item.value_classification || null,
+  };
+}
+
+async function fetchBtcUsd() {
+  const url =
+    COINGECKO_BTC + "?ids=bitcoin&vs_currencies=usd&include_24hr_change=true";
+  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`CoinGecko BTC HTTP ${res.status}`);
+  const j = await res.json();
+  const b = j && j.bitcoin;
+  if (!b) throw new Error("CoinGecko BTC empty");
+  const priceUsd = Number(b.usd);
+  const ch = b.usd_24h_change;
+  const changePct =
+    ch != null && Number.isFinite(Number(ch)) ? Number(Number(ch).toFixed(4)) : null;
+  return {
+    ok: true,
+    priceUsd: Number.isFinite(priceUsd) ? Number(priceUsd.toFixed(4)) : null,
+    change24hPct: changePct,
+    source: "coingecko",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/** Yahoo Chart 为非官方数据源，仅作 CoinGecko 失败时的回填。 */
+async function fetchBtcUsdYahoo() {
+  const url =
+    "https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?interval=1d&range=5d";
+  const res = await fetchWithTimeout(url, {
+    headers: { Accept: "application/json", "User-Agent": "yuqing-worker/1.1 (+cf)" },
+  });
+  if (!res.ok) throw new Error(`Yahoo BTC HTTP ${res.status}`);
+  const j = await res.json();
+  const r = j && j.chart && j.chart.result && j.chart.result[0];
+  const meta = r && r.meta;
+  if (!meta || meta.regularMarketPrice == null) throw new Error("Yahoo BTC empty meta");
+  const priceUsd = Number(meta.regularMarketPrice);
+  const prev = meta.chartPreviousClose != null ? Number(meta.chartPreviousClose) : null;
+  let changePct =
+    prev != null && Number.isFinite(prev) && prev !== 0 ? ((priceUsd - prev) / prev) * 100 : null;
+  if (changePct != null && Number.isFinite(changePct)) changePct = Number(changePct.toFixed(4));
+  return {
+    ok: true,
+    priceUsd: Number.isFinite(priceUsd) ? Number(priceUsd.toFixed(4)) : null,
+    change24hPct: changePct,
+    source: "yahoo",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+async function fetchFinnhubBulkQuotes(env, symbols) {
+  const token = env && env.FINNHUB_API_KEY;
+  if (!token) throw new Error("FINNHUB_API_KEY 未配置");
+  const uniq = [...new Set(symbols.map(String))].filter(Boolean);
+  const tasks = uniq.map(async (sym) => {
+    const url = `${FINNHUB_ORIGIN}/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${encodeURIComponent(token)}`;
+    try {
+      const r = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
+      const j = await r.json().catch(() => null);
+      if (!r.ok) return [sym, { ok: false, error: String((j && j.error) || r.status), symbol: sym }];
+      return [
+        sym,
+        {
+          ok: true,
+          symbol: sym,
+          price: j && j.c != null ? Number(Number(j.c).toFixed(4)) : null,
+          changePct: j && j.dp != null ? Number(Number(j.dp).toFixed(4)) : null,
+        },
+      ];
+    } catch (e) {
+      return [sym, { ok: false, error: String(e && e.message ? e.message : e), symbol: sym }];
+    }
+  });
+  const entries = await Promise.all(tasks);
+  return Object.fromEntries(entries);
+}
+
+const ASSET_ROWS = [
+  { name: "纳指", symbol: "QQQ" },
+  { name: "标普500", symbol: "SPY" },
+  { name: "英伟达", symbol: "NVDA" },
+  { name: "黄金", symbol: "GLD" },
+];
+
+function buildRealMarketData(finnhubQuotes, btc) {
+  const mk = {};
+  for (const row of ASSET_ROWS) {
+    const q = finnhubQuotes[row.symbol];
+    const ch =
+      q && q.ok && q.changePct != null ? String(q.changePct) : typeof q?.changePct === "number" ? String(q.changePct) : "0";
+    mk[row.name] = { change: ch, price: q && q.ok && q.price != null ? String(q.price) : "0" };
+  }
+  const btcChange =
+    btc && btc.ok && btc.change24hPct != null
+      ? String(Number(btc.change24hPct).toFixed(4))
+      : "0";
+  const btcPrice =
+    btc && btc.ok && btc.priceUsd != null ? String(btc.priceUsd) : "0";
+  mk["比特币"] = { change: btcChange, price: btcPrice };
+  return mk;
+}
+
+async function aggregateSources(env) {
+  const errors = [];
+  let fng = { ok: false, value: null, label: "", updatedAt: null, error: null };
+  try {
+    fng = { ...(await fetchFng()), error: null };
+  } catch (e) {
+    fng.ok = false;
+    fng.error = String(e && e.message ? e.message : e);
+    errors.push({ source: "fng", message: fng.error });
+    fng = { ok: false, value: null, label: "", updatedAt: null, error: fng.error };
+  }
+
+  let btcCgErr = null;
+  let btc = { ok: false, priceUsd: null, change24hPct: null, source: "coingecko", error: null };
+  try {
+    btc = { ...(await fetchBtcUsd()), error: null };
+  } catch (e) {
+    btcCgErr = String(e && e.message ? e.message : e);
+    btc = { ok: false, priceUsd: null, change24hPct: null, source: "coingecko", error: btcCgErr };
+  }
+  if (!btc.ok || btc.priceUsd == null) {
+    try {
+      const y = await fetchBtcUsdYahoo();
+      btc = { ...y, error: null };
+      if (btcCgErr) {
+        errors.push({ source: "btc", message: `CoinGecko：${btcCgErr}（已降级 Yahoo Chart，非官方）` });
+      }
+    } catch (eY) {
+      const yMsg = String(eY && eY.message ? eY.message : eY);
+      if (btcCgErr) errors.push({ source: "btc", message: `CoinGecko：${btcCgErr}；Yahoo：${yMsg}` });
+      else errors.push({ source: "btc", message: yMsg });
+      btc = { ok: false, priceUsd: null, change24hPct: null, source: "coingecko", error: yMsg };
+    }
+  }
+
+  const assetSymbols = ASSET_ROWS.map((r) => r.symbol);
+  let finQuotes = {};
+  try {
+    finQuotes = await fetchFinnhubBulkQuotes(env, assetSymbols);
+  } catch (e) {
+    const msg = String(e && e.message ? e.message : e);
+    errors.push({ source: "finnhub", message: msg });
+    for (const s of assetSymbols) finQuotes[s] = { ok: false, error: msg, symbol: s };
+  }
+
+  const assets = [];
+  for (const row of ASSET_ROWS) {
+    const q = finQuotes[row.symbol] || {};
+    assets.push({
+      name: row.name,
+      symbol: row.symbol,
+      price: q.ok ? q.price : null,
+      changePct: q.ok ? q.changePct : null,
+      source: "finnhub",
+      ok: !!q.ok,
+      error: q.ok ? undefined : q.error || "quote missing",
+    });
+  }
+  if (btc && btc.ok && btc.priceUsd != null) {
+    assets.push({
+      name: "比特币",
+      symbol: "BTC",
+      price: btc.priceUsd,
+      changePct: btc.change24hPct,
+      source: btc.source === "yahoo" ? "yahoo" : "coingecko",
+      ok: true,
+    });
+  }
+
+  const mkData = buildRealMarketData(finQuotes, btc);
+  return {
+    sources: {
+      fng,
+      btc,
+      assets,
+      errors,
+    },
+    realMarketData: mkData,
+  };
+}
+
+/** ---- Prompts（由原 ribao-cloudflare/index.html 迁入） ---- */
+
+function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
+  const bt = "```";
+  const mkData = realMarketData;
+  return (
+    "当前时间：" +
+    timeStr +
+    "。\n" +
+    "今日恐慌贪婪指数：" +
+    fngScore +
+    "（" +
+    fngClass +
+    "）。\n\n" +
+    "【真实行情数据（以下数字已确认，无需猜测）】\n" +
+    "- 纳斯达克100 ETF(QQQ) 24H涨跌：" +
+    mkData["纳指"].change +
+    "%\n" +
+    "- 标普500 ETF(SPY) 24H涨跌：" +
+    mkData["标普500"].change +
+    "%\n" +
+    "- 英伟达(NVDA) 24H涨跌：" +
+    mkData["英伟达"].change +
+    "%\n" +
+    "- 比特币(BTC) 24H涨跌：" +
+    mkData["比特币"].change +
+    "%\n" +
+    "- 黄金ETF(GLD) 24H涨跌：" +
+    mkData["黄金"].change +
+    "%\n\n" +
+    "---\n\n" +
+    "请基于以上数据，输出以下JSON块（仅供代码解析，前后不要有任何说明文字）：\n\n" +
+    bt +
+    "json\n" +
+    "{\n" +
+    '  "sentiment_summary": "结合恐慌指数与涨跌幅，一句话描述今日市场整体情绪状态（20字内）",\n' +
+    '  "market_regime": "今日风险偏好状态，从以下选一并输出中文：追逐风险 / 回避风险 / 结构分化 / 防御轮动",\n' +
+    '  "key_assets": [\n' +
+    "    {\n" +
+    '      "name": "纳指",\n' +
+    '      "change": ' +
+    mkData["纳指"].change +
+    ",\n" +
+    '      "catalyst": "【新闻催化】直接驱动本次涨跌的具体事件或数据（一句话，30字内）",\n' +
+    '      "structure": "【结构判断】这个涨跌是强化还是打破原有趋势？机构资金方向有何信号？（一句话，35字内）"\n' +
+    "    },\n" +
+    "    {\n" +
+    '      "name": "标普500",\n' +
+    '      "change": ' +
+    mkData["标普500"].change +
+    ",\n" +
+    '      "catalyst": "直接驱动事件（30字内）",\n' +
+    '      "structure": "趋势结构与机构信号（35字内）"\n' +
+    "    },\n" +
+    "    {\n" +
+    '      "name": "英伟达",\n' +
+    '      "change": ' +
+    mkData["英伟达"].change +
+    ",\n" +
+    '      "catalyst": "直接驱动事件（30字内）",\n' +
+    '      "structure": "趋势结构与机构信号（35字内）"\n' +
+    "    },\n" +
+    "    {\n" +
+    '      "name": "比特币",\n' +
+    '      "change": ' +
+    mkData["比特币"].change +
+    ",\n" +
+    '      "catalyst": "直接驱动事件（30字内）",\n' +
+    '      "structure": "趋势结构与机构信号（35字内）"\n' +
+    "    },\n" +
+    "    {\n" +
+    '      "name": "黄金",\n' +
+    '      "change": ' +
+    mkData["黄金"].change +
+    ",\n" +
+    '      "catalyst": "直接驱动事件（30字内）",\n' +
+    '      "structure": "趋势结构与机构信号（35字内）"\n' +
+    "    }\n" +
+    "  ],\n" +
+    '  "cross_asset": "跨资产关联解读：综合以上5个资产的涨跌组合，当前整体风险偏好是什么？资金在不同资产间如何流动？有无异常的资产背离信号？（60字内）",\n' +
+    '  "anomaly_alert": "定价背离/异动预警：指出哪个资产表现出了不合理的Alpha异动，揭示定价逻辑的断裂（例如黄金脱离实际利率锚定），并简述其潜在含义。若无明显异动，输出「无明显背离」。（50字内）",\n' +
+    '  "action_suggestion": "跨资产关联建议：针对当前的定价异动或整体资产关联状态，给小白投资者明确的操作或关注建议（例如建议观望、留意XX风险、减仓XX资产），并说明理由。（40字内）"\n' +
+    "}\n" +
+    bt +
+    "\n"
+  );
+}
+
+function buildProAIPrompt(timeStr) {
+  return (
+    "当前时间：" +
+    timeStr +
+    "。\n" +
+    "请使用Google Search工具搜集最新资讯，并直接按照以下Markdown格式输出，不要带有前缀和解释：\n\n" +
+    "【你的受众定位】阅读这份报告的人是一个会使用AI工具、关注AI行业动向的普通用户，而不是技术极客。他最感兴趣的是：头部AI公司又发布了什么新东西、这个新东西对他的日常工作和生活有什么实际用处。技术底层细节不是重点，「我能用它做什么」才是重点。\n\n" +
+    "【搜索规则——严格执行】\n" +
+    "第一优先级（必须检索）：请注意，今天是 " +
+    timeStr +
+    "。你必须只检索和总结在这个具体时间节点过去72小时内发生的事情。任何在此之前发布的模型（如早期的 GPT-5 预热或旧版 Claude）严禁纳入。以下头部AI公司是否有真正的【最新】动作：Anthropic(Claude)、OpenAI(ChatGPT/GPT系列)、Google(Gemini/NotebookLM等)、Meta(Llama系列)、xAI(Grok)、Mistral、苹果AI功能、微软Copilot。只要有任何一家有动作，必须纳入报告。\n" +
+    "第二优先级（有则检索）：过去72小时内，已经被广泛讨论的热门AI工具（如OpenClaw、Cursor、Perplexity等）有无新版本、新功能、新的实际用法被社区发现并讨论。禁止重复介绍这些工具「是什么」——只报告新增量：更新了什么、社区发现了什么新玩法、有人用它做出了什么有意思的事情。若某工具72小时内无任何新增量，本期不提。\n" +
+    "第三优先级（酌情检索）：过去72小时内，是否出现了一个对普通用户有实际使用价值的全新AI工具或功能（不需要编程基础即可上手的优先）。\n" +
+    "【拒答机制】：如果过去72小时没有满足条件的重磅新闻，请直接输出「近72小时暂无改变行业的重大AI发布」，宁缺毋滥，严禁拿几个月前的旧闻充数。\n\n" +
+    "【输出格式】筛选出3-5条展示，不能少于3条（除非真的没有重磅新闻），按以下格式严格输出（请确保每个区块之间至少有一个空行）：\n\n" +
+    "### [公司名/工具名] 核心变化一句话总结\n\n" +
+    "**发布日期**：请明确写出该新闻的准确发布日期（如 2026年3月20日），以便核实。\n\n" +
+    "**新了什么**：用一句话说清楚这次更新/发布的核心变化是什么。避免堆砌参数，直接说用户感知得到的差异。\n\n" +
+    "**对我有什么用**：这个更新对一个普通用户的日常工作（写作、信息整理、自动化办公、学习研究）有什么具体的新用法？给出1-2个可以直接上手的场景举例。\n\n" +
+    "**值得关注的程度**：高（改变使用习惯级别）/ 中（有用但不紧迫）/ 低（了解即可）\n\n" +
+    "全部内容输出后，附一段独立的**AI工具近期方向总结**：用普通人能理解的语言，概括这段时间AI工具的演进方向是什么，接下来哪类工具可能对普通用户的工作方式产生实质影响。"
+  );
+}
+
+function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
+  const mkData = realMarketData;
+  return (
+    "当前时间：" +
+    timeStr +
+    "。\n" +
+    "今日恐慌贪婪指数：" +
+    fngScore +
+    "（" +
+    fngClass +
+    "）。\n" +
+    "主要资产24H涨跌：纳指 " +
+    mkData["纳指"].change +
+    "%，标普500 " +
+    mkData["标普500"].change +
+    "%，英伟达 " +
+    mkData["英伟达"].change +
+    "%，比特币 " +
+    mkData["比特币"].change +
+    "%，黄金 " +
+    mkData["黄金"].change +
+    "%。\n" +
+    "---\n\n" +
+    "请使用Google Search工具搜集最新资讯，并严格按照以下Markdown格式输出两个模块的正文。\n\n" +
+    "【输出要求】输出完毕“今日头条”模块后，必须输出一个单独的行 `===SPLIT===` 作为分隔符，然后再输出“动态速览”的内容。不要输出额外的前言解释。\n\n" +
+    "## 今日头条\n\n" +
+    "执行双轨搜索：\n" +
+    "一轨（72小时热点）：过去72小时内影响最大的宏观/科技/地缘事件。\n" +
+    "二轨（一周时间重量级）：若过去一周内存在重量级程度明显碾压所有72小时新闻的事件（标准：千亿级以上市值公司战略级发布、国家级政策转向、系统性金融风险、头部科技公司年度大会、地缘政治危机），优先纳入并标注[持续追踪]。\n\n" +
+    "【条数判断规则】若搜索时段内同时存在多个重量级事件，且互不属于同一宏观背景的独立事件，可扩展至最多3条——但必须在心里先问自己：这些事件是真正独立的，还是同一宏观力量的不同表现？若是后者，合并为1条处理。如果没有重量级事件，则输出1条头条。\n\n" +
+    "每条头条按以下结构严格输出（请确保每个区块之间有一个空行）：\n\n" +
+    "### [事件类别] 事件核心标题\n\n" +
+    "**【事实锁定】**\n" +
+    "一句话说明事件时间、人物、动作和影响（段落内不要有换行）。\n\n" +
+    "**【结构拆解】**\n" +
+    "- **直接触发原因**：简述表面诱因。\n" +
+    "- **深层结构性矛盾**：简述深层矛盾。\n" +
+    "- **声明与行动的差异**：交叉对比各方的官方声明与其实际行动。\n\n" +
+    "**【传导预判】**\n" +
+    "- **高概率情景**：预判传导结果。\n" +
+    "- **中概率情景**：预判传导结果。\n" +
+    "- **低概率情景**：预判传导结果。\n\n" +
+    "===SPLIT===\n\n" +
+    "## 动态速览\n\n" +
+    "**【第一步：强制搜索】** 执行双轨检索：\n" +
+    "- 24小时轨：Google News国际头条、X/Twitter热搜话题、TechCrunch/华尔街日报科技财经版。至少获取8条候选。\n" +
+    "- 72小时重量级轨：若存在过去24-72小时内发生的重量级事件（资产冲击力评分预估≥8分），允许纳入候选池并标注[持续追踪]。\n\n" +
+    "**【第二步：内部评分（禁止跳过）】** 对每条候选新闻按以下权重打分1-10：\n" +
+    "- 资产价格潜在冲击力（权重50%）：该事件是否会在48小时内影响股价/汇率/大宗商品/加密资产？影响量级越大分越高。注意：宏观经济类和加密类事件，必须优先检索监管机构披露文件、央行官方声明原文，而非大众财经媒体的二手解读。\n" +
+    "- 社交热度与讨论激增（权重30%）：X平台、主流媒体的当前讨论密度和增速\n" +
+    "- 信息时效性（权重20%）：超过18小时的旧闻若非持续演变型事件，得分降半。但若某事件资产冲击力得分≥8，时效性扣分上限封顶20%，不得因时效性被直接淘汰。\n\n" +
+    "**【第三步：去重与验真（禁止跳过）】**\n" +
+    "- 同一宏观背景下的多条新闻仅保留综合分最高的一条\n" +
+    "- 地缘政治类事件：必须交叉验证对立各方的官方声明与其实际行动之间的差异，若只有一方声明而无法核实对立方行动，须在输出中注明\n" +
+    "- 每条必须有可验证的来源，严禁使用训练数据中的陈旧案例\n\n" +
+    "**【第四步：按类型输出5条，每条格式如下】**\n\n" +
+    "先判断每条新闻属于哪个类别：[地缘政治] / [宏观经济] / [科技产业] / [加密市场] / [企业动态] / [政策监管]\n\n" +
+    "输出格式（注意：在“### [类别] 事件标题”之后，必须保证不包含任何Markdown子标题符号，全部使用加粗文本作为重点）：\n" +
+    "### [类别] 事件标题\n" +
+    "**事件**：2-3句说明具体发生了什么。（然后紧接着本行继续输出）" +
+    "（根据类别，套用以下对应的专属分析框架，用加粗替代标题，且必须保持在同一行内）：\n\n" +
+    "若类别=地缘政治：**博弈方与核心利益**：各方官方声明 vs 实际行动的差异是什么 | **升级/降级信号**：...\n" +
+    "若类别=宏观经济：**已定价的内容**：... | **市场尚未定价的风险**：剥离叙事后，基本面与资金面是否存在背离？背离程度如何？\n" +
+    "若类别=科技产业：**产业链影响范围**：... | **资本逻辑**：这是范式转移还是均值回归噪音？给出判断依据。\n" +
+    "若类别=加密市场：**链上数据信号**：优先检索链上数据与监管披露文件，而非媒体报道 | **叙事与资金面背离**：当前叙事与实际资金流向是否一致？\n" +
+    "若类别=企业动态：**决策背后动机**：... | **竞对反应预测**：...\n" +
+    "若类别=政策监管：**明文说了什么**：... | **字里行间的信号**：与过去6-12个月的政策节奏相比有何变化？\n\n" +
+    "所有类别最后必须紧跟着加在上一行末尾：**⏰ 48-72h观察点**：接下来2-3天内，出现什么信号意味着这件事升级，出现什么信号意味着结束。严禁换行。\n\n" +
+    "5条新闻输出完毕后，附一段独立的**宏观趋势总结**：概括这5条新闻共同指向的近期宏观结构性变化。"
+  );
+}
+
+function buildProTrendsPrompt(newsText, timelineText, aiText, flashDataJsonText) {
+  const flashContext = flashDataJsonText
+    ? "\n【基础市场行情状态（供参考）】\n" + flashDataJsonText + "\n"
+    : "";
+  return (
+    "这是今日已生成的其他模块内容，请仔细阅读分析：" +
+    flashContext +
+    "\n【今日头条】\n" +
+    newsText +
+    "\n【动态速览】\n" +
+    timelineText +
+    "\n【AI情报站】\n" +
+    aiText +
+    "\n\n---\n基于以上全部内容，请直接输出以下三部分（不要带有前缀和解释，不需要额外搜索）：\n\n" +
+    "### 📶 正在强化的信号\n\n" +
+    "哪些趋势在过去24-72小时内得到了新的数据/事件确认，正在变得更加确定？评估时注意区分：这是真正的范式转移信号，还是短期均值回归噪音？（2-3条，每条必须独立成段，段落间留空行）\n\n" +
+    "### ⚡ 正在裂变的信号\n\n" +
+    "哪些此前普遍接受的判断，正在被新出现的数据或事件所挑战？重点关注叙事与资金面/基本面出现背离的领域。（1-2条，每条必须独立成段，无则明确说明「暂无明显裂变信号」）\n\n" +
+    "### 🎯 48-72h观察清单\n\n" +
+    "接下来2-3天内，有哪些具体事件、数据发布、或价格节点值得重点盯住？给出3-5个具体的观察项，格式必须是：\n\n" +
+    "- **事件/数据名称**：观察什么？若结果是X，意味着Y，市场将如何反应。若结果是Z，意味着W，市场将如何反应。\n\n" +
+    "（每一项作为列表的一项，步骤不可拆分换行）"
+  );
+}
+
+/** 今日头条/动态速览：以 D1 事实池为主，不默认调用搜索。 */
+function buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData, groundedFactsMarkdown) {
+  const mkData = realMarketData;
+  const facts =
+    String(groundedFactsMarkdown || "").trim() ||
+    "(事实池当前为空或过少：请仅依据下方资产数字做保守归纳，不得捏造具体媒体或链接。)";
+  return (
+    "当前时间：" +
+    timeStr +
+    "。\n" +
+    "今日恐慌贪婪指数：" +
+    fngScore +
+    "（" +
+    fngClass +
+    "）。\n" +
+    "主要资产24H涨跌：纳指 " +
+    mkData["纳指"].change +
+    "%，标普500 " +
+    mkData["标普500"].change +
+    "%，英伟达 " +
+    mkData["英伟达"].change +
+    "%，比特币 " +
+    mkData["比特币"].change +
+    "%，黄金 " +
+    mkData["黄金"].change +
+    "%。\n\n" +
+    "【系统已抓取事实池】以下条目来自 RSS/金融日历/新闻聚合网关，按时间倒序；不是你的训练记忆：" +
+    "\n" +
+    facts +
+    "\n---\n\n" +
+    "请在**不编造未出现在事实池中的外链或通讯社名称**的前提下，按要求输出两个模块，格式与旧版一致。\n" +
+    "若事实池信息不足，请在文首用一行说明「事实池不足，以下为弱置信归纳」，并显著降低结论强度。\n\n" +
+    "【输出要求】输出完毕“今日头条”模块后，必须输出一个单独的行 `===SPLIT===` 作为分隔符，然后再输出“动态速览”的内容。不要输出额外的前言解释。\n\n" +
+    "## 今日头条\n\n" +
+    "从事实池中挑选 1-3 条对跨资产定价影响最大的事件；每条须能在事实池中找到对应标题或来源支撑。\n\n" +
+    "### [事件类别] 事件核心标题\n\n" +
+    "**【事实锁定】**\n" +
+    "一句话说明时间、主体、动作与影响（勿添加事实池没有的细节）。\n\n" +
+    "**【结构拆解】**\n" +
+    "- **直接触发原因**\n" +
+    "- **深层结构性矛盾**\n" +
+    "- **声明与行动的差异**（若事实池无对证信息则写「事实池未提供对证材料」）\n\n" +
+    "**【传导预判】**\n" +
+    "- **高/中/低概率情景**各一行。\n\n" +
+    "===SPLIT===\n\n" +
+    "## 动态速览\n\n" +
+    "从事实池中再选至多 5 条 secondary 事件（可与头条同源主题但粒度不同），每条:\n" +
+    "### [类别] 标题\n" +
+    "**事件**：2-3 句。**⏰ 48-72h观察点**：一条，附于段末。\n\n" +
+    "最后附一段 **宏观趋势总结**：必须显式写明「主要由事实池中哪些类型的条目驱动」。"
+  );
+}
+
+/** AI 情报站：以事实池中 AI 标签/关键词命中项为主。 */
+function buildProAIGroundedPrompt(timeStr, aiFactsMarkdown) {
+  const block =
+    String(aiFactsMarkdown || "").trim() ||
+    "(事实池中暂无明确 AI 行业条目：请输出一段话说明「未发现高置信条目」，不要说具体产品发布时间。)";
+  return (
+    "当前时间：" +
+    timeStr +
+    "。\n\n" +
+    "【AI 情报事实池】\n" +
+    block +
+    "\n\n" +
+    "请根据上述条目整理 **AI / 云平台 / 大模型工具链** 动态，输出 Markdown。\n" +
+    "每条必须可追溯至事实池中的标题或来源名；若没有足够条目，宁可输出简短「本期事实池未发现足够 AI 硬核发布」。\n" +
+    "输出结构与旧版类似的 ### 小节 + **新了什么** / **对我有什么用**，但不要把训练记忆中的旧闻写进来。\n\n" +
+    "文末附 **AI 工具近期方向总结** 一段话，置信度必须与前面事实条目数量相称。"
+  );
+}
+
+/** ---- Gemini ---- */
+
+function getGeminiKey(env) {
+  return env && (env.GEMINI_API_KEY || env.GOOGLE_API_KEY) ? String(env.GEMINI_API_KEY || env.GOOGLE_API_KEY) : "";
+}
+
+function resolveProvider(env) {
+  const raw = env && env.YUQING_LLM_PROVIDER != null ? String(env.YUQING_LLM_PROVIDER).trim().toLowerCase() : "none";
+  if (!raw || raw === "none" || raw === "off" || raw === "disable") return "none";
+  if (raw === "gemini" || raw === "google") return "gemini";
+  return raw;
+}
+
+function flashModel(env) {
+  return env && env.YUQING_LLM_MODEL_FLASH ? String(env.YUQING_LLM_MODEL_FLASH) : "gemini-2.0-flash";
+}
+
+function proseModel(env, mode) {
+  const defFlash = flashModel(env);
+  const pro = env && env.YUQING_LLM_MODEL_PRO ? String(env.YUQING_LLM_MODEL_PRO) : "";
+  const isFast = String(mode || "").toLowerCase() === "fast";
+  if (isFast) return env && env.YUQING_LLM_MODEL_FAST_PROSE ? String(env.YUQING_LLM_MODEL_FAST_PROSE) : defFlash;
+  return pro || defFlash || "gemini-2.0-flash";
+}
+
+function trendsModel(env, mode) {
+  const t = env && env.YUQING_LLM_MODEL_TRENDS ? String(env.YUQING_LLM_MODEL_TRENDS) : "";
+  return t || proseModel(env, mode);
+}
+
+async function geminiGenerateContent(env, modelId, prompt, opts) {
+  const key = getGeminiKey(env);
+  if (!key) throw new Error("GEMINI_API_KEY / GOOGLE_API_KEY 未配置");
+
+  const useSearch = !!(opts && opts.googleSearch);
+
+  /** @type {any} */
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: opts && opts.temperature != null ? opts.temperature : useSearch ? 0.35 : 0.1,
+    },
+  };
+  if (useSearch) {
+    /** @see Google GenAI tools */
+    body.tools = [{ google_search: {} }];
+  }
+
+  const url =
+    GEMINI_ORIGIN +
+    `/v1beta/models/${encodeURIComponent(modelId)}:generateContent` +
+    `?key=` +
+    encodeURIComponent(key);
+
+  const res = await fetchWithTimeout(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  }, FETCH_TIMEOUT_LLM_MS);
+
+  const textRaw = await res.text();
+  /** @type {any} */
+  let j = null;
+  try {
+    j = textRaw ? JSON.parse(textRaw) : null;
+  } catch (_) {
+    j = null;
+  }
+
+  if (!res.ok) {
+    const apiErr =
+      j && j.error ? String(j.error.message || j.error.status || JSON.stringify(j.error)) : textRaw.slice(0, 200);
+    throw new Error(`Gemini HTTP ${res.status}: ${apiErr}`);
+  }
+
+  const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+  if (!Array.isArray(parts)) throw new Error("Gemini 返回无 candidates/parts");
+  let out = "";
+  for (const p of parts) {
+    if (p && p.text) out += p.text;
+  }
+  return out.trim();
+}
+
+function extractJsonFence(text) {
+  const m = String(text || "").match(/```json\s*([\s\S]*?)\s*```/);
+  if (!m) return String(text || "").trim();
+  return String(m[1] || "").trim();
+}
+
+/** ---- 兜底 dashboard（无 LLM） ---- */
+
+function fallbackDashboard(realMarketData, fngScore, fngClass) {
+  const mkData = realMarketData;
+  const keyAssets = [
+    { name: "纳指", change: mkData["纳指"].change, catalyst: "（占位）数据源已就绪；催化需启用 LLM 后生成。", structure: "结构性判断待 LLM 输出。" },
+    { name: "标普500", change: mkData["标普500"].change, catalyst: "（占位）", structure: "（占位）" },
+    { name: "英伟达", change: mkData["英伟达"].change, catalyst: "（占位）", structure: "（占位）" },
+    { name: "比特币", change: mkData["比特币"].change, catalyst: "（占位）", structure: "（占位）" },
+    { name: "黄金", change: mkData["黄金"].change, catalyst: "（占位）", structure: "（占位）" },
+  ];
+
+  let regime = "结构分化";
+  const q = Number(mkData["纳指"].change);
+  const b = Number(mkData["比特币"].change);
+  if (!Number.isNaN(q) && q > 0.5 && !Number.isNaN(b) && b > 0) regime = "追逐风险";
+  if (!Number.isNaN(q) && q < -0.8) regime = "回避风险";
+
+  return {
+    sentimentSummary: `${fngClass}（${fngScore}），风险情绪需结合数据源与后续 LLM 研判。（非投资决策）`,
+    marketRegime: regime,
+    keyAssets,
+    crossAsset:
+      "多资产涨跌组合已拉取；跨资产传导与背离解读请在 Cloudflare 配置 YUQING_LLM_PROVIDER=gemini 并填写密钥后由模型生成。",
+    anomalyAlert: "无明显背离",
+    actionSuggestion: "建议先观察数据与新闻模块输出，勿据此单独做出交易决策。",
+  };
+}
+
+function parseNewsSplit(combined) {
+  const s = String(combined || "");
+  const parts = s.split("===SPLIT===");
+  return {
+    news: (parts[0] || "").trim(),
+    timeline: (parts.length > 1 ? parts.slice(1).join("===SPLIT===") : "").trim(),
+  };
+}
+
+function sectionsDisabledStatus(message) {
+  return {
+    markdown: "",
+    items: [],
+    status: "disabled",
+    message: message || "LLM 未启用",
+  };
+}
+
+async function buildReport(env, bodyIn) {
+  const mode = String(bodyIn && bodyIn.mode ? bodyIn.mode : "deep").toLowerCase() === "fast" ? "fast" : "deep";
+  const modules = {
+    dashboard: true,
+    news: true,
+    timeline: true,
+    ai: true,
+    trends: true,
+    ...(bodyIn && bodyIn.modules && typeof bodyIn.modules === "object" ? bodyIn.modules : {}),
+  };
+
+  const force = !!(bodyIn && bodyIn.force);
+  const generatedAt = new Date().toISOString();
+  const timeStr = new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
+
+  const agg = await aggregateSources(env);
+  const { sources, realMarketData } = agg;
+
+  const fngScore = sources.fng && sources.fng.ok ? Number(sources.fng.value) : 50;
+  const fngClass =
+    sources.fng && sources.fng.ok && sources.fng.label
+      ? String(sources.fng.label)
+      : fngLabel(fngScore);
+
+  const provider = resolveProvider(env);
+  const llmEnabled = provider === "gemini" && !!getGeminiKey(env);
+  const llmStatus = {
+    provider,
+    enabled: llmEnabled,
+    capabilities: { search: false, stream: false },
+  };
+
+  const warnings = [];
+  warnings.push({
+    code: "notInvestmentAdvice",
+    text: "本日报含模型生成内容，仅供信息整理与内部研究，不构成投资建议。",
+  });
+
+  let factRows = [];
+  if (d1Bound(env)) {
+    try {
+      factRows = await loadRecentItems(env.YUQING_DB, 55);
+    } catch (e) {
+      warnings.push({ code: "d1_read", message: String(e && e.message ? e.message : e) });
+    }
+  }
+  const nonAiFacts = factRows.filter((r) => String(r.category || "").toUpperCase() !== "AI");
+  const factsMdMacro = formatFactsMarkdown(nonAiFacts, 42);
+  const aiFactRows = filterAiFactsFromNewsItems(factRows);
+  const factsMdAi = formatFactsMarkdown(aiFactRows, 28);
+  const groundingItemIds = factRows.slice(0, 48).map((r) => r.id);
+  let usedSearchNews = false;
+  let usedSearchAi = false;
+
+  let cacheHit = false;
+  const ttlSec = 600;
+
+  if (!force) {
+    const cacheUrl = new URL("https://yuqing-cache-internal/report");
+    cacheUrl.searchParams.set("m", mode);
+    cacheUrl.searchParams.set(
+      "v",
+      JSON.stringify({
+        dashboard: modules.dashboard,
+        news: modules.news,
+        timeline: modules.timeline,
+        ai: modules.ai,
+        trends: modules.trends,
+      }),
+    );
+    const hit = await caches.default.match(new Request(cacheUrl.toString()));
+    if (hit) {
+      const j = await hit.json().catch(() => null);
+      if (j && j.ok) {
+        cacheHit = true;
+        return {
+          ...j,
+          cache: { hit: true, ttlSec },
+          generatedAt,
+          workerBuild: WORKER_BUILD,
+        };
+      }
+    }
+  }
+
+  let dashboard = fallbackDashboard(realMarketData, fngScore, fngClass);
+  let flashDataJsonText = JSON.stringify(dashboard);
+  let newsMd = "";
+  let timelineMd = "";
+  let aiMd = "";
+  let trendsMd = "";
+
+  const sections = {
+    news: { markdown: "", items: [], status: "planned", message: null },
+    timeline: { markdown: "", items: [], status: "planned", message: null },
+    ai: { markdown: "", status: "planned", message: null },
+    trends: { markdown: "", status: "planned", message: null },
+  };
+
+  if (!llmEnabled) {
+    sections.news = sectionsDisabledStatus("请在 Worker 设置 YUQING_LLM_PROVIDER=gemini 并配置 GEMINI_API_KEY 或 GOOGLE_API_KEY。");
+    sections.timeline = sectionsDisabledStatus("同上。");
+    sections.ai = { markdown: "", status: "disabled", message: "LLM 未启用" };
+    sections.trends = { markdown: "", status: "disabled", message: "LLM 未启用" };
+  } else {
+    const tasks = [];
+
+    if (modules.dashboard) {
+      tasks.push(
+        (async () => {
+          try {
+            const prompt = buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData);
+            const model = flashModel(env);
+            const text = await geminiGenerateContent(env, model, prompt, { temperature: 0.1, googleSearch: false });
+            const inner = extractJsonFence(text);
+            const parsed = JSON.parse(inner);
+            dashboard = {
+              sentimentSummary: String(parsed.sentiment_summary || parsed.sentimentSummary || "").trim(),
+              marketRegime: String(parsed.market_regime || parsed.marketRegime || "").trim(),
+              keyAssets: Array.isArray(parsed.key_assets) ? parsed.key_assets : parsed.keyAssets || [],
+              crossAsset: String(parsed.cross_asset || parsed.crossAsset || "").trim(),
+              anomalyAlert: String(parsed.anomaly_alert || parsed.anomalyAlert || "").trim(),
+              actionSuggestion: String(parsed.action_suggestion || parsed.actionSuggestion || "").trim(),
+            };
+            flashDataJsonText = JSON.stringify(dashboard);
+          } catch (e) {
+            warnings.push({ code: "dashboardLlm", message: String(e && e.message ? e.message : e) });
+            dashboard = fallbackDashboard(realMarketData, fngScore, fngClass);
+            flashDataJsonText = JSON.stringify(dashboard);
+          }
+        })(),
+      );
+    }
+
+    await Promise.all(tasks);
+    tasks.length = 0;
+
+    const needMacro = modules.news || modules.timeline;
+    const needAi = modules.ai;
+
+    const allowSearchBody = !!(bodyIn && bodyIn.allowSearch);
+    const forceSearch = !!(bodyIn && bodyIn.forceSearch);
+    const envAlways = env && String(env.YUQING_LLM_ALWAYS_SEARCH || "") === "1";
+    const macroP =
+      needMacro &&
+      (async () => {
+        try {
+          const macroUseSearch =
+            forceSearch || envAlways || allowSearchBody || factsMdMacro.trim().length < 220;
+          usedSearchNews = macroUseSearch;
+          const prompt = macroUseSearch
+            ? buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData)
+            : buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData, factsMdMacro);
+          const model = proseModel(env, mode);
+          const combined = await geminiGenerateContent(env, model, prompt, { googleSearch: macroUseSearch });
+          const split = parseNewsSplit(combined);
+          newsMd = split.news;
+          timelineMd = split.timeline;
+          if (modules.news) {
+            sections.news = { markdown: newsMd, items: [], status: newsMd ? "ready" : "error", message: null };
+          } else sections.news = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
+          if (modules.timeline) {
+            sections.timeline = {
+              markdown: timelineMd,
+              items: [],
+              status: timelineMd ? "ready" : "error",
+              message: null,
+            };
+          } else sections.timeline = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
+        } catch (e) {
+          const msg = String(e && e.message ? e.message : e);
+          warnings.push({ code: "macroLlm", message: msg });
+          if (modules.news) sections.news = { markdown: "", items: [], status: "error", message: msg };
+          if (modules.timeline) sections.timeline = { markdown: "", items: [], status: "error", message: msg };
+        }
+      })();
+
+    const aiP =
+      needAi &&
+      (async () => {
+        try {
+          const aiUseSearch =
+            forceSearch || envAlways || allowSearchBody || factsMdAi.trim().length < 140;
+          usedSearchAi = aiUseSearch;
+          const prompt = aiUseSearch ? buildProAIPrompt(timeStr) : buildProAIGroundedPrompt(timeStr, factsMdAi);
+          const model = proseModel(env, mode);
+          aiMd = await geminiGenerateContent(env, model, prompt, { googleSearch: aiUseSearch });
+          sections.ai = { markdown: aiMd, status: aiMd ? "ready" : "error", message: null };
+        } catch (e) {
+          const msg = String(e && e.message ? e.message : e);
+          warnings.push({ code: "aiLlm", message: msg });
+          sections.ai = { markdown: "", status: "error", message: msg };
+        }
+      })();
+
+    await Promise.all([macroP || Promise.resolve(), aiP || Promise.resolve()]);
+
+    if (modules.trends) {
+      try {
+        const prompt = buildProTrendsPrompt(newsMd, timelineMd, aiMd, flashDataJsonText);
+        const model = trendsModel(env, mode);
+        trendsMd = await geminiGenerateContent(env, model, prompt, { googleSearch: false, temperature: 0.35 });
+        sections.trends = { markdown: trendsMd, status: trendsMd ? "ready" : "error", message: null };
+      } catch (e) {
+        const msg = String(e && e.message ? e.message : e);
+        warnings.push({ code: "trendsLlm", message: msg });
+        sections.trends = { markdown: "", status: "error", message: msg };
+      }
+    } else {
+      sections.trends = { markdown: "", status: "planned", message: "模块已关闭" };
+    }
+
+    if (!needMacro) {
+      sections.news = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
+      sections.timeline = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
+    }
+    if (!needAi) {
+      sections.ai = { markdown: "", status: "planned", message: "模块已关闭" };
+    }
+    llmStatus.capabilities.search = !!(usedSearchNews || usedSearchAi);
+  }
+
+  const out = {
+    ok: true,
+    workerBuild: WORKER_BUILD,
+    generatedAt,
+    mode,
+    cache: { hit: cacheHit, ttlSec },
+    d1Ready: d1Bound(env),
+    grounding: {
+      factCount: factRows.length,
+      itemIdsSample: groundingItemIds,
+      usedSearch: { news: usedSearchNews, ai: usedSearchAi },
+    },
+    sources: {
+      fng: sources.fng,
+      btc: sources.btc,
+      assets: sources.assets,
+      errors: sources.errors,
+    },
+    llmStatus,
+    dashboard: {
+      sentimentSummary: dashboard.sentimentSummary,
+      marketRegime: dashboard.marketRegime,
+      keyAssets: dashboard.keyAssets,
+      crossAsset: dashboard.crossAsset,
+      anomalyAlert: dashboard.anomalyAlert,
+      actionSuggestion: dashboard.actionSuggestion,
+    },
+    sections,
+    warnings,
+  };
+
+  if (d1Bound(env)) {
+    try {
+      await env.YUQING_DB.prepare(
+        `INSERT INTO yuqing_report_runs (generated_at, run_type, mode, grounding_json, report_json) VALUES (?, ?, ?, ?, ?)`,
+      )
+        .bind(
+          generatedAt,
+          "on_demand",
+          mode,
+          JSON.stringify(out.grounding),
+          JSON.stringify({ dashboard: out.dashboard, sections: out.sections, llmStatus: out.llmStatus }),
+        )
+        .run();
+    } catch (_) {}
+  }
+
+  if (!force) {
+    try {
+      const cacheUrl = new URL("https://yuqing-cache-internal/report");
+      cacheUrl.searchParams.set("m", mode);
+      cacheUrl.searchParams.set(
+        "v",
+        JSON.stringify({
+          dashboard: modules.dashboard,
+          news: modules.news,
+          timeline: modules.timeline,
+          ai: modules.ai,
+          trends: modules.trends,
+        }),
+      );
+      await caches.default.put(
+        new Request(cacheUrl.toString()),
+        new Response(JSON.stringify(out), {
+          headers: { "Cache-Control": `max-age=${ttlSec}` },
+        }),
+      );
+    } catch (_) {}
+  }
+
+  return out;
+}
+
+async function loadFactsBundle(env, limit = 70) {
+  const factRows = d1Bound(env) ? await loadRecentItems(env.YUQING_DB, limit).catch(() => []) : [];
+  const nonAiFacts = factRows.filter((r) => String(r.category || "").toUpperCase() !== "AI");
+  const aiFacts = filterAiFactsFromNewsItems(factRows);
+  return { factRows, nonAiFacts, aiFacts };
+}
+
+function dailyTopStoryFromFacts(rows) {
+  const primary = rows && rows.length ? rows[0] : null;
+  if (!primary) {
+    return {
+      category: "信息底座",
+      title: "本轮事实池暂无高置信新闻",
+      fact: "云端事实池暂未提供足够新闻条目，本页仅保留市场温度与来源状态。",
+      structure: ["等待下一次自动日报或手动扫描补充事实。"],
+      transmission: ["高概率情景：继续以市场监测页的客观数据作为主要参考。"],
+      sourceName: "Yuqing D1",
+      sourceUrl: "",
+    };
+  }
+  return {
+    category: primary.category || "综合事件",
+    title: primary.title || "未命名事件",
+    fact: itemSummary(primary),
+    structure: [
+      `来源：${primary.source || primary.sourceType || "事实池"}`,
+      primary.url ? "已保留原文链接，适合继续核对。" : "事实池未提供可跳转原文，需降低置信度。",
+      "事件一览只做信息底座，不直接给交易结论。",
+    ],
+    transmission: [
+      "若事件持续发酵，交给舆情分析页结合行情与衍生品做二次研判。",
+      "若后续缺少新事实或官方来源确认，按低权重背景信息处理。",
+    ],
+    sourceName: primary.source || primary.sourceType || "Yuqing D1",
+    sourceUrl: primary.url || "",
+  };
+}
+
+function dailyBriefsFromFacts(rows) {
+  const out = [];
+  for (const it of (rows || []).slice(1, 7)) {
+    out.push({
+      category: it.category || "综合",
+      title: it.title || "未命名动态",
+      body: itemSummary(it),
+      watch: it.url ? "已保留来源链接；重点看是否出现后续官方确认或市场二次反应。" : "事实池暂无原文链接，先作为低权重动态观察。",
+      sourceName: it.source || it.sourceType || "",
+      sourceUrl: it.url || "",
+    });
+  }
+  if (!out.length) {
+    out.push({
+      category: "系统状态",
+      title: "等待下一轮事实采集",
+      body: "当前 D1 事实池条目不足，日报只展示保守摘要。",
+      watch: "可手动点击重新扫描，或等待下一个 00/08/12/20 自动时点。",
+      sourceName: "Yuqing Worker",
+      sourceUrl: "",
+    });
+  }
+  return out;
+}
+
+function dailyAiIntelFromFacts(rows) {
+  const out = [];
+  for (const it of (rows || []).slice(0, 4)) {
+    out.push({
+      title: it.title || "AI 动态",
+      date: itemDateLabel(it.publishedAt || it.fetchedAt),
+      what: itemSummary(it),
+      use: "作为风险偏好和科技叙事背景，不直接替代市场结构判断。",
+      attention: Number(it.confidence || 0) >= 0.7 ? "高" : "中",
+      sourceName: it.source || it.sourceType || "",
+      sourceUrl: it.url || "",
+    });
+  }
+  if (!out.length) {
+    out.push({
+      title: "本期暂无高置信 AI 产业条目",
+      date: new Date().toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }),
+      what: "事实池没有命中明确 AI / 云平台 / 大模型工具链动态。",
+      use: "不拿旧闻补位，等待下一轮采集。",
+      attention: "低",
+      sourceName: "Yuqing D1",
+      sourceUrl: "",
+    });
+  }
+  return out;
+}
+
+function trendReadFromDailyInputs(legacy, factCount) {
+  const trendsMd = legacy && legacy.sections && legacy.sections.trends && legacy.sections.trends.markdown;
+  const hasLlm = !!String(trendsMd || "").trim();
+  return {
+    strengthening: hasLlm
+      ? [String(trendsMd).split("\n").find((x) => x.trim() && !x.startsWith("#")) || "LLM 已生成趋势研判，详见原始报告。"]
+      : [`事实池已有 ${factCount} 条候选，适合先判断哪些主题在连续出现。`],
+    cracking: hasLlm
+      ? ["详细裂变信号由云端 LLM 报告生成，本页保留摘要入口。"]
+      : ["事实不足或 LLM 未启用时，不主动制造分歧结论。"],
+    conclusion: "事件一览作为信息底座；交易含义请进入舆情分析查看二次研判。",
+  };
+}
+
+async function buildDailyEventReport(env, opts) {
+  const generatedAt = new Date(opts && opts.scheduledTime ? opts.scheduledTime : Date.now()).toISOString();
+  const triggerType = normalizeTriggerType(opts && opts.triggerType);
+  const slot = opts && opts.slot ? String(opts.slot) : bjtSlotLabel(DAILY_EVENT_KIND, generatedAt);
+  const sourceErrors = [];
+  let ingestResult = null;
+  if (!opts || opts.ingest !== false) {
+    try {
+      ingestResult = await ingestFactPool(env, { aggregateSources });
+      sourceErrors.push(...(ingestResult.ingestErrors || []));
+    } catch (e) {
+      sourceErrors.push({ source: "ingest", message: String(e && e.message ? e.message : e) });
+    }
+  }
+
+  const { factRows, nonAiFacts, aiFacts } = await loadFactsBundle(env, 80);
+  let legacy = null;
+  try {
+    legacy = await buildReport(env, {
+      mode: opts && opts.mode ? opts.mode : "deep",
+      force: true,
+      allowSearch: !!(opts && opts.forceSearch),
+      forceSearch: !!(opts && opts.forceSearch),
+      modules: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
+    });
+    if (legacy && Array.isArray(legacy.warnings)) sourceErrors.push(...legacy.warnings);
+  } catch (e) {
+    sourceErrors.push({ source: "daily_llm", message: String(e && e.message ? e.message : e) });
+  }
+
+  const agg = await aggregateSources(env).catch((e) => {
+    sourceErrors.push({ source: "market_sources", message: String(e && e.message ? e.message : e) });
+    return { sources: { fng: { ok: false }, btc: { ok: false }, assets: [], errors: [] }, realMarketData: {} };
+  });
+  const dashboard = legacy && legacy.dashboard ? legacy.dashboard : fallbackDashboard(agg.realMarketData, marketScoreFromSources(agg.sources), "中性");
+  const sourceRefs = [
+    ...sourceRefsFromFacts(factRows, 14),
+    { type: "route", label: "舆情分析", href: "#/news-analysis", route: "news-analysis" },
+  ];
+  const sources = uniqueSourceRows(factRows);
+  const report = {
+    title: "赛博前哨站",
+    subtitle: "日常新闻早午晚报",
+    marketTemperature: marketTemperatureFromSources(agg.sources, dashboard),
+    topStory: dailyTopStoryFromFacts(nonAiFacts),
+    dynamicBriefs: dailyBriefsFromFacts(nonAiFacts),
+    aiIntel: dailyAiIntelFromFacts(aiFacts),
+    trendRead: trendReadFromDailyInputs(legacy, factRows.length),
+    sources,
+    quality: {
+      factCount: factRows.length,
+      sourceCoverage: Math.min(100, Math.max(20, sources.length * 14 + Math.min(30, factRows.length))),
+      usedSearch: !!(legacy && legacy.grounding && legacy.grounding.usedSearch && (legacy.grounding.usedSearch.news || legacy.grounding.usedSearch.ai)),
+      ingestRows: ingestResult ? Number(ingestResult.insertedRows || 0) : 0,
+      caveat: "事件一览只做信息底座，不构成交易建议。",
+    },
+  };
+  return {
+    id: reportId(DAILY_EVENT_KIND, generatedAt),
+    kind: DAILY_EVENT_KIND,
+    reportDate: bjtDateKey(generatedAt),
+    slot,
+    triggerType,
+    generatedAt,
+    status: "ready",
+    sourceRefs,
+    grounding: {
+      factCount: factRows.length,
+      itemIdsSample: factRows.slice(0, 32).map((r) => r.id),
+      ingest: ingestResult,
+      quality: report.quality,
+    },
+    marketSnapshot: { sources: agg.sources, realMarketData: agg.realMarketData },
+    report,
+    sourceErrors,
+  };
+}
+
+function dailyAgeMs(daily) {
+  const t = daily && daily.generatedAt ? Date.parse(daily.generatedAt) : 0;
+  return t > 0 ? Date.now() - t : Infinity;
+}
+
+function marketStateFromLegacy(legacy, marketSnapshot) {
+  const dash = legacy && legacy.dashboard ? legacy.dashboard : null;
+  const src = marketSnapshot && marketSnapshot.data && marketSnapshot.data.derivativesSnapshot && marketSnapshot.data.derivativesSnapshot.data;
+  const score = dash && dash.sentimentSummary ? 62 : marketSnapshot && marketSnapshot.ok ? 58 : 46;
+  return {
+    regime: dash && dash.marketRegime ? dash.marketRegime : marketSnapshot && marketSnapshot.ok ? "市场数据可用，等待二次确认" : "市场快照存在缺口",
+    score,
+    bias: score >= 65 ? "偏多但需确认" : score <= 42 ? "偏谨慎" : "中性",
+    confidence: marketSnapshot && marketSnapshot.ok ? 72 : 54,
+    summary:
+      dash && dash.crossAsset
+        ? dash.crossAsset
+        : "已读取事件日报和市场监测上下文，详细交易推演需结合风险雷达与机会条件。",
+    keyAssets: Array.isArray(dash && dash.keyAssets)
+      ? dash.keyAssets.map((x) => ({
+          name: x.name || "",
+          change: x.change != null ? String(x.change) : "",
+          stance: x.structure || x.catalyst || "",
+          driver: x.catalyst || x.structure || "",
+        }))
+      : [
+          { name: "BTC", change: "", stance: "待确认", driver: "读取主行情 Worker 快照作为背景。" },
+          { name: "衍生品", change: "", stance: src ? "有快照" : "待补齐", driver: "资金费率、OI 与期权快照参与二次判断。" },
+        ],
+  };
+}
+
+function riskRadarFromInputs(daily, marketSnapshot, facts) {
+  const risks = [];
+  const marketErrors = (marketSnapshot && marketSnapshot.errors) || [];
+  if (marketErrors.length) {
+    risks.push({
+      level: "high",
+      title: "市场监测上下文不完整",
+      window: "当前",
+      trigger: marketErrors.map((e) => e.source).join(" / "),
+      assets: ["BTC", "衍生品", "强平"],
+      response: "不要把本轮舆情结论当成完整交易信号，先核对市场监测页。",
+    });
+  }
+  const dailyTitle = daily && daily.report && daily.report.topStory ? daily.report.topStory.title : "上游日报";
+  risks.push({
+    level: "mid",
+    title: "上游事件继续发酵",
+    window: "48-72h",
+    trigger: dailyTitle,
+    assets: ["BTC", "纳指", "美元", "美债"],
+    response: "只在价格、资金流和衍生品结构同向时提高权重。",
+  });
+  if ((facts || []).length < 18) {
+    risks.push({
+      level: "mid",
+      title: "事实池覆盖不足",
+      window: "本轮",
+      trigger: "D1 事实条目偏少",
+      assets: ["信息质量"],
+      response: "等待下一轮日报或手动强制增量搜索。",
+    });
+  }
+  return risks.slice(0, 4);
+}
+
+function opportunitiesFromInputs(daily, marketSnapshot) {
+  const hasMarket = !!(marketSnapshot && marketSnapshot.ok);
+  return [
+    {
+      label: "顺势确认",
+      direction: "BTC 方向确认",
+      setup: hasMarket ? "事件日报主题与 K 线、衍生品、强平数据同向。" : "先恢复市场快照，再判断方向。",
+      invalidation: "价格反应与事件叙事背离，或资金费率/OI 出现拥挤。",
+      priority: hasMarket ? 76 : 52,
+    },
+    {
+      label: "等待复核",
+      direction: "不追第一反应",
+      setup: "事件发生后等待 1-2 根高波动 K 线收敛，再观察 ETF/资金流确认。",
+      invalidation: "上游日报事件被官方来源否认或热度迅速消退。",
+      priority: 66,
+    },
+  ];
+}
+
+function calendarFromFacts(facts) {
+  const rows = [];
+  for (const it of facts || []) {
+    if (rows.length >= 6) break;
+    const cat = String(it.category || "").toLowerCase();
+    const title = String(it.title || "");
+    if (!/macro|calendar|economic|cpi|fed|fomc|就业|通胀|利率/i.test(`${cat} ${title}`)) continue;
+    rows.push({
+      id: it.id || `event-${rows.length}`,
+      title: title || "宏观事件",
+      startsAtUtc: new Date(Number(it.publishedAt || it.fetchedAt || Date.now())).toISOString(),
+      precision: "date",
+      displayTimezone: "Asia/Shanghai",
+      sourceType: it.sourceType || "fact_pool",
+      sourceName: it.source || "Yuqing D1",
+      sourceUrl: it.url || "",
+      confidence: Number(it.confidence || 0.62),
+      impactScore: Math.max(50, Math.round(Number(it.confidence || 0.62) * 100)),
+      assets: ["BTC", "美元", "美债", "纳指"],
+      why: itemSummary(it, "宏观事件可能影响风险资产定价。"),
+    });
+  }
+  return rows;
+}
+
+function trendReadForSentiment(legacy, incremental) {
+  const md = legacy && legacy.sections && legacy.sections.trends && legacy.sections.trends.markdown;
+  return {
+    strengthening: md ? ["云端趋势模块已生成，结合事件日报与市场快照给出二次判断。"] : ["事件日报和市场监测已合并为本轮舆情底座。"],
+    fracturing: incremental && incremental.used ? ["本轮触发按需增量搜索，说明上游事实或市场上下文存在缺口。"] : ["未触发额外搜索，说明上游日报与事实池覆盖暂时够用。"],
+    checklist: ["先核对市场监测页数据新鲜度。", "再看事件日报主题是否继续出现新事实。", "最后用风险雷达决定是否需要降低仓位或等待确认。"],
+  };
+}
+
+async function buildSentimentAnalysisReport(env, opts) {
+  const generatedAt = new Date(opts && opts.scheduledTime ? opts.scheduledTime : Date.now()).toISOString();
+  const triggerType = normalizeTriggerType(opts && opts.triggerType);
+  const slot = opts && opts.slot ? String(opts.slot) : bjtSlotLabel(SENTIMENT_ANALYSIS_KIND, generatedAt);
+  const sourceErrors = [];
+  let daily = null;
+  try {
+    daily = await loadLatestYuqingReport(env.YUQING_DB, DAILY_EVENT_KIND);
+  } catch (e) {
+    sourceErrors.push({ source: "daily_event", message: String(e && e.message ? e.message : e) });
+  }
+  let { factRows, aiFacts } = await loadFactsBundle(env, 80);
+  const marketSnapshot = await fetchMarketContext(env);
+  const inc = shouldUseIncrementalSearch({
+    dailyReport: daily,
+    dailyAgeMs: dailyAgeMs(daily),
+    factCount: factRows.length,
+    marketErrors: marketSnapshot.errors,
+    forceSearch: !!(opts && opts.forceSearch),
+  });
+  if (inc.useSearch) {
+    try {
+      const ingest = await ingestFactPool(env, { aggregateSources });
+      sourceErrors.push(...(ingest.ingestErrors || []));
+      const refreshed = await loadFactsBundle(env, 90);
+      factRows = refreshed.factRows;
+      aiFacts = refreshed.aiFacts;
+    } catch (e) {
+      sourceErrors.push({ source: "incremental_ingest", message: String(e && e.message ? e.message : e) });
+    }
+  }
+
+  let legacy = null;
+  try {
+    legacy = await buildReport(env, {
+      mode: opts && opts.mode ? opts.mode : "deep",
+      force: true,
+      allowSearch: inc.useSearch,
+      forceSearch: !!(opts && opts.forceSearch),
+      modules: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
+    });
+    if (legacy && Array.isArray(legacy.warnings)) sourceErrors.push(...legacy.warnings);
+  } catch (e) {
+    sourceErrors.push({ source: "sentiment_llm", message: String(e && e.message ? e.message : e) });
+  }
+
+  const excludedSourceIds = daily && daily.grounding && Array.isArray(daily.grounding.itemIdsSample)
+    ? daily.grounding.itemIdsSample
+    : [];
+  const sourceRefs = [
+    daily
+      ? { type: "daily_event", id: daily.id, label: "上游事件日报", href: `#/news?reportId=${encodeURIComponent(daily.id)}` }
+      : { type: "daily_event", label: "上游事件日报缺失", href: "#/news" },
+    { type: "market", label: "行情工作台", href: "#/chart", route: "chart" },
+    { type: "market", label: "衍生品面板", href: "#/derivatives", route: "derivatives" },
+    { type: "market", label: "强平雷达", href: "#/heatmap", route: "heatmap" },
+    ...sourceRefsFromFacts(factRows.filter((x) => !excludedSourceIds.includes(x.id)), 8),
+  ];
+  const incrementalSearch = { used: inc.useSearch, reasons: inc.reasons, excludedSourceIds };
+  const report = {
+    title: "BTC 核心跨资产情报日报",
+    upstreamDaily: daily
+      ? {
+          id: daily.id,
+          title: daily.report && daily.report.title ? daily.report.title : "事件一览",
+          generatedAt: daily.generatedAt,
+          slot: daily.slot,
+          href: `#/news?reportId=${encodeURIComponent(daily.id)}`,
+        }
+      : null,
+    marketState: marketStateFromLegacy(legacy, marketSnapshot),
+    riskRadar: riskRadarFromInputs(daily, marketSnapshot, factRows),
+    opportunityScanner: opportunitiesFromInputs(daily, marketSnapshot),
+    eventCalendar: calendarFromFacts(factRows),
+    aiIntel: dailyAiIntelFromFacts(aiFacts).map((x) => ({
+      title: x.title,
+      relevance: x.use,
+      watch: x.what,
+      confidence: x.attention === "高" ? 0.72 : 0.58,
+      sourceName: x.sourceName,
+      sourceUrl: x.sourceUrl,
+    })),
+    trendRead: trendReadForSentiment(legacy, incrementalSearch),
+    incrementalSearch,
+    quality: {
+      factCount: factRows.length,
+      sourceCoverage: Math.min(100, Math.max(20, factRows.length + (marketSnapshot.ok ? 35 : 10))),
+      marketSnapshotOk: !!marketSnapshot.ok,
+      usedSearch: inc.useSearch,
+      caveat: "本页是二次舆情研判，不构成投资建议。",
+    },
+  };
+  return {
+    id: reportId(SENTIMENT_ANALYSIS_KIND, generatedAt),
+    kind: SENTIMENT_ANALYSIS_KIND,
+    reportDate: bjtDateKey(generatedAt),
+    slot,
+    triggerType,
+    generatedAt,
+    status: "ready",
+    sourceRefs,
+    grounding: {
+      basedOnDailyReportId: daily ? daily.id : null,
+      factCount: factRows.length,
+      itemIdsSample: factRows.slice(0, 32).map((r) => r.id),
+      incrementalSearch,
+      quality: report.quality,
+    },
+    marketSnapshot,
+    report,
+    sourceErrors: [...sourceErrors, ...(marketSnapshot.errors || [])],
+  };
+}
+
+async function createYuqingReport(env, opts) {
+  if (!d1Bound(env)) throw new Error("D1 未绑定");
+  const kind = normalizeReportKind(opts && opts.kind);
+  const payload =
+    kind === DAILY_EVENT_KIND
+      ? await buildDailyEventReport(env, opts)
+      : await buildSentimentAnalysisReport(env, opts);
+  await insertYuqingReport(env.YUQING_DB, payload);
+  await pruneYuqingReports(env.YUQING_DB, REPORT_RETENTION_DAYS).catch(() => {});
+  await pruneOldItems(env.YUQING_DB, REPORT_RETENTION_DAYS).catch(() => {});
+  return payload;
+}
+
+/** ---- 兼容旧路径：Finnhub 代理 ---- */
+
+async function handleLegacyFinnhubBulk(request, env) {
+  const token = env && env.FINNHUB_API_KEY;
+  if (!token) return json({ error: "系统未配置 FINNHUB_API_KEY" }, 500);
+  const url = new URL(request.url);
+  const symbols = (url.searchParams.get("symbols") || "").split(",").filter(Boolean);
+  const results = {};
+  await Promise.all(
+    symbols.map(async (sym) => {
+      const target = `${FINNHUB_ORIGIN}/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${encodeURIComponent(token)}`;
+      try {
+        const resp = await fetchWithTimeout(target, { headers: { Accept: "application/json" } });
+        if (resp.ok) results[sym] = await resp.json();
+      } catch (_) {}
+    }),
+  );
+  return new Response(JSON.stringify(results), { headers: corsHeaders({ "Content-Type": "application/json" }) });
+}
+
+async function handleLegacyFinnhubSingle(request, env) {
+  const token = env && env.FINNHUB_API_KEY;
+  if (!token) return json({ error: "系统未配置 FINNHUB_API_KEY" }, 500);
+  const url = new URL(request.url);
+  const sym = url.searchParams.get("symbol") || "";
+  const target = `${FINNHUB_ORIGIN}/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${encodeURIComponent(token)}`;
+  const res = await fetchWithTimeout(target, { headers: { Accept: "application/json" } });
+  const text = await res.text();
+  return new Response(text, {
+    status: res.status,
+    headers: corsHeaders({ "Content-Type": "application/json" }),
+  });
+}
+
+export default {
+  /**
+   * @param {Request} request
+   * @param {any} env
+   * @param {any} _ctx
+   */
+  async fetch(request, env, _ctx) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
+    if (maintenanceEnabled(env)) {
+      return json({ ok: false, error: "舆情日报 Worker 维护中，暂不可用。" }, 503);
+    }
+
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    if (path === "/finnhub-bulk" || path === "/api/yuqing/finnhub-bulk") {
+      const rl = await checkRateLimit(request, "finnhub", 40);
+      if (rl) return rl;
+      return handleLegacyFinnhubBulk(request, env);
+    }
+    if (path.startsWith("/finnhub/")) {
+      const rl = await checkRateLimit(request, "finnhub", 40);
+      if (rl) return rl;
+      return handleLegacyFinnhubSingle(request, env);
+    }
+
+    if (path === "/api/yuqing/health") {
+      const rl = await checkRateLimit(request, "health", 120);
+      if (rl) return rl;
+      const p = resolveProvider(env);
+      return json({
+        ok: true,
+        workerBuild: WORKER_BUILD,
+        time: new Date().toISOString(),
+        maintenance: maintenanceEnabled(env),
+        llm: {
+          provider: p,
+          enabled: p === "gemini" && !!getGeminiKey(env),
+          models: {
+            flash: env && env.YUQING_LLM_MODEL_FLASH ? String(env.YUQING_LLM_MODEL_FLASH) : "gemini-2.0-flash",
+            pro: env && env.YUQING_LLM_MODEL_PRO ? String(env.YUQING_LLM_MODEL_PRO) : "",
+            trends: env && env.YUQING_LLM_MODEL_TRENDS ? String(env.YUQING_LLM_MODEL_TRENDS) : "",
+          },
+        },
+        secrets: {
+          finnhub: !!(env && env.FINNHUB_API_KEY),
+          gemini: !!getGeminiKey(env),
+          d1Ready: d1Bound(env),
+        },
+      });
+    }
+
+    if (path === "/api/yuqing/reports/latest" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "reports_latest", 80);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: false, report: null });
+      try {
+        const kind = normalizeReportKind(url.searchParams.get("kind"));
+        const report = await loadLatestYuqingReport(env.YUQING_DB, kind);
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, kind, report });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/reports/history" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "reports_history", 50);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: false, items: [] });
+      try {
+        const kind = normalizeReportKind(url.searchParams.get("kind"));
+        const days = url.searchParams.get("days") || String(REPORT_RETENTION_DAYS);
+        const items = await loadYuqingReportHistory(env.YUQING_DB, kind, days);
+        return json({
+          ok: true,
+          workerBuild: WORKER_BUILD,
+          d1Ready: true,
+          kind,
+          days: Math.min(30, Math.max(1, Number(days) || REPORT_RETENTION_DAYS)),
+          items: items.map(reportListSummary),
+        });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/reports/item" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "reports_item", 80);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: false, report: null });
+      try {
+        const id = url.searchParams.get("id") || "";
+        const report = await loadYuqingReportById(env.YUQING_DB, id);
+        if (!report) return json({ ok: false, error: "报告不存在" }, 404);
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/reports/generate" && request.method === "POST") {
+      const rl = await checkRateLimit(request, "reports_generate", 8);
+      if (rl) return rl;
+      let bodyIn = {};
+      try {
+        bodyIn = await request.json();
+      } catch (_) {
+        bodyIn = {};
+      }
+      try {
+        const kind = normalizeReportKind(bodyIn && bodyIn.kind);
+        const out = await createYuqingReport(env, {
+          kind,
+          triggerType: "manual",
+          forceSearch: !!(bodyIn && bodyIn.forceSearch),
+          mode: bodyIn && bodyIn.mode,
+        });
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report: out });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/latest" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "latest", 60);
+      if (rl) return rl;
+      try {
+        const agg = await aggregateSources(env);
+        if (!d1Bound(env)) {
+          return json({
+            ok: true,
+            workerBuild: WORKER_BUILD,
+            d1Ready: false,
+            capturedAt: null,
+            sources: agg.sources,
+            items: [],
+            note: "D1 未绑定或未执行迁移：请配置 wrangler.yuqing.toml 中的 yuqing 库并执行 SQL。",
+          });
+        }
+        const items = await loadRecentItems(env.YUQING_DB, 45);
+        const last = await env.YUQING_DB.prepare(
+          `SELECT captured_at as capturedAt FROM yuqing_snapshots ORDER BY id DESC LIMIT 1`,
+        ).first();
+        const capturedAt = last && last.capturedAt ? String(last.capturedAt) : null;
+        return json({
+          ok: true,
+          workerBuild: WORKER_BUILD,
+          d1Ready: true,
+          capturedAt,
+          sources: agg.sources,
+          items,
+        });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/items" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "items", 60);
+      if (rl) return rl;
+      const category = url.searchParams.get("category") || "";
+      const limit = url.searchParams.get("limit") || "40";
+      if (!d1Bound(env)) {
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: false, items: [] });
+      }
+      try {
+        const page = await loadItemsPage(env.YUQING_DB, category, limit);
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, ...page });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/history" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "hist", 30);
+      if (rl) return rl;
+      const days = url.searchParams.get("days") || "7";
+      if (!d1Bound(env)) {
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: false, stats: null });
+      }
+      try {
+        const stats = await loadHistoryStats(env.YUQING_DB, days);
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, stats });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/ingest" && request.method === "POST") {
+      const sec = env && env.CRON_SECRET ? String(env.CRON_SECRET) : "";
+      const h = request.headers.get("X-Yuqing-Cron-Secret") || "";
+      if (!sec || h !== sec) {
+        return json({ ok: false, error: "需要配置 CRON_SECRET 并在请求头 X-Yuqing-Cron-Secret 传入" }, 403);
+      }
+      if (!d1Bound(env)) {
+        return json({ ok: false, error: "D1 未绑定" }, 503);
+      }
+      try {
+        const r = await ingestFactPool(env, { aggregateSources });
+        return json({ ok: true, workerBuild: WORKER_BUILD, ...r });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/sources") {
+      const rl = await checkRateLimit(request, "sources", 45);
+      if (rl) return rl;
+      try {
+        const agg = await aggregateSources(env);
+        return json({ ok: true, ...agg.sources, workerBuild: WORKER_BUILD });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/report" && request.method === "POST") {
+      const rl = await checkRateLimit(request, "report", 8);
+      if (rl) return rl;
+      let bodyIn = {};
+      try {
+        bodyIn = await request.json();
+      } catch (_) {
+        bodyIn = {};
+      }
+      try {
+        const out = await createYuqingReport(env, {
+          kind: SENTIMENT_ANALYSIS_KIND,
+          triggerType: "manual",
+          forceSearch: !!(bodyIn && (bodyIn.forceSearch || bodyIn.allowSearch)),
+          mode: bodyIn && bodyIn.mode,
+        });
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report: out });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/llm/test" && request.method === "POST") {
+      const rl = await checkRateLimit(request, "llmtest", 6);
+      if (rl) return rl;
+      const p = resolveProvider(env);
+      if (p !== "gemini" || !getGeminiKey(env)) {
+        return json({ ok: false, error: "需要 YUQING_LLM_PROVIDER=gemini 且配置密钥" }, 400);
+      }
+      let bodyIn = {};
+      try {
+        bodyIn = await request.json();
+      } catch (_) {
+        bodyIn = {};
+      }
+      const prompt = String((bodyIn && bodyIn.prompt) || "用一句话回复：系统在线。");
+      try {
+        const model = String((bodyIn && bodyIn.model) || flashModel(env));
+        const text = await geminiGenerateContent(env, model, prompt, { googleSearch: false, temperature: 0.2 });
+        return json({ ok: true, model, text });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/" || path === "") {
+      return json({
+        ok: true,
+        service: "yuqing",
+        workerBuild: WORKER_BUILD,
+        endpoints: [
+          "GET /api/yuqing/health",
+          "GET /api/yuqing/sources",
+          "GET /api/yuqing/latest",
+          "GET /api/yuqing/items",
+          "GET /api/yuqing/history",
+          "GET /api/yuqing/reports/latest?kind=daily_event|sentiment_analysis",
+          "GET /api/yuqing/reports/history?kind=...&days=7",
+          "GET /api/yuqing/reports/item?id=...",
+          "POST /api/yuqing/reports/generate",
+          "POST /api/yuqing/report (compat: sentiment_analysis)",
+          "POST /api/yuqing/ingest (+X-Yuqing-Cron-Secret)",
+          "POST /api/yuqing/llm/test",
+        ],
+      });
+    }
+
+    return json({ ok: false, error: "Not found" }, 404);
+  },
+
+  /** Cloudflare Cron：北京时间事件日报 00/08/12/20，舆情分析 09/14/22。 */
+  async scheduled(event, env) {
+    try {
+      if (!d1Bound(env)) return;
+      const scheduledTime = event && event.scheduledTime ? Number(event.scheduledTime) : Date.now();
+      const due = scheduledKindsForDate(scheduledTime);
+      if (!due.length) return;
+      for (const task of due) {
+        await createYuqingReport(env, {
+          kind: task.kind,
+          triggerType: "scheduled",
+          slot: task.slot,
+          scheduledTime,
+        });
+      }
+    } catch (e) {
+      console.error("yuqing scheduled reports:", e && e.message ? e.message : e);
+    }
+  },
+};

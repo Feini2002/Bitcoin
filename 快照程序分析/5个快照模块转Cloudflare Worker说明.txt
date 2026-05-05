@@ -1,0 +1,239 @@
+市场监测快照程序整合说明
+
+本文是当前阶段给后续 Codex 使用的实施说明。旧标题里的“5 个子页面”来自早期规划；按现在系统状态，本轮先整合“市场监测”下已经初步搭建完成的 4 个子模块：
+
+- 行情工作台：`#/chart`
+- 订单流与足迹图：`#/orderflow`
+- 强平雷达：`#/heatmap`
+- 衍生品面板：`#/derivatives`
+
+链上 / onchain 仍可作为未来扩展位，但当前市场监测整合不把它作为必需输入。
+
+## 当前现状
+
+四个市场监测子模块已经完成初步骨架，具备页面入口、数据读取、前端确定性计算、错误 / 新鲜度提示和本地验证脚本。它们不是最终形态，但已经可以进入“统一快照程序 + 后续 Worker 编排”的阶段。
+
+### 行情工作台
+
+- 页面入口：`js/pages/chart.js`
+- 依赖逻辑：`js/chart/indicator-math.js`、`js/chart/indicator-panes.js`、`js/chart/mtf-tiles.js`
+- 数据入口：`DataEngine.fetchKlinesFromD1()`，Worker 路由 `/api/d1/klines`，补同步 `/api/d1/sync`
+- 页面实时层：Binance WebSocket 前台跳动，D1 轮询修正历史 K 线
+- 已完成的旧快照核心：`chartSnapshotCore.mjs`，旧版本 `1.1.0`
+- 后续整合重点：K 线多周期、指标、区间结构、关键位、上级周期压制和矩阵摘要
+
+### 订单流与足迹图
+
+- 页面入口：`js/pages/orderflow.js`
+- 依赖逻辑：`js/orderflow/footprint-engine.js`、`js/orderflow/footprint-canvas.js`
+- 数据入口：Worker 路由 `/api/d1/footprint`，并融合 `/api/d1/klines` 关键位
+- 页面分析层：成交分布 POC / VAH / VAL、买卖失衡、关键位、SFP、可视窗口读数模型
+- 已完成的旧快照核心：`orderflowSnapshotCore.mjs`，旧版本 `1.4.0`
+- 后续整合重点：不要输出原始 levels 大数组，只输出当前窗口、MTF 摘要、dashboard、证据链和 freshness
+
+### 强平雷达
+
+- 页面入口：`js/pages/heatmap.js`
+- 依赖逻辑：`js/heatmap/liquidation-engine.js`、`js/heatmap/pressure-matrix.js`
+- 数据入口：Worker 路由 `/api/d1/liquidations`、`/api/d1/liquidations/status`、`/api/d1/liquidations/wake`
+- 关联输入：`DataEngine.fetchDerivatives()`、`DataEngine.fetchKlinesFromD1()`
+- 页面分析层：D1 5m 强平桶、本页实时强平流、来源健康、估算压力矩阵
+- 已完成的旧快照核心：`heatmapSnapshotCore.mjs`，旧版本 `1.1.0`
+- 后续整合重点：区分“已发生强平”和“估算压力”，不要暗示精确潜在清算池金额
+
+### 衍生品面板
+
+- 页面入口：`js/pages/derivatives.js`
+- 数据入口：`DataEngine.fetchDerivatives()`、`DataEngine.triggerDerivativesSyncStages()`
+- Worker 路由：`/api/d1/derivatives`、`/api/d1/derivatives/sync`、`/api/d1/derivatives/status`、`/api/d1/derivatives/origin-check`
+- Worker 现有 AI 路由：`/api/ai/derivatives-snapshot`
+- D1 表：`derivative_timeseries`、`derivative_sync_status`、`derivative_metric_health`、`derivative_source_health`、`derivative_sync_locks`
+- 已完成的旧快照核心：`derivativesSnapshotCore.mjs`，旧版本 `1.4.0`
+- 后续整合重点：六项矩阵、数据可信度、同步修复提示、Bybit Funding/OI 兜底、宏观旁路低权重
+
+## 本轮整理后的目录原则
+
+旧的四个同名子文件夹只用于早期分散开发：
+
+- `行情工作台/`
+- `订单流与足迹图/`
+- `强平雷达/`
+- `衍生品面板/`
+
+这些目录里的 `页面优化说明.md`、`xxxSnapshotCore.mjs`、`buildXxxAiSnapshot.cjs` 不再作为后续开发入口。后续不要恢复“每个页面一个快照文件夹”的结构。
+
+新的统一工作区为：
+
+`快照程序分析/`
+
+该目录用于后续放置：
+
+- 统一市场监测快照程序
+- 本地构建 / 调试入口，如确实需要
+- 后续准备部署的新 AI Worker 代码
+- Worker 路由、Agent 输入、LLM 调用、D1 写入相关辅助文件
+
+建议先在这个目录内开发和验证，等 Worker 形态稳定后，再决定是否移动到 `cloudflare/` 或由 `cloudflare/wrangler.toml` 单独引用。
+
+## 后续要创建的统一快照程序
+
+后续 Codex 应创建一个统一快照程序，而不是简单搬运旧的 4 组 `mjs + cjs`。
+
+建议文件形态：
+
+- 主程序：`快照程序分析/marketSnapshotProgram.mjs`
+- 新 Worker：`快照程序分析/ai-orchestrator-worker.js`
+- 可选本地调试入口：仅在必要时创建，且不要恢复旧子页面分散目录
+
+如果决定严格合成一个文件，则优先把确定性核心、数据读取适配、desk 聚合、Agent 输入映射放入 `marketSnapshotProgram.mjs`，Worker 文件只做路由和环境绑定；如果 Cloudflare 部署要求更清晰的边界，可以保留 Worker 文件作为部署入口。
+
+统一快照程序至少要导出：
+
+- `buildChartSnapshot(env, options)`
+- `buildOrderflowSnapshot(env, options)`
+- `buildHeatmapSnapshot(env, options)`
+- `buildDerivativesSnapshot(env, options)`
+- `buildMarketDeskSnapshot(env, options)`
+- `buildAgentInputs(deskSnapshot, options)`
+
+`buildMarketDeskSnapshot()` 的目标输出：
+
+```js
+{
+  generatedAt: "ISO time",
+  scope: "market-monitoring",
+  snapshotVersion: "market-desk-x.y.z",
+  pages: {
+    chart,
+    orderflow,
+    heatmap,
+    derivatives
+  },
+  agentInputs: {
+    env,
+    flow,
+    deriv,
+    chief
+  },
+  dataFreshness,
+  notableConflicts,
+  llmBrief
+}
+```
+
+## Agent 输入映射
+
+当前系统的页面归口关系已经在 `js/config.js` 中存在，统一快照程序要沿用这个逻辑：
+
+- 环境评估员 `env`：主要看 `chart`，关联 `derivatives`
+- 盘口流动性官 `flow`：主要看 `orderflow` + `heatmap`，关联 `chart`
+- 衍生品情报官 `deriv`：主要看 `derivatives`
+- 首席策略官 `chief`：汇总 `chart` + `orderflow` + `heatmap` + `derivatives`
+
+不要让 LLM 直接读取大段原始 K 线、足迹 levels、强平逐笔事件或完整时间序列。统一程序只给浓缩后的指标、状态、证据、冲突、数据新鲜度和简短中文摘要。
+
+## 数据读取策略
+
+第一阶段可以复用现有线上 Worker HTTP 路由，减少一次性改动：
+
+- 行情：`/api/d1/klines`
+- 订单流：`/api/d1/footprint`
+- 强平：`/api/d1/liquidations`
+- 衍生品：`/api/d1/derivatives`
+
+第二阶段再按部署需要改为直接查 D1：
+
+- `klines`
+- `footprint_bars`
+- `liquidation_5m_buckets`
+- `derivative_timeseries`
+- `derivative_sync_status`
+- `derivative_metric_health`
+- `derivative_source_health`
+
+关键要求：
+
+- 核心算法不能依赖 DOM。
+- Worker 内不能依赖 `window`、`document` 或浏览器全局对象。
+- 如果复用 `js/chart/indicator-math.js`、`js/orderflow/footprint-engine.js`、`js/heatmap/pressure-matrix.js` 中的逻辑，需要先确认能在 Worker / Node 环境稳定加载。
+- 旧 CJS 壳中的 `fs`、`https`、`eval`、`require` 不能直接搬进 Worker。
+
+## Worker 路由建议
+
+新 Worker 可提供：
+
+- `GET /api/ai/chart-snapshot`
+- `GET /api/ai/orderflow-snapshot`
+- `GET /api/ai/heatmap-snapshot`
+- `GET /api/ai/derivatives-snapshot`
+- `GET /api/ai/market-desk-snapshot`
+- `POST /api/ai/analyze-page`
+- `POST /api/ai/analyze-market-desk`
+
+现有 `/api/ai/derivatives-snapshot` 已在 `cloudflare/binance-klines-worker.js` 中存在。后续若新 Worker 接管该路由，需要明确是否保留兼容转发，避免前端或诊断脚本断链。
+
+## 实时点击流程
+
+1. 用户在页面点击“分析当前页”或“分析市场监测”。
+2. 前端请求新 Worker 的 `analyze-page` 或 `analyze-market-desk`。
+3. Worker 调用统一快照程序生成当前页或全市场监测 snapshot。
+4. Worker 根据 `agentInputs` 选择对应员工上下文。
+5. Worker 调 LLM。
+6. Worker 返回结构化结论、引用的 snapshot 摘要和风险提示。
+
+## 后台定时流程
+
+1. Cloudflare Cron 触发新 Worker。
+2. Worker 生成 `buildMarketDeskSnapshot(env, { profile: "brief" })`。
+3. Worker 生成晨会 / 巡检 / 员工发言。
+4. Worker 写入 D1，例如未来可新增 `agent_briefings`、`agent_messages`、`ai_runs`。
+5. 前端会议室或员工页读取这些结果。
+
+Cloudflare Cron 使用 UTC 时间。若要北京时间晨会，必须在 Worker 中显式转换 Asia/Shanghai 业务时间，或使用对应 UTC Cron 配置。
+
+## 需要同步调整的旧验证脚本
+
+删除旧四个快照子文件夹后，以下脚本仍然是有价值的验证资产，但路径会过期，后续创建统一程序时必须同步改造：
+
+- `scripts/verify-chart-snapshot-core.cjs`
+- `scripts/verify-footprint-aggregation.cjs` 中引用旧 `orderflowSnapshotCore.mjs` 的部分
+- `scripts/verify-heatmap-snapshot.cjs`
+- `scripts/verify-derivatives-core.cjs`
+- `package.json` 中的 `test`、`verify:chart-snapshot`、`verify:footprint`、`verify:heatmap`、`verify:derivatives` 如仍引用旧路径，也要同步调整
+
+在统一快照程序创建前，不要把这些旧脚本的失败当成页面功能失败。页面主功能仍由 `js/pages/*`、`js/*`、`cloudflare/binance-klines-worker.js` 和 D1 路由承担。
+
+## 实施顺序
+
+1. 在 `快照程序分析/` 中创建统一快照程序骨架。
+2. 先接入四个模块的数据读取适配，不接 LLM。
+3. 把旧四个 snapshot core 的确定性逻辑按当前页面逻辑重组进统一程序。
+4. 生成 `buildMarketDeskSnapshot()`，输出四页 snapshot 和 `agentInputs`。
+5. 改造验证脚本，让它们测试新统一程序。
+6. 本地运行最小验证：`npm.cmd run lint`、新快照验证脚本、必要时 `npm.cmd run verify:api`。
+7. 创建或接入新 Worker 路由。
+8. 若修改已部署 Worker，按项目规则执行本地校验和 `wrangler deploy`。
+9. 若新增 D1 表或写入远程 D1，按项目规则执行远程 D1 迁移 / 写入命令。
+10. 最后再接 LLM 调用、员工页读取和会议室展示。
+
+## 验收标准
+
+统一快照程序完成后，至少满足：
+
+- 四个单页 snapshot 都能独立生成。
+- `market-desk-snapshot` 能一次生成四页结果。
+- `agentInputs` 能按 `env`、`flow`、`deriv`、`chief` 分发。
+- `dataFreshness` 能表达 D1、实时流、fallback、stale、missing、sourceOk。
+- `notableConflicts` 能表达行情、订单流、强平、衍生品之间的冲突。
+- `llmBrief` 可以单独读懂。
+- 不输出大规模原始 K 线、足迹 levels、强平逐笔事件或完整衍生品序列。
+- Worker 路由能返回 JSON。
+- 后台 Cron 能生成 brief 版本。
+- 相关验证脚本已从旧四个文件夹路径迁移到 `快照程序分析/`。
+
+## 注意事项
+
+- 网络实时数据成功不等于稳定测试结论，Binance、Bybit、Cloudflare、D1 和 Yahoo 宏观旁路都可能随时间变化。
+- 不要删除其他模块的 PLANNED 或占位 UI。当前清理只针对早期快照开发目录。
+- 不要把旧 `页面优化说明.md` 当成后续实现依据；四个页面的真实当前逻辑以 `js/pages/*`、共享引擎、`DataEngine` 和 Worker/D1 为准。
+- `子页面AI快照导出规范.txt` 可作为历史背景阅读，但后续执行以本文为准。

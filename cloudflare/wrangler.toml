@@ -1,0 +1,50 @@
+# 与 Cloudflare 控制台一致：Worker 名 btc，自定义域 btc.feiniwork.com，D1 库名 btc、绑定名 DB。
+# 见 binance-klines-worker.js 内注释。
+# 本地开发:
+#   npx wrangler d1 execute btc --local --file=./schema.sql
+#   npx wrangler dev --local
+# 线上（建表/迁移到账号里的 D1「btc」）:
+#   npx wrangler d1 execute btc --remote --file=./schema.sql
+#   npx wrangler deploy
+
+name = "btc"
+main = "binance-klines-worker.js"
+compatibility_date = "2024-12-01"
+
+# Smart Placement: 让 Worker 执行位置贴近 fapi.binance.com（东京/新加坡），
+# 使出站 IP 落在亚太非受限区，避免币安 451 地域拦截。
+[placement]
+mode = "smart"
+
+# D1 数据库绑定：Worker 里用 env.DB 访问
+# 注意: database_id 需要在 cloudflare dashboard / `wrangler d1 create` 后填入真实 id。
+# 本地 `wrangler dev --local` 会忽略 database_id、自动在 .wrangler/state/v3/d1/ 下建 sqlite 文件。
+# 与前端关系：本机 D1 只在本机 miniflare 中可用；已 deploy 的 Worker 只绑定线上 D1。前端在「设置」中二选一，无法「线上 Worker + 本机 D1 文件」。
+[[d1_databases]]
+binding = "DB"
+database_name = "btc"
+database_id = "de758bb8-c7f5-41c7-a6ea-32c0ddf74d57"
+
+[[durable_objects.bindings]]
+name = "LIQUIDATION_COLLECTOR"
+class_name = "LiquidationCollector"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LiquidationCollector"]
+
+# 定时触发：每 5 分钟一次，由 Worker 内部按时间判断需要同步哪些周期。
+# 免费版 Workers 的 Cron Triggers 也支持。
+[triggers]
+crons = ["* * * * *"]
+
+# 可选的反代基址（仅当 Cloudflare 直连 fapi 被 451 时使用）。
+# 对应代码里的 BINANCE_FAPI_ORIGIN。
+# [vars]
+# BINANCE_FAPI_ORIGIN = "https://你的反代.example.com"
+# SYMBOLS：默认 BTCUSDT。本系统行情数据以比特币为主，一般不配置多交易对。
+#
+# 静态前端（Cloudflare Pages）：在仓库根目录执行 npm run deploy:pages（project-name=bit-trading-desk）。
+# 部署成功后脚本会自动 prune：production/preview 各自仅保留最新 BIT_PAGES_KEEP 条（默认 5）。
+# 首次需先创建项目：npx wrangler pages project create bit-trading-desk --production-branch=main
+# 绑定自定义域：控制台 Workers & Pages → bit-trading-desk → Custom domains。
