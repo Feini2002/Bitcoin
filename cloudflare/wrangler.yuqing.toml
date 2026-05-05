@@ -16,8 +16,11 @@ workers_dev = true
 
 [vars]
 YUQING_LLM_PROVIDER = "auto"
-# 开发阶段：关闭含 LLM 的定点日报/舆情研判（scheduled 不跑）；手动 POST /api/yuqing/reports/generate 仍可触发。恢复定点时改为 "true" 并恢复下方 crons。
-YUQING_SCHEDULED_REPORTS_ENABLED = "false"
+# 舆情 LLM 统一走同一 Gemini 模型（与 yuqing-worker.js 中 YUQING_GEMINI_MODEL_DEFAULT 对齐；控制台可改）
+YUQING_LLM_MODEL_FLASH = "gemini-3.1-flash-lite-preview"
+YUQING_LLM_MODEL_PRO = "gemini-3.1-flash-lite-preview"
+YUQING_LLM_MODEL_TRENDS = "gemini-3.1-flash-lite-preview"
+YUQING_LLM_MODEL_FAST_PROSE = "gemini-3.1-flash-lite-preview"
 # MAINTENANCE_MODE = "false"
 
 # D1（舆情专用，与 btc 无关）。请先执行：
@@ -32,11 +35,9 @@ binding = "YUQING_DB"
 database_name = "yuqing"
 database_id = "e89cfebb-2d98-4f10-ae94-4f5f4fe52a8f"
 
-# Cron（含 LLM 报告）：当前开发阶段空置，不占触发次数、不消耗 Token。BTC K 线在 binance-klines-worker，未在此处配置。
-# 恢复：YUQING_SCHEDULED_REPORTS_ENABLED = "true" 且启用下行（UTC → 北京时间 事件 00/08/12/20 + 舆情 09/14/22）：
-# crons = ["0 0,1,4,6,12,14,16 * * *"]
+# UTC cron 覆盖北京时间事件日报 00/08/12/20 与舆情分析 09/14/22。
 [triggers]
-crons = []
+crons = ["0 0,1,4,6,12,14,16 * * *"]
 
 # Secrets（示例，勿写密钥进仓库）：
 #   npx wrangler secret put CRON_SECRET --config wrangler.yuqing.toml        # POST /api/yuqing/ingest 时需 X-Yuqing-Cron-Secret

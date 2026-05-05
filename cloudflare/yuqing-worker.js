@@ -3,7 +3,7 @@
  *
  * - 聚合非 LLM：FNG、CoinGecko BTC、Finnhub 批量 ETF/股票报价（仅行情数字，不喂新闻）
  * - 今日头条 / 动态速览 / AI 情报站：固定 Gemini + Google Search（不调 Finnhub 新闻事实池回填）
- * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini|auto（默认 auto：已配置 GEMINI_API_KEY / GOOGLE_API_KEY 则走 Gemini）；密钥仅存 Worker Secret
+ * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini|auto（默认 auto）；默认模型见 YUQING_GEMINI_MODEL_DEFAULT，可被 YUQING_LLM_MODEL_* 覆盖；密钥仅存 Worker Secret
  *
  * 兼容旧 api.feiniwork.com 的路径：/finnhub-bulk、/finnhub/*（建议使用 /api/yuqing/*）
  */
@@ -18,7 +18,7 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.5-skip-scheduled-llm";
+const WORKER_BUILD = "yuqing-worker/1.1.6-gemini-31-flash-lite";
 
 /** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
 const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
@@ -30,6 +30,9 @@ const COINGECKO_BTC = "https://api.coingecko.com/api/v3/simple/price";
 
 const FETCH_TIMEOUT_SOURCES_MS = 12_000;
 const FETCH_TIMEOUT_LLM_MS = 118_000;
+
+/** 舆情链路 Gemini 默认模型；可通过 Worker 环境变量 YUQING_LLM_MODEL_FLASH / _PRO / _TRENDS / _FAST_PROSE 单独覆盖 */
+const YUQING_GEMINI_MODEL_DEFAULT = "gemini-3.1-flash-lite-preview";
 const REPORT_RETENTION_DAYS = 7;
 const DAILY_EVENT_KIND = "daily_event";
 const SENTIMENT_ANALYSIS_KIND = "sentiment_analysis";
@@ -1168,7 +1171,7 @@ function resolveProvider(env) {
 }
 
 function flashModel(env) {
-  return env && env.YUQING_LLM_MODEL_FLASH ? String(env.YUQING_LLM_MODEL_FLASH) : "gemini-2.0-flash";
+  return env && env.YUQING_LLM_MODEL_FLASH ? String(env.YUQING_LLM_MODEL_FLASH) : YUQING_GEMINI_MODEL_DEFAULT;
 }
 
 function proseModel(env, mode) {
@@ -1176,7 +1179,7 @@ function proseModel(env, mode) {
   const pro = env && env.YUQING_LLM_MODEL_PRO ? String(env.YUQING_LLM_MODEL_PRO) : "";
   const isFast = String(mode || "").toLowerCase() === "fast";
   if (isFast) return env && env.YUQING_LLM_MODEL_FAST_PROSE ? String(env.YUQING_LLM_MODEL_FAST_PROSE) : defFlash;
-  return pro || defFlash || "gemini-2.0-flash";
+  return pro || defFlash || YUQING_GEMINI_MODEL_DEFAULT;
 }
 
 function trendsModel(env, mode) {
@@ -2157,7 +2160,7 @@ export default {
           provider: p,
           enabled: p === "gemini" && !!getGeminiKey(env),
           models: {
-            flash: env && env.YUQING_LLM_MODEL_FLASH ? String(env.YUQING_LLM_MODEL_FLASH) : "gemini-2.0-flash",
+            flash: env && env.YUQING_LLM_MODEL_FLASH ? String(env.YUQING_LLM_MODEL_FLASH) : YUQING_GEMINI_MODEL_DEFAULT,
             pro: env && env.YUQING_LLM_MODEL_PRO ? String(env.YUQING_LLM_MODEL_PRO) : "",
             trends: env && env.YUQING_LLM_MODEL_TRENDS ? String(env.YUQING_LLM_MODEL_TRENDS) : "",
           },
