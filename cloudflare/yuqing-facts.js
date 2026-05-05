@@ -1,6 +1,9 @@
 /**
  * Yuqing Worker：事实池（D1 + 定时抓取）辅助模块。
  * 由 `yuqing-worker.js` 引用；勿单独作为主入口部署。
+ *
+ * 事件一览「今日头条 / 动态速览 / AI 情报站」内容由 Gemini + Google Search 生成，
+ * 此处 ingest **不再写入 Finnhub 新闻与经济日历**（Finnhub 仍可由 Worker 用于行情 quote）。
  */
 
 const FINNHUB_ORIGIN = "https://finnhub.io";
@@ -309,22 +312,6 @@ export async function ingestFactPool(env, hooks) {
     }
   } catch (e) {
     ingestErrors.push({ step: "coindesk_rss", message: String(e && e.message ? e.message : e) });
-  }
-
-  try {
-    const cal = await fetchFinnhubEconomicCalendar(env);
-    for (const x of cal) rows.push(x);
-  } catch (e) {
-    ingestErrors.push({ step: "finnhub_econ", message: String(e && e.message ? e.message : e) });
-  }
-
-  for (const cat of ["crypto", "general"]) {
-    try {
-      const news = await fetchFinnhubMarketNews(env, cat);
-      for (const x of news) rows.push(x);
-    } catch (e) {
-      ingestErrors.push({ step: `finnhub_news_${cat}`, message: String(e && e.message ? e.message : e) });
-    }
   }
 
   const dedup = new Map();

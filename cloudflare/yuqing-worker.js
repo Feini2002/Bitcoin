@@ -1,8 +1,8 @@
 /**
  * Cloudflare Worker：舆情日报（yuqing.feiniwork.com）
  *
- * - 聚合非 LLM：FNG、CoinGecko BTC、Finnhub 批量 ETF/股票报价
- * - 后端编排日报：由原 ribao-cloudflare/index.html 迁移的 Prompt 与分析流程
+ * - 聚合非 LLM：FNG、CoinGecko BTC、Finnhub 批量 ETF/股票报价（仅行情数字，不喂新闻）
+ * - 今日头条 / 动态速览 / AI 情报站：固定 Gemini + Google Search（不调 Finnhub 新闻事实池回填）
  * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini|auto（默认 auto：已配置 GEMINI_API_KEY / GOOGLE_API_KEY 则走 Gemini）；密钥仅存 Worker Secret
  *
  * 兼容旧 api.feiniwork.com 的路径：/finnhub-bulk、/finnhub/*（建议使用 /api/yuqing/*）
@@ -11,7 +11,6 @@
 import {
   d1Bound,
   filterAiFactsFromNewsItems,
-  formatFactsMarkdown,
   ingestFactPool,
   loadHistoryStats,
   loadItemsPage,
@@ -19,7 +18,7 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.2-llm-auto";
+const WORKER_BUILD = "yuqing-worker/1.1.3-gemini-search-daily-blocks";
 
 const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 const FINNHUB_ORIGIN = "https://finnhub.io";
@@ -921,30 +920,6 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
   );
 }
 
-function buildProAIPrompt(timeStr) {
-  return (
-    "当前时间：" +
-    timeStr +
-    "。\n" +
-    "请使用Google Search工具搜集最新资讯，并直接按照以下Markdown格式输出，不要带有前缀和解释：\n\n" +
-    "【你的受众定位】阅读这份报告的人是一个会使用AI工具、关注AI行业动向的普通用户，而不是技术极客。他最感兴趣的是：头部AI公司又发布了什么新东西、这个新东西对他的日常工作和生活有什么实际用处。技术底层细节不是重点，「我能用它做什么」才是重点。\n\n" +
-    "【搜索规则——严格执行】\n" +
-    "第一优先级（必须检索）：请注意，今天是 " +
-    timeStr +
-    "。你必须只检索和总结在这个具体时间节点过去72小时内发生的事情。任何在此之前发布的模型（如早期的 GPT-5 预热或旧版 Claude）严禁纳入。以下头部AI公司是否有真正的【最新】动作：Anthropic(Claude)、OpenAI(ChatGPT/GPT系列)、Google(Gemini/NotebookLM等)、Meta(Llama系列)、xAI(Grok)、Mistral、苹果AI功能、微软Copilot。只要有任何一家有动作，必须纳入报告。\n" +
-    "第二优先级（有则检索）：过去72小时内，已经被广泛讨论的热门AI工具（如OpenClaw、Cursor、Perplexity等）有无新版本、新功能、新的实际用法被社区发现并讨论。禁止重复介绍这些工具「是什么」——只报告新增量：更新了什么、社区发现了什么新玩法、有人用它做出了什么有意思的事情。若某工具72小时内无任何新增量，本期不提。\n" +
-    "第三优先级（酌情检索）：过去72小时内，是否出现了一个对普通用户有实际使用价值的全新AI工具或功能（不需要编程基础即可上手的优先）。\n" +
-    "【拒答机制】：如果过去72小时没有满足条件的重磅新闻，请直接输出「近72小时暂无改变行业的重大AI发布」，宁缺毋滥，严禁拿几个月前的旧闻充数。\n\n" +
-    "【输出格式】筛选出3-5条展示，不能少于3条（除非真的没有重磅新闻），按以下格式严格输出（请确保每个区块之间至少有一个空行）：\n\n" +
-    "### [公司名/工具名] 核心变化一句话总结\n\n" +
-    "**发布日期**：请明确写出该新闻的准确发布日期（如 2026年3月20日），以便核实。\n\n" +
-    "**新了什么**：用一句话说清楚这次更新/发布的核心变化是什么。避免堆砌参数，直接说用户感知得到的差异。\n\n" +
-    "**对我有什么用**：这个更新对一个普通用户的日常工作（写作、信息整理、自动化办公、学习研究）有什么具体的新用法？给出1-2个可以直接上手的场景举例。\n\n" +
-    "**值得关注的程度**：高（改变使用习惯级别）/ 中（有用但不紧迫）/ 低（了解即可）\n\n" +
-    "全部内容输出后，附一段独立的**AI工具近期方向总结**：用普通人能理解的语言，概括这段时间AI工具的演进方向是什么，接下来哪类工具可能对普通用户的工作方式产生实质影响。"
-  );
-}
-
 function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
   const mkData = realMarketData;
   const bt = "```";
@@ -1061,116 +1036,109 @@ function buildProTrendsPrompt(newsText, timelineText, aiText, flashDataJsonText)
   );
 }
 
-/** 今日头条/动态速览：以 D1 事实池为主，不默认调用搜索。 */
-function buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData, groundedFactsMarkdown) {
-  const mkData = realMarketData;
+/** AI 情报站：Gemini + Google Search，输出结构化 JSON（与事件一览 renderDailyAi 对齐）。 */
+function buildProAIJsonPrompt(timeStr) {
   const bt = "```";
-  const facts =
-    String(groundedFactsMarkdown || "").trim() ||
-    "(事实池当前为空或过少：请仅依据下方资产数字做保守归纳，不得捏造具体媒体或链接。)";
   return (
     "当前时间：" +
     timeStr +
     "。\n" +
-    "今日恐慌贪婪指数：" +
-    fngScore +
-    "（" +
-    fngClass +
-    "）。\n" +
-    "主要资产24H涨跌：纳指 " +
-    mkData["纳指"].change +
-    "%，标普500 " +
-    mkData["标普500"].change +
-    "%，英伟达 " +
-    mkData["英伟达"].change +
-    "%，比特币 " +
-    mkData["比特币"].change +
-    "%，黄金 " +
-    mkData["黄金"].change +
-    "%。\n\n" +
-    "【系统已抓取事实池】以下条目来自 RSS/金融日历/新闻聚合网关，按时间倒序；不是你的训练记忆：" +
-    "\n" +
-    facts +
-    "\n---\n\n" +
-    "请在**不编造未出现在事实池中的外链或通讯社名称**的前提下，按要求输出 JSON。\n" +
-    "若事实池信息不足，请显著降低结论强度，但不要输出脚手架解释或面向开发者的说明。\n\n" +
-    "【结构要求】\n" +
-    "严格输出一个 JSON 块，包含三个字段：topStories（头条事件，必须3条）、dynamicBriefs（动态速览，至多5条）、macroTrend（宏观趋势总结）。\n\n" +
-    "## 1. topStories (今日头条)\n" +
-    "从事实池中挑选 3 条对跨资产定价影响最大的高价值事件；每条须能在事实池中找到对应标题或来源支撑，且尽量覆盖不同资产传导维度。\n\n" +
-    "对于每一个头条对象，包含以下字段：\n" +
-    '- "category"：事件类别\n' +
-    '- "title"：事件核心标题\n' +
-    '- "fact"：一句话说明时间、主体、动作与影响（勿添加事实池没有的细节）\n' +
-    '- "structure"：包含三个字段的对象：\n' +
-    '  - "trigger"：直接触发原因\n' +
-    '  - "conflict"：深层结构性矛盾\n' +
-    '  - "divergence"：声明与行动的差异（若无对证信息则写「事实池未提供对证材料」）\n' +
-    '- "impacts"：受影响资产数组，每个对象包含：\n' +
-    '  - "asset"：资产名称（如 "BTC", "纳指" 等）\n' +
-    '  - "direction"：利多/利空/震荡（必须是 "up", "down", 或 "shock" 之一）\n' +
-    '  - "logic"：传导逻辑预判\n' +
-    '- "nextWatch"：后续观察什么数据或事件节点\n\n' +
-    "## 2. dynamicBriefs (动态速览)\n" +
-    "从事实池中再选至多 5 条 secondary 事件（可与头条同源主题但粒度不同）。\n" +
-    "包含字段：\n" +
-    '- "category"：类别\n' +
-    '- "title"：标题\n' +
-    '- "body"：一句话说明发生了什么\n' +
-    '- "description"：补充主体、动作和影响\n' +
-    '- "analysis"：说明可能影响与后续验证信号\n\n' +
-    "## 3. macroTrend (宏观趋势总结)\n" +
-    "概括事实池驱动的近期宏观结构性变化，必须显式写明「主要由事实池中哪些类型的条目驱动」。\n\n" +
-    bt + "json\n" +
+    "请使用 Google Search 工具检索最新可核验资讯，并**仅输出一个 JSON 代码块**（不要前缀说明、不要 Markdown 报告体）。\n\n" +
+    "【受众】关注 AI 工具与日常可用性的普通用户；重点在「新了什么」「对我有什么用」，少堆参数。\n\n" +
+    "【检索规则——与 ribao 一致】\n" +
+    "1) 仅纳入可指向近 72 小时内公开来源的信息；严禁用训练记忆里的旧闻凑数。\n" +
+    "2) 优先：Anthropic / OpenAI / Google(Gemini 等) / Meta / xAI / Mistral / 苹果 AI / 微软 Copilot 等有**可核验新动作**才写。\n" +
+    "3) 次要：Cursor、Perplexity、OpenClaw 等热门工具在 72h 内的**新增量**（版本、功能、社区玩法）；无新增量则不写。\n" +
+    "4) 若 72h 内无满足条件的条目：`aiIntel` 输出空数组 `[]`。\n\n" +
+    "【输出 schema】顶层对象仅含 `aiIntel` 数组；每条含字段：\n" +
+    '- "title"：短标题\n' +
+    '- "date"：发布日期（如 2026年5月5日 或 ISO 日期）\n' +
+    '- "what"：一句话「新了什么」\n' +
+    '- "use"：一句话「对我有什么用」\n' +
+    '- "attention"：只能是「高」「中」「低」之一\n' +
+    '- "sourceName"：媒体或官方来源名\n' +
+    '- "sourceUrl"：可选，有可核验链接则填写\n\n' +
+    "条数：**3～6 条**；若无达标新闻则 `aiIntel`: []。\n\n" +
+    bt +
+    "json\n" +
     "{\n" +
-    '  "topStories": [\n' +
+    '  "aiIntel": [\n' +
     "    {\n" +
-    '      "category": "...",\n' +
     '      "title": "...",\n' +
-    '      "fact": "...",\n' +
-    '      "structure": {\n' +
-    '        "trigger": "...",\n' +
-    '        "conflict": "...",\n' +
-    '        "divergence": "..."\n' +
-    "      },\n" +
-    '      "impacts": [\n' +
-    '        { "asset": "...", "direction": "up", "logic": "..." }\n' +
-    "      ],\n" +
-    '      "nextWatch": "..."\n' +
+    '      "date": "...",\n' +
+    '      "what": "...",\n' +
+    '      "use": "...",\n' +
+    '      "attention": "高",\n' +
+    '      "sourceName": "...",\n' +
+    '      "sourceUrl": ""\n' +
     "    }\n" +
-    "  ],\n" +
-    '  "dynamicBriefs": [\n' +
-    "    {\n" +
-    '      "category": "...",\n' +
-    '      "title": "...",\n' +
-    '      "body": "...",\n' +
-    '      "description": "...",\n' +
-    '      "analysis": "..."\n' +
-    "    }\n" +
-    "  ],\n" +
-    '  "macroTrend": "..."\n' +
+    "  ]\n" +
     "}\n" +
-    bt + "\n"
+    bt +
+    "\n"
   );
 }
 
-/** AI 情报站：以事实池中 AI 标签/关键词命中项为主。 */
-function buildProAIGroundedPrompt(timeStr, aiFactsMarkdown) {
-  const block =
-    String(aiFactsMarkdown || "").trim() ||
-    "(事实池中暂无明确 AI 行业条目：请输出一段话说明「未发现高置信条目」，不要说具体产品发布时间。)";
-  return (
-    "当前时间：" +
-    timeStr +
-    "。\n\n" +
-    "【AI 情报事实池】\n" +
-    block +
-    "\n\n" +
-    "请根据上述条目整理 **AI / 云平台 / 大模型工具链** 动态，输出 Markdown。\n" +
-    "每条必须可追溯至事实池中的标题或来源名；若没有足够条目，宁可输出简短「本期事实池未发现足够 AI 硬核发布」。\n" +
-    "输出结构与旧版类似的 ### 小节 + **新了什么** / **对我有什么用**，但不要把训练记忆中的旧闻写进来。\n\n" +
-    "文末附 **AI 工具近期方向总结** 一段话，置信度必须与前面事实条目数量相称。"
-  );
+function normalizeAiIntelFromLlm(raw) {
+  const arr = Array.isArray(raw) ? raw : [];
+  const out = [];
+  for (const it of arr.slice(0, 8)) {
+    if (!it || typeof it !== "object") continue;
+    const attentionRaw = String(it.attention || it.level || "中").trim();
+    let attention = "中";
+    if (/高/.test(attentionRaw)) attention = "高";
+    else if (/低/.test(attentionRaw)) attention = "低";
+    out.push({
+      title: cleanReportText(it.title || it.headline, "AI 动态", 200),
+      date: cleanReportText(
+        it.date || it.publishDate || "",
+        new Date().toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }),
+        48,
+      ),
+      what: cleanReportText(it.what || it.news || it.summary, "", 500),
+      use: cleanReportText(it.use || it.valueForUser || it.impact, "", 500),
+      attention,
+      sourceName: cleanReportText(it.sourceName || it.source || "Google 检索", 100),
+      sourceUrl: cleanReportText(it.sourceUrl || it.url || "", "", 600),
+    });
+  }
+  if (!out.length) {
+    return [
+      {
+        title: "近72小时暂无满足筛选条目的重大 AI 发布",
+        date: new Date().toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }),
+        what: "检索未命中符合时间窗与可核验要求的条目，未用训练记忆补位。",
+        use: "可稍后使用「实时扫描」重试，或查看舆情分析全文。",
+        attention: "低",
+        sourceName: "Gemini + Google Search",
+        sourceUrl: "",
+      },
+    ];
+  }
+  return out.slice(0, 6);
+}
+
+function renderAiIntelMarkdownForTrends(items) {
+  const lines = [];
+  for (const x of items || []) {
+    lines.push(
+      "### " +
+        cleanReportText(x.title, "AI", 120) +
+        "\n\n" +
+        "**发布日期**：" +
+        cleanReportText(x.date, "", 48) +
+        "\n\n" +
+        "**新了什么**：" +
+        cleanReportText(x.what, "", 400) +
+        "\n\n" +
+        "**对我有什么用**：" +
+        cleanReportText(x.use, "", 400) +
+        "\n\n" +
+        "**值得关注的程度**：" +
+        cleanReportText(x.attention, "中", 8),
+    );
+  }
+  return lines.join("\n\n");
 }
 
 /** ---- Gemini ---- */
@@ -1353,10 +1321,6 @@ async function buildReport(env, bodyIn) {
       warnings.push({ code: "d1_read", message: String(e && e.message ? e.message : e) });
     }
   }
-  const nonAiFacts = factRows.filter((r) => String(r.category || "").toUpperCase() !== "AI");
-  const factsMdMacro = formatFactsMarkdown(nonAiFacts, 42);
-  const aiFactRows = filterAiFactsFromNewsItems(factRows);
-  const factsMdAi = formatFactsMarkdown(aiFactRows, 28);
   const groundingItemIds = factRows.slice(0, 48).map((r) => r.id);
   let usedSearchNews = false;
   let usedSearchAi = false;
@@ -1409,7 +1373,7 @@ async function buildReport(env, bodyIn) {
   if (!llmEnabled) {
     sections.news = sectionsDisabledStatus("请在 Worker 设置 GEMINI_API_KEY（或 GOOGLE_API_KEY），并将 YUQING_LLM_PROVIDER 设为 gemini 或 auto（默认 auto：有密钥即启用）。");
     sections.timeline = sectionsDisabledStatus("同上。");
-    sections.ai = { markdown: "", status: "disabled", message: "LLM 未启用" };
+    sections.ai = { markdown: "", status: "disabled", message: "LLM 未启用", data: { aiIntel: [] } };
     sections.trends = { markdown: "", status: "disabled", message: "LLM 未启用" };
   } else {
     const tasks = [];
@@ -1447,25 +1411,18 @@ async function buildReport(env, bodyIn) {
     const needMacro = modules.news || modules.timeline;
     const needAi = modules.ai;
 
-    const allowSearchBody = !!(bodyIn && bodyIn.allowSearch);
-    const forceSearch = !!(bodyIn && bodyIn.forceSearch);
-    const envAlways = env && String(env.YUQING_LLM_ALWAYS_SEARCH || "") === "1";
     const macroP =
       needMacro &&
       (async () => {
         try {
-          const macroUseSearch =
-            forceSearch || envAlways || allowSearchBody || factsMdMacro.trim().length < 220;
-          usedSearchNews = macroUseSearch;
-          const prompt = macroUseSearch
-            ? buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData)
-            : buildProNewsGroundedPrompt(timeStr, fngScore, fngClass, realMarketData, factsMdMacro);
+          usedSearchNews = true;
+          const prompt = buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData);
           const model = proseModel(env, mode);
-          const combined = await geminiGenerateContent(env, model, prompt, { googleSearch: macroUseSearch });
+          const combined = await geminiGenerateContent(env, model, prompt, { googleSearch: true });
           const inner = extractJsonFence(combined);
           const parsed = JSON.parse(inner);
-          const topStories = normalizeDailyTopStoriesFromLlm(parsed.topStories, nonAiFacts);
-          const dynamicBriefs = normalizeDailyBriefsFromLlm(parsed.dynamicBriefs, nonAiFacts);
+          const topStories = normalizeDailyTopStoriesFromLlm(parsed.topStories, []);
+          const dynamicBriefs = normalizeDailyBriefsFromLlm(parsed.dynamicBriefs, []);
           const macroTrend = cleanReportText(parsed.macroTrend, "", 420);
           newsMd = renderTopStoriesMarkdown(topStories, macroTrend);
           timelineMd = renderBriefsMarkdown(dynamicBriefs);
@@ -1504,17 +1461,24 @@ async function buildReport(env, bodyIn) {
       needAi &&
       (async () => {
         try {
-          const aiUseSearch =
-            forceSearch || envAlways || allowSearchBody || factsMdAi.trim().length < 140;
-          usedSearchAi = aiUseSearch;
-          const prompt = aiUseSearch ? buildProAIPrompt(timeStr) : buildProAIGroundedPrompt(timeStr, factsMdAi);
+          usedSearchAi = true;
+          const prompt = buildProAIJsonPrompt(timeStr);
           const model = proseModel(env, mode);
-          aiMd = await geminiGenerateContent(env, model, prompt, { googleSearch: aiUseSearch });
-          sections.ai = { markdown: aiMd, status: aiMd ? "ready" : "error", message: null };
+          const text = await geminiGenerateContent(env, model, prompt, { googleSearch: true, temperature: 0.35 });
+          const inner = extractJsonFence(text);
+          const parsed = JSON.parse(inner);
+          const aiIntelItems = normalizeAiIntelFromLlm(parsed.aiIntel);
+          aiMd = renderAiIntelMarkdownForTrends(aiIntelItems);
+          sections.ai = {
+            markdown: aiMd,
+            data: { aiIntel: aiIntelItems },
+            status: aiMd ? "ready" : "error",
+            message: null,
+          };
         } catch (e) {
           const msg = String(e && e.message ? e.message : e);
           warnings.push({ code: "aiLlm", message: msg });
-          sections.ai = { markdown: "", status: "error", message: msg };
+          sections.ai = { markdown: "", data: { aiIntel: [] }, status: "error", message: msg };
         }
       })();
 
@@ -1540,7 +1504,7 @@ async function buildReport(env, bodyIn) {
       sections.timeline = { markdown: "", items: [], status: "planned", message: "模块已关闭" };
     }
     if (!needAi) {
-      sections.ai = { markdown: "", status: "planned", message: "模块已关闭" };
+      sections.ai = { markdown: "", status: "planned", message: "模块已关闭", data: { aiIntel: [] } };
     }
     llmStatus.capabilities.search = !!(usedSearchNews || usedSearchAi);
   }
@@ -1767,7 +1731,7 @@ async function buildDailyEventReport(env, opts) {
     }
   }
 
-  const { factRows, nonAiFacts, aiFacts } = await loadFactsBundle(env, 80);
+  const { factRows } = await loadFactsBundle(env, 80);
   let legacy = null;
   try {
     legacy = await buildReport(env, {
@@ -1793,21 +1757,26 @@ async function buildDailyEventReport(env, opts) {
   ];
   const sources = uniqueSourceRows(factRows);
   
-  let topStories = dailyTopStoriesFromFacts(nonAiFacts);
-  let dynamicBriefs = dailyBriefsFromFacts(nonAiFacts);
+  let topStories = dailyTopStoriesFromFacts([]);
+  let dynamicBriefs = dailyBriefsFromFacts([]);
   let macroTrend = "";
-  
+
   if (legacy && legacy.sections && legacy.sections.news && legacy.sections.news.data) {
     const data = legacy.sections.news.data;
     if (Array.isArray(data.topStories) && data.topStories.length > 0) {
-      topStories = normalizeDailyTopStoriesFromLlm(data.topStories, nonAiFacts);
+      topStories = normalizeDailyTopStoriesFromLlm(data.topStories, []);
     }
     if (Array.isArray(data.dynamicBriefs) && data.dynamicBriefs.length > 0) {
-      dynamicBriefs = normalizeDailyBriefsFromLlm(data.dynamicBriefs, nonAiFacts);
+      dynamicBriefs = normalizeDailyBriefsFromLlm(data.dynamicBriefs, []);
     }
     macroTrend = cleanReportText(data.macroTrend, "", 420);
   }
-  
+
+  let aiIntel =
+    legacy && legacy.sections && legacy.sections.ai && legacy.sections.ai.data && Array.isArray(legacy.sections.ai.data.aiIntel)
+      ? legacy.sections.ai.data.aiIntel
+      : dailyAiIntelFromFacts([]);
+
   const report = {
     title: "事件日报",
     subtitle: "日常新闻早午晚报",
@@ -1816,7 +1785,7 @@ async function buildDailyEventReport(env, opts) {
     topStory: topStories[0],
     topStories,
     dynamicBriefs,
-    aiIntel: dailyAiIntelFromFacts(aiFacts),
+    aiIntel,
     trendRead: trendReadFromDailyInputs(legacy, factRows.length),
     sources,
     quality: {
@@ -2043,13 +2012,17 @@ async function buildSentimentAnalysisReport(env, opts) {
     riskRadar: riskRadarFromInputs(daily, marketSnapshot, factRows),
     opportunityScanner: opportunitiesFromInputs(daily, marketSnapshot),
     eventCalendar: calendarFromFacts(factRows),
-    aiIntel: dailyAiIntelFromFacts(aiFacts).map((x) => ({
+    aiIntel: (
+      legacy && legacy.sections && legacy.sections.ai && legacy.sections.ai.data && Array.isArray(legacy.sections.ai.data.aiIntel)
+        ? legacy.sections.ai.data.aiIntel
+        : dailyAiIntelFromFacts(aiFacts)
+    ).map((x) => ({
       title: x.title,
-      relevance: x.use,
-      watch: x.what,
+      relevance: x.use || "",
+      watch: x.what || "",
       confidence: x.attention === "高" ? 0.72 : 0.58,
-      sourceName: x.sourceName,
-      sourceUrl: x.sourceUrl,
+      sourceName: x.sourceName || "",
+      sourceUrl: x.sourceUrl || "",
     })),
     trendRead: trendReadForSentiment(legacy, incrementalSearch),
     incrementalSearch,
