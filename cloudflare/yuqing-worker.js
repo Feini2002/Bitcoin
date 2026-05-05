@@ -18,7 +18,7 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.3-gemini-search-daily-blocks";
+const WORKER_BUILD = "yuqing-worker/1.1.4-reports-delete";
 
 const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 const FINNHUB_ORIGIN = "https://finnhub.io";
@@ -43,7 +43,7 @@ function maintenanceEnabled(env) {
 function corsHeaders(extra = {}) {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Expose-Headers": "X-Worker-Build, X-Yuqing-Worker",
     ...extra,
@@ -222,6 +222,14 @@ async function loadLatestYuqingReport(db, kind) {
 async function loadYuqingReportById(db, id) {
   const row = await db.prepare(`SELECT * FROM yuqing_reports WHERE id = ? LIMIT 1`).bind(String(id || "")).first();
   return decodeReportRow(row);
+}
+
+async function deleteYuqingReportById(db, id) {
+  const sid = String(id || "").trim();
+  if (!sid) return { deleted: 0 };
+  const res = await db.prepare(`DELETE FROM yuqing_reports WHERE id = ?`).bind(sid).run();
+  const meta = res && res.meta ? res.meta : {};
+  return { deleted: Number(meta.changes || 0) };
 }
 
 async function loadYuqingReportHistory(db, kind, days) {
@@ -2206,6 +2214,21 @@ export default {
       }
     }
 
+    if (path === "/api/yuqing/reports/item" && request.method === "DELETE") {
+      const rl = await checkRateLimit(request, "reports_delete", 24);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定或未迁移", d1Ready: false }, 503);
+      try {
+        const id = String(url.searchParams.get("id") || "").trim();
+        if (!id) return json({ ok: false, error: "缺少 id" }, 400);
+        const { deleted } = await deleteYuqingReportById(env.YUQING_DB, id);
+        if (!deleted) return json({ ok: false, error: "报告不存在或已删除" }, 404);
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, id, deleted });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
     if (path === "/api/yuqing/reports/generate" && request.method === "POST") {
       const rl = await checkRateLimit(request, "reports_generate", 8);
       if (rl) return rl;
@@ -2381,6 +2404,7 @@ export default {
           "GET /api/yuqing/reports/latest?kind=daily_event|sentiment_analysis",
           "GET /api/yuqing/reports/history?kind=...&days=7",
           "GET /api/yuqing/reports/item?id=...",
+          "DELETE /api/yuqing/reports/item?id=...",
           "POST /api/yuqing/reports/generate",
           "POST /api/yuqing/report (compat: sentiment_analysis)",
           "POST /api/yuqing/ingest (+X-Yuqing-Cron-Secret)",

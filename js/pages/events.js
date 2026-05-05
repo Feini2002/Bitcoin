@@ -520,12 +520,17 @@ function renderDailyArchiveList() {
       lastDate = date || lastDate;
       const active = dailyActiveReport().id === item.id;
       const title = item.title || (item.report && (item.report.title || item.report.topStory?.title)) || "日报";
-      return `${dateHead}<button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${dailyEscapeHtml(item.id)}">
+      const deleteBtn =
+        item.id && item.id !== DAILY_EVENT_MOCK_REPORT.id
+          ? `<button type="button" class="news-archive-delete" data-report-id="${dailyEscapeHtml(item.id)}" title="从云端 D1 删除此条" aria-label="删除此条存档"><i class="ph ph-trash"></i></button>`
+          : "";
+      return `${dateHead}<div class="news-archive-row">
+        <button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${dailyEscapeHtml(item.id)}">
         <span>${dailyEscapeHtml(dailySlotLabel(item))}</span>
         <strong>${dailyEscapeHtml(title)}</strong>
         <em>${dailyEscapeHtml(dailyFormatTime(item.generatedAt))}</em>
         <small>${dailyEscapeHtml(dailyTriggerLabel(item))}</small>
-      </button>`;
+      </button>${deleteBtn}</div>`;
     })
     .join("");
 }
@@ -661,6 +666,35 @@ async function loadDailyHistory() {
     const data = await DataEngine.fetchYuqingReportHistory(DAILY_EVENT_KIND, 7, { signal: __yuqingDailyAbort?.signal });
     if (data && Array.isArray(data.items) && data.items.length) dailyEventState.history = data.items;
   } catch (_) {}
+}
+
+async function deleteDailyArchiveEntry(id) {
+  const rid = String(id || "").trim();
+  if (!rid || rid === DAILY_EVENT_MOCK_REPORT.id) return;
+  if (typeof DataEngine === "undefined" || typeof DataEngine.deleteYuqingReportItem !== "function") {
+    dailyEventState.status = "DataEngine 不支持删除";
+    renderYuqingDailyIntoDom();
+    return;
+  }
+  if (!window.confirm("确定删除此条回档？云端 D1 中的对应记录将一并删除且不可恢复。")) return;
+  try {
+    await DataEngine.deleteYuqingReportItem(rid);
+    dailyEventState.history = (dailyEventState.history || []).filter((x) => x && x.id !== rid);
+    const activeId = dailyActiveReport().id;
+    const hashId = dailyHashReportId();
+    if (activeId === rid || hashId === rid) {
+      try {
+        history.replaceState(null, "", "#/news");
+      } catch (_) {}
+      await loadDailyReport("");
+    } else {
+      renderYuqingDailyIntoDom();
+    }
+    dailyEventState.status = "已删除所选回档";
+  } catch (e) {
+    dailyEventState.status = e && e.message ? e.message : String(e);
+    renderYuqingDailyIntoDom();
+  }
 }
 
 async function loadDailyReport(reportId = "") {
@@ -807,6 +841,16 @@ function bindYuqingDailyEvents() {
         } catch (_) {}
         await loadDailyReport(id);
       }
+    });
+  });
+  document.querySelectorAll(".news-archive-delete").forEach((del) => {
+    if (del.dataset.boundDel) return;
+    del.dataset.boundDel = "1";
+    del.addEventListener("click", async (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const id = del.getAttribute("data-report-id") || "";
+      await deleteDailyArchiveEntry(id);
     });
   });
 }

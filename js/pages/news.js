@@ -379,12 +379,17 @@ function renderReportArchive(reportRow) {
       lastDate = date || lastDate;
       const active = reportRow.id === item.id;
       const title = item.title || (item.report && item.report.title) || "舆情分析";
-      return `${dateHead}<button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${analysisEscapeHtml(item.id)}">
+      const deleteBtn =
+        item.id && item.id !== ANALYSIS_MOCK_REPORT.id
+          ? `<button type="button" class="news-archive-delete" data-report-id="${analysisEscapeHtml(item.id)}" title="从云端 D1 删除此条" aria-label="删除此条存档"><i class="ph ph-trash"></i></button>`
+          : "";
+      return `${dateHead}<div class="news-archive-row">
+        <button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${analysisEscapeHtml(item.id)}">
         <span>${analysisEscapeHtml(analysisSlotLabel(item))}</span>
         <strong>${analysisEscapeHtml(title)}</strong>
         <em>${analysisEscapeHtml(analysisFormatTime(item.generatedAt))}</em>
         <small>${analysisEscapeHtml(item.triggerType === "manual" ? "手动分析" : "定点触发")}</small>
-      </button>`;
+      </button>${deleteBtn}</div>`;
     })
     .join("");
 }
@@ -575,6 +580,35 @@ async function loadAnalysisHistory() {
   } catch (_) {}
 }
 
+async function deleteAnalysisArchiveEntry(id) {
+  const rid = String(id || "").trim();
+  if (!rid || rid === ANALYSIS_MOCK_REPORT.id) return;
+  if (typeof DataEngine === "undefined" || typeof DataEngine.deleteYuqingReportItem !== "function") {
+    analysisState.status = "DataEngine 不支持删除";
+    renderNewsIntoDom();
+    return;
+  }
+  if (!window.confirm("确定删除此条回档？云端 D1 中的对应记录将一并删除且不可恢复。")) return;
+  try {
+    await DataEngine.deleteYuqingReportItem(rid);
+    analysisState.history = (analysisState.history || []).filter((x) => x && x.id !== rid);
+    const activeId = activeAnalysisReport().id;
+    const hashId = analysisHashReportId();
+    if (activeId === rid || hashId === rid) {
+      try {
+        history.replaceState(null, "", "#/news-analysis");
+      } catch (_) {}
+      await loadAnalysisReport("");
+    } else {
+      renderNewsIntoDom();
+    }
+    analysisState.status = "已删除所选回档";
+  } catch (e) {
+    analysisState.status = e && e.message ? e.message : String(e);
+    renderNewsIntoDom();
+  }
+}
+
 async function loadAnalysisReport(reportId = "") {
   if (typeof DataEngine === "undefined") {
     analysisState.source = "error";
@@ -668,6 +702,16 @@ function bindNewsInnerEvents() {
         } catch (_) {}
         await loadAnalysisReport(id);
       }
+    });
+  });
+  document.querySelectorAll(".news-archive-delete").forEach((del) => {
+    if (del.dataset.boundDel) return;
+    del.dataset.boundDel = "1";
+    del.addEventListener("click", async (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const id = del.getAttribute("data-report-id") || "";
+      await deleteAnalysisArchiveEntry(id);
     });
   });
 }

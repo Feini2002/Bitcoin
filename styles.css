@@ -6740,6 +6740,43 @@ html[data-theme="dark"] .theme-option--active {
   overflow: auto;
 }
 
+.news-archive-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+}
+
+.news-archive-row .news-archive-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-archive-delete {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.news-archive-delete:hover {
+  border-color: rgba(239, 68, 68, 0.42);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.news-archive-delete .ph {
+  font-size: 18px;
+}
+
 .news-archive-item {
   width: 100%;
   display: grid;

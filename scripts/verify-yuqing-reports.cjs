@@ -108,6 +108,9 @@ const decoded = ctx.decodeReportRow({
 });
 assertOk(decoded && decoded.quality.factCount === 2 && decoded.sourceRefs[0].href === "#/chart", "decode report row contract");
 
+assertOk(worker.includes("request.method === \"DELETE\"") && worker.includes("reports_delete"), "worker handles DELETE reports/item");
+assertOk(/DELETE FROM yuqing_reports WHERE id = \?/.test(worker), "worker deletes report by primary id");
+
 for (const route of [
   "/api/yuqing/reports/latest",
   "/api/yuqing/reports/history",
@@ -124,6 +127,7 @@ for (const method of [
   "fetchYuqingReportLatest",
   "fetchYuqingReportHistory",
   "fetchYuqingReportItem",
+  "deleteYuqingReportItem",
   "generateYuqingStructuredReport",
   "fetchYuqingReportStatus",
 ]) {

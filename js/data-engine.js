@@ -270,6 +270,30 @@ const DataEngine = {
     return data;
   },
 
+  async deleteYuqingReportItem(id, opts = {}) {
+    const q = new URLSearchParams({ id: String(id || "").trim() });
+    const url = `${this.yuqingApiBase()}/api/yuqing/reports/item?${q.toString()}`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const t = setTimeout(() => ctrl.abort(), Math.min(25_000, Math.max(5_000, Number(opts.timeoutMs) || 15_000)));
+    let res;
+    try {
+      res = await fetch(url, { method: "DELETE", cache: "no-store", signal: ctrl.signal, headers: { Accept: "application/json" } });
+    } catch (e) {
+      const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
+      throw new Error(`无法删除舆情报告：${m}`);
+    } finally {
+      clearTimeout(t);
+      unsub();
+    }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const hint = data && (data.error || data.message);
+      throw new Error(`舆情报告删除 ${res.status}${hint ? `: ${hint}` : ""}`);
+    }
+    return data;
+  },
+
   async generateYuqingStructuredReport(kind = "sentiment_analysis", payload = {}, opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate`;
     const timeoutMs = Math.min(210_000, Math.max(5_000, Number(opts.timeoutMs) || 185_000));
