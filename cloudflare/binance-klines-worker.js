@@ -52,8 +52,11 @@ const MAX_KLINES_PER_INTERVAL = 2000;
 const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
 const FETCH_TIMEOUT_MS = 8000;
+/** Gemini REST（与 yuqing Worker 对齐）；密钥来自 Secret GEMINI_API_KEY / GOOGLE_API_KEY */
+const FETCH_TIMEOUT_LLM_MS = 118_000;
+const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
-const WORKER_BUILD = "btc-worker/3.7.8-footprint-auto-sync";
+const WORKER_BUILD = "btc-worker/3.7.9-gemini-llm-sync";
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
 const LIQUIDATION_SYMBOL = DEFAULT_SYMBOL;
 const LIQUIDATION_BUCKET_MS = 5 * 60 * 1000;
@@ -205,6 +208,93 @@ async function fetchWithTimeout(u, opts, timeoutMs = FETCH_TIMEOUT_MS) {
   } finally {
     clearTimeout(t);
   }
+}
+
+function getGeminiApiKey(env) {
+  if (!env) return "";
+  const k = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
+  return k ? String(k) : "";
+}
+
+/** BTC_LLM_PROVIDER：none | gemini | google | auto（默认 auto：有密钥则启用） */
+function resolveBtcLlmProvider(env) {
+  const hasExplicit = env && env.BTC_LLM_PROVIDER != null && String(env.BTC_LLM_PROVIDER).trim() !== "";
+  const raw = hasExplicit ? String(env.BTC_LLM_PROVIDER).trim().toLowerCase() : "auto";
+  if (raw === "auto") return getGeminiApiKey(env) ? "gemini" : "none";
+  if (raw === "none" || raw === "off" || raw === "disable") return "none";
+  if (raw === "gemini" || raw === "google") return "gemini";
+  return "none";
+}
+
+function btcGeminiModel(env) {
+  return env && env.BTC_GEMINI_MODEL ? String(env.BTC_GEMINI_MODEL) : "gemini-2.0-flash";
+}
+
+async function btcGeminiGenerateText(env, prompt, opts) {
+  const key = getGeminiApiKey(env);
+  if (!key) throw new Error("GEMINI_API_KEY / GOOGLE_API_KEY 未配置");
+  const modelId = btcGeminiModel(env);
+  const useSearch = !!(opts && opts.googleSearch);
+  /** @type {any} */
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: opts && opts.temperature != null ? opts.temperature : useSearch ? 0.35 : 0.12,
+    },
+  };
+  if (useSearch) body.tools = [{ google_search: {} }];
+  const url =
+    GEMINI_ORIGIN +
+    `/v1beta/models/${encodeURIComponent(modelId)}:generateContent` +
+    `?key=` +
+    encodeURIComponent(key);
+  const res = await fetchWithTimeout(
+    url,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+    },
+    FETCH_TIMEOUT_LLM_MS,
+  );
+  const textRaw = await res.text();
+  /** @type {any} */
+  let j = null;
+  try {
+    j = textRaw ? JSON.parse(textRaw) : null;
+  } catch (_) {
+    j = null;
+  }
+  if (!res.ok) {
+    const apiErr =
+      j && j.error ? String(j.error.message || j.error.status || JSON.stringify(j.error)) : textRaw.slice(0, 200);
+    throw new Error(`Gemini HTTP ${res.status}: ${apiErr}`);
+  }
+  const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+  if (!Array.isArray(parts)) throw new Error("Gemini 返回无 candidates/parts");
+  let out = "";
+  for (const p of parts) {
+    if (p && p.text) out += p.text;
+  }
+  return out.trim();
+}
+
+async function handleAiLlmStatus(_request, env) {
+  const keyOk = !!getGeminiApiKey(env);
+  const provider = resolveBtcLlmProvider(env);
+  return json(
+    {
+      ok: true,
+      worker: "btc",
+      geminiKeyConfigured: keyOk,
+      llmProvider: provider,
+      llmActive: provider === "gemini" && keyOk,
+      modelDefault: btcGeminiModel(env),
+      workerBuild: WORKER_BUILD,
+    },
+    200,
+    { "Cache-Control": "no-store" },
+  );
 }
 
 function intervalMs(interval) {
@@ -3698,7 +3788,23 @@ async function handleDerivativesSnapshot(_request, env, url) {
   const profile = String(url.searchParams.get("profile") || "current");
   const range = String(url.searchParams.get("range") || "30d");
   const payload = await readDerivativesPayload(env, symbol, range);
-  return json(buildCompactDerivativesSnapshot(payload, profile), 200, { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-ai-derivatives-snapshot" });
+  /** @type {any} */
+  const compact = buildCompactDerivativesSnapshot(payload, profile);
+  const wantGeminiSummary = String(url.searchParams.get("geminiSummary") || "").trim() === "1";
+  if (wantGeminiSummary && resolveBtcLlmProvider(env) === "gemini" && getGeminiApiKey(env)) {
+    try {
+      const brief = compact.llmBrief || "";
+      const prompt =
+        "你是衍生品与市场微观结构的简报助手。基于下列结构化要点（中文），输出一段不超过 120 字的 Markdown：" +
+        "提炼杠杆情绪与宏观波动的组合含义，标注不确定性；禁止编造要点中未出现的数字。\n\n" +
+        brief;
+      compact.llmSummary = await btcGeminiGenerateText(env, prompt, { temperature: 0.12 });
+      compact.llmSummaryProvider = "gemini";
+    } catch (e) {
+      compact.llmSummaryError = String(e && e.message ? e.message : e).slice(0, 260);
+    }
+  }
+  return json(compact, 200, { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-ai-derivatives-snapshot" });
 }
 
 async function handleReadOnchain(_request, env, url) {
@@ -5425,6 +5531,7 @@ export default {
     if (path === "/api/d1/derivatives/status") return handleDerivativesStatus(request, env);
     if (path === "/api/d1/derivatives/origin-check") return handleDerivativesOriginProbe(request, env);
     if (path === "/api/d1/onchain") return handleReadOnchain(request, env, url);
+    if (path === "/api/ai/llm-status") return handleAiLlmStatus(request, env);
     if (path === "/api/ai/derivatives-snapshot") return handleDerivativesSnapshot(request, env, url);
 
     const isLegacyProxy =
@@ -5445,7 +5552,7 @@ export default {
       {
         error: "path not found",
         hint:
-          "GET /api/d1/klines?symbol=BTCUSDT&interval=15m  |  /api/binance/ticker/price?symbol=BTCUSDT  |  /api/d1/footprint?symbol=BTCUSDT&interval=5m  |  /api/d1/liquidations?symbol=BTCUSDT&range=30d  |  /api/d1/derivatives?symbol=BTCUSDT&range=30d  |  /api/ai/derivatives-snapshot?profile=brief  |  /api/d1/status",
+          "GET /api/d1/klines?symbol=BTCUSDT&interval=15m  |  /api/binance/ticker/price?symbol=BTCUSDT  |  /api/d1/footprint?symbol=BTCUSDT&interval=5m  |  /api/d1/liquidations?symbol=BTCUSDT&range=30d  |  /api/d1/derivatives?symbol=BTCUSDT&range=30d  |  /api/ai/derivatives-snapshot?profile=brief  |  /api/ai/llm-status  |  /api/d1/status",
       },
       404
     );

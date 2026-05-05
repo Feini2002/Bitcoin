@@ -5,7 +5,7 @@
 #   npx wrangler secret put FINNHUB_API_KEY --config wrangler.yuqing.toml
 #   npx wrangler secret put GEMINI_API_KEY --config wrangler.yuqing.toml   # 或 GOOGLE_API_KEY
 # Provider（也可在控制台改 vars）：
-#   YUQING_LLM_PROVIDER=none|gemini
+#   YUQING_LLM_PROVIDER=none|gemini|auto   （默认 auto：已配置 Gemini 密钥则启用）
 #
 # 自定义域若在 wrangler deploy 时不自动下发，请到 Cloudflare 控制台为该 Worker 添加 Custom Domain: yuqing.feiniwork.com
 
@@ -15,7 +15,7 @@ compatibility_date = "2024-12-01"
 workers_dev = true
 
 [vars]
-YUQING_LLM_PROVIDER = "none"
+YUQING_LLM_PROVIDER = "auto"
 # MAINTENANCE_MODE = "false"
 
 # D1（舆情专用，与 btc 无关）。请先执行：

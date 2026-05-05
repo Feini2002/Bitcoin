@@ -3,7 +3,7 @@
  *
  * - 聚合非 LLM：FNG、CoinGecko BTC、Finnhub 批量 ETF/股票报价
  * - 后端编排日报：由原 ribao-cloudflare/index.html 迁移的 Prompt 与分析流程
- * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini；密钥仅存 Worker Secret
+ * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini|auto（默认 auto：已配置 GEMINI_API_KEY / GOOGLE_API_KEY 则走 Gemini）；密钥仅存 Worker Secret
  *
  * 兼容旧 api.feiniwork.com 的路径：/finnhub-bulk、/finnhub/*（建议使用 /api/yuqing/*）
  */
@@ -19,7 +19,7 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.1";
+const WORKER_BUILD = "yuqing-worker/1.1.2-llm-auto";
 
 const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 const FINNHUB_ORIGIN = "https://finnhub.io";
@@ -1180,7 +1180,9 @@ function getGeminiKey(env) {
 }
 
 function resolveProvider(env) {
-  const raw = env && env.YUQING_LLM_PROVIDER != null ? String(env.YUQING_LLM_PROVIDER).trim().toLowerCase() : "none";
+  const hasExplicit = env && env.YUQING_LLM_PROVIDER != null && String(env.YUQING_LLM_PROVIDER).trim() !== "";
+  const raw = hasExplicit ? String(env.YUQING_LLM_PROVIDER).trim().toLowerCase() : "auto";
+  if (raw === "auto") return getGeminiKey(env) ? "gemini" : "none";
   if (!raw || raw === "none" || raw === "off" || raw === "disable") return "none";
   if (raw === "gemini" || raw === "google") return "gemini";
   return raw;
@@ -1290,7 +1292,7 @@ function fallbackDashboard(realMarketData, fngScore, fngClass) {
     marketRegime: regime,
     keyAssets,
     crossAsset:
-      "多资产涨跌组合已拉取；跨资产传导与背离解读请在 Cloudflare 配置 YUQING_LLM_PROVIDER=gemini 并填写密钥后由模型生成。",
+      "多资产涨跌组合已拉取；跨资产传导与背离解读在已配置 GEMINI_API_KEY 且 YUQING_LLM_PROVIDER 为 gemini 或 auto（默认）时由模型生成。",
     anomalyAlert: "无明显背离",
     actionSuggestion: "建议先观察数据与新闻模块输出，勿据此单独做出交易决策。",
   };
@@ -1405,7 +1407,7 @@ async function buildReport(env, bodyIn) {
   };
 
   if (!llmEnabled) {
-    sections.news = sectionsDisabledStatus("请在 Worker 设置 YUQING_LLM_PROVIDER=gemini 并配置 GEMINI_API_KEY 或 GOOGLE_API_KEY。");
+    sections.news = sectionsDisabledStatus("请在 Worker 设置 GEMINI_API_KEY（或 GOOGLE_API_KEY），并将 YUQING_LLM_PROVIDER 设为 gemini 或 auto（默认 auto：有密钥即启用）。");
     sections.timeline = sectionsDisabledStatus("同上。");
     sections.ai = { markdown: "", status: "disabled", message: "LLM 未启用" };
     sections.trends = { markdown: "", status: "disabled", message: "LLM 未启用" };
@@ -2374,7 +2376,7 @@ export default {
       if (rl) return rl;
       const p = resolveProvider(env);
       if (p !== "gemini" || !getGeminiKey(env)) {
-        return json({ ok: false, error: "需要 YUQING_LLM_PROVIDER=gemini 且配置密钥" }, 400);
+        return json({ ok: false, error: "需要 Gemini：配置 GEMINI_API_KEY 且 YUQING_LLM_PROVIDER 不可为 none/off" }, 400);
       }
       let bodyIn = {};
       try {

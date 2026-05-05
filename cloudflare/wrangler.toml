@@ -38,6 +38,12 @@ new_sqlite_classes = ["LiquidationCollector"]
 [triggers]
 crons = ["* * * * *"]
 
+# 可选：Gemini（与 yuqing 共用 Secret 名 GEMINI_API_KEY / GOOGLE_API_KEY）
+#   npx wrangler secret put GEMINI_API_KEY
+# LLM：`BTC_LLM_PROVIDER=none|gemini|auto`（默认 auto，有密钥则视为可用；亦可在控制台设置）
+[vars]
+BTC_LLM_PROVIDER = "auto"
+
 # 可选的反代基址（仅当 Cloudflare 直连 fapi 被 451 时使用）。
 # 对应代码里的 BINANCE_FAPI_ORIGIN。
 # [vars]
