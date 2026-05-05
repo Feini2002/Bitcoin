@@ -5729,10 +5729,8 @@ html[data-theme="dark"] .theme-option--active {
 }
 
 .daily-event-command {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  backdrop-filter: blur(12px);
+  position: relative;
+  z-index: auto;
 }
 
 .news-command-main {
