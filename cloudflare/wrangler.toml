@@ -1,10 +1,9 @@
 # 与 Cloudflare 控制台一致：Worker 名 btc，自定义域 btc.feiniwork.com，D1 库名 btc、绑定名 DB。
 # 见 binance-klines-worker.js 内注释。
-# 本地开发:
-#   npx wrangler d1 execute btc --local --file=./schema.sql
-#   npx wrangler dev --local
-# 线上（建表/迁移到账号里的 D1「btc」）:
+#
+# D1（线上库「btc」）建表或迁移后在仓库 cloudflare 目录执行：
 #   npx wrangler d1 execute btc --remote --file=./schema.sql
+# Worker 发布后：
 #   npx wrangler deploy
 
 name = "btc"
@@ -16,10 +15,8 @@ compatibility_date = "2024-12-01"
 [placement]
 mode = "smart"
 
-# D1 数据库绑定：Worker 里用 env.DB 访问
-# 注意: database_id 需要在 cloudflare dashboard / `wrangler d1 create` 后填入真实 id。
-# 本地 `wrangler dev --local` 会忽略 database_id、自动在 .wrangler/state/v3/d1/ 下建 sqlite 文件。
-# 与前端关系：本机 D1 只在本机 miniflare 中可用；已 deploy 的 Worker 只绑定线上 D1。前端在「设置」中二选一，无法「线上 Worker + 本机 D1 文件」。
+# D1 数据库绑定：Worker 里用 env.DB 访问已部署 D1。
+# database_id：在控制台创建或与 `wrangler d1 create` 输出对齐后填入。
 [[d1_databases]]
 binding = "DB"
 database_name = "btc"

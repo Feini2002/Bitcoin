@@ -2,8 +2,9 @@
    配置 —— AGENTS / NAV / 数据页映射
    ======================================================= */
 
-/* K 线经 Cloudflare Worker + D1（见 cloudflare/binance-klines-worker.js）。
-   若在 index.html 里先于本文件设置 window.BIT_DATA_API_BASE / BIT_YUQING_API_BASE，则视为预置基址。 */
+/* K 线与衍生品等：经 Cloudflare Worker + D1（cloudflare/binance-klines-worker.js）。
+ * 舆情日报：独立 Worker（默认 yuqing.feiniwork.com）。
+ * 仅需要换到另一条已上线的 Worker HTTPS 域名时：在本脚本先前注入 window.BIT_DATA_API_BASE / BIT_YUQING_API_BASE，避免改默认常量。 */
 
 const BIT_KLINE_DEFAULT_CLOUD = "https://btc.feiniwork.com";
 const BIT_YUQING_DEFAULT_CLOUD = "https://yuqing.feiniwork.com";

@@ -1,6 +1,6 @@
 # BitDesk 专属 Harness 增强说明
 
-本系统是轻量交易数据监测台：**静态前端**（Pages 或任意 CDN）通过 **Cloudflare Worker + D1** 拉取 K 线、footprint、衍生品与舆情接口；已无本地 Node Express 宿主。
+本系统是轻量交易数据监测台：**静态前端**（Pages 或任意 CDN）通过 **Cloudflare Worker + D1** 拉取 K 线、footprint、衍生品与舆情接口；数据与服务端逻辑均在云上。
 
 ## 当前逻辑地图
 
@@ -32,7 +32,6 @@
 - 设置：`/index.html#settings`
 - 会议室：`/index.html#boardroom`
 
-（此前依赖本机 `:port` + `npm start` 的方式已移除。）
 
 ## 云端部署
 

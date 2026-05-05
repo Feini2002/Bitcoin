@@ -1,6 +1,4 @@
 .env
 node_modules/
-.bitdesk-port
 .wrangler/
 tmp-playwright/
-bitdesk-server.*.log

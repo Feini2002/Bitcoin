@@ -78,7 +78,7 @@ function pageSettings() {
       <header class="page-header settings-page-head">
         <div>
           <h1 class="page-title">设置</h1>
-          <div class="page-sub">偏好与云端数据巡检 · 主题写入本机，行情写入 Worker 绑定的 D1</div>
+          <div class="page-sub">偏好与云端巡检 · 主题仅在浏览器会话内保存；行情读写经 Cloudflare Worker 绑定的 D1</div>
         </div>
         <span class="chip ok settings-theme-chip">当前主题 · ${themeLabel}</span>
       </header>
@@ -133,14 +133,14 @@ function pageSettings() {
           <div class="settings-panel-icon settings-panel-icon--yuqing" aria-hidden="true"><i class="ph ph-newspaper-clipping"></i></div>
           <div>
             <h2 class="settings-panel-title">舆情与事件定点说明</h2>
-            <p class="settings-panel-desc">云端 Cron 时点由 Worker 配置固定；此处可开关本机「下一档预估」提示。</p>
+            <p class="settings-panel-desc">云端 Cron 时点由 Worker 配置固定；此处可开关浏览器「下一档预估」提示。</p>
           </div>
         </div>
         <div class="settings-yuqing-card">
           <div class="settings-yuqing-main">
             <label class="settings-yuqing-toggle">
               <input id="settings-yuqing-enabled" type="checkbox" ${yuqingSchedule.enabled ? "checked" : ""} />
-              <span>启用本机「下一次预估」提示（仅界面偏好；Worker Cron 时点不可在此修改）</span>
+              <span>启用浏览器「下一次预估」提示（仅前端偏好；Worker Cron 时点不可在此修改）</span>
             </label>
             <div class="settings-yuqing-readonly" aria-readonly="true">
               <p class="settings-yuqing-readonly-title">云端定点任务（北京时间 · Asia/Shanghai）</p>
@@ -155,7 +155,7 @@ function pageSettings() {
             <div class="cloud-status-card">
               <span>下一次预估（事件日报下一档）</span>
               <strong id="settings-yuqing-next">${escapeHtml(yuqingNext)}</strong>
-              <em>Asia/Shanghai · 本机演算</em>
+              <em>Asia/Shanghai · 前台推算（非 Worker）</em>
             </div>
             <span class="settings-actions-msg" id="settings-yuqing-msg"></span>
           </div>
@@ -587,7 +587,7 @@ function initSettingsYuqingSchedule() {
       saved = DataEngine.writeYuqingScheduleDraft(draft);
     }
     refreshSettingsYuqingNext(saved);
-    showMsg(saved.enabled ? "已开启本机预估提示。" : "已关闭本机预估提示。");
+    showMsg(saved.enabled ? "已开启浏览器预估提示。" : "已关闭浏览器预估提示。");
   };
 
   const enabledEl = document.getElementById("settings-yuqing-enabled");

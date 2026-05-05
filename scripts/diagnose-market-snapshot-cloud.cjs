@@ -3,7 +3,7 @@
  *
  * Usage:
  *   $env:SNAPSHOT_WRITE_TOKEN="..."
- *   node scripts/diagnose-market-snapshot-cloud.cjs https://market-snapshot.<account>.workers.dev
+ *   node scripts/diagnose-market-snapshot-cloud.cjs https://<你的 market-snapshot Worker>
  */
 
 const BASE = String(process.argv[2] || process.env.MARKET_SNAPSHOT_BASE || "").replace(/\/$/, "");

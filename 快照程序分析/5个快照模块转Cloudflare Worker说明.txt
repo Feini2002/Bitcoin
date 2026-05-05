@@ -11,7 +11,7 @@
 
 ## 当前现状
 
-四个市场监测子模块已经完成初步骨架，具备页面入口、数据读取、前端确定性计算、错误 / 新鲜度提示和本地验证脚本。它们不是最终形态，但已经可以进入“统一快照程序 + 后续 Worker 编排”的阶段。
+四个市场监测子模块已经完成初步骨架，具备页面入口、数据读取、前端确定性计算、错误 / 新鲜度提示以及仓库脚本（`npm run lint` / `verify:*`）。它们不是最终形态，但已经可以进入“统一快照程序 + 后续 Worker 编排”的阶段。
 
 ### 行情工作台
 
@@ -69,7 +69,7 @@
 该目录用于后续放置：
 
 - 统一市场监测快照程序
-- 本地构建 / 调试入口，如确实需要
+- 待部署快照 Worker（与 `快照程序分析/wrangler.snapshot.toml` 对齐）及验证脚本锚点
 - 后续准备部署的新 AI Worker 代码
 - Worker 路由、Agent 输入、LLM 调用、D1 写入相关辅助文件
 
@@ -83,7 +83,7 @@
 
 - 主程序：`快照程序分析/marketSnapshotProgram.mjs`
 - 新 Worker：`快照程序分析/ai-orchestrator-worker.js`
-- 可选本地调试入口：仅在必要时创建，且不要恢复旧子页面分散目录
+- 按需补充与线上路由对齐的巡检脚本（仍放在 `快照程序分析/` 或 `scripts/`），勿恢复分散的旧子页面目录。
 
 如果决定严格合成一个文件，则优先把确定性核心、数据读取适配、desk 聚合、Agent 输入映射放入 `marketSnapshotProgram.mjs`，Worker 文件只做路由和环境绑定；如果 Cloudflare 部署要求更清晰的边界，可以保留 Worker 文件作为部署入口。
 
@@ -210,9 +210,9 @@ Cloudflare Cron 使用 UTC 时间。若要北京时间晨会，必须在 Worker 
 3. 把旧四个 snapshot core 的确定性逻辑按当前页面逻辑重组进统一程序。
 4. 生成 `buildMarketDeskSnapshot()`，输出四页 snapshot 和 `agentInputs`。
 5. 改造验证脚本，让它们测试新统一程序。
-6. 本地运行最小验证：`npm.cmd run lint`、新快照验证脚本、必要时 `npm.cmd run verify:api`。
+6. 克隆工作区最小验证：`npm.cmd run lint`、新快照验证脚本、必要时 `npm.cmd run verify:api`。
 7. 创建或接入新 Worker 路由。
-8. 若修改已部署 Worker，按项目规则执行本地校验和 `wrangler deploy`。
+8. 若修改已部署 Worker，按项目规则执行校验与 `wrangler deploy`。
 9. 若新增 D1 表或写入远程 D1，按项目规则执行远程 D1 迁移 / 写入命令。
 10. 最后再接 LLM 调用、员工页读取和会议室展示。
 

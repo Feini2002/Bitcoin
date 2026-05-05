@@ -1,5 +1,5 @@
 /**
- * 静态前端壳自检（不拉起任何本地 HTTP 服务）。
+ * 静态前端壳自检：校验仓库入口文件齐备；可选对已部署 Worker 发 HTTPS GET。
  * - 校验 index.html / js/app.js / styles.css 存在且入口 HTML 引用主脚本。
  * - 可选：`BITDESK_SMOKE_ORIGIN=https://你的 Worker 根` 时对 `${ORIGIN}/api/d1/status` 发 GET，
  *   验证线上行情 Worker 可读（离线或未设变量则跳过）。

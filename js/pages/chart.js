@@ -20,7 +20,7 @@ const CHART_WORKBENCH_TF_KEY = "bitdesk.workbench.chartInterval";
 const CHART_VIEWPORT_KEY = "bitdesk.workbench.chartViewport";
 /** 不允许视口停在最后一根 K 线右侧的未来空白区；0 = 最新 K 线贴近右边界 */
 const CHART_MIN_RIGHT_SCROLL_POSITION = 0;
-/** 图表时间统一按中国东八区展示（与浏览器本地时区无关） */
+/** 图表时间统一按中国东八区展示（与操作系统时区设定无关） */
 const CHINA_TZ = "Asia/Shanghai";
 
 function viewportStorageKey(symbol, interval) {

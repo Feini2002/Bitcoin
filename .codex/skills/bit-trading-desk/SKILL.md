@@ -66,7 +66,7 @@ Choose the smallest useful verification set:
 - Indicator math changes: `node scripts/verify-indicator-math.cjs`.
 - Footprint/orderflow changes: `npm run verify:footprint`.
 - Frontend UI changes: inspect the affected route on deployed Pages (or another static host) when practical.
-- Cloudflare worker/schema changes: validate syntax/config locally where possible before suggesting deployment.
+- Cloudflare worker/schema changes: validate syntax/config in the checked-out repo before suggesting deployment.
 - After any change, deploy affected surfaces: `npm.cmd run deploy:pages` for frontend/static/docs/rules/scripts/shared logic; `npx.cmd wrangler deploy` from `cloudflare/` for Worker changes; run both when both surfaces are affected, Worker first.
 
 If a relevant verification cannot be run, say why in the final response.

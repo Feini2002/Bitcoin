@@ -302,13 +302,12 @@ const PLACEHOLDERS = {
   },
   "data-vault": {
     title: "数据池",
-    sub: "本地缓存的所有历史数据 / API 状态 / 数据回填",
-    icon: "ph-database",
+    sub: "浏览器侧离线缓存占位：历史快照 / API 状态 / 数据回填（PLANNED）",    icon: "ph-database",
     future: [
       { title: "已缓存数据", desc: "品种 × 周期 × 起止时间" },
       { title: "API 状态", desc: "Binance / Deribit / FRED 等上次成功时间" },
       { title: "数据回填", desc: "手动补齐历史数据缺口" },
-      { title: "占用空间", desc: "本地存储占用概览" },
+      { title: "占用空间", desc: "浏览器存储占用概览" },
     ],
   },
   playbook: {
@@ -328,5 +327,5 @@ const SETTINGS_FUTURE = [
   { title: "API Keys", desc: "Binance · Deribit · FRED · CoinGlass · OpenAI 等" },
   { title: "Agent 配置", desc: "重命名 / 改头像色 / 启用禁用" },
   { title: "快捷键", desc: "切页 / 调出追问框 / 召集会议" },
-  { title: "数据与备份", desc: "导入导出本地缓存" },
+  { title: "数据与备份", desc: "导入导出浏览器离线缓存" },
 ];

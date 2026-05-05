@@ -4631,7 +4631,7 @@ async function handleReadFootprint(_request, env, url) {
       interval,
       tickSize,
       effectiveTickSize: resolveFootprintTickSize(tickSize),
-      /** 供浏览器新鲜度对齐（弱化本机时钟误差）；不传时仍用客户端 Date.now()。 */
+      /** 供浏览器新鲜度对齐（弱化客户端时钟漂移）；不传时仍用客户端 Date.now()。 */
       now: Date.now(),
       count: bars.length,
       latestT: bars.length ? bars[bars.length - 1].t : 0,
