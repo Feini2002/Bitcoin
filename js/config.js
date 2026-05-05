@@ -38,18 +38,14 @@ function getPageHostname() {
 }
 
 function klineWranglerApiHost() {
-  const host = getPageHostname();
-  if (!host || host === "" || host === "localhost" || host === "[::1]" || host === "127.0.0.1" || host.indexOf("127.") === 0) {
-    return "127.0.0.1";
+  try {
+    return new URL(BIT_KLINE_DEFAULT_CLOUD).hostname;
+  } catch {
+    return "btc.feiniwork.com";
   }
-  return host;
 }
 
-/** 与「自动」：内网/本机 → 本机 wrangler；公网 host → 默认线上 Worker */
-/**
- * 当前应请求的 K 线 Worker 根 URL。优先读 localStorage 模式（见设置页），否则 auto（含 index 预置）。
- * @returns {string}
- */
+/** 当前应请求的 K 线 Worker 根 URL。优先读 localStorage 模式（见设置页），否则为线上 Worker。 */
 function getBitDataApiBase() {
   return BIT_KLINE_DEFAULT_CLOUD;
 }

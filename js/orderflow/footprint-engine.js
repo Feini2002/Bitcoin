@@ -1492,7 +1492,6 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         isLocalDevPageHostname(host)
       ) {
         out.push(location.origin);
-        out.push("http://127.0.0.1:3000");
       }
       if (typeof global.getBitDataApiBase === "function") {
         try {

@@ -1,5 +1,8 @@
-/* 其他 JSON 接口的基址。K 线走 DataEngine：默认 BIT_DATA_API_BASE Worker，或同源 server /api/binance/klines */
-// const API_BASE = "http://127.0.0.1:3000";
+/* 其他 JSON 接口的基址；主行情走 DataEngine / window.BIT_DATA_API_BASE。 */
+const API_BASE =
+  typeof window !== "undefined" && window.BIT_DATA_API_BASE
+    ? String(window.BIT_DATA_API_BASE).replace(/\/$/, "")
+    : "https://btc.feiniwork.com";
 
 async function fetchJson(path, options = {}) {
   if (typeof API_BASE === "undefined" || !API_BASE) {

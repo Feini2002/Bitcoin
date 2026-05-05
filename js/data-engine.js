@@ -16,10 +16,7 @@ const DataEngine = {
     if (typeof window !== "undefined" && window.BIT_DATA_API_BASE) {
       return String(window.BIT_DATA_API_BASE).replace(/\/$/, "");
     }
-    if (typeof location !== "undefined" && (location.protocol === "http:" || location.protocol === "https:")) {
-      return location.origin;
-    }
-    return "http://127.0.0.1:3000";
+    return "https://btc.feiniwork.com";
   },
 
   /** Cloudflare「舆情日报」Worker 根 URL（独立于 btc.feiniwork.com）。 */
@@ -419,8 +416,7 @@ const DataEngine = {
       let klineBackend = "云端";
       try {
         const u = new URL(this.apiBase());
-        const h = u.hostname;
-        if (h === "127.0.0.1" || h === "localhost" || h === "[::1]") klineBackend = "本地";
+        if (u.hostname) klineBackend = u.hostname;
       } catch (_) {}
       window.__LAST_KLINES_BACKEND = klineBackend;
     }
