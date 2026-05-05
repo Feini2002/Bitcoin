@@ -13,6 +13,8 @@ const dailyEventState = {
   status: "信息已更新",
   source: "mock",
   loading: false,
+  /** 报告库抽屉筛选：all | scheduled | manual（实时扫描） */
+  archiveFilter: "all",
 };
 
 const DAILY_EVENT_MOCK_REPORT = {
@@ -493,8 +495,23 @@ function renderDailyRefs(row) {
   return `<div class="news-ref-row">${refs.slice(0, 8).map((ref) => dailyRenderLink(ref)).join("")}</div>`;
 }
 
+function dailyArchiveFilteredHistory() {
+  const raw = dailyEventState.history.length ? dailyEventState.history : [DAILY_EVENT_MOCK_REPORT];
+  const mode = dailyEventState.archiveFilter || "all";
+  if (mode === "all") return raw;
+  return raw.filter((item) => {
+    const t = String(item.triggerType || "").toLowerCase();
+    if (mode === "manual") return t === "manual";
+    if (mode === "scheduled") return t !== "manual";
+    return true;
+  });
+}
+
 function renderDailyArchiveList() {
-  const items = dailyEventState.history.length ? dailyEventState.history : [DAILY_EVENT_MOCK_REPORT];
+  const items = dailyArchiveFilteredHistory();
+  if (!items.length) {
+    return `<p class="daily-archive-empty muted-text">该分类下暂无记录，可切换到「全部」或改天再试。</p>`;
+  }
   let lastDate = "";
   return items
     .map((item) => {
@@ -513,6 +530,13 @@ function renderDailyArchiveList() {
     .join("");
 }
 
+function renderDailyArchiveFilters() {
+  const cur = dailyEventState.archiveFilter || "all";
+  const mk = (key, label) =>
+    `<button type="button" class="daily-archive-filter ${cur === key ? "active" : ""}" data-archive-filter="${dailyEscapeHtml(key)}" role="tab" aria-selected="${cur === key ? "true" : "false"}">${dailyEscapeHtml(label)}</button>`;
+  return `<div class="daily-archive-filters" role="tablist">${mk("all", "全部")}${mk("scheduled", "定点班次")}${mk("manual", "实时扫描")}</div>`;
+}
+
 function renderYuqingDailyReport(row) {
   const r = row || dailyActiveReport();
   const q = dailyQuality(r);
@@ -529,7 +553,7 @@ function renderYuqingDailyReport(row) {
       </div>
       <div class="news-command-actions">
         <div class="daily-clock-pill"><i class="ph ph-clock"></i><span id="daily-clock">--</span></div>
-        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading || DAILY_EVENT_FORCE_MOCK ? "disabled" : ""}>
+        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading || DAILY_EVENT_FORCE_MOCK ? "disabled" : ""} title="即时调用 Gemini 检索并写入报告库（可在右侧抽屉「实时扫描」中回看）">
           <i class="ph ph-rocket-launch"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
         </button>
         <button type="button" class="btn primary" id="daily-open-archive">
@@ -599,11 +623,13 @@ function renderYuqingDailyReport(row) {
         <div>
           <span class="news-section-kicker">最近 7 天</span>
           <h3>事件日报回档</h3>
+          <p class="daily-archive-sub">定点早报 / 午报 / 晚报与「实时扫描」都会写入此列表，可按类型筛选。</p>
         </div>
         <button type="button" class="btn" id="daily-close-archive" title="关闭报告库">
           <i class="ph ph-x"></i><span>关闭</span>
         </button>
       </div>
+      ${renderDailyArchiveFilters()}
       <div class="news-archive-list">${renderDailyArchiveList()}</div>
     </aside>
   `;
@@ -693,6 +719,7 @@ async function generateDailyReport() {
   dailyEventState.loading = true;
   dailyEventState.status = "正在触发手动搜索与日报分析...";
   renderYuqingDailyIntoDom();
+  let openArchiveAfter = false;
   try {
     const data = await DataEngine.generateYuqingStructuredReport(DAILY_EVENT_KIND, { mode: "deep", forceSearch: true }, { timeoutMs: 190_000 });
     if (data && data.report) {
@@ -702,14 +729,17 @@ async function generateDailyReport() {
       try {
         history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(data.report.id)}`);
       } catch (_) {}
+      await loadDailyHistory();
+      dailyEventState.archiveFilter = "manual";
+      openArchiveAfter = true;
     }
-    await loadDailyHistory();
   } catch (e) {
     dailyEventState.source = "error";
     dailyEventState.status = e && e.message ? e.message : String(e);
   } finally {
     dailyEventState.loading = false;
     renderYuqingDailyIntoDom();
+    if (openArchiveAfter) openDailyArchive();
   }
 }
 
@@ -742,7 +772,11 @@ function bindYuqingDailyEvents() {
   const open = document.getElementById("daily-open-archive");
   if (open && !open.dataset.bound) {
     open.dataset.bound = "1";
-    open.addEventListener("click", openDailyArchive);
+    open.addEventListener("click", () => {
+      dailyEventState.archiveFilter = "all";
+      renderYuqingDailyIntoDom();
+      openDailyArchive();
+    });
   }
   const close = document.getElementById("daily-close-archive");
   if (close && !close.dataset.bound) {
@@ -754,6 +788,13 @@ function bindYuqingDailyEvents() {
     backdrop.dataset.bound = "1";
     backdrop.addEventListener("click", closeDailyArchive);
   }
+  document.querySelectorAll(".daily-archive-filter").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      dailyEventState.archiveFilter = btn.getAttribute("data-archive-filter") || "all";
+      renderYuqingDailyIntoDom();
+      openDailyArchive();
+    });
+  });
   document.querySelectorAll(".news-archive-item").forEach((btn) => {
     if (btn.dataset.bound) return;
     btn.dataset.bound = "1";

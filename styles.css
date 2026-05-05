@@ -6691,6 +6691,47 @@ html[data-theme="dark"] .theme-option--active {
   font-size: var(--fz-md);
 }
 
+.daily-archive-sub {
+  margin: 8px 0 0;
+  font-size: var(--fz-xs);
+  color: var(--muted);
+  line-height: 1.45;
+  max-width: 280px;
+}
+
+.daily-archive-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.daily-archive-filter {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--muted);
+  font-size: var(--fz-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.daily-archive-filter:hover {
+  border-color: rgba(56,189,248,0.35);
+  color: var(--text);
+}
+
+.daily-archive-filter.active {
+  border-color: rgba(56,189,248,0.55);
+  background: rgba(56,189,248,0.1);
+  color: var(--info);
+}
+
+.daily-archive-empty {
+  margin: var(--sp-2) 0;
+  font-size: var(--fz-xs);
+}
+
 .news-archive-list {
   display: flex;
   flex-direction: column;
