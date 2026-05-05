@@ -244,6 +244,22 @@ function dailyFormatTime(value) {
   });
 }
 
+/** 本页日报「触发检索」的完整时间（上海） */
+function dailyFormatTriggeredSearchAt(value) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
 function dailySlotLabel(row) {
   const slot = String(row && row.slot ? row.slot : "");
   if (slot.startsWith("manual")) return "手动";
@@ -466,13 +482,6 @@ function renderDailyTrend(row) {
   ].join("");
 }
 
-function renderDailySlotTabs(row) {
-  const current = dailySlotLabel(row);
-  return ["早报", "午报", "晚报"]
-    .map((label) => `<span class="daily-slot-tab ${current === label ? "active" : ""}">${dailyEscapeHtml(label)}</span>`)
-    .join("");
-}
-
 function renderDailySources(row) {
   const sources = row.report.sources || [];
   if (!sources.length) return `<p class="muted-text">暂无来源列表。</p>`;
@@ -545,14 +554,19 @@ function renderDailyArchiveFilters() {
 function renderYuqingDailyReport(row) {
   const r = row || dailyActiveReport();
   const q = dailyQuality(r);
-  const temp = r.report.marketTemperature || {};
   return `
     <div class="news-command daily-event-command">
       <div class="news-command-main daily-command-main">
-        <div class="daily-slot-tabs">${renderDailySlotTabs(r)}</div>
+        <div class="daily-report-trigger">
+          <span class="daily-report-trigger-label">本页日报触发检索</span>
+          <div class="daily-report-trigger-row">
+            <i class="ph ph-clock" aria-hidden="true"></i>
+            <strong>${dailyEscapeHtml(dailyFormatTriggeredSearchAt(r.generatedAt))}</strong>
+            <span class="daily-report-trigger-tz">Asia/Shanghai</span>
+          </div>
+        </div>
         <div class="daily-report-meta">
-          <span><i class="ph ph-calendar-dots"></i>${dailyEscapeHtml(r.reportDate || "")}</span>
-          <span><i class="ph ph-clock"></i>${dailyEscapeHtml(dailyFormatTime(r.generatedAt))}</span>
+          <span title="报表归属日期"><i class="ph ph-calendar-dots"></i>${dailyEscapeHtml(r.reportDate || "—")}</span>
           <span><i class="ph ph-list-checks"></i>事件 ${Number(q.factCount || 0)} · 覆盖 ${Number(q.sourceCoverage || 0)}%</span>
         </div>
       </div>
@@ -565,13 +579,6 @@ function renderYuqingDailyReport(row) {
           <i class="ph ph-clock-counter-clockwise"></i><span>7日报告库</span>
         </button>
       </div>
-    </div>
-
-    <div class="news-phase-strip">
-      <span><i class="ph ph-pulse"></i>${dailyEscapeHtml(temp.regime || "结构分化")}</span>
-      <span><i class="ph ph-clock"></i>早报 / 午报 / 晚报 · Asia/Shanghai</span>
-      <span><i class="ph ph-compass"></i>0-72小时观察</span>
-      <span><i class="ph ph-fingerprint"></i>${dailyEscapeHtml(dailyTriggerLabel(r))}</span>
     </div>
 
     <div class="news-intel-grid">
@@ -628,7 +635,7 @@ function renderYuqingDailyReport(row) {
         <div>
           <span class="news-section-kicker">最近 7 天</span>
           <h3>事件日报回档</h3>
-          <p class="daily-archive-sub">定点早报 / 午报 / 晚报与「实时扫描」都会写入此列表，可按类型筛选。</p>
+          <p class="daily-archive-sub">定点班次（北京时间 00 / 08 / 12 / 20）与「实时扫描」都会写入此列表，切换报告请用 7 日报告库。</p>
         </div>
         <button type="button" class="btn" id="daily-close-archive" title="关闭报告库">
           <i class="ph ph-x"></i><span>关闭</span>

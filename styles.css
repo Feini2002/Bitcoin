@@ -6478,31 +6478,44 @@ html[data-theme="dark"] .theme-option--active {
   flex-wrap: wrap;
 }
 
-.daily-slot-tabs {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-1);
+.daily-report-trigger {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
-.daily-slot-tab {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  color: var(--muted);
-  font-size: var(--fz-xs);
+.daily-report-trigger-label {
+  font-size: 10px;
   font-weight: 800;
-  white-space: nowrap;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-.daily-slot-tab.active {
+.daily-report-trigger-row {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.daily-report-trigger-row .ph {
+  color: var(--info);
+  font-size: 18px;
+}
+
+.daily-report-trigger-row strong {
+  font-size: var(--fz-md);
+  font-weight: 700;
   color: var(--text);
-  background: rgba(56,189,248,0.13);
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-report-trigger-tz {
+  font-size: var(--fz-xs);
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .daily-report-meta {
