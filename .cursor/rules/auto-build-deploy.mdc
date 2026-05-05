@@ -27,6 +27,13 @@ alwaysApply: true
 
 说明：Pages 不提供 D1 绑定；数据层始终在对应 Worker。部署顺序建议：先 Workers（含 D1 迁移），再 Pages。
 
+## GitHub 源码备份（Agent 默认执行）
+
+- **规范全文**：仓库根目录 `GITHUB-BACKUP-WORKFLOW.md`。
+- **与 Cloudflare 的相对顺序**：在按上文完成「必跑校验」与「按需 Cloudflare 部署」之后，对**确有应向用户交付的仓库文件变更**的任务，还须 **commit 并 push 到 `origin` 的默认分支（当前为 `main`）**，以便远程可追溯、可 `clone` 回档。
+- **例外**：用户在当轮指令中明示「本轮不推送」「仅本地」时跳过；校验/部署/WAF/凭据导致无法安全上线时，须在回复说明原因，不强行 push 坏状态。
+- **凭据**：推送依赖本机已配置的 GitHub 认证（HTTPS 凭据管理器或个人访问令牌、或 SSH）；Agent 无法在对话中替你保存账号密码。
+
 ## 范围与 PLANNED
 
 遵守仓库根目录 `.cursorrules`：勿删未实现模块的 PLANNED；仅因本任务需要而改动的文件才触发上述部署。

@@ -38,6 +38,7 @@
 - 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`）后，默认完成本地校验并直接执行对应的 `wrangler deploy`，不要只停留在本地代码改动。
 - 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容的改动，默认同步执行对应的远程 D1 迁移/写入命令（如 `wrangler d1 execute ... --remote --file=...`），并在最终回复说明已处理的远程对象与命令。
 - 若部署或远程 D1 操作因登录、权限、网络或 Cloudflare 状态失败，必须明确说明失败原因和下一步需要的人工动作。
+- **GitHub 备份**：对已产生应向用户交付的仓库改动的收尾，在条件允许时于部署之后将变更 **commit 并 push 到 `origin/main`**（细节与例外见仓库根目录 `GITHUB-BACKUP-WORKFLOW.md` 及 `.cursor/rules/auto-build-deploy.mdc`）。
 
 ## Pages Custom Domain Cache
 
