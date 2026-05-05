@@ -18,7 +18,7 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 
-const WORKER_BUILD = "yuqing-worker/1.1.6-gemini-31-flash-lite";
+const WORKER_BUILD = "yuqing-worker/1.1.7-trend-cracking-fix";
 
 /** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
 const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
@@ -1712,6 +1712,27 @@ function dailyAiIntelFromFacts(rows) {
   return out;
 }
 
+function trendMdSubstantiveLines(md) {
+  return String(md || "")
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter((s) => s && !s.startsWith("#"));
+}
+
+/** 与 trends 同源；取第二段非空行或首段后半句，避免「还要等其他云端报告」的误导（定点/手动均走同一 buildReport）。 */
+function crackingSnippetFromTrendsMd(trendsMd) {
+  const lines = trendMdSubstantiveLines(trendsMd);
+  if (lines.length >= 2) return lines[1];
+  if (lines.length === 1) {
+    const parts = lines[0]
+      .split(/(?<=[。！？])\s+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length >= 2) return parts.slice(1).join("");
+  }
+  return "与左侧强化同源：均为本轮同一请求内模型输出的趋势段落；全文仅一段时请重点阅读段内的风险、对立假设与限定条件。";
+}
+
 function trendReadFromDailyInputs(legacy, factCount) {
   const trendsMd = legacy && legacy.sections && legacy.sections.trends && legacy.sections.trends.markdown;
   const newsData = legacy && legacy.sections && legacy.sections.news && legacy.sections.news.data;
@@ -1723,9 +1744,7 @@ function trendReadFromDailyInputs(legacy, factCount) {
       : hasLlm
         ? [String(trendsMd).split("\n").find((x) => x.trim() && !x.startsWith("#")) || "LLM 已生成趋势研判，详见原始报告。"]
       : [`最近72小时内已有 ${factCount} 条候选，优先观察哪些主题正在连续出现。`],
-    cracking: hasLlm
-      ? ["详细裂变信号由云端 LLM 报告生成，当前页面保留摘要入口。"]
-      : ["若事实密度不足，先降低分歧判断权重，等待更多来源确认。"],
+    cracking: hasLlm ? [crackingSnippetFromTrendsMd(trendsMd)] : ["若事实密度不足，先降低分歧判断权重，等待更多来源确认。"],
     conclusion: "0-72小时观察：跟踪高价值事件是否获得官方口径、资金流与价格结构的共同确认。",
   };
 }
