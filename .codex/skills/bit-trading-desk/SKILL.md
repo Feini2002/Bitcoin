@@ -1,6 +1,6 @@
 ---
 name: bit-trading-desk
-description: Project-specific workflow for the Bit Trading Desk / crypto data monitoring system. Use when Codex modifies, reviews, diagnoses, or plans work in this repository, especially files under js/, scripts/, cloudflare/, backend/, mock/, index.html, styles.css, or when handling PLANNED placeholders, market data APIs, indicator math, footprint/orderflow, Binance/Deribit/FRED/Yahoo data, Cloudflare workers, or static Pages-hosted frontend behavior.
+description: Project-specific workflow for the Bit Trading Desk / crypto data monitoring system. Use when Codex modifies, reviews, diagnoses, or plans work in this repository, especially files under js/, scripts/, cloudflare/, index.html, styles.css, or when handling PLANNED placeholders, market data APIs, indicator math, footprint/orderflow, Binance/Deribit/FRED/Yahoo data, Cloudflare workers, or static Pages-hosted frontend behavior.
 ---
 
 # Bit Trading Desk
@@ -18,13 +18,12 @@ Get-Content -Encoding UTF8 .cursorrules
 ## Repository Map
 
 - `index.html`, `styles.css`: main shell and shared UI styling.
-- `js/app.js`, `js/nav.js`, `js/api.js`, `js/config.js`, `js/data-engine.js`: frontend app wiring, navigation, API client, config, data orchestration.
+- `js/app.js`, `js/nav.js`, `js/config.js`, `js/data-engine.js`: app shell, navigation, config, data orchestration and Worker-facing `fetch` calls.
 - `js/pages/`: feature pages such as overview, chart, orderflow, news, settings, calculator, environment agent, boardroom.
 - `js/chart/`: chart widgets, multi-timeframe tiles, indicator panes, indicator math.
 - `js/orderflow/`: footprint/orderflow engine and canvas rendering.
 - `scripts/`: deterministic diagnostics and verification scripts.
 - `cloudflare/`: worker and D1 schema for remote/public data paths.
-- `mock/`: local mock environment data.
 - `旧参考文件/`: reference material only; do not migrate or delete unless explicitly asked.
 
 ## Cursor Rules To Preserve

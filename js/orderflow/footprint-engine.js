@@ -1483,16 +1483,6 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 
     apiBases() {
       const out = [];
-      const host =
-        typeof location !== "undefined" && location.hostname ? String(location.hostname) : "";
-      if (
-        typeof location !== "undefined" &&
-        (location.protocol === "http:" || location.protocol === "https:") &&
-        typeof isLocalDevPageHostname === "function" &&
-        isLocalDevPageHostname(host)
-      ) {
-        out.push(location.origin);
-      }
       if (typeof global.getBitDataApiBase === "function") {
         try {
           out.push(global.getBitDataApiBase());

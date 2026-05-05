@@ -3,8 +3,7 @@
    ======================================================= */
 
 /* K 线经 Cloudflare Worker + D1（见 cloudflare/binance-klines-worker.js）。
-   - 若在 index.html 里先于本文件设置 window.BIT_DATA_API_BASE，则除「设置」中强制选择模式外，视为预置基址（auto 下生效）。
-   - 注意：Worker 仅能读写其所绑定的 D1；与本机 wrangler dev --local 的 D1 不是同一套存储。 */
+   若在 index.html 里先于本文件设置 window.BIT_DATA_API_BASE / BIT_YUQING_API_BASE，则视为预置基址。 */
 
 const BIT_KLINE_DEFAULT_CLOUD = "https://btc.feiniwork.com";
 const BIT_YUQING_DEFAULT_CLOUD = "https://yuqing.feiniwork.com";
@@ -16,36 +15,7 @@ if (typeof window !== "undefined" && window.BIT_YUQING_API_BASE != null && Strin
   window._BIT_YUQING_BASE_PRESET = true;
 }
 
-function isLocalDevPageHostname(h) {
-  if (!h || h === "" || h === "localhost" || h === "127.0.0.1" || h === "[::1]") return true;
-  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
-  if (!m) return false;
-  const a = +m[1], b = +m[2];
-  if (a === 10) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 127) return true;
-  if (a === 169 && b === 254) return true;
-  return false;
-}
-
-function getPageHostname() {
-  try {
-    return (typeof location !== "undefined" && location.hostname) ? String(location.hostname) : "";
-  } catch (_) {
-    return "";
-  }
-}
-
-function klineWranglerApiHost() {
-  try {
-    return new URL(BIT_KLINE_DEFAULT_CLOUD).hostname;
-  } catch {
-    return "btc.feiniwork.com";
-  }
-}
-
-/** 当前应请求的 K 线 Worker 根 URL。优先读 localStorage 模式（见设置页），否则为线上 Worker。 */
+/** 当前应请求的 K 线 Worker 根 URL（与已部署 Worker 一致）。 */
 function getBitDataApiBase() {
   return BIT_KLINE_DEFAULT_CLOUD;
 }
@@ -65,8 +35,6 @@ function getYuqingApiBase() {
 }
 
 if (typeof window !== "undefined") {
-  /** 供 footprint-engine 等判断本机或内网联调页（hostname）；纯 Pages 托管时无同源 Node 代理。 */
-  window.isLocalDevPageHostname = isLocalDevPageHostname;
   window.getBitDataApiBase = getBitDataApiBase;
   window.getYuqingApiBase = getYuqingApiBase;
   if (window.BIT_DATA_API_BASE == null) {

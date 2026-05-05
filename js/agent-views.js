@@ -1,4 +1,4 @@
-/* 分析层员工页静态视图数据（后续可改为 fetch mock/*.json 或 API） */
+/* 分析层员工页静态视图数据（后续可改为 fetch 云端 API） */
 const AGENT_VIEWS = {
   chief: {
     stance: "谨慎做多",
