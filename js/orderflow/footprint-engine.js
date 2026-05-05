@@ -1530,7 +1530,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
           interval: this.interval,
           tickSize: String(this.tickSize || "auto"),
           limit: String(Math.min(MAX_CACHE_BARS, Math.max(1, Number(this.maxBars) || 80))),
-          sync: "0",
+          sync: "auto",
         });
         let bars = null;
         let meta = null;

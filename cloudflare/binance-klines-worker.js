@@ -47,12 +47,13 @@ const FOOTPRINT_BACKFILL_MAX_WINDOWS = 40;
 const FOOTPRINT_FETCH_LIMIT = 1000;
 /** Cron / 手动 footprint 单次最多拉取的 aggTrades 页数（每页 FOOTPRINT_FETCH_LIMIT）；增大以追上 last_trade_id 积压，避免前台「延迟/503」误判。*/
 const FOOTPRINT_MAX_FETCH_PAGES = 14;
+const FOOTPRINT_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
 const MAX_KLINES_PER_INTERVAL = 2000;
 const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
 const FETCH_TIMEOUT_MS = 8000;
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
-const WORKER_BUILD = "btc-worker/3.7.7-footprint-merge-cpu";
+const WORKER_BUILD = "btc-worker/3.7.8-footprint-auto-sync";
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
 const LIQUIDATION_SYMBOL = DEFAULT_SYMBOL;
 const LIQUIDATION_BUCKET_MS = 5 * 60 * 1000;
@@ -863,6 +864,30 @@ async function readFootprintStatus(env, symbol) {
     lastTradeId: Number(row?.last_trade_id || 0),
     lastTradeTime: Number(row?.last_trade_time || 0),
   };
+}
+
+function footprintReadReferenceTime(status, latestT, now = Date.now()) {
+  const lastTradeTime = Number(status?.last_trade_time || 0);
+  if (Number.isFinite(lastTradeTime) && lastTradeTime > 0) return lastTradeTime;
+  const t = Number(latestT);
+  if (!Number.isFinite(t) || t <= 0) return 0;
+  return Math.min(now, t + intervalMs(FOOTPRINT_BASE_INTERVAL));
+}
+
+function isFootprintTailStaleForRead(status, latestT, now = Date.now()) {
+  const ref = footprintReadReferenceTime(status, latestT, now);
+  if (!ref) return true;
+  const step = intervalMs(FOOTPRINT_BASE_INTERVAL);
+  const freshLimit = Math.max(45_000, Math.min(step, 2 * 60_000));
+  return now - ref > freshLimit;
+}
+
+function recentlyTriedFootprintSync(status, now = Date.now()) {
+  if (!status || !status.last_run) return false;
+  const raw = status.last_run;
+  const numeric = Number(raw);
+  const lastRunMs = Number.isFinite(numeric) && numeric > 0 ? numeric : Date.parse(String(raw));
+  return Number.isFinite(lastRunMs) && now - lastRunMs < FOOTPRINT_READ_AUTO_SYNC_MIN_MS;
 }
 
 async function loadExistingFootprintBars(env, symbol, starts) {
@@ -4459,13 +4484,32 @@ async function handleReadFootprint(_request, env, url) {
     FOOTPRINT_API_MAX_LIMIT,
     Math.max(1, parseInt(String(url.searchParams.get("limit") || String(FOOTPRINT_API_MAX_LIMIT)), 10) || FOOTPRINT_API_MAX_LIMIT)
   );
-  const sync = String(url.searchParams.get("sync") || "0") === "1";
+  const syncParam = String(url.searchParams.get("sync") || "auto").toLowerCase();
+  const forceSync = syncParam === "1" || syncParam === "true" || syncParam === "force";
+  const allowAutoSync = syncParam !== "0" && syncParam !== "false" && syncParam !== "off";
   let syncResult = null;
-  if (sync) syncResult = await syncFootprintOne(env, symbol);
+  let status = await env.DB.prepare(
+    "SELECT last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status WHERE symbol = ?1"
+  ).bind(symbol).first();
+  let availableBase = await footprintBarCount(env, symbol);
+  if (forceSync) {
+    syncResult = await syncFootprintOne(env, symbol);
+  } else if (
+    allowAutoSync &&
+    isFootprintTailStaleForRead(status, Number(availableBase?.maxT || 0)) &&
+    !recentlyTriedFootprintSync(status)
+  ) {
+    syncResult = await syncFootprintOne(env, symbol);
+  }
+  if (syncResult) {
+    status = await env.DB.prepare(
+      "SELECT last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status WHERE symbol = ?1"
+    ).bind(symbol).first();
+    availableBase = await footprintBarCount(env, symbol);
+  }
 
   const mult = Math.max(1, Math.ceil(intervalMs(interval) / intervalMs(FOOTPRINT_BASE_INTERVAL)));
   const baseLimit = Math.min(FOOTPRINT_MAX_BARS, limit * mult + mult);
-  const availableBase = await footprintBarCount(env, symbol);
   const { results } = await env.DB.prepare(
     `SELECT t, o, h, l, c, buy_vol, sell_vol, poc_price, levels_json, last_trade_id
        FROM footprint_bars
@@ -4474,9 +4518,6 @@ async function handleReadFootprint(_request, env, url) {
   ).bind(symbol, FOOTPRINT_BASE_INTERVAL, baseLimit).all();
   const rows = (results || []).slice().reverse();
   const bars = mergeFootprintRows(rows, interval, tickSize).slice(-limit);
-  const status = await env.DB.prepare(
-    "SELECT last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status WHERE symbol = ?1"
-  ).bind(symbol).first();
 
   return new Response(
     JSON.stringify({
@@ -5326,8 +5367,11 @@ export const __footprintTestHooks = {
   FOOTPRINT_API_MAX_LIMIT,
   FOOTPRINT_MAX_FETCH_PAGES,
   FOOTPRINT_BACKFILL_MAX_WINDOWS,
+  FOOTPRINT_READ_AUTO_SYNC_MIN_MS,
   LIQUIDATION_BUCKET_MS,
   LIQUIDATION_RETENTION_MS,
+  isFootprintTailStaleForRead,
+  recentlyTriedFootprintSync,
   resolveFootprintTickSize,
   mergeFootprintRows,
   recomputeFootprintBar,

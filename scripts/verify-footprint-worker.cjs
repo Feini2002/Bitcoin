@@ -27,8 +27,22 @@ function assert(name, cond, detail) {
   assert("API read limit supports loaded history", hooks.FOOTPRINT_API_MAX_LIMIT === 240);
   assert("manual backfill is bounded", hooks.FOOTPRINT_BACKFILL_MAX_WINDOWS === 40);
   assert("footprint fetch pages sized for backlog drain", hooks.FOOTPRINT_MAX_FETCH_PAGES === 14);
+  assert("footprint read auto sync is rate limited", hooks.FOOTPRINT_READ_AUTO_SYNC_MIN_MS === 45 * 1000);
   assert("auto tick resolves to base server tick", hooks.resolveFootprintTickSize("auto") === 10);
   assert("explicit tick is honored", hooks.resolveFootprintTickSize("50") === 50);
+  const now = Date.UTC(2026, 4, 5, 15, 0, 0);
+  assert(
+    "fresh footprint status skips read auto sync",
+    hooks.isFootprintTailStaleForRead({ last_trade_time: now - 60 * 1000 }, now - 5 * 60 * 1000, now) === false
+  );
+  assert(
+    "stale footprint status enables read auto sync",
+    hooks.isFootprintTailStaleForRead({ last_trade_time: now - 3 * 60 * 1000 }, now - 5 * 60 * 1000, now) === true
+  );
+  assert(
+    "recent footprint sync attempt is gated",
+    hooks.recentlyTriedFootprintSync({ last_run: now - 10 * 1000 }, now) === true
+  );
 
   const t0 = Date.UTC(2026, 3, 28, 8, 0, 0);
   const row = (offsetMin, o, h, l, c, levels) => ({
