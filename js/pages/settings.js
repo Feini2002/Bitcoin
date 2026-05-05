@@ -68,21 +68,6 @@ function settingsYuqingNextRunLabel(cfg) {
   return d.toLocaleString("zh-CN", { hour12: false });
 }
 
-function renderSettingsYuqingTimeInputs(times) {
-  const arr = Array.isArray(times) && times.length ? times.slice(0, 4) : ["00:00", "08:00", "12:00", "20:00"];
-  while (arr.length < 4) arr.push("");
-  return arr
-    .map(
-      (value, idx) => `
-        <label class="settings-yuqing-time">
-          <span>时点 ${idx + 1}</span>
-          <input id="settings-yuqing-time-${idx + 1}" type="time" value="${escapeHtml(value)}" />
-        </label>
-      `,
-    )
-    .join("");
-}
-
 function pageSettings() {
   const current = getTheme();
   const themeLabel = current === "dark" ? "深色" : "浅色";
@@ -147,35 +132,30 @@ function pageSettings() {
         <div class="settings-panel-head">
           <div class="settings-panel-icon settings-panel-icon--yuqing" aria-hidden="true"><i class="ph ph-newspaper-clipping"></i></div>
           <div>
-            <h2 class="settings-panel-title">事件一览日报定时</h2>
-            <p class="settings-panel-desc">北京时间事件日报每日 00/08/12/20；舆情分析 09/14/22 延迟触发，先吃上游日报再叠加市场监测。</p>
+            <h2 class="settings-panel-title">舆情与事件定点说明</h2>
+            <p class="settings-panel-desc">云端 Cron 时点由 Worker 配置固定；此处可开关本机「下一档预估」提示。</p>
           </div>
         </div>
         <div class="settings-yuqing-card">
           <div class="settings-yuqing-main">
             <label class="settings-yuqing-toggle">
               <input id="settings-yuqing-enabled" type="checkbox" ${yuqingSchedule.enabled ? "checked" : ""} />
-              <span>启用定时日报</span>
+              <span>启用本机「下一次预估」提示（仅界面偏好；Worker Cron 时点不可在此修改）</span>
             </label>
-            <div class="settings-yuqing-times">
-              ${renderSettingsYuqingTimeInputs(yuqingSchedule.times)}
-            </div>
-            <div class="settings-yuqing-analysis-times">
-              <span>舆情分析时点</span>
-              <strong>09:00</strong>
-              <strong>14:00</strong>
-              <strong>22:00</strong>
+            <div class="settings-yuqing-readonly" aria-readonly="true">
+              <p class="settings-yuqing-readonly-title">云端定点任务（北京时间 · Asia/Shanghai）</p>
+              <ul class="settings-yuqing-readonly-list">
+                <li><strong>事件日报</strong> 每日 00:00、08:00、12:00、20:00</li>
+                <li><strong>舆情二次分析</strong> 每日 09:00、14:00、22:00（依赖上游日报与市场监测）</li>
+              </ul>
+              <p class="muted-text settings-yuqing-readonly-note">实际触发以已部署 Worker 的 Cron 配置为准；此处仅作说明。</p>
             </div>
           </div>
           <div class="settings-yuqing-side">
             <div class="cloud-status-card">
-              <span>下一次预估</span>
+              <span>下一次预估（事件日报下一档）</span>
               <strong id="settings-yuqing-next">${escapeHtml(yuqingNext)}</strong>
-              <em>Asia/Shanghai · Worker Cron / D1</em>
-            </div>
-            <div class="settings-actions settings-yuqing-actions">
-              <button type="button" class="btn primary" id="settings-yuqing-save"><i class="ph ph-floppy-disk"></i><span>保存草稿</span></button>
-              <button type="button" class="btn" id="settings-yuqing-reset"><i class="ph ph-arrow-counter-clockwise"></i><span>恢复默认</span></button>
+              <em>Asia/Shanghai · 本机演算</em>
             </div>
             <span class="settings-actions-msg" id="settings-yuqing-msg"></span>
           </div>
@@ -581,10 +561,7 @@ async function copySettingsText(text) {
 
 function collectSettingsYuqingScheduleDraft() {
   const enabled = !!document.getElementById("settings-yuqing-enabled")?.checked;
-  const times = [1, 2, 3, 4]
-    .map((idx) => String(document.getElementById(`settings-yuqing-time-${idx}`)?.value || "").trim())
-    .filter(Boolean);
-  return { enabled, times };
+  return { enabled };
 }
 
 function refreshSettingsYuqingNext(cfg) {
@@ -603,47 +580,20 @@ function initSettingsYuqingSchedule() {
     if (msg) msg.textContent = text || "";
   };
 
-  panel.addEventListener("change", (e) => {
-    if (
-      e.target &&
-      (e.target.id === "settings-yuqing-enabled" || String(e.target.id || "").startsWith("settings-yuqing-time-"))
-    ) {
-      refreshSettingsYuqingNext();
+  const persistEnabled = () => {
+    const draft = collectSettingsYuqingScheduleDraft();
+    let saved = draft;
+    if (typeof DataEngine !== "undefined" && typeof DataEngine.writeYuqingScheduleDraft === "function") {
+      saved = DataEngine.writeYuqingScheduleDraft(draft);
     }
-  });
+    refreshSettingsYuqingNext(saved);
+    showMsg(saved.enabled ? "已开启本机预估提示。" : "已关闭本机预估提示。");
+  };
 
-  const save = document.getElementById("settings-yuqing-save");
-  if (save) {
-    save.addEventListener("click", () => {
-      const draft = collectSettingsYuqingScheduleDraft();
-      let saved = draft;
-      if (typeof DataEngine !== "undefined" && typeof DataEngine.writeYuqingScheduleDraft === "function") {
-        saved = DataEngine.writeYuqingScheduleDraft(draft);
-      }
-      refreshSettingsYuqingNext(saved);
-      showMsg("已保存本机草稿；线上触发以 wrangler.yuqing.toml Cron 为准。");
-    });
-  }
-
-  const reset = document.getElementById("settings-yuqing-reset");
-  if (reset) {
-    reset.addEventListener("click", () => {
-      const d =
-        typeof DataEngine !== "undefined" && typeof DataEngine.defaultYuqingScheduleDraft === "function"
-          ? DataEngine.defaultYuqingScheduleDraft()
-          : readSettingsYuqingScheduleDraft();
-      const enabled = document.getElementById("settings-yuqing-enabled");
-      if (enabled) enabled.checked = !!d.enabled;
-      [1, 2, 3, 4].forEach((idx) => {
-        const input = document.getElementById(`settings-yuqing-time-${idx}`);
-        if (input) input.value = d.times[idx - 1] || "";
-      });
-      if (typeof DataEngine !== "undefined" && typeof DataEngine.writeYuqingScheduleDraft === "function") {
-        DataEngine.writeYuqingScheduleDraft(d);
-      }
-      refreshSettingsYuqingNext(d);
-      showMsg("已恢复默认 00/08/12/20 事件日报时点。");
-    });
+  const enabledEl = document.getElementById("settings-yuqing-enabled");
+  if (enabledEl && !enabledEl.dataset.boundYuqing) {
+    enabledEl.dataset.boundYuqing = "1";
+    enabledEl.addEventListener("change", persistEnabled);
   }
 
   refreshSettingsYuqingNext(readSettingsYuqingScheduleDraft());

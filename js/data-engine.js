@@ -788,13 +788,15 @@ const DataEngine = {
       const raw = localStorage.getItem(this.yuqingScheduleDraftKey());
       if (!raw) return d;
       const parsed = JSON.parse(raw);
+      const merged = parsed && typeof parsed === "object" ? parsed : {};
       return {
         ...d,
-        ...(parsed && typeof parsed === "object" ? parsed : {}),
-        times: this.normalizeYuqingScheduleTimes(parsed && parsed.times),
-        analysisTimes: ["09:00", "14:00", "22:00"],
+        enabled: !!merged.enabled,
+        times: [...d.times],
+        analysisTimes: [...d.analysisTimes],
         timezone: "Asia/Shanghai",
         phase: "worker_d1_reports",
+        updatedAt: merged.updatedAt != null ? merged.updatedAt : d.updatedAt,
       };
     } catch (_) {
       return d;
@@ -802,13 +804,18 @@ const DataEngine = {
   },
 
   writeYuqingScheduleDraft(payload) {
+    const d = this.defaultYuqingScheduleDraft();
     const current = this.readYuqingScheduleDraft();
+    const wantEnabled =
+      payload && typeof payload === "object" && Object.prototype.hasOwnProperty.call(payload, "enabled")
+        ? !!payload.enabled
+        : !!current.enabled;
     const next = {
       ...current,
-      ...(payload && typeof payload === "object" ? payload : {}),
-      enabled: !!(payload && payload.enabled),
-      times: this.normalizeYuqingScheduleTimes(payload && payload.times),
-      analysisTimes: ["09:00", "14:00", "22:00"],
+      ...d,
+      enabled: wantEnabled,
+      times: [...d.times],
+      analysisTimes: [...d.analysisTimes],
       timezone: "Asia/Shanghai",
       updatedAt: new Date().toISOString(),
       phase: "worker_d1_reports",

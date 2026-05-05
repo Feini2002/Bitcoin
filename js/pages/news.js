@@ -14,113 +14,6 @@ const analysisState = {
   loading: false,
 };
 
-const ANALYSIS_MOCK_REPORT = {
-  id: "mock-analysis-20260505-09",
-  kind: SENTIMENT_ANALYSIS_KIND,
-  reportDate: "2026-05-05",
-  slot: "09",
-  triggerType: "scheduled_mock",
-  generatedAt: "2026-05-05T01:30:00Z",
-  status: "mock",
-  sourceRefs: [
-    { type: "daily_event", label: "上游事件日报", href: "#/news?reportId=mock-daily-20260505-08" },
-    { type: "market", label: "行情工作台", href: "#/chart", route: "chart" },
-    { type: "market", label: "衍生品面板", href: "#/derivatives", route: "derivatives" },
-    { type: "market", label: "强平雷达", href: "#/heatmap", route: "heatmap" },
-  ],
-  quality: { factCount: 22, sourceCoverage: 78, marketSnapshotOk: true, usedSearch: false, caveat: "本地样本，仅用于云端不可用时预览。" },
-  report: {
-    title: "BTC 核心跨资产情报日报",
-    upstreamDaily: {
-      id: "mock-daily-20260505-08",
-      title: "赛博前哨站",
-      generatedAt: "2026-05-05T00:35:00Z",
-      slot: "08",
-      href: "#/news?reportId=mock-daily-20260505-08",
-    },
-    marketState: {
-      regime: "风险偏好修复但脆弱",
-      score: 58,
-      bias: "中性偏多",
-      confidence: 72,
-      summary: "事件日报主题与市场快照显示 BTC 维持高位震荡，下一段方向更依赖美元、美债和 ETF 资金流确认。",
-      keyAssets: [
-        { name: "BTC", change: "+3.44%", stance: "震荡偏强", driver: "ETF 流入与高位筹码承接尚可" },
-        { name: "ETH", change: "+1.86%", stance: "跟随修复", driver: "相对 BTC 强度仍不足" },
-        { name: "衍生品", change: "", stance: "待确认", driver: "费率与 OI 未给出单边拥挤信号" },
-      ],
-    },
-    riskRadar: [
-      {
-        level: "mid",
-        title: "宏观数据窗口临近",
-        window: "48h",
-        trigger: "核心 CPI 或初请显著偏离预期",
-        assets: ["BTC", "纳指", "美元", "美债"],
-        response: "降低追涨仓位，等待第一根高波动 K 线收敛后再评估。",
-      },
-      {
-        level: "mid",
-        title: "ETF 流入与价格背离",
-        window: "72h",
-        trigger: "价格新高但净流入连续走弱",
-        assets: ["BTC", "ETH"],
-        response: "把突破视为待确认，不把单根放量阳线当作趋势延续。",
-      },
-    ],
-    opportunityScanner: [
-      {
-        label: "顺势确认",
-        direction: "BTC 上破确认",
-        setup: "BTC 站稳关键区间上沿，ETF 净流入扩大，费率未过热。",
-        invalidation: "上破后 4H 收回区间内，且美债收益率继续上行。",
-        priority: 84,
-      },
-      {
-        label: "等待复核",
-        direction: "不追第一反应",
-        setup: "事件发生后等待高波动 K 线收敛，再观察资金流确认。",
-        invalidation: "上游日报事件被官方来源否认或热度迅速消退。",
-        priority: 66,
-      },
-    ],
-    eventCalendar: [
-      {
-        id: "mock-cpi",
-        title: "美国 CPI / 核心 CPI",
-        startsAtUtc: "2026-05-06T12:30:00Z",
-        precision: "time",
-        displayTimezone: "Asia/Shanghai",
-        sourceType: "official_calendar",
-        sourceName: "BLS",
-        sourceUrl: "https://www.bls.gov/cpi/",
-        confidence: 0.92,
-        impactScore: 95,
-        assets: ["BTC", "纳指", "美元", "美债"],
-        why: "决定市场是否继续交易降息推迟。",
-      },
-    ],
-    aiIntel: [
-      {
-        title: "AI CAPEX 叙事仍支撑纳指权重股",
-        relevance: "对 BTC 的影响是风险偏好传导，不是直接基本面。",
-        watch: "云厂商资本开支指引、NVDA 供应链订单、AI 软件商业化收入。",
-        confidence: 0.7,
-      },
-    ],
-    trendRead: {
-      strengthening: ["风险偏好没有消失，但更依赖宏观数据确认。"],
-      fracturing: ["AI 权重股强势与指数广度不足之间存在分歧。"],
-      checklist: ["CPI 后 2 年期美债是否继续上行。", "BTC ETF 净流入是否配合价格突破。", "纳指上涨是否扩散到更多行业。"],
-    },
-    incrementalSearch: {
-      used: false,
-      reasons: [],
-      excludedSourceIds: ["mock-daily-20260505-08"],
-    },
-  },
-};
-
 function analysisEscapeHtml(value) {
   return String(value == null ? "" : value)
     .replace(/&/g, "&amp;")
@@ -164,18 +57,36 @@ function analysisSlotLabel(row) {
 }
 
 function activeAnalysisReport() {
-  return analysisState.report || ANALYSIS_MOCK_REPORT;
+  return analysisState.report;
+}
+
+function analysisCurrentReportId() {
+  const row = analysisState.report;
+  return row && row.id ? String(row.id) : "";
 }
 
 function analysisQuality(row) {
+  if (!row || typeof row !== "object") return {};
   return row.quality || (row.report && row.report.quality) || (row.grounding && row.grounding.quality) || {};
 }
 
 function analysisSourceStatusText() {
   if (analysisState.source === "cloud") return "云端 D1 舆情分析已接入";
-  if (analysisState.source === "error") return `云端不可用，使用本地样本：${analysisState.status}`;
+  if (analysisState.source === "error") return `读取失败：${analysisState.status}`;
   if (analysisState.source === "loading") return "正在读取云端 D1 舆情分析...";
-  return analysisState.status || "本地样本";
+  return analysisState.status || "待机";
+}
+
+function analysisLiveDotClass() {
+  if (analysisState.source === "cloud") return "";
+  if (analysisState.source === "loading") return "idle";
+  return "mock";
+}
+
+function analysisStatusChipMarkup() {
+  if (analysisState.source === "cloud") return `<span class="chip ok">D1 已载入</span>`;
+  if (analysisState.source === "loading") return `<span class="chip">载入中…</span>`;
+  return `<span class="chip warn">暂无云端报告</span>`;
 }
 
 function pctText(value) {
@@ -369,20 +280,23 @@ function renderIncremental(report) {
   `;
 }
 
-function renderReportArchive(reportRow) {
-  const items = analysisState.history.length ? analysisState.history : [ANALYSIS_MOCK_REPORT];
+function renderReportArchive() {
+  const items = analysisState.history.length ? analysisState.history : [];
+  const curId = analysisCurrentReportId();
+  if (!items.length) {
+    return `<p class="daily-archive-empty muted-text">暂无历史记录。可先执行一次「手动二次分析」或等待定点任务。</p>`;
+  }
   let lastDate = "";
   return items
     .map((item) => {
       const date = item.reportDate || "";
       const dateHead = date && date !== lastDate ? `<div class="news-archive-date">${analysisEscapeHtml(date)}</div>` : "";
       lastDate = date || lastDate;
-      const active = reportRow.id === item.id;
+      const active = !!item.id && item.id === curId;
       const title = item.title || (item.report && item.report.title) || "舆情分析";
-      const deleteBtn =
-        item.id && item.id !== ANALYSIS_MOCK_REPORT.id
-          ? `<button type="button" class="news-archive-delete" data-report-id="${analysisEscapeHtml(item.id)}" title="从云端 D1 删除此条" aria-label="删除此条存档"><i class="ph ph-trash"></i></button>`
-          : "";
+      const deleteBtn = item.id
+        ? `<button type="button" class="news-archive-delete" data-report-id="${analysisEscapeHtml(item.id)}" title="从云端 D1 删除此条" aria-label="删除此条存档"><i class="ph ph-trash"></i></button>`
+        : "";
       return `${dateHead}<div class="news-archive-row">
         <button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${analysisEscapeHtml(item.id)}">
         <span>${analysisEscapeHtml(analysisSlotLabel(item))}</span>
@@ -394,23 +308,41 @@ function renderReportArchive(reportRow) {
     .join("");
 }
 
-function renderYuqingReport(row) {
-  const r = row || activeAnalysisReport();
-  const report = r.report || {};
-  const state = report.marketState || {};
-  const q = analysisQuality(r);
-  const upstream = report.upstreamDaily;
+function renderNewsArchiveChrome() {
   return `
+    <div class="news-archive-backdrop" id="news-archive-backdrop" hidden></div>
+    <aside class="news-archive-drawer" id="news-archive-drawer" aria-hidden="true">
+      <div class="news-archive-head">
+        <div>
+          <span class="news-section-kicker">最近 7 天</span>
+          <h3>舆情分析回档</h3>
+        </div>
+        <button type="button" class="btn" id="news-close-archive" title="关闭报告库">
+          <i class="ph ph-x"></i><span>关闭</span>
+        </button>
+      </div>
+      <div class="news-archive-list">${renderReportArchive()}</div>
+    </aside>
+  `;
+}
+
+function renderYuqingReport(row) {
+  const chrome = renderNewsArchiveChrome();
+  const r = row !== undefined && row !== null ? row : activeAnalysisReport();
+  const titleText = analysisEscapeHtml((r && r.report && r.report.title) || "舆情分析");
+  const subLine = `${analysisEscapeHtml(analysisFormatTime(r && r.generatedAt))} · ${analysisEscapeHtml(analysisSlotLabel(r))}`;
+
+  const commandShell = `
     <div class="news-command">
       <div class="news-command-main">
-        <span class="news-live-dot ${analysisState.source === "cloud" ? "" : "mock"}"></span>
+        <span class="news-live-dot ${analysisLiveDotClass()}"></span>
         <div>
-          <h1>${analysisEscapeHtml(report.title || "舆情分析")}</h1>
-          <p>${analysisEscapeHtml(analysisFormatTime(r.generatedAt))} · ${analysisEscapeHtml(analysisSlotLabel(r))}</p>
+          <h1>${titleText}</h1>
+          <p>${subLine}</p>
         </div>
       </div>
       <div class="news-command-actions">
-        <span class="chip ${analysisState.source === "cloud" ? "ok" : "warn"}">${analysisState.source === "cloud" ? "D1 Live" : "Mock Fallback"}</span>
+        ${analysisStatusChipMarkup()}
         <button type="button" class="btn" id="news-generate-preview" ${analysisState.loading ? "disabled" : ""}>
           <i class="ph ph-arrows-clockwise"></i><span>${analysisState.loading ? "分析中" : "手动二次分析"}</span>
         </button>
@@ -418,7 +350,27 @@ function renderYuqingReport(row) {
           <i class="ph ph-clock-counter-clockwise"></i><span>7日报告库</span>
         </button>
       </div>
+    </div>`;
+
+  if (!r || !r.report) {
+    const hint = analysisEscapeHtml(analysisSourceStatusText());
+    return `${commandShell}
+    <div class="news-phase-strip">
+      <span><i class="ph ph-database"></i> ${hint}</span>
+      <span><i class="ph ph-calendar-check"></i> 定点二次分析 · 北京时间 09 / 14 / 22（Cron 固化）</span>
     </div>
+    <div class="daily-event-empty">
+      <p class="muted-text">${hint}</p>
+      <p class="muted-text">可手动触发「手动二次分析」写入 D1，或打开 7 日报告库选择历史条目。</p>
+    </div>
+    ${chrome}`;
+  }
+
+  const report = r.report || {};
+  const state = report.marketState || {};
+  const q = analysisQuality(r);
+  const upstream = report.upstreamDaily;
+  return `${commandShell}
 
     <div class="news-phase-strip">
       <span><i class="ph ph-database"></i> ${analysisEscapeHtml(analysisSourceStatusText())}</span>
@@ -529,19 +481,7 @@ function renderYuqingReport(row) {
       </section>
     </div>
 
-    <div class="news-archive-backdrop" id="news-archive-backdrop" hidden></div>
-    <aside class="news-archive-drawer" id="news-archive-drawer" aria-hidden="true">
-      <div class="news-archive-head">
-        <div>
-          <span class="news-section-kicker">最近 7 天</span>
-          <h3>舆情分析回档</h3>
-        </div>
-        <button type="button" class="btn" id="news-close-archive" title="关闭报告库">
-          <i class="ph ph-x"></i><span>关闭</span>
-        </button>
-      </div>
-      <div class="news-archive-list">${renderReportArchive(r)}</div>
-    </aside>
+    ${chrome}
   `;
 }
 
@@ -582,7 +522,7 @@ async function loadAnalysisHistory() {
 
 async function deleteAnalysisArchiveEntry(id) {
   const rid = String(id || "").trim();
-  if (!rid || rid === ANALYSIS_MOCK_REPORT.id) return;
+  if (!rid) return;
   if (typeof DataEngine === "undefined" || typeof DataEngine.deleteYuqingReportItem !== "function") {
     analysisState.status = "DataEngine 不支持删除";
     renderNewsIntoDom();
@@ -596,7 +536,8 @@ async function deleteAnalysisArchiveEntry(id) {
   try {
     await DataEngine.deleteYuqingReportItem(rid);
     analysisState.history = (analysisState.history || []).filter((x) => x && x.id !== rid);
-    const activeId = activeAnalysisReport().id;
+    const cur = activeAnalysisReport();
+    const activeId = cur && cur.id;
     const hashId = analysisHashReportId();
     if (activeId === rid || hashId === rid) {
       try {
@@ -635,12 +576,12 @@ async function loadAnalysisReport(reportId = "") {
       analysisState.source = "cloud";
       analysisState.status = "云端 D1 舆情分析已加载";
     } else {
-      analysisState.report = ANALYSIS_MOCK_REPORT;
+      analysisState.report = null;
       analysisState.source = "error";
       analysisState.status = data && data.d1Ready === false ? "D1 未绑定或迁移未执行" : "暂无云端舆情分析";
     }
   } catch (e) {
-    analysisState.report = ANALYSIS_MOCK_REPORT;
+    analysisState.report = null;
     analysisState.source = "error";
     analysisState.status = e && e.message ? e.message : String(e);
   }
@@ -700,7 +641,7 @@ function bindNewsInnerEvents() {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-report-id") || "";
       closeNewsArchive();
-      if (id && id !== ANALYSIS_MOCK_REPORT.id) {
+      if (id) {
         try {
           history.replaceState(null, "", `#/news-analysis?reportId=${encodeURIComponent(id)}`);
         } catch (_) {}

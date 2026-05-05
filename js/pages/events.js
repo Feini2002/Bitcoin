@@ -3,213 +3,17 @@
    ======================================================= */
 
 const DAILY_EVENT_KIND = "daily_event";
-const DAILY_EVENT_FORCE_MOCK = false;
 let __yuqingDailyClock = null;
 let __yuqingDailyAbort = null;
 
 const dailyEventState = {
   report: null,
   history: [],
-  status: "信息已更新",
-  source: "mock",
+  status: "正在加载云端日报…",
+  source: "loading",
   loading: false,
   /** 报告库抽屉筛选：all | scheduled | manual（实时扫描） */
   archiveFilter: "all",
-};
-
-const DAILY_EVENT_MOCK_REPORT = {
-  id: "mock-daily-contract-20260505-08",
-  kind: DAILY_EVENT_KIND,
-  reportDate: "2026-05-05",
-  slot: "08",
-  triggerType: "mock_contract",
-  generatedAt: "2026-05-05T00:35:00Z",
-  status: "mock",
-  sourceRefs: [
-    { type: "search_pack", label: "全球要闻搜索" },
-    { type: "official_calendar", label: "官方日历与政策公告" },
-    { type: "company_updates", label: "企业与科技更新" },
-    { type: "market_context", label: "跨资产市场背景" },
-    { type: "route", label: "舆情分析（二次研判入口）", href: "#/news-analysis", route: "news-analysis" },
-  ],
-  quality: { factCount: 36, sourceCoverage: 88, usedSearch: true, caveat: "覆盖率按来源数量、事实密度与可追溯程度估算。" },
-  report: {
-    title: "事件日报",
-    subtitle: "日常新闻早午晚报",
-    marketTemperature: {
-      score: 50,
-      label: "结构分化",
-      regime: "结构分化",
-      summary: "中性（50）：风险偏好与防御买盘同时存在，宏观宽松、AI 权重叙事和地缘风险正在拉扯同一批资金。",
-      crossAsset: "AI 权重叙事仍强，美元与黄金也有支撑，BTC 需要资金流继续确认。",
-      anomaly: "风险资产与避险资产同时获得关注，说明事件驱动还没有给出单边答案。",
-      suggestion: "先看事件是否继续被官方口径、资金流和价格结构共同确认，再进入二次研判。",
-    },
-    topStory: {
-      category: "地缘政治",
-      title: "[持续追踪] 能源通道安全与停火谈判进入同一观察窗口",
-      fact: "多方围绕海运安全、能源供应与地区停火条件密集接触，原油、航运与避险资产的风险溢价重新被市场关注。",
-      structure: {
-        trigger: "直接触发原因：能源通道安全议题与地区停火谈判在同一时间窗发酵。",
-        conflict: "深层结构性矛盾：供应稳定、地缘安全承诺与国内政治压力之间仍难一次性达成平衡。",
-        divergence: "声明与行动差异：公开表态偏向降温，但市场更关注实际护航、制裁与供应链保险成本。"
-      },
-      impacts: [
-        { asset: "原油", direction: "up", logic: "谈判继续但未失控升级，油价风险溢价维持。" },
-        { asset: "BTC", direction: "shock", logic: "风险偏好受抑，短线需要资金流二次确认。" }
-      ],
-      nextWatch: "出现局部摩擦或制裁升级，美元、黄金和能源链条短线获得防御买盘。",
-      sourceName: "全球要闻",
-      sourceUrl: "",
-    },
-    topStories: [
-      {
-        category: "地缘政治",
-        title: "[持续追踪] 能源通道安全与停火谈判进入同一观察窗口",
-        fact: "多方围绕海运安全、能源供应与地区停火条件密集接触，原油、航运与避险资产的风险溢价重新被市场关注。",
-        structure: {
-          trigger: "直接触发原因：能源通道安全议题与地区停火谈判在同一时间窗发酵。",
-          conflict: "深层结构性矛盾：供应稳定、地缘安全承诺与国内政治压力之间仍难一次性达成平衡。",
-          divergence: "声明与行动差异：公开表态偏向降温，但市场更关注实际护航、制裁与供应链保险成本。"
-        },
-        impacts: [
-          { asset: "原油", direction: "up", logic: "谈判继续但未失控升级，油价风险溢价维持。" },
-          { asset: "BTC", direction: "shock", logic: "风险偏好受抑，短线需要资金流二次确认。" }
-        ],
-        nextWatch: "出现局部摩擦或制裁升级，美元、黄金和能源链条短线获得防御买盘。",
-        sourceName: "全球要闻",
-        sourceUrl: "",
-      },
-      {
-        category: "宏观经济",
-        title: "美国通胀预期回落，但服务项粘性仍压住降息交易",
-        fact: "通胀预期回落带动降息交易修复，但服务通胀和薪资韧性让市场不敢把宽松路径一次性定满。",
-        structure: {
-          trigger: "直接触发原因：通胀预期与利率期货重新指向更友好的政策窗口。",
-          conflict: "深层结构性矛盾：商品通胀降温快于服务项，居民薪资与企业定价仍在延缓政策转向。",
-          divergence: "声明与行动差异：市场提前交易降息，央行官员仍强调数据依赖，美元和美债没有完全同步松动。"
-        },
-        impacts: [
-          { asset: "纳指", direction: "up", logic: "宽松交易温和延续，成长股获得估值支撑。" },
-          { asset: "美元", direction: "down", logic: "降息预期重燃，美元指数面临下行压力。" }
-        ],
-        nextWatch: "美债拍卖或官员讲话偏鹰，美元反弹会压制风险资产弹性。",
-        sourceName: "宏观日历",
-        sourceUrl: "",
-      },
-      {
-        category: "科技产业",
-        title: "AI 资本开支与企业级 Agent 落地继续牵引科技权重",
-        fact: "大型科技公司把 AI 功能从演示能力推进到云服务、办公流程和企业权限系统，市场继续给算力与软件链条定价。",
-        structure: {
-          trigger: "直接触发原因：云厂商与软件平台持续发布企业级 AI 工作流、数据连接和自动化执行能力。",
-          conflict: "深层结构性矛盾：资本开支仍在抬升，但收入兑现、客户留存和单位推理成本需要持续验证。",
-          divergence: "声明与行动差异：公司口径强调效率提升，投资者更关注订单、毛利率和真实付费转化。"
-        },
-        impacts: [
-          { asset: "AI链条", direction: "up", logic: "纳指权重继续获得叙事支撑，但指数广度不足会限制全面风险偏好。" },
-          { asset: "SaaS", direction: "shock", logic: "软件公司若客户案例和定价体系快速清晰，AI 叙事从概念热度转向收入验证。" }
-        ],
-        nextWatch: "CAPEX 上修伴随利润率压力，AI 链条内部会出现分化。",
-        sourceName: "科技产业",
-        sourceUrl: "",
-      },
-    ],
-    dynamicBriefs: [
-      {
-        category: "宏观经济",
-        title: "美国通胀预期回落但服务项粘性仍未消失",
-        body: "市场重新上调降息概率。",
-        description: "服务通胀与薪资数据仍让政策路径保持弹性，美元和美债没有完全确认宽松交易。",
-        analysis: "若官员讲话与债券需求共同转鸽，风险偏好会扩散；若美元反弹，BTC 和高贝塔科技股会先承压。",
-        sourceName: "宏观日历",
-        sourceUrl: "",
-      },
-      {
-        category: "政策监管",
-        title: "稳定币与交易平台披露规则进入新一轮意见窗口",
-        body: "监管讨论从单点执法转向储备披露、客户资产隔离与跨境服务边界。",
-        description: "市场关注规则是否会提高交易平台运营成本，以及稳定币发行方的储备透明度要求。",
-        analysis: "短线更容易先交易合规成本，中期才会重新评估头部机构受益空间。",
-        sourceName: "政策跟踪",
-        sourceUrl: "",
-      },
-      {
-        category: "科技产业",
-        title: "AI 应用从模型参数竞赛转向企业级工作流落地",
-        body: "产品更新更强调后台自动化、数据连接、权限治理与 Agent 编排。",
-        description: "投资者开始从模型能力演示转向客户部署、续费和可计费工作流。",
-        analysis: "AI 叙事仍能支撑科技权重，但若指数广度不跟，行情会更偏结构性。",
-        sourceName: "科技产业",
-        sourceUrl: "",
-      },
-      {
-        category: "加密市场",
-        title: "BTC 在资金流、美元与风险偏好之间保持高位拉扯",
-        body: "BTC 仍是风险偏好和美元流动性的混合表达。",
-        description: "现货 ETF 资金流决定短线弹性，美元方向和纳指权重表现决定外部环境。",
-        analysis: "只有资金流、纳指和链上活跃度同时改善，价格突破才更容易获得持续性。",
-        sourceName: "加密市场",
-        sourceUrl: "",
-      },
-      {
-        category: "企业动态",
-        title: "大型科技公司继续把 AI 功能打包进办公与云服务",
-        body: "企业公告更强调 AI 功能的权限、审计、数据连接与可计费工作流。",
-        description: "办公软件、云平台和数据服务正在把 AI 从插件变成默认能力。",
-        analysis: "市场会继续盯客户案例和定价体系，收入验证越清晰，叙事越不容易降温。",
-        sourceName: "企业更新",
-        sourceUrl: "",
-      },
-    ],
-    aiIntel: [
-      {
-        title: "企业 AI 从聊天界面转向常驻型 Agent",
-        date: "2026/05/05",
-        what: "产品开始强调跨应用后台执行、自动检索、会议纪要与邮件处理。",
-        use: "对普通用户的意义是把 AI 当作持续执行的工作助手，而不是一次性问答窗口。",
-        attention: "高",
-        sourceName: "科技更新",
-        sourceUrl: "",
-      },
-      {
-        title: "开源模型工具链把本地部署门槛继续压低",
-        date: "2026/05/05",
-        what: "量化、检索增强、低成本推理与本地知识库模板进一步打包。",
-        use: "个人和小团队更容易把私有资料接入 AI，不必每次从零搭建工程链路。",
-        attention: "中",
-        sourceName: "开源生态",
-        sourceUrl: "",
-      },
-      {
-        title: "多模态 AI 更贴近日常内容生产流程",
-        date: "2026/05/05",
-        what: "图像、语音、表格和网页内容能在同一工作流里被识别、改写与整理。",
-        use: "适合做日报、素材归档、会议复盘和投研笔记的半自动处理。",
-        attention: "中",
-        sourceName: "产品更新",
-        sourceUrl: "",
-      },
-    ],
-    trendRead: {
-      strengthening: [
-        "AI 叙事正在从模型能力展示转向企业工作流落地，若云厂商 CAPEX 继续上修，纳指权重链条会保持叙事支撑。",
-        "宏观宽松预期有修复迹象，但服务通胀和美元方向仍会决定风险偏好能否扩散。",
-        "加密市场的交易弹性仍依赖 ETF 资金流连续性，单日上涨不足以确认趋势延续。",
-      ],
-      cracking: [
-        "风险资产与避险资产同时被买入，说明市场仍在对地缘和政策不确定性做双向准备。",
-        "AI 权重股叙事强，但若指数广度不足，风险偏好修复会更像结构行情而非全面扩散。",
-      ],
-      conclusion: "0-72小时观察清单：看能源通道谈判是否降温；看美元与美债是否确认宽松交易；看 BTC ETF 净流入能否连续配合价格突破。",
-    },
-    sources: [
-      { name: "Search Pack", type: "搜索结果", reliability: "中高", count: 12 },
-      { name: "Official Calendar", type: "官方日历", reliability: "高", count: 5 },
-      { name: "Company Updates", type: "企业公告", reliability: "中高", count: 6 },
-      { name: "Market Context", type: "跨资产背景", reliability: "中", count: 5 },
-    ],
-  },
 };
 
 function dailyEscapeHtml(value) {
@@ -272,25 +76,29 @@ function dailySlotLabel(row) {
 
 function dailyTriggerLabel(row) {
   const trigger = String(row && row.triggerType ? row.triggerType : "");
-  if (trigger.includes("mock")) return "定时生成";
   if (trigger === "manual") return "手动搜索";
   return "定点触发";
 }
 
 function dailyActiveReport() {
-  return dailyEventState.report || DAILY_EVENT_MOCK_REPORT;
+  return dailyEventState.report;
+}
+
+function dailyCurrentReportId() {
+  const row = dailyEventState.report;
+  return row && row.id ? String(row.id) : "";
 }
 
 function dailyQuality(row) {
+  if (!row || typeof row !== "object") return {};
   return row.quality || (row.report && row.report.quality) || (row.grounding && row.grounding.quality) || {};
 }
 
 function dailySourceStatusText() {
   if (dailyEventState.source === "cloud") return "云端 D1 报告已接入";
-  if (dailyEventState.source === "mock") return dailyEventState.status || "信息已更新";
   if (dailyEventState.source === "error") return `数据源切换中：${dailyEventState.status}`;
   if (dailyEventState.source === "loading") return "正在读取云端 D1 报告...";
-  return dailyEventState.status || "信息已更新";
+  return dailyEventState.status || "待机";
 }
 
 function dailyRenderLink(ref) {
@@ -505,7 +313,7 @@ function renderDailyRefs(row) {
 }
 
 function dailyArchiveFilteredHistory() {
-  const raw = dailyEventState.history.length ? dailyEventState.history : [DAILY_EVENT_MOCK_REPORT];
+  const raw = dailyEventState.history.length ? dailyEventState.history : [];
   const mode = dailyEventState.archiveFilter || "all";
   if (mode === "all") return raw;
   return raw.filter((item) => {
@@ -522,17 +330,17 @@ function renderDailyArchiveList() {
     return `<p class="daily-archive-empty muted-text">该分类下暂无记录，可切换到「全部」或改天再试。</p>`;
   }
   let lastDate = "";
+  const curId = dailyCurrentReportId();
   return items
     .map((item) => {
       const date = item.reportDate || "";
       const dateHead = date && date !== lastDate ? `<div class="news-archive-date">${dailyEscapeHtml(date)}</div>` : "";
       lastDate = date || lastDate;
-      const active = dailyActiveReport().id === item.id;
+      const active = !!item.id && item.id === curId;
       const title = item.title || (item.report && (item.report.title || item.report.topStory?.title)) || "日报";
-      const deleteBtn =
-        item.id && item.id !== DAILY_EVENT_MOCK_REPORT.id
-          ? `<button type="button" class="news-archive-delete" data-report-id="${dailyEscapeHtml(item.id)}" title="从云端 D1 删除此条" aria-label="删除此条存档"><i class="ph ph-trash"></i></button>`
-          : "";
+      const deleteBtn = item.id
+        ? `<button type="button" class="news-archive-delete" data-report-id="${dailyEscapeHtml(item.id)}" title="从云端 D1 删除此条" aria-label="删除此条存档"><i class="ph ph-trash"></i></button>`
+        : "";
       return `${dateHead}<div class="news-archive-row">
         <button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${dailyEscapeHtml(item.id)}">
         <span>${dailyEscapeHtml(dailySlotLabel(item))}</span>
@@ -551,35 +359,68 @@ function renderDailyArchiveFilters() {
   return `<div class="daily-archive-filters" role="tablist">${mk("all", "全部")}${mk("scheduled", "定点班次")}${mk("manual", "实时扫描")}</div>`;
 }
 
-function renderYuqingDailyReport(row) {
-  const r = row || dailyActiveReport();
-  const q = dailyQuality(r);
+function renderDailyArchiveChrome() {
   return `
+    <div class="news-archive-backdrop" id="daily-archive-backdrop" hidden></div>
+    <aside class="news-archive-drawer" id="daily-archive-drawer" aria-hidden="true">
+      <div class="news-archive-head">
+        <div>
+          <span class="news-section-kicker">最近 7 天</span>
+          <h3>事件日报回档</h3>
+          <p class="daily-archive-sub">定点班次（北京时间 00 / 08 / 12 / 20）与「实时扫描」都会写入此列表，切换报告请用 7 日报告库。</p>
+        </div>
+        <button type="button" class="btn" id="daily-close-archive" title="关闭报告库">
+          <i class="ph ph-x"></i><span>关闭</span>
+        </button>
+      </div>
+      ${renderDailyArchiveFilters()}
+      <div class="news-archive-list">${renderDailyArchiveList()}</div>
+    </aside>`;
+}
+
+function renderYuqingDailyReport(row) {
+  const chrome = renderDailyArchiveChrome();
+  const r = row !== undefined && row !== null ? row : dailyActiveReport();
+
+  const commandShell = `
     <div class="news-command daily-event-command">
       <div class="news-command-main daily-command-main">
         <div class="daily-report-trigger">
           <span class="daily-report-trigger-label">本页日报触发检索</span>
           <div class="daily-report-trigger-row">
             <i class="ph ph-clock" aria-hidden="true"></i>
-            <strong>${dailyEscapeHtml(dailyFormatTriggeredSearchAt(r.generatedAt))}</strong>
+            <strong>${dailyEscapeHtml(dailyFormatTriggeredSearchAt(r && r.generatedAt ? r.generatedAt : null))}</strong>
             <span class="daily-report-trigger-tz">Asia/Shanghai</span>
           </div>
         </div>
         <div class="daily-report-meta">
-          <span title="报表归属日期"><i class="ph ph-calendar-dots"></i>${dailyEscapeHtml(r.reportDate || "—")}</span>
-          <span><i class="ph ph-list-checks"></i>事件 ${Number(q.factCount || 0)} · 覆盖 ${Number(q.sourceCoverage || 0)}%</span>
+          <span title="报表归属日期"><i class="ph ph-calendar-dots"></i>${dailyEscapeHtml((r && r.reportDate) || "—")}</span>
+          <span><i class="ph ph-list-checks"></i>事件 ${Number(dailyQuality(r || {}).factCount || 0)} · 覆盖 ${Number(dailyQuality(r || {}).sourceCoverage || 0)}%</span>
         </div>
       </div>
       <div class="news-command-actions">
         <div class="daily-clock-pill"><i class="ph ph-clock"></i><span id="daily-clock">--</span></div>
-        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading || DAILY_EVENT_FORCE_MOCK ? "disabled" : ""} title="即时调用 Gemini 检索并写入报告库（可在右侧抽屉「实时扫描」中回看）">
+        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="即时调用 Gemini 检索并写入报告库（可在右侧抽屉「实时扫描」中回看）">
           <i class="ph ph-rocket-launch"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
         </button>
         <button type="button" class="btn primary" id="daily-open-archive">
           <i class="ph ph-clock-counter-clockwise"></i><span>7日报告库</span>
         </button>
       </div>
+    </div>`;
+
+  if (!r || !r.report) {
+    const st = dailyEscapeHtml(dailyEventState.status || "暂无云端事件日报");
+    return `${commandShell}
+    <div class="daily-event-empty">
+      <p class="muted-text">${st}</p>
+      <p class="muted-text">可用「实时扫描」写入一条至 D1，或打开 7 日报告库从历史记录中选择。</p>
     </div>
+    ${chrome}`;
+  }
+
+  const q = dailyQuality(r);
+  return `${commandShell}
 
     <div class="news-intel-grid">
       ${renderDailyTemperature(r)}
@@ -628,22 +469,7 @@ function renderYuqingDailyReport(row) {
         <div class="news-ai-list">${renderDailyAi(r)}</div>
       </section>
     </div>
-
-    <div class="news-archive-backdrop" id="daily-archive-backdrop" hidden></div>
-    <aside class="news-archive-drawer" id="daily-archive-drawer" aria-hidden="true">
-      <div class="news-archive-head">
-        <div>
-          <span class="news-section-kicker">最近 7 天</span>
-          <h3>事件日报回档</h3>
-          <p class="daily-archive-sub">定点班次（北京时间 00 / 08 / 12 / 20）与「实时扫描」都会写入此列表，切换报告请用 7 日报告库。</p>
-        </div>
-        <button type="button" class="btn" id="daily-close-archive" title="关闭报告库">
-          <i class="ph ph-x"></i><span>关闭</span>
-        </button>
-      </div>
-      ${renderDailyArchiveFilters()}
-      <div class="news-archive-list">${renderDailyArchiveList()}</div>
-    </aside>
+    ${chrome}
   `;
 }
 
@@ -677,7 +503,7 @@ async function loadDailyHistory() {
 
 async function deleteDailyArchiveEntry(id) {
   const rid = String(id || "").trim();
-  if (!rid || rid === DAILY_EVENT_MOCK_REPORT.id) return;
+  if (!rid) return;
   if (typeof DataEngine === "undefined" || typeof DataEngine.deleteYuqingReportItem !== "function") {
     dailyEventState.status = "DataEngine 不支持删除";
     renderYuqingDailyIntoDom();
@@ -691,7 +517,7 @@ async function deleteDailyArchiveEntry(id) {
   try {
     await DataEngine.deleteYuqingReportItem(rid);
     dailyEventState.history = (dailyEventState.history || []).filter((x) => x && x.id !== rid);
-    const activeId = dailyActiveReport().id;
+    const activeId = dailyCurrentReportId();
     const hashId = dailyHashReportId();
     if (activeId === rid || hashId === rid) {
       try {
@@ -709,14 +535,6 @@ async function deleteDailyArchiveEntry(id) {
 }
 
 async function loadDailyReport(reportId = "") {
-  if (DAILY_EVENT_FORCE_MOCK) {
-    dailyEventState.report = DAILY_EVENT_MOCK_REPORT;
-    dailyEventState.history = [DAILY_EVENT_MOCK_REPORT];
-    dailyEventState.source = "mock";
-    dailyEventState.status = "信息已更新";
-    renderYuqingDailyIntoDom();
-    return;
-  }
   if (typeof DataEngine === "undefined") {
     dailyEventState.source = "error";
     dailyEventState.status = "DataEngine 不可用";
@@ -738,12 +556,12 @@ async function loadDailyReport(reportId = "") {
       dailyEventState.source = "cloud";
       dailyEventState.status = "云端 D1 报告已加载";
     } else {
-      dailyEventState.report = DAILY_EVENT_MOCK_REPORT;
+      dailyEventState.report = null;
       dailyEventState.source = "error";
       dailyEventState.status = data && data.d1Ready === false ? "D1 未绑定或迁移未执行" : "暂无云端日报";
     }
   } catch (e) {
-    dailyEventState.report = DAILY_EVENT_MOCK_REPORT;
+    dailyEventState.report = null;
     dailyEventState.source = "error";
     dailyEventState.status = e && e.message ? e.message : String(e);
   }
@@ -752,14 +570,6 @@ async function loadDailyReport(reportId = "") {
 }
 
 async function generateDailyReport() {
-  if (DAILY_EVENT_FORCE_MOCK) {
-    dailyEventState.report = DAILY_EVENT_MOCK_REPORT;
-    dailyEventState.history = [DAILY_EVENT_MOCK_REPORT];
-    dailyEventState.source = "mock";
-    dailyEventState.status = "信息已更新";
-    renderYuqingDailyIntoDom();
-    return;
-  }
   if (typeof DataEngine === "undefined" || typeof DataEngine.generateYuqingStructuredReport !== "function") return;
   dailyEventState.loading = true;
   dailyEventState.status = "正在触发手动搜索与日报分析...";
@@ -846,7 +656,7 @@ function bindYuqingDailyEvents() {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-report-id") || "";
       closeDailyArchive();
-      if (id && id !== DAILY_EVENT_MOCK_REPORT.id) {
+      if (id) {
         try {
           history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(id)}`);
         } catch (_) {}
