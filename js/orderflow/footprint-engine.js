@@ -1492,6 +1492,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         isLocalDevPageHostname(host)
       ) {
         out.push(location.origin);
+        out.push("http://127.0.0.1:3000");
       }
       if (typeof global.getBitDataApiBase === "function") {
         try {
@@ -1501,7 +1502,6 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       if (typeof BIT_KLINE_DEFAULT_CLOUD !== "undefined") {
         out.push(BIT_KLINE_DEFAULT_CLOUD);
       }
-      out.push("http://127.0.0.1:3000");
       return [...new Set(out.filter(Boolean).map((x) => String(x).replace(/\/$/, "")))];
     }
 
@@ -1550,6 +1550,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
               interval: parsed.interval,
               tickSize: parsed.tickSize,
               effectiveTickSize: parsed.effectiveTickSize,
+              now: Number.isFinite(Number(parsed.now)) ? Number(parsed.now) : undefined,
               count: parsed.count,
               latestT: parsed.latestT,
               baseInterval: parsed.baseInterval,

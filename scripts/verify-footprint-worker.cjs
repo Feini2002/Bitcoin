@@ -26,6 +26,7 @@ function assert(name, cond, detail) {
   assert("cloud footprint cap is practical 30d depth", hooks.FOOTPRINT_MAX_BARS === 8640);
   assert("API read limit supports loaded history", hooks.FOOTPRINT_API_MAX_LIMIT === 240);
   assert("manual backfill is bounded", hooks.FOOTPRINT_BACKFILL_MAX_WINDOWS === 40);
+  assert("footprint fetch pages sized for backlog drain", hooks.FOOTPRINT_MAX_FETCH_PAGES === 14);
   assert("auto tick resolves to base server tick", hooks.resolveFootprintTickSize("auto") === 10);
   assert("explicit tick is honored", hooks.resolveFootprintTickSize("50") === 50);
 

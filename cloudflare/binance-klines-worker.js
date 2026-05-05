@@ -45,13 +45,14 @@ const FOOTPRINT_BACKFILL_WINDOW_MS = 5 * 60 * 1000;
 const FOOTPRINT_BACKFILL_DEFAULT_WINDOWS = 36;
 const FOOTPRINT_BACKFILL_MAX_WINDOWS = 40;
 const FOOTPRINT_FETCH_LIMIT = 1000;
-const FOOTPRINT_MAX_FETCH_PAGES = 5;
+/** Cron / 手动 footprint 单次最多拉取的 aggTrades 页数（每页 FOOTPRINT_FETCH_LIMIT）；增大以追上 last_trade_id 积压，避免前台「延迟/503」误判。*/
+const FOOTPRINT_MAX_FETCH_PAGES = 14;
 const MAX_KLINES_PER_INTERVAL = 2000;
 const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
 const FETCH_TIMEOUT_MS = 8000;
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
-const WORKER_BUILD = "btc-worker/3.7.6-freshness-aware-kline-sync";
+const WORKER_BUILD = "btc-worker/3.7.7-footprint-merge-cpu";
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
 const LIQUIDATION_SYMBOL = DEFAULT_SYMBOL;
 const LIQUIDATION_BUCKET_MS = 5 * 60 * 1000;
@@ -1116,6 +1117,7 @@ function mergeFootprintRows(rows, interval, tickSize) {
     let bar = map.get(bucket);
     if (!bar) {
       bar = emptyFootprintBar(bucket, Number(row.o));
+      bar._lvlAcc = new Map();
       map.set(bucket, bar);
     }
     bar.h = Math.max(bar.h, Number(row.h));
@@ -1127,17 +1129,21 @@ function mergeFootprintRows(rows, interval, tickSize) {
     }
     bar.lastTradeId = Math.max(Number(bar.lastTradeId) || 0, Number(row.last_trade_id || 0));
     for (const level of rebinLevels(levels, tickSize)) {
-      let target = bar.levels.find((x) => x.price === level.price);
+      const pri = Number(level.price);
+      if (!Number.isFinite(pri)) continue;
+      let target = bar._lvlAcc.get(pri);
       if (!target) {
-        target = { price: level.price, buyVol: 0, sellVol: 0 };
-        bar.levels.push(target);
+        target = { price: pri, buyVol: 0, sellVol: 0 };
+        bar._lvlAcc.set(pri, target);
       }
-      target.buyVol += level.buyVol;
-      target.sellVol += level.sellVol;
+      target.buyVol += Number(level.buyVol) || 0;
+      target.sellVol += Number(level.sellVol) || 0;
     }
   }
   return [...map.values()]
     .map((bar) => {
+      bar.levels = [...bar._lvlAcc.values()].sort((a, b) => Number(b.price) - Number(a.price));
+      delete bar._lvlAcc;
       delete bar._lastBaseT;
       return recomputeFootprintBar(bar);
     })
@@ -4478,6 +4484,8 @@ async function handleReadFootprint(_request, env, url) {
       interval,
       tickSize,
       effectiveTickSize: resolveFootprintTickSize(tickSize),
+      /** 供浏览器新鲜度对齐（弱化本机时钟误差）；不传时仍用客户端 Date.now()。 */
+      now: Date.now(),
       count: bars.length,
       latestT: bars.length ? bars[bars.length - 1].t : 0,
       baseInterval: FOOTPRINT_BASE_INTERVAL,
@@ -5316,6 +5324,7 @@ export const __footprintTestHooks = {
   FOOTPRINT_BASE_INTERVAL,
   FOOTPRINT_MAX_BARS,
   FOOTPRINT_API_MAX_LIMIT,
+  FOOTPRINT_MAX_FETCH_PAGES,
   FOOTPRINT_BACKFILL_MAX_WINDOWS,
   LIQUIDATION_BUCKET_MS,
   LIQUIDATION_RETENTION_MS,
