@@ -1,0 +1,4 @@
+.codex/
+.cursor/
+.wrangler/
+node_modules/

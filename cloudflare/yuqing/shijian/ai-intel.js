@@ -7,18 +7,19 @@ export function buildDailyAiIntelPrompt(timeStr) {
     "。\n" +
     "你是 AI 日常情报编辑。请使用 Google Search 检索近72小时内公开可核验的 AI 工具、模型、平台和产品更新。\n\n" +
     "搜索限定：\n" +
-    "1) 只纳入近72小时内有公开来源的新动作，严禁用旧闻凑数。\n" +
-    "2) 优先官方博客、发布说明、可信科技媒体和开发者社区高置信更新。\n" +
-    "3) 重点是普通用户、内容创作者、开发者或办公工作流能感知的变化。\n" +
-    "4) 不写金融市场影响，不把 AI 新闻解释成交易叙事。\n\n" +
-    "仅输出一个 JSON 代码块，顶层字段为 aiIntel。每条包含 title、date、what、use、attention、sourceName、sourceUrl。attention 只能是「高」「中」「低」。条数 3 到 6 条；无达标新闻则输出空数组。"
+    "1) 必须至少提取 5 条以上内容，着重挖掘头部 AI 公司（OpenAI, Google, Anthropic, Microsoft, Meta等）的新工具与新特性发布。\n" +
+    "2) 只纳入近72小时内有公开来源的新动作，严禁用旧闻凑数。\n" +
+    "3) 优先官方博客、发布说明、可信科技媒体和开发者社区高置信更新。\n" +
+    "4) 重点是普通用户、内容创作者、开发者或办公工作流能感知的变化。\n" +
+    "5) 不写金融市场影响，不把 AI 新闻解释成交易叙事。\n\n" +
+    "仅输出一个 JSON 代码块，顶层字段为 aiIntel。每条包含 title、date、what、use、attention、sourceName、sourceUrl。attention 只能是「高」「中」「低」。"
   );
 }
 
 export function normalizeDailyAiIntelItems(raw) {
   const arr = Array.isArray(raw) ? raw : [];
   const out = [];
-  for (const it of arr.slice(0, 8)) {
+  for (const it of arr.slice(0, 10)) {
     if (!it || typeof it !== "object") continue;
     const attentionRaw = cleanText(it.attention || it.level || "中", "中", 8);
     let attention = "中";
@@ -47,7 +48,7 @@ export function normalizeDailyAiIntelItems(raw) {
       },
     ];
   }
-  return out.slice(0, 6);
+  return out;
 }
 
 export function renderDailyAiIntelMarkdownForTrends(items) {

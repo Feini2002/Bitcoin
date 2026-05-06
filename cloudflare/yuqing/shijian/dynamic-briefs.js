@@ -24,7 +24,7 @@ export function buildDailyBriefsPrompt(timeStr) {
     "2) 主题尽量覆盖政治、经济、科技、社会、平台生态、公司动态等，不要与今日头条重复。\n" +
     "3) 不用训练记忆补旧闻；无法核验的社媒传言不要写入。\n\n" +
     "分析限定：每条只回答发生了什么、谁受影响、为什么值得记一笔；不要写投资建议、交易方向或资产传导。\n\n" +
-    "仅输出一个 JSON 代码块，顶层字段为 dynamicBriefs。每条包含 category、title、body、description、analysis、watch、sourceName、sourceUrl。"
+    "仅输出一个 JSON 代码块，顶层字段为 dynamicBriefs。每条包含 category、title、body、description、analysis、watch、time (新闻发生或报道时间，例如“5月6日 14:00”)、sourceName、sourceUrl。"
   );
 }
 
@@ -43,6 +43,7 @@ export function normalizeDailyBriefItems(raw, fallbackRows = []) {
       description: cleanText(src.description || src.detail || fb.description || body, body, 240),
       analysis,
       watch: cleanText(src.watch || src.nextWatch || analysis || fb.watch, "继续等待多源确认。", 220),
+      time: cleanText(src.time || src.date || "", "", 48),
       sourceName: normalizeSourceName(src.sourceName || src.source || fb.sourceName, ""),
       sourceUrl: normalizeSourceUrl(src.sourceUrl || src.url || fb.sourceUrl),
     });
@@ -54,9 +55,10 @@ export function normalizeDailyBriefItems(raw, fallbackRows = []) {
 export function renderDailyBriefsMarkdown(briefs) {
   return (briefs || [])
     .map((item, idx) => {
+      const timeLine = item.time ? `时间：${item.time}\n` : "";
       return [
         `### ${idx + 1}. ${markdownTitle(item.title, "动态")}`,
-        cleanText(item.body, "事件细节等待补强。", 220),
+        timeLine + cleanText(item.body, "事件细节等待补强。", 220),
         `为什么值得记：${cleanText(item.analysis || item.watch, "后续观察权威来源跟进。", 220)}`,
       ].join("\n\n");
     })

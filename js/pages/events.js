@@ -28,6 +28,13 @@ function dailyEscapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function parseMarkdownInline(value) {
+  let escaped = dailyEscapeHtml(value);
+  // parse **bold**
+  escaped = escaped.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  return escaped;
+}
+
 function dailyHashReportId() {
   try {
     const hash = String(location.hash || "");
@@ -232,15 +239,15 @@ function renderDailyTopStory(story, idx = 0) {
   const item = story && typeof story === "object" ? story : {};
   let structureHtml = "";
   if (Array.isArray(item.structure)) {
-    structureHtml = item.structure.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
+    structureHtml = item.structure.map((x) => `<span>${parseMarkdownInline(x)}</span>`).join("");
   } else if (item.structure && typeof item.structure === "object") {
     structureHtml = [
-      item.structure.trigger ? `<span>${dailyEscapeHtml(item.structure.trigger)}</span>` : "",
-      item.structure.conflict ? `<span>${dailyEscapeHtml(item.structure.conflict)}</span>` : "",
-      item.structure.divergence ? `<span>${dailyEscapeHtml(item.structure.divergence)}</span>` : "",
+      item.structure.trigger ? `<span>${parseMarkdownInline(item.structure.trigger)}</span>` : "",
+      item.structure.conflict ? `<span>${parseMarkdownInline(item.structure.conflict)}</span>` : "",
+      item.structure.divergence ? `<span>${parseMarkdownInline(item.structure.divergence)}</span>` : "",
     ].join("");
   } else if (item.structure) {
-    structureHtml = `<span>${dailyEscapeHtml(item.structure)}</span>`;
+    structureHtml = `<span>${parseMarkdownInline(item.structure)}</span>`;
   }
   if (!structureHtml) structureHtml = `<span class="muted-text">等待事实池补充诱因、矛盾和预期差信息。</span>`;
 
@@ -249,14 +256,14 @@ function renderDailyTopStory(story, idx = 0) {
     impactsHtml = item.impacts.map((raw) => {
       const imp = raw && typeof raw === "object" ? raw : { asset: "资产", direction: "shock", logic: raw };
       const meta = dailyImpactDirectionMeta(imp.direction);
-      return `<div class="daily-impact-row"><span class="daily-impact-badge ${meta.cls}">[${dailyEscapeHtml(imp.asset || "资产")}] ${meta.label}</span><span class="daily-impact-logic">${dailyEscapeHtml(imp.logic || imp.reason || "等待价格和资金流确认。")}</span></div>`;
+      return `<div class="daily-impact-row"><span class="daily-impact-badge ${meta.cls}">[${dailyEscapeHtml(imp.asset || "资产")}] ${meta.label}</span><span class="daily-impact-logic">${parseMarkdownInline(imp.logic || imp.reason || "等待价格和资金流确认。")}</span></div>`;
     }).join("");
   } else if (Array.isArray(item.transmission)) {
-    impactsHtml = item.transmission.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("");
+    impactsHtml = item.transmission.map((x) => `<span>${parseMarkdownInline(x)}</span>`).join("");
   }
   if (!impactsHtml) impactsHtml = `<span class="muted-text">等待资产传导确认。</span>`;
 
-  const watchHtml = item.nextWatch ? `<div class="news-story-watch daily-story-contract-line"><b>后续观察</b><span>${dailyEscapeHtml(item.nextWatch)}</span></div>` : "";
+  const watchHtml = item.nextWatch ? `<div class="news-story-watch daily-story-contract-line"><b>后续观察</b><span>${parseMarkdownInline(item.nextWatch)}</span></div>` : "";
 
   const sourceTag = item.sourceUrl
     ? `<a href="${dailyEscapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(item.sourceName || "来源")}</a>`
@@ -271,8 +278,8 @@ function renderDailyTopStory(story, idx = 0) {
           <span>${dailyEscapeHtml(item.category || "今日头条")}</span>
           ${sourceTag}
         </div>
-        <h3>${dailyEscapeHtml(item.title || "暂无头条")}</h3>
-        <div class="news-story-watch daily-story-contract-line"><b>事实锁定</b><span>${dailyEscapeHtml(item.fact || "等待事实池补充。")}</span></div>
+        <h3>${parseMarkdownInline(item.title || "暂无头条")}</h3>
+        <div class="news-story-watch daily-story-contract-line"><b>事实锁定</b><span>${parseMarkdownInline(item.fact || "等待事实池补充。")}</span></div>
         <div class="news-story-watch daily-story-contract-line"><b>结构拆解</b><div class="daily-column-lines">${structureHtml}</div></div>
         <div class="news-story-impact">
           <b>传导预判</b>
@@ -301,18 +308,20 @@ function renderDailyBriefs(row) {
             : "";
         const description = item.description || item.detail || "";
         const analysis = item.analysis || item.watch || "";
+        const timeStr = item.time ? `<span>${dailyEscapeHtml(item.time)}</span>` : "";
         return `
         <article class="news-story">
           <div class="news-story-rank muted">${idx + 1}</div>
           <div class="news-story-body">
             <div class="news-story-meta">
               <span>${dailyEscapeHtml(item.category || "动态")}</span>
+              ${timeStr}
               ${sourceTag}
             </div>
-            <h3>${dailyEscapeHtml(item.title || "")}</h3>
-            <div class="news-story-watch daily-story-contract-line"><b>事件</b><span>${dailyEscapeHtml(item.body || "")}</span></div>
-            ${description ? `<div class="news-story-watch daily-story-contract-line"><b>描述</b><span>${dailyEscapeHtml(description)}</span></div>` : ""}
-            ${analysis ? `<div class="news-story-watch"><b>简析</b><span>${dailyEscapeHtml(analysis)}</span></div>` : ""}
+            <h3>${parseMarkdownInline(item.title || "")}</h3>
+            <div class="news-story-watch daily-story-contract-line"><b>事件</b><span>${parseMarkdownInline(item.body || "")}</span></div>
+            ${description ? `<div class="news-story-watch daily-story-contract-line"><b>描述</b><span>${parseMarkdownInline(description)}</span></div>` : ""}
+            ${analysis ? `<div class="news-story-watch"><b>简析</b><span>${parseMarkdownInline(analysis)}</span></div>` : ""}
           </div>
         </article>
       `;
@@ -333,10 +342,10 @@ function renderDailyAi(row) {
         return `<div class="news-ai-row">
         <div class="news-ai-icon"><i class="ph ph-sparkle"></i></div>
         <div>
-          <h4>${dailyEscapeHtml(item.title || "")}</h4>
+          <h4>${parseMarkdownInline(item.title || "")}</h4>
           <span>发布日期：${dailyEscapeHtml(item.date || "近72小时")}</span>
-          <p><strong>新了什么：</strong>${dailyEscapeHtml(item.what || "")}</p>
-          <p><strong>对我有什么用：</strong>${dailyEscapeHtml(item.use || "")}</p>
+          <p><strong>新了什么：</strong>${parseMarkdownInline(item.what || "")}</p>
+          <p><strong>对我有什么用：</strong>${parseMarkdownInline(item.use || "")}</p>
           ${source ? `<div class="news-source-inline">来源：${source}</div>` : ""}
         </div>
         <strong>${dailyEscapeHtml(item.attention || "")}关注</strong>
@@ -355,7 +364,7 @@ function renderDailyTrend(row) {
     : t.strengthening;
   const block = (title, rows, cls) => `<div class="news-trend-block ${cls}">
     <h4>${dailyEscapeHtml(title)}</h4>
-    ${(rows || []).map((x) => `<p>${dailyEscapeHtml(x)}</p>`).join("")}
+    ${(rows || []).map((x) => `<p>${parseMarkdownInline(x)}</p>`).join("")}
   </div>`;
   return [
     block("正在强化的信号", strengthening, "ok"),
@@ -521,18 +530,7 @@ function renderYuqingDailyReport(row) {
         <div class="news-story-list compact">${renderDailyBriefs(r)}</div>
       </section>
 
-      <section class="news-panel span-6">
-        <div class="news-panel-head">
-          <div>
-            <span class="news-section-kicker">趋势线索</span>
-            <h3>正在强化与裂变的信号</h3>
-          </div>
-          <i class="ph ph-wave-sine"></i>
-        </div>
-        <div class="news-trend-grid">${renderDailyTrend(r)}</div>
-      </section>
-
-      <section class="news-panel span-6">
+      <section class="news-panel span-12">
         <div class="news-panel-head">
           <div>
             <span class="news-section-kicker">AI 情报站</span>
@@ -541,6 +539,17 @@ function renderYuqingDailyReport(row) {
           <i class="ph ph-brain"></i>
         </div>
         <div class="news-ai-list">${renderDailyAi(r)}</div>
+      </section>
+
+      <section class="news-panel span-12">
+        <div class="news-panel-head">
+          <div>
+            <span class="news-section-kicker">趋势线索</span>
+            <h3>正在强化与裂变的信号</h3>
+          </div>
+          <i class="ph ph-wave-sine"></i>
+        </div>
+        <div class="news-trend-grid">${renderDailyTrend(r)}</div>
       </section>
     </div>
     ${chrome}
