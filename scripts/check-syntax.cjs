@@ -59,6 +59,12 @@ for (const file of files) {
     relNorm.startsWith("cloudflare/yuqing/shijian/") ||
     relNorm.startsWith("cloudflare/yuqing/fenxi/")
   ) {
+    let prev = "";
+    while (prev !== src) {
+      prev = src;
+      src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/m, "");
+      src = src.replace(/^\s*export\s+\{[\s\S]*?\}\s+from\s+["'][^"']+["']\s*;?\s*/m, "");
+    }
     src = src.replace(/^\s*export\s+/gm, "");
   }
   try {
