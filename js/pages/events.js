@@ -478,7 +478,6 @@ function renderYuqingDailyReport(row) {
         </div>
         <div class="daily-report-meta">
           <span title="报表归属日期"><i class="ph ph-calendar-dots"></i>${dailyEscapeHtml((r && r.reportDate) || "—")}</span>
-          <span><i class="ph ph-list-checks"></i>事件 ${Number(dailyQuality(r || {}).factCount || 0)} · 覆盖 ${Number(dailyQuality(r || {}).sourceCoverage || 0)}%</span>
         </div>
       </div>
       <div class="news-command-actions">

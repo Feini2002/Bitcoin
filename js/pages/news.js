@@ -376,7 +376,6 @@ function renderYuqingReport(row) {
       <span><i class="ph ph-database"></i> ${analysisEscapeHtml(analysisSourceStatusText())}</span>
       <span><i class="ph ph-newspaper-clipping"></i> ${upstream ? `<a href="${analysisEscapeHtml(upstream.href || "#/news")}">上游日报 ${analysisEscapeHtml(upstream.slot || "")}</a>` : "上游日报缺失"}</span>
       <span><i class="ph ph-calendar-check"></i> 09 / 14 / 22 · Asia/Shanghai</span>
-      <span><i class="ph ph-list-checks"></i> 事实 ${Number(q.factCount || 0)} · 覆盖 ${Number(q.sourceCoverage || 0)}%</span>
     </div>
 
     ${renderAnalysisRefs(r)}
