@@ -20,9 +20,28 @@ import {
   pruneOldItems,
 } from "./yuqing-facts.js";
 import { YUQING_FENXI_PAGE, fenxiModuleShell } from "./fenxi/index.js";
-import { YUQING_SHIJIAN_PAGE, shijianModuleShell } from "./shijian/index.js";
+import {
+  YUQING_SHIJIAN_PAGE,
+  buildDailyAiIntelPrompt,
+  buildDailyBriefsPrompt,
+  buildDailyTemperature,
+  buildDailyTemperaturePrompt,
+  buildDailyTopStoriesPrompt,
+  buildDailyTopStoriesWirePrompt,
+  buildDailyTrendCluesPrompt,
+  buildTrendReadFromDailyEventInputs,
+  dailyThemeFromStoriesAndBriefs,
+  mergeTopStoryCandidatesForDaily,
+  normalizeDailyAiIntelItems,
+  normalizeDailyBriefItems,
+  normalizeDailyTopStoryItems,
+  renderDailyAiIntelMarkdownForTrends,
+  renderDailyBriefsMarkdown,
+  renderDailyTopStoriesMarkdown,
+  shijianModuleShell,
+} from "./shijian/index.js";
 
-const WORKER_BUILD = "yuqing-worker/1.2.0-dir-layout-shell";
+const WORKER_BUILD = "yuqing-worker/1.4.0-ndjson-stream";
 
 /** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
 const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
@@ -54,7 +73,7 @@ function corsHeaders(extra = {}) {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Accept",
     "Access-Control-Expose-Headers": "X-Worker-Build, X-Yuqing-Worker",
     ...extra,
   };
@@ -1319,6 +1338,8 @@ async function buildReport(env, bodyIn) {
 
   /** 默认 true（趋势综合含 AI 情报）。事件一览日报传 false：趋势仅综合「温度计 dashboard + 今日头条 + 动态速览」三块。 */
   const trendsUseAiIntel = !(bodyIn && bodyIn.trendsUseAiIntel === false);
+  const dailyEventFocus = !!(bodyIn && bodyIn.dailyEventFocus);
+  const dualHeadlineLanes = !!(bodyIn && bodyIn.dualHeadlineLanes);
 
   const force = !!(bodyIn && bodyIn.force);
   const generatedAt = new Date().toISOString();
@@ -1374,6 +1395,8 @@ async function buildReport(env, bodyIn) {
         ai: modules.ai,
         trends: modules.trends,
         trendsUseAiIntel,
+        dailyEventFocus,
+        dualHeadlineLanes,
       }),
     );
     const hit = await caches.default.match(new Request(cacheUrl.toString()));
@@ -1411,42 +1434,65 @@ async function buildReport(env, bodyIn) {
     sections.ai = { markdown: "", status: "disabled", message: "LLM 未启用", data: { aiIntel: [] } };
     sections.trends = { markdown: "", status: "disabled", message: "LLM 未启用" };
   } else {
-    const tasks = [];
+    const streamSink =
+      dailyEventFocus && bodyIn && typeof bodyIn.__streamSink === "function" ? bodyIn.__streamSink : null;
 
-    if (modules.dashboard) {
-      tasks.push(
-        (async () => {
-          try {
-            const prompt = buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData);
-            const model = flashModel(env);
-            const text = await geminiGenerateContent(env, model, prompt, { temperature: 0.1, googleSearch: false });
-            const inner = extractJsonFence(text);
-            const parsed = JSON.parse(inner);
-            dashboard = {
-              sentimentSummary: String(parsed.sentiment_summary || parsed.sentimentSummary || "").trim(),
-              marketRegime: String(parsed.market_regime || parsed.marketRegime || "").trim(),
-              keyAssets: Array.isArray(parsed.key_assets) ? parsed.key_assets : parsed.keyAssets || [],
-              crossAsset: String(parsed.cross_asset || parsed.crossAsset || "").trim(),
-              anomalyAlert: String(parsed.anomaly_alert || parsed.anomalyAlert || "").trim(),
-              actionSuggestion: String(parsed.action_suggestion || parsed.actionSuggestion || "").trim(),
-            };
-            flashDataJsonText = JSON.stringify(dashboard);
-          } catch (e) {
-            warnings.push({ code: "dashboardLlm", message: String(e && e.message ? e.message : e) });
-            dashboard = fallbackDashboard(realMarketData, fngScore, fngClass);
-            flashDataJsonText = JSON.stringify(dashboard);
+    const runDashboardLlm =
+      modules.dashboard &&
+      (async () => {
+        try {
+          const prompt = dailyEventFocus
+            ? buildDailyTemperaturePrompt(timeStr, fngScore, fngClass, realMarketData)
+            : buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData);
+          const model = flashModel(env);
+          const text = await geminiGenerateContent(env, model, prompt, { temperature: 0.1, googleSearch: false });
+          const inner = extractJsonFence(text);
+          const parsed = JSON.parse(inner);
+          dashboard = {
+            sentimentSummary: String(parsed.sentiment_summary || parsed.sentimentSummary || "").trim(),
+            marketRegime: String(parsed.market_regime || parsed.marketRegime || "").trim(),
+            keyAssets: Array.isArray(parsed.key_assets) ? parsed.key_assets : parsed.keyAssets || [],
+            crossAsset: String(parsed.cross_asset || parsed.crossAsset || "").trim(),
+            anomalyAlert: String(parsed.anomaly_alert || parsed.anomalyAlert || "").trim(),
+            actionSuggestion: String(parsed.action_suggestion || parsed.actionSuggestion || "").trim(),
+          };
+          flashDataJsonText = JSON.stringify(dashboard);
+          if (streamSink) {
+            try {
+              streamSink({
+                type: "partial",
+                module: "temperature",
+                marketTemperature: buildDailyTemperature(sources, dashboard),
+                dashboard: {
+                  sentimentSummary: dashboard.sentimentSummary,
+                  marketRegime: dashboard.marketRegime,
+                  keyAssets: dashboard.keyAssets,
+                  crossAsset: dashboard.crossAsset,
+                  anomalyAlert: dashboard.anomalyAlert,
+                  actionSuggestion: dashboard.actionSuggestion,
+                },
+              });
+            } catch (_) {}
           }
-        })(),
-      );
-    }
+        } catch (e) {
+          warnings.push({ code: "dashboardLlm", message: String(e && e.message ? e.message : e) });
+          dashboard = fallbackDashboard(realMarketData, fngScore, fngClass);
+          flashDataJsonText = JSON.stringify(dashboard);
+        }
+      })();
 
-    await Promise.all(tasks);
-    tasks.length = 0;
+    if (!dailyEventFocus) {
+      if (runDashboardLlm) await runDashboardLlm;
+    }
 
     const needMacro = modules.news || modules.timeline;
     const needAi = modules.ai;
 
+    let dailyTopStories = [];
+    let dailyBriefs = [];
+
     const macroP =
+      !dailyEventFocus &&
       needMacro &&
       (async () => {
         try {
@@ -1492,24 +1538,119 @@ async function buildReport(env, bodyIn) {
         }
       })();
 
+    const topStoriesP =
+      dailyEventFocus &&
+      modules.news &&
+      (async () => {
+        try {
+          usedSearchNews = true;
+          const model = proseModel(env, mode);
+          let rawList = [];
+          if (dualHeadlineLanes) {
+            const [ra, rb] = await Promise.all([
+              (async () => {
+                const text = await geminiGenerateContent(env, model, buildDailyTopStoriesPrompt(timeStr), {
+                  googleSearch: true,
+                  temperature: 0.25,
+                });
+                const inner = extractJsonFence(text);
+                const parsed = JSON.parse(inner);
+                return Array.isArray(parsed.topStories) ? parsed.topStories : [];
+              })(),
+              (async () => {
+                const text = await geminiGenerateContent(env, model, buildDailyTopStoriesWirePrompt(timeStr), {
+                  googleSearch: true,
+                  temperature: 0.28,
+                });
+                const inner = extractJsonFence(text);
+                const parsed = JSON.parse(inner);
+                return Array.isArray(parsed.topStories) ? parsed.topStories : [];
+              })(),
+            ]);
+            rawList = mergeTopStoryCandidatesForDaily(ra, rb);
+          } else {
+            const prompt = buildDailyTopStoriesPrompt(timeStr);
+            const text = await geminiGenerateContent(env, model, prompt, { googleSearch: true, temperature: 0.25 });
+            const inner = extractJsonFence(text);
+            const parsed = JSON.parse(inner);
+            rawList = Array.isArray(parsed.topStories) ? parsed.topStories : [];
+          }
+          dailyTopStories = normalizeDailyTopStoryItems(rawList, []);
+          newsMd = renderDailyTopStoriesMarkdown(dailyTopStories);
+          sections.news = {
+            data: { topStories: dailyTopStories, dynamicBriefs: dailyBriefs, macroTrend: "" },
+            markdown: newsMd,
+            items: dailyTopStories,
+            status: "ready",
+            message: null,
+          };
+          if (streamSink) {
+            try {
+              streamSink({ type: "partial", module: "topStories", topStories: dailyTopStories, dualHeadlineLanes });
+            } catch (_) {}
+          }
+        } catch (e) {
+          const msg = String(e && e.message ? e.message : e);
+          warnings.push({ code: "dailyTopStoriesLlm", message: msg });
+          sections.news = { markdown: "", items: [], status: "error", message: msg };
+        }
+      })();
+
+    const dailyBriefsP =
+      dailyEventFocus &&
+      modules.timeline &&
+      (async () => {
+        try {
+          usedSearchNews = true;
+          const prompt = buildDailyBriefsPrompt(timeStr);
+          const model = proseModel(env, mode);
+          const text = await geminiGenerateContent(env, model, prompt, { googleSearch: true, temperature: 0.3 });
+          const inner = extractJsonFence(text);
+          const parsed = JSON.parse(inner);
+          dailyBriefs = normalizeDailyBriefItems(parsed.dynamicBriefs, []);
+          timelineMd = renderDailyBriefsMarkdown(dailyBriefs);
+          sections.timeline = {
+            data: { dynamicBriefs: dailyBriefs },
+            markdown: timelineMd,
+            items: dailyBriefs,
+            status: "ready",
+            message: null,
+          };
+          if (streamSink) {
+            try {
+              streamSink({ type: "partial", module: "dynamicBriefs", dynamicBriefs });
+            } catch (_) {}
+          }
+        } catch (e) {
+          const msg = String(e && e.message ? e.message : e);
+          warnings.push({ code: "dailyBriefsLlm", message: msg });
+          sections.timeline = { markdown: "", items: [], status: "error", message: msg };
+        }
+      })();
+
     const aiP =
       needAi &&
       (async () => {
         try {
           usedSearchAi = true;
-          const prompt = buildProAIJsonPrompt(timeStr);
+          const prompt = dailyEventFocus ? buildDailyAiIntelPrompt(timeStr) : buildProAIJsonPrompt(timeStr);
           const model = proseModel(env, mode);
           const text = await geminiGenerateContent(env, model, prompt, { googleSearch: true, temperature: 0.35 });
           const inner = extractJsonFence(text);
           const parsed = JSON.parse(inner);
-          const aiIntelItems = normalizeAiIntelFromLlm(parsed.aiIntel);
-          aiMd = renderAiIntelMarkdownForTrends(aiIntelItems);
+          const aiIntelItems = dailyEventFocus ? normalizeDailyAiIntelItems(parsed.aiIntel) : normalizeAiIntelFromLlm(parsed.aiIntel);
+          aiMd = dailyEventFocus ? renderDailyAiIntelMarkdownForTrends(aiIntelItems) : renderAiIntelMarkdownForTrends(aiIntelItems);
           sections.ai = {
             markdown: aiMd,
             data: { aiIntel: aiIntelItems },
             status: aiMd ? "ready" : "error",
             message: null,
           };
+          if (streamSink && dailyEventFocus) {
+            try {
+              streamSink({ type: "partial", module: "aiIntel", aiIntel: aiIntelItems });
+            } catch (_) {}
+          }
         } catch (e) {
           const msg = String(e && e.message ? e.message : e);
           warnings.push({ code: "aiLlm", message: msg });
@@ -1519,10 +1660,27 @@ async function buildReport(env, bodyIn) {
 
     const runTrends = async () => {
       try {
-        const prompt = buildProTrendsPrompt(newsMd, timelineMd, aiMd, flashDataJsonText, trendsUseAiIntel ? "full" : "daily_event_above_trend");
+        const prompt = dailyEventFocus
+          ? buildDailyTrendCluesPrompt(newsMd, timelineMd, aiMd, flashDataJsonText)
+          : buildProTrendsPrompt(newsMd, timelineMd, aiMd, flashDataJsonText, trendsUseAiIntel ? "full" : "daily_event_above_trend");
         const model = trendsModel(env, mode);
         trendsMd = await geminiGenerateContent(env, model, prompt, { googleSearch: false, temperature: 0.35 });
         sections.trends = { markdown: trendsMd, status: trendsMd ? "ready" : "error", message: null };
+        if (streamSink && dailyEventFocus) {
+          try {
+            const legacySnap = {
+              sections: {
+                trends: { markdown: trendsMd },
+                news: { data: sections.news && sections.news.data },
+              },
+            };
+            streamSink({
+              type: "partial",
+              module: "trends",
+              trendRead: buildTrendReadFromDailyEventInputs(legacySnap, factRows.length),
+            });
+          } catch (_) {}
+        }
       } catch (e) {
         const msg = String(e && e.message ? e.message : e);
         warnings.push({ code: "trendsLlm", message: msg });
@@ -1530,7 +1688,30 @@ async function buildReport(env, bodyIn) {
       }
     };
 
-    if (!trendsUseAiIntel && modules.trends && needMacro) {
+    if (dailyEventFocus) {
+      await Promise.all([
+        runDashboardLlm || Promise.resolve(),
+        topStoriesP || Promise.resolve(),
+        dailyBriefsP || Promise.resolve(),
+        aiP || Promise.resolve(),
+      ]);
+      const macroTrend = dailyThemeFromStoriesAndBriefs(dailyTopStories, dailyBriefs);
+      if (modules.news && sections.news.status === "ready") {
+        sections.news.data = { topStories: dailyTopStories, dynamicBriefs: dailyBriefs, macroTrend };
+      }
+      if (streamSink) {
+        try {
+          streamSink({
+            type: "partial",
+            module: "digest",
+            macroTrend,
+            topStories: [...dailyTopStories],
+            dynamicBriefs: [...dailyBriefs],
+          });
+        } catch (_) {}
+      }
+      if (modules.trends) await runTrends();
+    } else if (!trendsUseAiIntel && modules.trends && needMacro) {
       await (macroP || Promise.resolve());
       await Promise.all([runTrends(), aiP || Promise.resolve()]);
     } else {
@@ -1550,6 +1731,7 @@ async function buildReport(env, bodyIn) {
       sections.ai = { markdown: "", status: "planned", message: "模块已关闭", data: { aiIntel: [] } };
     }
     llmStatus.capabilities.search = !!(usedSearchNews || usedSearchAi);
+    if (streamSink) llmStatus.capabilities.stream = true;
   }
 
   const out = {
@@ -1612,6 +1794,8 @@ async function buildReport(env, bodyIn) {
           ai: modules.ai,
           trends: modules.trends,
           trendsUseAiIntel,
+          dailyEventFocus,
+          dualHeadlineLanes,
         }),
       );
       await caches.default.put(
@@ -1802,7 +1986,10 @@ async function buildDailyEventReport(env, opts) {
       force: true,
       allowSearch: !!(opts && opts.forceSearch),
       forceSearch: !!(opts && opts.forceSearch),
-      trendsUseAiIntel: false,
+      dailyEventFocus: true,
+      trendsUseAiIntel: true,
+      dualHeadlineLanes: !!(opts && opts.dualHeadlineLanes),
+      __streamSink: opts && opts.__streamSink,
       modules: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
     });
     if (legacy && Array.isArray(legacy.warnings)) sourceErrors.push(...legacy.warnings);
@@ -1828,10 +2015,10 @@ async function buildDailyEventReport(env, opts) {
   if (legacy && legacy.sections && legacy.sections.news && legacy.sections.news.data) {
     const data = legacy.sections.news.data;
     if (Array.isArray(data.topStories) && data.topStories.length > 0) {
-      topStories = normalizeDailyTopStoriesFromLlm(data.topStories, []);
+      topStories = normalizeDailyTopStoryItems(data.topStories, []);
     }
     if (Array.isArray(data.dynamicBriefs) && data.dynamicBriefs.length > 0) {
-      dynamicBriefs = normalizeDailyBriefsFromLlm(data.dynamicBriefs, []);
+      dynamicBriefs = normalizeDailyBriefItems(data.dynamicBriefs, []);
     }
     macroTrend = cleanReportText(data.macroTrend, "", 420);
   }
@@ -1844,13 +2031,13 @@ async function buildDailyEventReport(env, opts) {
   const report = {
     title: "事件日报",
     subtitle: "日常新闻早午晚报",
-    marketTemperature: marketTemperatureFromSources(agg.sources, dashboard),
+    marketTemperature: buildDailyTemperature(agg.sources, dashboard),
     macroTrend,
     topStory: topStories[0],
     topStories,
     dynamicBriefs,
     aiIntel,
-    trendRead: trendReadFromDailyInputs(legacy, factRows.length),
+    trendRead: buildTrendReadFromDailyEventInputs(legacy, factRows.length),
     sources,
     quality: {
       factCount: factRows.length,
@@ -2307,11 +2494,74 @@ export default {
           triggerType: "manual",
           forceSearch: !!(bodyIn && bodyIn.forceSearch),
           mode: bodyIn && bodyIn.mode,
+          dualHeadlineLanes: !!(bodyIn && bodyIn.dualHeadlineLanes),
         });
         return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report: out });
       } catch (e) {
         return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
       }
+    }
+
+    if (path === "/api/yuqing/reports/generate-stream" && request.method === "POST") {
+      const rl = await checkRateLimit(request, "reports_generate", 8);
+      if (rl) return rl;
+      let bodyIn = {};
+      try {
+        bodyIn = await request.json();
+      } catch (_) {
+        bodyIn = {};
+      }
+      if (!d1Bound(env)) {
+        return json({ ok: false, error: "D1 未绑定", d1Ready: false }, 503);
+      }
+      const kind = normalizeReportKind(bodyIn && bodyIn.kind);
+      if (kind !== DAILY_EVENT_KIND) {
+        return json({ ok: false, error: "流式生成仅支持 daily_event" }, 400);
+      }
+
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          let closed = false;
+          const safeWrite = (obj) => {
+            if (closed) return;
+            try {
+              controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+            } catch (_) {}
+          };
+          try {
+            safeWrite({ type: "start", workerBuild: WORKER_BUILD, d1Ready: true });
+            const payload = await buildDailyEventReport(env, {
+              triggerType: "manual",
+              forceSearch: !!(bodyIn && bodyIn.forceSearch),
+              mode: bodyIn && bodyIn.mode,
+              dualHeadlineLanes: !!(bodyIn && bodyIn.dualHeadlineLanes),
+              __streamSink: (evt) => safeWrite(evt),
+            });
+            await insertYuqingReport(env.YUQING_DB, payload);
+            await pruneYuqingReports(env.YUQING_DB, REPORT_RETENTION_DAYS).catch(() => {});
+            await pruneOldItems(env.YUQING_DB, REPORT_RETENTION_DAYS).catch(() => {});
+            safeWrite({ type: "done", ok: true, report: payload });
+          } catch (e) {
+            safeWrite({ type: "error", ok: false, error: String(e && e.message ? e.message : e) });
+          } finally {
+            closed = true;
+            try {
+              controller.close();
+            } catch (_) {}
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders(),
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "X-Worker-Build": WORKER_BUILD,
+          "X-Yuqing-Worker": "1",
+          "Cache-Control": "no-store",
+        },
+      });
     }
 
     if (path === "/api/yuqing/latest" && request.method === "GET") {
@@ -2468,6 +2718,7 @@ export default {
           "GET /api/yuqing/reports/item?id=...",
           "DELETE /api/yuqing/reports/item?id=...",
           "POST /api/yuqing/reports/generate",
+          "POST /api/yuqing/reports/generate-stream",
           "POST /api/yuqing/report (compat: sentiment_analysis)",
           "POST /api/yuqing/ingest (+X-Yuqing-Cron-Secret)",
           "POST /api/yuqing/llm/test",

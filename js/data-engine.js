@@ -296,7 +296,7 @@ const DataEngine = {
 
   async generateYuqingStructuredReport(kind = "sentiment_analysis", payload = {}, opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate`;
-    const timeoutMs = Math.min(210_000, Math.max(5_000, Number(opts.timeoutMs) || 185_000));
+    const timeoutMs = Math.min(600_000, Math.max(5_000, Number(opts.timeoutMs) || 185_000));
     const ctrl = new AbortController();
     const unsub = this.attachAbort(opts.signal, ctrl);
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -331,6 +331,85 @@ const DataEngine = {
       throw new Error(`舆情报告接口 ${res.status}${hint ? `: ${hint}` : ""}`);
     }
     return data;
+  },
+
+  async streamYuqingDailyEventReport(payload = {}, opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate-stream`;
+    const timeoutMs = Math.min(600_000, Math.max(30_000, Number(opts.timeoutMs) || 420_000));
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const onEvent = typeof opts.onEvent === "function" ? opts.onEvent : () => {};
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
+        cache: "no-store",
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          kind: "daily_event",
+          ...(payload && typeof payload === "object" ? payload : {}),
+        }),
+      });
+    } catch (e) {
+      clearTimeout(t);
+      unsub();
+      const m =
+        e && e.name === "AbortError"
+          ? `请求超时(>${Math.round(timeoutMs / 1000)}s)或页面已切换`
+          : e && e.message
+            ? e.message
+            : String(e);
+      throw new Error(`舆情流式生成失败（${url}）：${m}`);
+    }
+    if (!res.ok) {
+      clearTimeout(t);
+      unsub();
+      const text = await res.text().catch(() => "");
+      throw new Error(`舆情流式接口 ${res.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
+    }
+    const reader = res.body && res.body.getReader ? res.body.getReader() : null;
+    if (!reader) {
+      clearTimeout(t);
+      unsub();
+      throw new Error("舆情流式接口未返回可读流");
+    }
+    const dec = new TextDecoder();
+    let buf = "";
+    let lastDone = null;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          let evt;
+          try {
+            evt = JSON.parse(line);
+          } catch (_) {
+            continue;
+          }
+          await Promise.resolve(onEvent(evt));
+          if (evt && evt.type === "done" && evt.report) lastDone = evt;
+          if (evt && evt.type === "error" && evt.error) {
+            throw new Error(String(evt.error));
+          }
+        }
+      }
+    } finally {
+      clearTimeout(t);
+      unsub();
+      try {
+        await reader.cancel();
+      } catch (_) {}
+    }
+    if (lastDone && lastDone.report) return lastDone;
+    throw new Error("流式响应未返回完整报告");
   },
 
   async fetchYuqingReportStatus(opts = {}) {

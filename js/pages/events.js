@@ -5,9 +5,12 @@
 const DAILY_EVENT_KIND = "daily_event";
 let __yuqingDailyClock = null;
 let __yuqingDailyAbort = null;
+let __dailyScanTick = null;
 
 const dailyEventState = {
   report: null,
+  /** 流式生成过程中用于即时渲染的临时行（不入库，done 后清空） */
+  streamPreviewRow: null,
   history: [],
   status: "正在加载云端日报…",
   source: "loading",
@@ -81,7 +84,77 @@ function dailyTriggerLabel(row) {
 }
 
 function dailyActiveReport() {
-  return dailyEventState.report;
+  return dailyEventState.streamPreviewRow || dailyEventState.report;
+}
+
+function dailyEnsureStreamPreviewShell() {
+  if (dailyEventState.streamPreviewRow) return dailyEventState.streamPreviewRow;
+  const now = new Date().toISOString();
+  dailyEventState.streamPreviewRow = {
+    id: "",
+    kind: DAILY_EVENT_KIND,
+    reportDate: "",
+    slot: "manual",
+    triggerType: "manual",
+    generatedAt: now,
+    status: "streaming",
+    sourceRefs: [],
+    grounding: { quality: { factCount: 0, sourceCoverage: 0 } },
+    marketSnapshot: {},
+    report: {
+      title: "事件日报",
+      subtitle: "流式生成中…",
+      marketTemperature: {
+        score: 50,
+        label: "生成中",
+        summary: "等待信息温度模块…",
+        regime: "",
+        crossAsset: "",
+        anomaly: "",
+        suggestion: "",
+      },
+      macroTrend: "",
+      topStory: null,
+      topStories: [],
+      dynamicBriefs: [],
+      aiIntel: [],
+      trendRead: { strengthening: [], cracking: [], conclusion: "" },
+      sources: [],
+      quality: { factCount: 0, sourceCoverage: 0, usedSearch: true, caveat: "" },
+    },
+    sourceErrors: [],
+  };
+  return dailyEventState.streamPreviewRow;
+}
+
+function mergeDailyStreamEvent(evt) {
+  if (!evt || evt.type !== "partial") return;
+  const row = dailyEnsureStreamPreviewShell();
+  const rep = row.report;
+  if (evt.module === "temperature" && evt.marketTemperature && typeof evt.marketTemperature === "object") {
+    Object.assign(rep.marketTemperature, evt.marketTemperature);
+  }
+  if (evt.module === "topStories" && Array.isArray(evt.topStories)) {
+    rep.topStories = evt.topStories;
+    rep.topStory = evt.topStories[0] || rep.topStory;
+  }
+  if (evt.module === "dynamicBriefs" && Array.isArray(evt.dynamicBriefs)) {
+    rep.dynamicBriefs = evt.dynamicBriefs;
+  }
+  if (evt.module === "digest") {
+    if (evt.macroTrend) rep.macroTrend = String(evt.macroTrend);
+    if (Array.isArray(evt.topStories)) {
+      rep.topStories = evt.topStories;
+      rep.topStory = evt.topStories[0] || rep.topStory;
+    }
+    if (Array.isArray(evt.dynamicBriefs)) rep.dynamicBriefs = evt.dynamicBriefs;
+  }
+  if (evt.module === "aiIntel" && Array.isArray(evt.aiIntel)) {
+    rep.aiIntel = evt.aiIntel;
+  }
+  if (evt.module === "trends" && evt.trendRead && typeof evt.trendRead === "object") {
+    rep.trendRead = evt.trendRead;
+  }
 }
 
 function dailyCurrentReportId() {
@@ -95,6 +168,7 @@ function dailyQuality(row) {
 }
 
 function dailySourceStatusText() {
+  if (dailyEventState.streamPreviewRow) return `流式预览：${dailyEventState.status || "生成中"}`;
   if (dailyEventState.source === "cloud") return "云端 D1 报告已接入";
   if (dailyEventState.source === "error") return `数据源切换中：${dailyEventState.status}`;
   if (dailyEventState.source === "loading") return "正在读取云端 D1 报告...";
@@ -400,7 +474,7 @@ function renderYuqingDailyReport(row) {
       </div>
       <div class="news-command-actions">
         <div class="daily-clock-pill"><i class="ph ph-clock"></i><span id="daily-clock">--</span></div>
-        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="单次请求 Worker：串联生成温度计、今日头条、动态速览、趋势线索与同条日报中的 AI 情报站，并写入 D1（约在 3 分钟内完成）">
+        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="单次请求 Worker：NDJSON 流式返回，模块就绪即显示；温度/头条/速览/AI 并行检索（头条可双路），趋势最后归纳；完成后写入 D1（约 1～5 分钟）">
           <i class="ph ph-rocket-launch"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
         </button>
         <button type="button" class="btn primary" id="daily-open-archive">
@@ -541,6 +615,7 @@ async function loadDailyReport(reportId = "") {
     renderYuqingDailyIntoDom();
     return;
   }
+  dailyEventState.streamPreviewRow = null;
   if (__yuqingDailyAbort) __yuqingDailyAbort.abort();
   __yuqingDailyAbort = new AbortController();
   dailyEventState.source = "loading";
@@ -570,17 +645,65 @@ async function loadDailyReport(reportId = "") {
 }
 
 async function generateDailyReport() {
-  if (typeof DataEngine === "undefined" || typeof DataEngine.generateYuqingStructuredReport !== "function") return;
+  if (typeof DataEngine === "undefined") return;
+  const canStream = typeof DataEngine.streamYuqingDailyEventReport === "function";
+  const canGen = typeof DataEngine.generateYuqingStructuredReport === "function";
+  if (!canStream && !canGen) return;
+  if (__yuqingDailyAbort) __yuqingDailyAbort.abort();
+  __yuqingDailyAbort = new AbortController();
+  const scanSignal = __yuqingDailyAbort.signal;
+  const reportIdBefore = dailyCurrentReportId();
+  const tScanStart = Date.now();
+  if (__dailyScanTick) {
+    clearInterval(__dailyScanTick);
+    __dailyScanTick = null;
+  }
+  dailyEventState.streamPreviewRow = null;
   dailyEventState.loading = true;
-  dailyEventState.status = "正在触发单次全流程日报（温度计→头条→速览→趋势→情报站），请耐心等待…";
+  dailyEventState.status = canStream
+    ? "已连接流式通道：各模块检索完成后将逐段显示，全部完成后写入 D1。请勿关闭页面…"
+    : "正在触发单次全流程日报（信息温度、头条、速览、AI 情报并发检索 → 趋势归纳 → 写入 D1）。首次约 1～4 分钟，请勿关闭页面…";
   renderYuqingDailyIntoDom();
+  __dailyScanTick = setInterval(() => {
+    if (!dailyEventState.loading) return;
+    const sec = Math.floor((Date.now() - tScanStart) / 1000);
+    dailyEventState.status = canStream
+      ? `流式生成中（已等待 ${sec}s）… 若长时间停在某一模块，多为该路 Gemini 检索偏慢。`
+      : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为 Gemini 检索偏慢或网络中断。`;
+    renderYuqingDailyIntoDom();
+  }, 8000);
   let openArchiveAfter = false;
+  const payload = { mode: "deep", forceSearch: true, dualHeadlineLanes: true };
   try {
-    const data = await DataEngine.generateYuqingStructuredReport(DAILY_EVENT_KIND, { mode: "deep", forceSearch: true }, { timeoutMs: 190_000 });
+    let data = null;
+    if (canStream) {
+      data = await DataEngine.streamYuqingDailyEventReport(payload, {
+        timeoutMs: 480_000,
+        signal: scanSignal,
+        onEvent: async (evt) => {
+          if (evt.type === "start") {
+            dailyEventState.status = "流式通道已建立，等待各模块…";
+            renderYuqingDailyIntoDom();
+            return;
+          }
+          if (evt.type === "partial") {
+            mergeDailyStreamEvent(evt);
+            dailyEventState.source = "cloud";
+            dailyEventState.status = `已更新：${evt.module || "模块"}`;
+            renderYuqingDailyIntoDom();
+          }
+        },
+      });
+    } else {
+      data = await DataEngine.generateYuqingStructuredReport(DAILY_EVENT_KIND, payload, { timeoutMs: 480_000, signal: scanSignal });
+    }
+    dailyEventState.streamPreviewRow = null;
     if (data && data.report) {
       dailyEventState.report = data.report;
       dailyEventState.source = "cloud";
-      dailyEventState.status = "单次请求已完成：趋势仅综合页面上方三块（温度计/头条/速览），并已写入报告库（含 AI 情报站）";
+      dailyEventState.status = canStream
+        ? "流式扫描已完成，已写入 D1（头条为双路检索合并，可在 Worker 请求体关闭 dualHeadlineLanes 以省检索）。"
+        : "单次扫描已完成，已写入 D1 并拉回本条（趋势基于温度+头条+速览+AI 情报归纳）。";
       try {
         history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(data.report.id)}`);
       } catch (_) {}
@@ -589,9 +712,37 @@ async function generateDailyReport() {
       openArchiveAfter = true;
     }
   } catch (e) {
-    dailyEventState.source = "error";
-    dailyEventState.status = e && e.message ? e.message : String(e);
+    const msg = e && e.message ? e.message : String(e);
+    dailyEventState.streamPreviewRow = null;
+    const maybeTimeout = /超时|AbortError|aborted|network/i.test(msg);
+    if (maybeTimeout) {
+      dailyEventState.status = "请求中断或超时，正在尝试从 D1 读取最新一条事件日报…";
+      dailyEventState.source = "loading";
+      renderYuqingDailyIntoDom();
+      try {
+        await loadDailyReport("");
+        const row = dailyEventState.report;
+        if (row && row.id && row.id !== reportIdBefore && row.report) {
+          dailyEventState.source = "cloud";
+          dailyEventState.status =
+            "浏览器等待已结束，但云端可能已生成新报告：已从 D1 拉回最新一条。若内容不完整或仍是旧版，请稍后再点「实时扫描」。";
+        } else {
+          dailyEventState.source = "error";
+          dailyEventState.status = msg;
+        }
+      } catch (_) {
+        dailyEventState.source = "error";
+        dailyEventState.status = msg;
+      }
+    } else {
+      dailyEventState.source = "error";
+      dailyEventState.status = msg;
+    }
   } finally {
+    if (__dailyScanTick) {
+      clearInterval(__dailyScanTick);
+      __dailyScanTick = null;
+    }
     dailyEventState.loading = false;
     renderYuqingDailyIntoDom();
     if (openArchiveAfter) openDailyArchive();

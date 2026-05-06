@@ -125,6 +125,7 @@ for (const route of [
   "/api/yuqing/reports/history",
   "/api/yuqing/reports/item",
   "/api/yuqing/reports/generate",
+  "/api/yuqing/reports/generate-stream",
 ]) {
   assertOk(worker.includes(route), `worker exposes ${route}`);
 }
@@ -138,6 +139,7 @@ for (const method of [
   "fetchYuqingReportItem",
   "deleteYuqingReportItem",
   "generateYuqingStructuredReport",
+  "streamYuqingDailyEventReport",
   "fetchYuqingReportStatus",
 ]) {
   assertOk(dataEngine.includes(method), `DataEngine has ${method}`);
