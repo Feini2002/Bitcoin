@@ -40,11 +40,11 @@
 
 - 若用户已在同一条消息里写清了模块名与范围，可简要复述确认后再执行，无需重复追问相同信息。
 
-## Cloudflare Worker / D1 默认处理
+## Cloudflare Worker / D1 处理（仅按需执行）
 
-- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`）后，默认完成克隆侧校验并直接执行对应的 `wrangler deploy`，不要只做改代码跳过线上发布。
-- 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容的改动，默认同步执行对应的远程 D1 迁移/写入命令（如 `wrangler d1 execute ... --remote --file=...`），并在最终回复说明已处理的远程对象与命令。
-- 若部署或远程 D1 操作因登录、权限、网络或 Cloudflare 状态失败，必须明确说明失败原因和下一步需要的人工动作。
+- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`）后，默认仅在本地完成校验，**除非用户明确要求部署**，否则不自动执行 `wrangler deploy`。
+- 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容，**除非用户明确要求同步**，否则不自动执行远程 D1 迁移/写入命令。
+- 若用户明确要求部署或同步但操作因登录、权限、网络或 Cloudflare 状态失败，须在回复中明确说明原因。
 
 ## Cloudflare Pages 自定义域名缓存
 

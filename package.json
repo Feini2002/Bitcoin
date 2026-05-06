@@ -19,9 +19,12 @@
     "verify:fib": "node scripts/verify-fibonacci-stats.cjs",
     "diff:summary": "node scripts/diff-summary.cjs",
     "prune:pages": "node scripts/prune-pages-deployments.cjs",
-    "deploy:pages": "npx wrangler pages deploy . --project-name=bit-trading-desk --commit-dirty=true && node scripts/prune-pages-deployments.cjs"
+    "deploy:pages": "npx wrangler pages deploy . --project-name=bit-trading-desk --branch main --commit-dirty=true && node scripts/prune-pages-deployments.cjs",
+    "dev:local": "vite"
   },
   "devDependencies": {
-    "playwright": "^1.59.1"
+    "playwright": "^1.59.1",
+    "vite": "^6.3.5",
+    "vite-plugin-full-reload": "^1.2.0"
   }
 }

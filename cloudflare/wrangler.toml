@@ -48,6 +48,7 @@ BTC_LLM_PROVIDER = "auto"
 # SYMBOLS：默认 BTCUSDT。本系统行情数据以比特币为主，一般不配置多交易对。
 #
 # 静态前端（Cloudflare Pages）：在仓库根目录执行 npm run deploy:pages（project-name=bit-trading-desk）。
-# 部署成功后脚本会自动 prune：production/preview 各自仅保留最新 BIT_PAGES_KEEP 条（默认 5）。
+# deploy 脚本含 --branch main：与控制台 production branch 一致；若本地在 master 且省略 --branch，直连上传会落入 Preview，自定义域仍指向旧 Production。
+# 部署成功后脚本会自动 prune：production/preview 各自仅保留最新 BIT_PAGES_KEEP 条（默认 8）。
 # 首次需先创建项目：npx wrangler pages project create bit-trading-desk --production-branch=main
 # 绑定自定义域：控制台 Workers & Pages → bit-trading-desk → Custom domains。

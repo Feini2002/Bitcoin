@@ -19,19 +19,19 @@ alwaysApply: true
 - 若触及静态入口或 Worker 联调：`npm run verify:api`（默认请求已部署行情 Worker；必要时用 `BITDESK_SMOKE_ORIGIN` 覆盖根 URL）
 - 以 `AGENTS.md` 验证矩阵为准，能跑尽跑
 
-## Cloudflare 部署（Agent 默认执行）
+## Cloudflare 部署（仅按需执行）
 
-1. **Pages（静态站）**：在仓库根目录执行 **`npm run deploy:pages`**（内含上传后与控制台「Deployments」对齐的 **`prune:pages`**：`production` / `preview` **各自仅保留最新 5 条**，更早记录由脚本调用 `wrangler pages deployment delete` 删除）。单独修剪时可运行 **`npm run prune:pages`**；仿真：`node scripts/prune-pages-deployments.cjs --dry-run`。保留数量可用环境变量 **`BIT_PAGES_KEEP`**，项目名称 **`BIT_PAGES_PROJECT`**（默认 `bit-trading-desk`）。
+1. **Pages（静态站）**：仅在用户明确要求部署时，在仓库根目录执行 **`npm run deploy:pages`**（内含上传后与控制台「Deployments」对齐的 **`prune:pages`**：`production` / `preview` **各自仅保留最新 8 条**，更早记录由脚本调用 `wrangler pages deployment delete` 删除）。单独修剪时可运行 **`npm run prune:pages`**；仿真：`node scripts/prune-pages-deployments.cjs --dry-run`。保留数量可用环境变量 **`BIT_PAGES_KEEP`**（默认 **`8`**），项目名称 **`BIT_PAGES_PROJECT`**（默认 `bit-trading-desk`）。
 2. **btc 行情 Worker + D1 绑定代码**：若本次修改了 `cloudflare/binance-klines-worker.js`、`cloudflare/wrangler.toml`，或 btc 专用 D1 的 `cloudflare/schema.sql` 且需同步远程表结构：在 **`cloudflare`** 目录执行 **`npx wrangler deploy`**，并按 `.cursorrules` 对远程 D1 执行 `wrangler d1 execute ... --remote`（若适用）。
 3. **yuqing Worker**：若修改了 **`cloudflare/yuqing/**`**（入口 `yuqing-worker.js`、`yuqing-facts.js`、`shijian/`、`fenxi/` 等）、`cloudflare/wrangler.yuqing.toml` 或 `cloudflare/migrations/yuqing/**`：在 **`cloudflare`** 目录执行 **`npx wrangler deploy --config wrangler.yuqing.toml`**（及所需 D1 remote 执行）。
 
 说明：Pages 不提供 D1 绑定；数据层始终在对应 Worker。部署顺序建议：先 Workers（含 D1 迁移），再 Pages。
 
-## GitHub 源码备份（Agent 默认执行）
+## GitHub 源码备份（仅按需执行）
 
 - **规范全文**：仓库根目录 `GITHUB-BACKUP-WORKFLOW.md`。
-- **与 Cloudflare 的相对顺序**：在按上文完成「必跑校验」与「按需 Cloudflare 部署」之后，对**确有应向用户交付的仓库文件变更**的任务，还须 **commit 并 push 到 `origin` 的默认分支（当前为 `main`）**，以便远程可追溯、可 `clone` 回档。
-- **例外**：用户在当轮指令中明示「本轮不推送 GitHub」「仅存档在工作区不上传」时跳过；校验/部署/权限/网络/凭据导致无法安全上线时，须在回复说明原因，不强行 push 坏状态。
+- **执行条件**：仅在用户本轮指令中**明确要求**推送 GitHub 时，才在完成「必跑校验」后进行 **commit 并 push 到 `origin` 的默认分支（当前为 `main`）**。
+- **默认行为**：除非另有说明，否则默认**不**进行远程推送，仅在本地工作区保留改动。
 - **凭据**：推送依赖已配置的 GitHub 认证（HTTPS 凭据管理器或个人访问令牌、或 SSH）；Agent 无法在对话中替你保存账号密码。
 
 ## 范围与 PLANNED

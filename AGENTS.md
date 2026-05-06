@@ -29,16 +29,17 @@
 
 - 前端 UI 改动后在生产站点 `https://bitcoin.feiniwork.com/` 核验受影响 hash，例如 `/index.html#chart`、`/index.html#orderflow`、`/index.html#settings`。
 
-## Cloudflare Deployments
+## Cloudflare Deployments (Manual/On-Demand Only)
 
-- 当前系统已经完整部署。修改任何仓库内容后，默认在收尾阶段运行 `npm run build`，然后部署受影响的线上面：
-  - 前端、静态资源、规则/文档、脚本或共享逻辑改动后执行 `npm run deploy:pages`。
+- **默认行为**：修改仓库内容后，默认**不**执行 Cloudflare 部署，也不执行 GitHub 推送。
+- **部署触发**：只有在用户指令中明确提到「部署」、「上线」或「deploy」时，才在收尾阶段运行 `npm run build`，并部署受影响的线上面：
+  - 前端、静态资源、规则/文档、脚本或共享逻辑改动后执行 `npm run deploy:pages`（内含 **`prune:pages`**：`production` / `preview` **各自默认保留最新 8 条**部署；可用环境变量 **`BIT_PAGES_KEEP`** 覆盖）。
   - Worker 改动后在 `cloudflare/` 下执行 `wrangler deploy`。
   - 同时影响 Pages 与 Worker 时，两者都要部署，先 Worker 后 Pages。
-- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`）后，默认完成克隆侧校验并直接执行对应的 `wrangler deploy`，不要只做改代码跳过线上发布。
-- 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容的改动，默认同步执行对应的远程 D1 迁移/写入命令（如 `wrangler d1 execute ... --remote --file=...`），并在最终回复说明已处理的远程对象与命令。
-- 若部署或远程 D1 操作因登录、权限、网络或 Cloudflare 状态失败，必须明确说明失败原因和下一步需要的人工动作。
-- **GitHub 备份**：对已产生应向用户交付的仓库改动的收尾，在条件允许时于部署之后将变更 **commit 并 push 到 `origin/main`**（细节与例外见仓库根目录 `GITHUB-BACKUP-WORKFLOW.md` 及 `.cursor/rules/auto-build-deploy.mdc`）。
+- **GitHub 备份**：仅在用户明确指令要求下，于部署之后（若适用）将变更 **commit 并 push 到 `origin/main`**。
+- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`），默认仅在本地完成校验，**不**自动执行 `wrangler deploy`，除非被明确要求。
+- 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容，默认**不**同步执行远程 D1 命令，除非被明确要求。
+- 若用户明确要求部署但操作因登录、权限、网络或 Cloudflare 状态失败，须明确说明原因。
 
 ## Pages Custom Domain Cache
 

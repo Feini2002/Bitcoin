@@ -4,7 +4,7 @@
  *
  * 环境变量：
  *   BIT_PAGES_PROJECT — 默认 bit-trading-desk
- *   BIT_PAGES_KEEP    — 每个 environment（production / preview）各保留条数，默认 5
+ *   BIT_PAGES_KEEP    — 每个 environment（production / preview）各保留条数，默认 8
  *
  * 参数：--dry-run 只打印将要删除的 Id，不调用 delete。
  */
@@ -15,7 +15,7 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const PROJECT = String(process.env.BIT_PAGES_PROJECT || "bit-trading-desk").trim() || "bit-trading-desk";
-const KEEP = Math.max(1, Math.min(50, parseInt(String(process.env.BIT_PAGES_KEEP || "5"), 10) || 5));
+const KEEP = Math.max(1, Math.min(50, parseInt(String(process.env.BIT_PAGES_KEEP || "8"), 10) || 8));
 const DRY = process.argv.includes("--dry-run");
 
 function wrangler(args) {

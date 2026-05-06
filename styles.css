@@ -6071,10 +6071,13 @@ html[data-theme="dark"] .theme-option--active {
   gap: var(--sp-3);
 }
 
+.news-story-list.compact {
+  display: flex;
+  flex-direction: column;
+}
+
 .news-story {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: var(--sp-3);
+  display: block;
   padding: var(--sp-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -6116,6 +6119,14 @@ html[data-theme="dark"] .theme-option--active {
   border: 1px solid var(--border);
   border-radius: 5px;
   background: var(--surface-2);
+}
+
+.news-story-meta .news-story-category {
+  background: rgba(56,189,248,0.15);
+  color: var(--primary, #38bdf8);
+  font-weight: 500;
+  border-color: rgba(56,189,248,0.25);
+  font-size: 11px;
 }
 
 .news-story-meta strong {
@@ -6180,7 +6191,7 @@ html[data-theme="dark"] .theme-option--active {
 
 .news-ai-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--sp-3);
 }
 
@@ -6733,7 +6744,8 @@ html[data-theme="dark"] .theme-option--active {
 .news-archive-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  /* 须高于 ::view-transition（见下方），否则模块过渡快照会叠在遮罩/抽屉之上 */
+  z-index: 96;
   background: rgba(15,23,42,0.32);
 }
 
@@ -6742,7 +6754,8 @@ html[data-theme="dark"] .theme-option--active {
   top: var(--topbar-h);
   right: 0;
   bottom: 0;
-  z-index: 80;
+  /* 低于 .yuqing-delete-modal-root(130)，高于视图过渡层 */
+  z-index: 106;
   width: min(420px, calc(100vw - 24px));
   display: flex;
   flex-direction: column;
@@ -6811,6 +6824,86 @@ html[data-theme="dark"] .theme-option--active {
 .daily-archive-empty {
   margin: var(--sp-2) 0;
   font-size: var(--fz-xs);
+}
+
+.daily-settings-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.daily-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface-1);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.daily-setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.daily-setting-row span {
+  font-size: var(--fz-sm);
+  color: var(--text-2);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 40px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--surface-3);
+  transition: .2s;
+  border-radius: 20px;
+}
+
+.toggle-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: var(--ok);
+}
+
+.toggle-switch input:disabled + .slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% { transform: rotate(360deg); }
 }
 
 .news-archive-list {
@@ -7627,3 +7720,106 @@ html[data-theme="dark"] .yuqing-delete-modal-sheet {
     font-size: 19px;
   }
 }
+
+/* View Transitions for Daily Report - iOS Style */
+/* 过渡层默认栈序可能盖住 fixed 侧栏；显式压低整棵 ::view-transition，保留命名组动画 */
+::view-transition {
+  z-index: 50;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.1, 1);
+}
+
+::view-transition-group(daily-grid),
+::view-transition-group(daily-temperature),
+::view-transition-group(daily-news),
+::view-transition-group(daily-timeline),
+::view-transition-group(daily-ai),
+::view-transition-group(daily-trends),
+::view-transition-group(daily-command-bar) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.1, 1);
+}
+
+/* 进场动画：极轻微缩放和淡入 */
+::view-transition-new(daily-temperature),
+::view-transition-new(daily-news),
+::view-transition-new(daily-timeline),
+::view-transition-new(daily-ai),
+::view-transition-new(daily-trends) {
+  animation: 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) both ios-fade-in,
+             0.3s cubic-bezier(0.1, 0.9, 0.2, 1) both ios-scale-up;
+}
+
+@keyframes ios-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ios-scale-up {
+  from { transform: scale(0.99); }
+  to { transform: scale(1); }
+}
+
+/* 退场动画：纯淡出，避免缩放冲突导致的抖动 */
+::view-transition-old(daily-temperature),
+::view-transition-old(daily-news),
+::view-transition-old(daily-timeline),
+::view-transition-old(daily-ai),
+::view-transition-old(daily-trends) {
+  animation: 0.2s ease-in both ios-fade-out;
+}
+
+@keyframes ios-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Daily AI Cards */
+.daily-ai-card {
+  min-width: 0;
+  padding: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.daily-ai-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.daily-ai-card h4 {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.daily-ai-date {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.daily-ai-card p {
+  margin: 8px 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.daily-ai-card p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+

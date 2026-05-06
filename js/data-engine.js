@@ -294,6 +294,52 @@ const DataEngine = {
     return data;
   },
 
+  async fetchYuqingEventDashboardSettings(opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/event-dashboard`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    let res;
+    try {
+      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    } catch (e) {
+      unsub();
+      throw new Error(`获取舆情设置失败（${url}）：${e.message || String(e)}`);
+    }
+    unsub();
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const hint = data && (data.error || data.message);
+      throw new Error(`获取舆情设置接口 ${res.status}${hint ? `: ${hint}` : ""}`);
+    }
+    return data;
+  },
+
+  async updateYuqingEventDashboardSettings(settings, opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/event-dashboard`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        signal: ctrl.signal,
+        body: JSON.stringify(settings)
+      });
+    } catch (e) {
+      unsub();
+      throw new Error(`更新舆情设置失败（${url}）：${e.message || String(e)}`);
+    }
+    unsub();
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const hint = data && (data.error || data.message);
+      throw new Error(`更新舆情设置接口 ${res.status}${hint ? `: ${hint}` : ""}`);
+    }
+    return data;
+  },
+
   async generateYuqingStructuredReport(kind = "sentiment_analysis", payload = {}, opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate`;
     const timeoutMs = Math.min(600_000, Math.max(5_000, Number(opts.timeoutMs) || 185_000));
