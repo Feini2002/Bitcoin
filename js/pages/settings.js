@@ -105,8 +105,8 @@ function pageSettings() {
           </div>
         </div>
         <ul class="settings-fact-list">
-          <li><strong>读取</strong>行情页只读 <code>/api/d1/klines?sync=0</code>，不会在浏览器里写库；实时跳动由 Binance WS 补齐。</li>
-          <li><strong>同步</strong>「立即同步 D1」调用 Worker 的 <code>/api/d1/sync</code> 全周期写库；成功后会自动再读一次状态。</li>
+          <li><strong>读取</strong>行情页默认读取 <code>/api/d1/klines?sync=0</code>；若当前周期明显落后，工作台会触发一次当前周期同步，实时跳动由 Binance WS 补齐。</li>
+          <li><strong>同步</strong>「立即同步 D1」调用 Worker 的 <code>/api/d1/sync</code> 全周期写库；工作台右上角按钮只同步当前周期。</li>
           <li><strong>保留策略</strong>各周期至多约 2000 根 K 线；Footprint 以 5m 为基底至多 8640 根，高周期由 Worker 聚合。</li>
           <li><strong>排障</strong>如果出现异常，优先复制下方「异常摘要」发给 Codex；完整 JSON 只用于核对 Worker/D1 原始返回。</li>
         </ul>
@@ -504,7 +504,7 @@ function renderCloudStatusSummary(data) {
     ${manualHtml}
     <div class="cloud-status-help">
       <strong>真实架构：</strong>
-      Pages 静态页请求 ${escapeHtml(apiBase || "已配置 Worker")}；图表页只读 D1，设置页的「立即同步 D1」才会触发 Worker 手动写库。Cron 仍是常规维护入口，每个周期最多保留最近 ${Number(data.maxPerInterval || 2000)} 根。
+      Pages 静态页请求 ${escapeHtml(apiBase || "已配置 Worker")}；图表页默认只读 D1，但打开后发现当前周期明显落后或点击右上角按钮时会同步当前周期；设置页的「立即同步 D1」用于全周期手动写库。Cron 仍是常规维护入口，每个周期最多保留最近 ${Number(data.maxPerInterval || 2000)} 根。
     </div>
     <div class="cloud-status-cards">
       <div class="cloud-status-card">

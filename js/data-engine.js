@@ -457,7 +457,7 @@ const DataEngine = {
 
   /**
    * 设置页/运维入口：触发已部署 Worker 手动同步 K 线到其绑定的 Cloudflare D1。
-   * 图表页不调用这里；图表只读 /api/d1/klines?sync=0 并用 Binance WS 做实时跳动。
+   * 设置页用于全周期运维同步；图表页只在当前周期落后或手动按钮触发时调用当前周期同步。
    */
   async triggerCloudSync(symbol, interval = "all", wait = true, opts = {}) {
     if (wait && typeof wait === "object") {

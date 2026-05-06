@@ -1,7 +1,7 @@
 /* =======================================================
    行情工作台
    - 初始历史数据走 Worker /api/d1/klines（Cloudflare D1 缓存，币安源）
-   - 浏览器每 60s 只读 D1；写库由已部署 Worker Cron 维护，设置页的运维按钮才会触发 /api/d1/sync。
+   - 浏览器每 60s 只读 D1；打开后若当前周期明显落后会触发一次当前周期同步，右上角按钮也会同步并重读当前周期。
    - 实时 K 线由 Binance WebSocket（当前周期的 kline stream）补齐 OHLC。
    - 主图标题栏「最新价」独立推送：优先 Binance aggTrade WebSocket（U 本位/现货线路自动切换 + 解析组合流包装），
      网络/CORS 受阻时用币安公开 REST 最新价与 Worker「BIT_DATA_API_BASE」上的 /api/binance/ticker/price 轮询兜底（非 D1、非 K 线序列）。
@@ -15,6 +15,9 @@ const CHART_HEADLINE_REST_PAUSE_AFTER_WS_MS = 2000;
 /** 已连接但长时间收不到 aggTrade 时切换 spot/futures 线路 */
 const CHART_HEADLINE_WS_STALL_SWITCH_MS = 7000;
 const CHART_D1_POLL_MS = 60 * 1000;
+const CHART_D1_SYNC_TIMEOUT_MS = 90 * 1000;
+const CHART_D1_AUTO_SYNC_STALE_BARS = 2;
+const CHART_D1_AUTO_SYNC_COOLDOWN_MS = 5 * 60 * 1000;
 const CHART_WORKBENCH_TF_KEY = "bitdesk.workbench.chartInterval";
 /** 横向平移/缩放：按「交易对|周期」存 scrollPosition + barSpacing（localStorage） */
 const CHART_VIEWPORT_KEY = "bitdesk.workbench.chartViewport";
@@ -171,6 +174,7 @@ let chartHeadlineAggSinceOpen = false;
 let chartD1PollTimer = null;
 let chartD1PollInFlight = false;
 let chartD1PollGen = 0;
+let chartD1AutoSyncLastAt = 0;
 let chartVisibilityRefreshHandler = null;
 let chartFocusRefreshHandler = null;
 let chartLastWsStatusAt = 0;
@@ -1119,10 +1123,10 @@ function pageChart() {
         </div>
         <div class="chart-action-cluster">
           <span class="chart-live-status" id="chart-status"></span>
-          <button type="button" class="btn chart-sync-btn" id="chart-cloud-sync" data-manual-hint="只重新读取当前周期的 Cloudflare D1；需要写库请到设置页点「立即同步 D1」。"
-            title="只重新读取当前周期的 Cloudflare D1；需要写库请到设置页点「立即同步 D1」。">
+          <button type="button" class="btn chart-sync-btn" id="chart-cloud-sync" data-manual-hint="触发 Worker 同步当前周期 D1，然后重新读取 Cloudflare D1。"
+            title="触发 Worker 同步当前周期 D1，然后重新读取 Cloudflare D1。">
             <i class="ph ph-arrow-clockwise"></i>
-            <span>重读D1</span>
+            <span>同步D1</span>
           </button>
         </div>
       </div>
@@ -1348,11 +1352,15 @@ function initChart() {
     syncBtn.addEventListener("click", async () => {
       syncBtn.disabled = true;
       const statusEl = document.getElementById("chart-status");
-      if (statusEl) statusEl.textContent = `正在重新读取 D1（${currentInterval}）…`;
+      const interval = currentInterval;
+      if (statusEl) statusEl.textContent = `正在同步 D1（${interval}）…`;
       try {
-        await loadChartData(CHART_SYMBOL, currentInterval);
+        await triggerChartD1Sync(CHART_SYMBOL, interval, "manual");
+        if (interval === currentInterval) {
+          await loadChartData(CHART_SYMBOL, interval, { skipAutoSync: true });
+        }
       } catch (e) {
-        if (statusEl) statusEl.textContent = "刷新失败: " + (e && e.message ? e.message : e);
+        if (statusEl) statusEl.textContent = "同步失败: " + (e && e.message ? e.message : e);
       } finally {
         syncBtn.disabled = false;
       }
@@ -1427,8 +1435,8 @@ function setChartStatusLine(symbol, interval, nBars) {
     lastSyncText ? `上次写入 D1: ${lastSyncText}` : "",
     lastSync && lastSync.last_ok === 0 && lastSync.last_error ? `上次同步错误: ${lastSync.last_error}` : "",
     `WS 详情: ${chartWsStateText()}`,
-    `浏览器只读 D1 自动刷新间隔: ${Math.round(CHART_D1_POLL_MS / 1000)} 秒；写库由 Worker Cron 或设置页手动同步负责。`,
-    "图表页不会调用 /api/d1/sync；按钮只重读当前周期 D1 缓存。",
+    `浏览器只读 D1 自动刷新间隔: ${Math.round(CHART_D1_POLL_MS / 1000)} 秒；打开后若当前周期明显落后会触发一次当前周期同步。`,
+    "右上角按钮会调用 /api/d1/sync 同步当前周期，然后重读 D1 缓存；设置页仍用于全周期手动同步。",
     "说明：时间差 = 当前时间 − D1 最后一根 K 的开盘时间（币安字段 t）。进行中 K 线该差值常在 0～一个周期内；若远大于周期，才可能是 D1/Cron 落后。",
     "历史 K 来自币安 U 本位永续，经 Worker 落 D1；图表实时更新为浏览器直连币安 WS。",
   ].filter(Boolean);
@@ -1437,7 +1445,7 @@ function setChartStatusLine(symbol, interval, nBars) {
   if (syncBtn) {
     const manual =
       (syncBtn.dataset && syncBtn.dataset.manualHint) ||
-      "只重新读取 Cloudflare D1；需要写库请到设置页点「立即同步 D1」。";
+      "触发 Worker 同步当前周期 D1，然后重新读取 Cloudflare D1。";
     syncBtn.title = [manual, summaryLine, detailBits.join("\n")].filter(Boolean).join("\n\n");
   }
 }
@@ -1797,7 +1805,54 @@ function startChartD1Polling() {
   try { window.addEventListener("focus", chartFocusRefreshHandler); } catch (_) {}
 }
 
-async function loadChartData(symbol, interval) {
+function shouldAutoSyncChartD1(interval, rows) {
+  if (typeof document !== "undefined" && document.hidden) return false;
+  if (Date.now() - chartD1AutoSyncLastAt < CHART_D1_AUTO_SYNC_COOLDOWN_MS) return false;
+  if (!Array.isArray(rows) || rows.length === 0) return true;
+  const meta = (typeof window !== "undefined" && window.__LAST_KLINES_META) || null;
+  const staleMs = Number(meta && meta.staleMs);
+  const step = getIntervalStepMs(interval);
+  if (!Number.isFinite(staleMs) || !Number.isFinite(step) || step <= 0) return false;
+  const grace = Math.max(step * CHART_D1_AUTO_SYNC_STALE_BARS, step + 2 * 60 * 1000);
+  return staleMs > grace;
+}
+
+async function triggerChartD1Sync(symbol, interval, reason) {
+  if (typeof DataEngine === "undefined" || typeof DataEngine.triggerCloudSync !== "function") {
+    throw new Error("数据引擎未加载，无法触发 D1 同步");
+  }
+  const statusEl = document.getElementById("chart-status");
+  if (statusEl) {
+    const label = reason === "auto" ? "检测到 D1 落后，正在自动同步" : "正在同步";
+    statusEl.textContent = `${label} ${symbol} ${interval} D1…`;
+  }
+  return DataEngine.triggerCloudSync(symbol, interval, true, { timeoutMs: CHART_D1_SYNC_TIMEOUT_MS });
+}
+
+async function maybeAutoSyncChartD1AfterRead(symbol, interval, loadGen, rows) {
+  if (loadGen !== chartLoadGen) return;
+  if (!shouldAutoSyncChartD1(interval, rows)) return;
+  chartD1AutoSyncLastAt = Date.now();
+  try {
+    await triggerChartD1Sync(symbol, interval, "auto");
+    if (loadGen !== chartLoadGen || symbol !== CHART_SYMBOL || interval !== currentInterval) return;
+    const raw = await DataEngine.fetchKlinesFromD1(symbol, interval, 2000, { sync: "0" });
+    if (loadGen !== chartLoadGen || symbol !== CHART_SYMBOL || interval !== currentInterval) return;
+    if (!Array.isArray(raw) || raw.length === 0) {
+      setChartStatusLine(symbol, interval, lastRenderedCount);
+      return;
+    }
+    const merged = mergeD1RowsWithLiveRows(raw);
+    const count = setChartDataFromRows(merged);
+    setChartStatusLine(symbol, interval, count);
+    refreshMtfAfterMainLoad();
+  } catch (e) {
+    console.warn("[chart] 自动同步 D1 失败", e);
+    if (loadGen === chartLoadGen) setChartStatusLine(symbol, interval, lastRenderedCount);
+  }
+}
+
+async function loadChartData(symbol, interval, opts = {}) {
   const myGen = ++chartLoadGen;
   const statusEl = document.getElementById("chart-status");
   if (statusEl) statusEl.textContent = `加载 ${symbol} ${interval} 数据…`;
@@ -1839,6 +1894,7 @@ async function loadChartData(symbol, interval) {
       lastRenderedCount = 0;
       startChartD1Polling();
       refreshMtfAfterMainLoad();
+      if (!opts.skipAutoSync) maybeAutoSyncChartD1AfterRead(symbol, interval, myGen, rawData);
       return;
     }
 
@@ -1849,6 +1905,7 @@ async function loadChartData(symbol, interval) {
     setChartStatusLine(symbol, interval, count);
     startChartD1Polling();
     refreshMtfAfterMainLoad();
+    if (!opts.skipAutoSync) maybeAutoSyncChartD1AfterRead(symbol, interval, myGen, rawData);
   } catch (e) {
     if (myGen !== chartLoadGen) return;
     console.error("加载图表数据失败:", e);
