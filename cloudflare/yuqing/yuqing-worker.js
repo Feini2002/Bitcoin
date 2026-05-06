@@ -72,7 +72,7 @@ function maintenanceEnabled(env) {
 function corsHeaders(extra = {}) {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Accept",
     "Access-Control-Expose-Headers": "X-Worker-Build, X-Yuqing-Worker",
     ...extra,
@@ -407,8 +407,9 @@ function normalizeDailyTopStoriesFromLlm(raw, fallbackRows) {
   for (let i = 0; i < candidates.length && out.length < 3; i += 1) {
     out.push(normalizeDailyTopStoryInput(candidates[i], fallbackStories[out.length]));
   }
-  while (out.length < 3 && fallbackStories[out.length]) out.push(fallbackStories[out.length]);
-  return out.length ? out : fallbackStories;
+  // 如果 LLM 判断没有 3 条重要事情，不再强制补齐「等待更多来源」模块
+  // while (out.length < 3 && fallbackStories[out.length]) out.push(fallbackStories[out.length]);
+  return out.length ? out : [fallbackStories[0]];
 }
 
 function normalizeDailyBriefsFromLlm(raw, fallbackRows) {
@@ -774,16 +775,11 @@ function buildRealMarketData(finnhubQuotes, btc) {
   const mk = {};
   for (const row of ASSET_ROWS) {
     const q = finnhubQuotes[row.symbol];
-    const ch =
-      q && q.ok && q.changePct != null ? String(q.changePct) : typeof q?.changePct === "number" ? String(q.changePct) : "0";
-    mk[row.name] = { change: ch, price: q && q.ok && q.price != null ? String(q.price) : "0" };
+    const ch = q && q.ok && q.changePct != null ? String(q.changePct) : "数据缺失";
+    mk[row.name] = { change: ch, price: q && q.ok && q.price != null ? String(q.price) : "数据缺失" };
   }
-  const btcChange =
-    btc && btc.ok && btc.change24hPct != null
-      ? String(Number(btc.change24hPct).toFixed(4))
-      : "0";
-  const btcPrice =
-    btc && btc.ok && btc.priceUsd != null ? String(btc.priceUsd) : "0";
+  const btcChange = btc && btc.ok && btc.change24hPct != null ? String(Number(btc.change24hPct).toFixed(4)) : "数据缺失";
+  const btcPrice = btc && btc.ok && btc.priceUsd != null ? String(btc.priceUsd) : "数据缺失";
   mk["比特币"] = { change: btcChange, price: btcPrice };
   return mk;
 }
@@ -983,14 +979,14 @@ function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "---\n\n" +
     "请使用Google Search工具搜集最新资讯，并严格按照以下 JSON 格式输出，不要带有前缀和解释，请仅输出一个 JSON 块：\n\n" +
     "【结构要求】\n" +
-    "输出必须包含三个字段：topStories（头条事件，必须3条）、dynamicBriefs（动态速览，必须5条）、macroTrend（宏观趋势总结）。\n\n" +
+    "输出必须包含三个字段：topStories（头条事件，1~3条）、dynamicBriefs（动态速览，必须5条）、macroTrend（宏观趋势总结）。\n\n" +
     "## 1. topStories (今日头条)\n" +
     "执行双轨搜索：\n" +
     "一轨（72小时热点）：过去72小时内影响最大的宏观/科技/地缘事件。\n" +
     "二轨（一周时间重量级）：若过去一周内存在重量级程度明显碾压所有72小时新闻的事件（标准：千亿级以上市值公司战略级发布、国家级政策转向、系统性金融风险、头部科技公司年度大会、地缘政治危机），优先纳入并标注[持续追踪]。\n\n" +
-    "【条数判断规则】今日头条固定输出3条高价值事件。若多个事件属于同一宏观背景，也要拆成不同的资产传导维度；若事实不足，选择最新72小时内可验证性更高的事件补足，不要输出脚手架解释。\n\n" +
+    "【条数判断规则】萃取今日最核心的 1~3 条高价值事件。若今日仅有 1-2 件真正的大事，果断只返回 1-2 条，坚决不拿次要新闻凑数；读者的时间极度宝贵，宁缺毋滥。若事实不足，不强行补齐 3 条，也不要输出脚手架解释。\n\n" +
     "对于每一个头条对象，包含以下字段：\n" +
-    '- "category"：事件类别，如 [地缘政治] / [宏观经济] / [科技产业] / [加密市场] / [企业动态] / [政策监管]\n' +
+    '- "category"：事件类别，必须使用中文，如 [地缘政治] / [宏观经济] / [科技产业] / [加密市场] / [企业动态] / [政策监管]\n' +
     '- "title"：事件核心标题\n' +
     '- "fact"：一句话说明事件时间、人物、动作和影响\n' +
     '- "structure"：包含三个字段的对象：\n' +
@@ -998,7 +994,7 @@ function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
     '  - "conflict"：简述深层矛盾\n' +
     '  - "divergence"：交叉对比各方的官方声明与其实际行动\n' +
     '- "impacts"：受影响资产数组（通常1-3个），每个对象包含：\n' +
-    '  - "asset"：资产名称（如 "BTC", "纳指", "美元", "黄金" 等）\n' +
+    '  - "asset"：资产名称（必须使用中文，如 "比特币", "纳指", "美元", "黄金" 等）\n' +
     '  - "direction"：利多/利空/震荡（必须是 "up", "down", 或 "shock" 之一）\n' +
     '  - "logic"：传导逻辑预判（一句话说明为什么）\n' +
     '- "nextWatch"：一句话说明后续观察什么数据或事件节点\n\n' +
@@ -1980,6 +1976,10 @@ async function buildDailyEventReport(env, opts) {
 
   const { factRows } = await loadFactsBundle(env, 80);
   let legacy = null;
+  const passedModules = opts && opts.modules && typeof opts.modules === "object" 
+    ? opts.modules 
+    : { dashboard: true, news: true, timeline: true, ai: true, trends: true };
+    
   try {
     legacy = await buildReport(env, {
       mode: opts && opts.mode ? opts.mode : "deep",
@@ -1990,7 +1990,7 @@ async function buildDailyEventReport(env, opts) {
       trendsUseAiIntel: true,
       dualHeadlineLanes: !!(opts && opts.dualHeadlineLanes),
       __streamSink: opts && opts.__streamSink,
-      modules: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
+      modules: passedModules,
     });
     if (legacy && Array.isArray(legacy.warnings)) sourceErrors.push(...legacy.warnings);
   } catch (e) {
@@ -2320,6 +2320,23 @@ async function createYuqingReport(env, opts) {
   return payload;
 }
 
+async function getYuqingSettings(db, key) {
+  const row = await db.prepare(`SELECT value_json FROM yuqing_settings WHERE key = ?`).bind(key).first();
+  if (row && row.value_json) {
+    try {
+      return JSON.parse(row.value_json);
+    } catch (_) {}
+  }
+  return null;
+}
+
+async function putYuqingSettings(db, key, settings) {
+  await db.prepare(
+    `INSERT INTO yuqing_settings (key, value_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+     ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = CURRENT_TIMESTAMP`
+  ).bind(key, JSON.stringify(settings)).run();
+}
+
 /** ---- 兼容旧路径：Finnhub 代理 ---- */
 
 async function handleLegacyFinnhubBulk(request, env) {
@@ -2478,6 +2495,63 @@ export default {
       }
     }
 
+    if (path === "/api/yuqing/settings/event-dashboard" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "settings_get", 100);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定" }, 503);
+      try {
+        const s = await getYuqingSettings(env.YUQING_DB, "event_dashboard");
+        if (!s) {
+          return json({
+            ok: true,
+            settings: {
+              visibility: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
+              scanCoverage: { dashboard: true, news: true, timeline: true, ai: true, trends: true }
+            }
+          });
+        }
+        return json({ ok: true, settings: s });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/settings/event-dashboard" && request.method === "PUT") {
+      const rl = await checkRateLimit(request, "settings_put", 20);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定" }, 503);
+      let bodyIn;
+      try {
+        bodyIn = await request.json();
+      } catch (_) {
+        return json({ ok: false, error: "格式错误" }, 400);
+      }
+      try {
+        const v = bodyIn.visibility || {};
+        const s = bodyIn.scanCoverage || {};
+        const settings = {
+          visibility: {
+            dashboard: !!v.dashboard,
+            news: !!v.news,
+            timeline: !!v.timeline,
+            ai: !!v.ai,
+            trends: !!v.trends
+          },
+          scanCoverage: {
+            dashboard: !!s.dashboard,
+            news: !!s.news,
+            timeline: !!s.timeline,
+            ai: !!s.ai,
+            trends: !!s.trends
+          }
+        };
+        await putYuqingSettings(env.YUQING_DB, "event_dashboard", settings);
+        return json({ ok: true, settings });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
     if (path === "/api/yuqing/reports/generate" && request.method === "POST") {
       const rl = await checkRateLimit(request, "reports_generate", 8);
       if (rl) return rl;
@@ -2495,6 +2569,7 @@ export default {
           forceSearch: !!(bodyIn && bodyIn.forceSearch),
           mode: bodyIn && bodyIn.mode,
           dualHeadlineLanes: !!(bodyIn && bodyIn.dualHeadlineLanes),
+          modules: bodyIn && bodyIn.modules,
         });
         return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report: out });
       } catch (e) {
@@ -2536,6 +2611,7 @@ export default {
               forceSearch: !!(bodyIn && bodyIn.forceSearch),
               mode: bodyIn && bodyIn.mode,
               dualHeadlineLanes: !!(bodyIn && bodyIn.dualHeadlineLanes),
+              modules: bodyIn && bodyIn.modules,
               __streamSink: (evt) => safeWrite(evt),
             });
             await insertYuqingReport(env.YUQING_DB, payload);
@@ -2717,6 +2793,8 @@ export default {
           "GET /api/yuqing/reports/history?kind=...&days=7",
           "GET /api/yuqing/reports/item?id=...",
           "DELETE /api/yuqing/reports/item?id=...",
+          "GET /api/yuqing/settings/event-dashboard",
+          "PUT /api/yuqing/settings/event-dashboard",
           "POST /api/yuqing/reports/generate",
           "POST /api/yuqing/reports/generate-stream",
           "POST /api/yuqing/report (compat: sentiment_analysis)",
