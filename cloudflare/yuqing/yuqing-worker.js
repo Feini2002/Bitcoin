@@ -2,7 +2,7 @@
  * Cloudflare Worker：舆情日报（yuqing.feiniwork.com）
  *
  * - 聚合非 LLM：FNG、CoinGecko BTC、Finnhub 批量 ETF/股票报价（仅行情数字，不喂新闻）
- * - 今日头条 / 动态速览 / AI 情报站：固定 Gemini + Google Search（不调 Finnhub 新闻事实池回填）
+ * - 今日头条 / 动态速览 / AI 情报站 / GitHub 工具雷达：固定 Gemini + Google Search（不调 Finnhub 新闻事实池回填）
  * - LLM：可配置 YUQING_LLM_PROVIDER=none|gemini|auto（默认 auto）；默认模型见 YUQING_GEMINI_MODEL_DEFAULT，可被 YUQING_LLM_MODEL_* 覆盖；密钥仅存 Worker Secret
  *
  * 兼容旧 api.feiniwork.com 的路径：/finnhub-bulk、/finnhub/*（建议使用 /api/yuqing/*）
@@ -24,6 +24,7 @@ import {
   YUQING_SHIJIAN_PAGE,
   buildDailyAiIntelPrompt,
   buildDailyBriefsPrompt,
+  buildDailyGithubToolsPrompt,
   buildDailyTemperature,
   buildDailyTemperaturePrompt,
   buildDailyTopStoriesPrompt,
@@ -34,9 +35,11 @@ import {
   mergeTopStoryCandidatesForDaily,
   normalizeDailyAiIntelItems,
   normalizeDailyBriefItems,
+  normalizeDailyGithubToolItems,
   normalizeDailyTopStoryItems,
   renderDailyAiIntelMarkdownForTrends,
   renderDailyBriefsMarkdown,
+  renderDailyGithubToolsMarkdownForTrends,
   renderDailyTopStoriesMarkdown,
   shijianModuleShell,
 } from "./shijian/index.js";
@@ -50,6 +53,7 @@ const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 const FINNHUB_ORIGIN = "https://finnhub.io";
 const ALT_FNG = "https://api.alternative.me/fng/";
 const COINGECKO_BTC = "https://api.coingecko.com/api/v3/simple/price";
+const YAHOO_CHART_ORIGIN = "https://query1.finance.yahoo.com/v8/finance/chart";
 
 const FETCH_TIMEOUT_SOURCES_MS = 12_000;
 const FETCH_TIMEOUT_LLM_MS = 118_000;
@@ -595,7 +599,7 @@ function compactMarketEndpoint(key, result) {
 async function fetchMarketContext(env) {
   const base = marketApiBase(env);
   const endpoints = {
-    klines: `${base}/api/d1/klines?symbol=BTCUSDT&interval=1h&limit=96&sync=0`,
+    klines: `${base}/api/d1/klines?symbol=BTCUSDT&interval=1h&limit=192&sync=0`,
     derivatives: `${base}/api/d1/derivatives?symbol=BTCUSDT&range=30d&sync=0`,
     liquidations: `${base}/api/d1/liquidations?symbol=BTCUSDT&range=30d&includeActive=1`,
     derivativesSnapshot: `${base}/api/ai/derivatives-snapshot?profile=brief`,
@@ -765,22 +769,250 @@ async function fetchFinnhubBulkQuotes(env, symbols) {
 }
 
 const ASSET_ROWS = [
-  { name: "纳指", symbol: "QQQ" },
-  { name: "标普500", symbol: "SPY" },
-  { name: "英伟达", symbol: "NVDA" },
-  { name: "黄金", symbol: "GLD" },
+  { name: "纳指", symbol: "QQQ", yahooSymbol: "QQQ", label: "纳斯达克100 ETF" },
+  { name: "标普500", symbol: "SPY", yahooSymbol: "SPY", label: "标普500 ETF" },
+  { name: "英伟达", symbol: "NVDA", yahooSymbol: "NVDA", label: "英伟达" },
+  { name: "黄金", symbol: "GLD", yahooSymbol: "GLD", label: "黄金ETF" },
 ];
 
-function buildRealMarketData(finnhubQuotes, btc) {
+const MARKET_MOVE_ROWS = [
+  { name: "比特币", symbol: "BTC", yahooSymbol: "BTC-USD", label: "Bitcoin USD" },
+  ...ASSET_ROWS,
+];
+
+function finiteNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function roundNumber(value, digits = 4) {
+  const n = finiteNumber(value);
+  return n == null ? null : Number(n.toFixed(digits));
+}
+
+function pctChange(latest, base) {
+  const a = finiteNumber(latest);
+  const b = finiteNumber(base);
+  if (a == null || b == null || b === 0) return null;
+  return roundNumber(((a - b) / b) * 100, 4);
+}
+
+function fmtPctForPrompt(value) {
+  const n = finiteNumber(value);
+  if (n == null) return "缺失";
+  return `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
+}
+
+function jsonNumberForPrompt(value) {
+  const n = finiteNumber(value);
+  return n == null ? "null" : String(roundNumber(n, 4));
+}
+
+function chartPointsFromYahoo(data) {
+  const r = data && data.chart && data.chart.result && data.chart.result[0];
+  const timestamps = r && Array.isArray(r.timestamp) ? r.timestamp : [];
+  const closes = r && r.indicators && r.indicators.quote && r.indicators.quote[0] && r.indicators.quote[0].close;
+  const rows = [];
+  if (!Array.isArray(closes)) return rows;
+  for (let i = 0; i < timestamps.length && i < closes.length; i += 1) {
+    const close = finiteNumber(closes[i]);
+    const t = finiteNumber(timestamps[i]);
+    if (close == null || t == null) continue;
+    rows.push({ t: t * 1000, close });
+  }
+  rows.sort((a, b) => a.t - b.t);
+  return rows;
+}
+
+function closeAtOrBefore(points, targetT) {
+  const target = finiteNumber(targetT);
+  if (!Array.isArray(points) || !points.length || target == null) return null;
+  let picked = null;
+  for (const p of points) {
+    if (p.t <= target) picked = p;
+    else break;
+  }
+  return picked;
+}
+
+function movesFromChartPoints(points) {
+  if (!Array.isArray(points) || points.length < 2) return { h24: null, d3: null, d7: null };
+  const latest = points[points.length - 1];
+  const windows = {
+    h24: 24 * 3600 * 1000,
+    d3: 3 * 24 * 3600 * 1000,
+    d7: 7 * 24 * 3600 * 1000,
+  };
+  const out = {};
+  for (const [key, ms] of Object.entries(windows)) {
+    const base = closeAtOrBefore(points, latest.t - ms);
+    out[key] = base ? pctChange(latest.close, base.close) : null;
+  }
+  return out;
+}
+
+async function fetchYahooAssetMove(row) {
+  const url = `${YAHOO_CHART_ORIGIN}/${encodeURIComponent(row.yahooSymbol)}?interval=1h&range=10d`;
+  const res = await fetchWithTimeout(url, {
+    headers: { Accept: "application/json", "User-Agent": "yuqing-worker/1.4 (+cf)" },
+  }, FETCH_TIMEOUT_SOURCES_MS);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`Yahoo Chart ${row.yahooSymbol} HTTP ${res.status}`);
+  const points = chartPointsFromYahoo(data);
+  if (points.length < 2) throw new Error(`Yahoo Chart ${row.yahooSymbol} points insufficient`);
+  const latest = points[points.length - 1];
+  const meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+  const price = finiteNumber(meta && meta.regularMarketPrice) ?? latest.close;
+  const moves = movesFromChartPoints(points);
+  return {
+    ok: true,
+    name: row.name,
+    symbol: row.symbol,
+    dataSymbol: row.yahooSymbol,
+    label: row.label || row.symbol,
+    price: roundNumber(price, 4),
+    moves,
+    latestAt: new Date(latest.t).toISOString(),
+    source: "yahoo_chart_1h",
+    points: points.length,
+  };
+}
+
+async function fetchBtcD1AssetMove(env) {
+  const url = `${marketApiBase(env)}/api/d1/klines?symbol=BTCUSDT&interval=1h&limit=192&sync=0`;
+  const res = await fetchWithTimeout(url, {
+    headers: { Accept: "application/json", "User-Agent": "yuqing-worker/1.4 (+cf)" },
+  }, FETCH_TIMEOUT_SOURCES_MS);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`BTC D1 klines HTTP ${res.status}`);
+  const rows = data && Array.isArray(data.klines) ? data.klines : [];
+  const points = rows
+    .map((row) => ({ t: finiteNumber(row.t), close: finiteNumber(row.c) }))
+    .filter((row) => row.t != null && row.close != null)
+    .sort((a, b) => a.t - b.t);
+  if (points.length < 25) throw new Error(`BTC D1 1h points insufficient: ${points.length}`);
+  const latest = points[points.length - 1];
+  const moves = movesFromChartPoints(points);
+  return {
+    ok: true,
+    name: "比特币",
+    symbol: "BTC",
+    dataSymbol: "BTCUSDT",
+    label: "BTCUSDT 1h D1",
+    price: roundNumber(latest.close, 4),
+    moves,
+    latestAt: new Date(latest.t).toISOString(),
+    source: "bitdesk_d1_1h",
+    points: points.length,
+  };
+}
+
+function fallbackAssetMove(row, finnhubQuotes, btc) {
+  if (row.name === "比特币") {
+    const h24 = btc && btc.ok ? roundNumber(btc.change24hPct, 4) : null;
+    return {
+      ok: h24 != null || (btc && btc.priceUsd != null),
+      name: row.name,
+      symbol: row.symbol,
+      dataSymbol: row.yahooSymbol,
+      label: row.label || row.symbol,
+      price: btc && btc.priceUsd != null ? roundNumber(btc.priceUsd, 4) : null,
+      moves: { h24, d3: null, d7: null },
+      latestAt: btc && btc.updatedAt ? btc.updatedAt : new Date().toISOString(),
+      source: btc && btc.source ? `${btc.source}_fallback` : "btc_fallback",
+      error: btc && btc.error ? btc.error : "historical series unavailable",
+    };
+  }
+  const q = finnhubQuotes && finnhubQuotes[row.symbol] ? finnhubQuotes[row.symbol] : null;
+  const h24 = q && q.ok ? roundNumber(q.changePct, 4) : null;
+  return {
+    ok: h24 != null || (q && q.price != null),
+    name: row.name,
+    symbol: row.symbol,
+    dataSymbol: row.yahooSymbol,
+    label: row.label || row.symbol,
+    price: q && q.price != null ? roundNumber(q.price, 4) : null,
+    moves: { h24, d3: null, d7: null },
+    latestAt: new Date().toISOString(),
+    source: "finnhub_quote_fallback",
+    error: q && q.error ? q.error : "historical series unavailable",
+  };
+}
+
+async function fetchAssetMoveRows(env, finnhubQuotes, btc) {
+  const rows = await Promise.all(
+    MARKET_MOVE_ROWS.map(async (row) => {
+      if (row.name === "比特币") {
+        try {
+          return await fetchBtcD1AssetMove(env);
+        } catch (d1Error) {
+          try {
+            return await fetchYahooAssetMove(row);
+          } catch (yahooError) {
+            const fallback = fallbackAssetMove(row, finnhubQuotes, btc);
+            return {
+              ...fallback,
+              error: `D1:${String(d1Error && d1Error.message ? d1Error.message : d1Error)}；Yahoo:${String(yahooError && yahooError.message ? yahooError.message : yahooError)}`,
+            };
+          }
+        }
+      }
+      try {
+        return await fetchYahooAssetMove(row);
+      } catch (e) {
+        const fallback = fallbackAssetMove(row, finnhubQuotes, btc);
+        return {
+          ...fallback,
+          error: String(e && e.message ? e.message : e),
+        };
+      }
+    }),
+  );
+  return rows;
+}
+
+function marketMoveLineFromData(realMarketData) {
+  const mk = realMarketData || {};
+  return MARKET_MOVE_ROWS.map((row) => {
+    const item = mk[row.name] || {};
+    const moves = item.moves || {};
+    return `${row.name}(${item.symbol || row.symbol}) 24h ${fmtPctForPrompt(moves.h24 ?? item.change)} / 3d ${fmtPctForPrompt(moves.d3)} / 7d ${fmtPctForPrompt(moves.d7)}`;
+  }).join("；");
+}
+
+function buildRealMarketData(finnhubQuotes, btc, assetMoves = []) {
+  const moveByName = Object.fromEntries((assetMoves || []).map((row) => [row.name, row]));
   const mk = {};
+  for (const row of MARKET_MOVE_ROWS) {
+    const move = moveByName[row.name] || null;
+    const fallback = fallbackAssetMove(row, finnhubQuotes, btc);
+    const src = move || fallback;
+    const h24 = src && src.moves ? src.moves.h24 : null;
+    mk[row.name] = {
+      symbol: row.symbol,
+      dataSymbol: row.yahooSymbol,
+      label: row.label || row.symbol,
+      change: h24 != null ? String(h24) : "数据缺失",
+      price: src && src.price != null ? String(src.price) : "数据缺失",
+      moves: {
+        h24: src && src.moves ? src.moves.h24 : null,
+        d3: src && src.moves ? src.moves.d3 : null,
+        d7: src && src.moves ? src.moves.d7 : null,
+      },
+      source: src && src.source ? src.source : "missing",
+      ok: !!(src && src.ok),
+      latestAt: src && src.latestAt ? src.latestAt : null,
+    };
+  }
   for (const row of ASSET_ROWS) {
     const q = finnhubQuotes[row.symbol];
-    const ch = q && q.ok && q.changePct != null ? String(q.changePct) : "数据缺失";
-    mk[row.name] = { change: ch, price: q && q.ok && q.price != null ? String(q.price) : "数据缺失" };
+    if (mk[row.name] && mk[row.name].price === "数据缺失" && q && q.ok && q.price != null) {
+      mk[row.name].price = String(q.price);
+    }
   }
-  const btcChange = btc && btc.ok && btc.change24hPct != null ? String(Number(btc.change24hPct).toFixed(4)) : "数据缺失";
-  const btcPrice = btc && btc.ok && btc.priceUsd != null ? String(btc.priceUsd) : "数据缺失";
-  mk["比特币"] = { change: btcChange, price: btcPrice };
+  if (mk["比特币"] && mk["比特币"].price === "数据缺失" && btc && btc.ok && btc.priceUsd != null) {
+    mk["比特币"].price = String(btc.priceUsd);
+  }
   return mk;
 }
 
@@ -829,36 +1061,35 @@ async function aggregateSources(env) {
     for (const s of assetSymbols) finQuotes[s] = { ok: false, error: msg, symbol: s };
   }
 
-  const assets = [];
-  for (const row of ASSET_ROWS) {
-    const q = finQuotes[row.symbol] || {};
-    assets.push({
-      name: row.name,
-      symbol: row.symbol,
-      price: q.ok ? q.price : null,
-      changePct: q.ok ? q.changePct : null,
-      source: "finnhub",
-      ok: !!q.ok,
-      error: q.ok ? undefined : q.error || "quote missing",
-    });
-  }
-  if (btc && btc.ok && btc.priceUsd != null) {
-    assets.push({
-      name: "比特币",
-      symbol: "BTC",
-      price: btc.priceUsd,
-      changePct: btc.change24hPct,
-      source: btc.source === "yahoo" ? "yahoo" : "coingecko",
-      ok: true,
+  const assetMoves = await fetchAssetMoveRows(env, finQuotes, btc);
+  const failedMoveRows = assetMoves.filter((row) => !row.ok || row.error);
+  if (failedMoveRows.length) {
+    errors.push({
+      source: "asset_history",
+      message: failedMoveRows.map((row) => `${row.name}:${row.error || "series incomplete"}`).join("；").slice(0, 500),
     });
   }
 
-  const mkData = buildRealMarketData(finQuotes, btc);
+  const assets = assetMoves.map((row) => ({
+    name: row.name,
+    symbol: row.symbol,
+    dataSymbol: row.dataSymbol,
+    price: row.price,
+    changePct: row.moves && row.moves.h24 != null ? row.moves.h24 : null,
+    change3dPct: row.moves && row.moves.d3 != null ? row.moves.d3 : null,
+    change7dPct: row.moves && row.moves.d7 != null ? row.moves.d7 : null,
+    source: row.source,
+    ok: !!row.ok,
+    error: row.ok ? undefined : row.error || "history missing",
+  }));
+
+  const mkData = buildRealMarketData(finQuotes, btc, assetMoves);
   return {
     sources: {
       fng,
       btc,
       assets,
+      assetMoves,
       errors,
     },
     realMarketData: mkData,
@@ -870,6 +1101,7 @@ async function aggregateSources(env) {
 function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
   const bt = "```";
   const mkData = realMarketData;
+  const moveLine = marketMoveLineFromData(mkData);
   return (
     "当前时间：" +
     timeStr +
@@ -879,22 +1111,11 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "（" +
     fngClass +
     "）。\n\n" +
-    "【真实行情数据（以下数字已确认，无需猜测）】\n" +
-    "- 纳斯达克100 ETF(QQQ) 24H涨跌：" +
-    mkData["纳指"].change +
-    "%\n" +
-    "- 标普500 ETF(SPY) 24H涨跌：" +
-    mkData["标普500"].change +
-    "%\n" +
-    "- 英伟达(NVDA) 24H涨跌：" +
-    mkData["英伟达"].change +
-    "%\n" +
-    "- 比特币(BTC) 24H涨跌：" +
-    mkData["比特币"].change +
-    "%\n" +
-    "- 黄金ETF(GLD) 24H涨跌：" +
-    mkData["黄金"].change +
-    "%\n\n" +
+    "【真实行情数据（Worker 基于 1h 历史序列计算，不是 quote 单点）】\n" +
+    moveLine +
+    "\n\n" +
+    "使用规则：24h 只代表短线冲击，3d 代表短线延续，7d 代表背景趋势；不要把单日异动误判为趋势。\n" +
+    "阅读建议只能指导今天先重点阅读哪些事件，禁止输出买入、卖出、加仓、减仓等投资建议。\n\n" +
     "---\n\n" +
     "请基于以上数据，输出以下JSON块（仅供代码解析，前后不要有任何说明文字）：\n\n" +
     bt +
@@ -906,7 +1127,16 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "    {\n" +
     '      "name": "纳指",\n' +
     '      "change": ' +
-    mkData["纳指"].change +
+    jsonNumberForPrompt(mkData["纳指"].moves && mkData["纳指"].moves.h24) +
+    ",\n" +
+    '      "h24": ' +
+    jsonNumberForPrompt(mkData["纳指"].moves && mkData["纳指"].moves.h24) +
+    ",\n" +
+    '      "d3": ' +
+    jsonNumberForPrompt(mkData["纳指"].moves && mkData["纳指"].moves.d3) +
+    ",\n" +
+    '      "d7": ' +
+    jsonNumberForPrompt(mkData["纳指"].moves && mkData["纳指"].moves.d7) +
     ",\n" +
     '      "catalyst": "【新闻催化】直接驱动本次涨跌的具体事件或数据（一句话，30字内）",\n' +
     '      "structure": "【结构判断】这个涨跌是强化还是打破原有趋势？机构资金方向有何信号？（一句话，35字内）"\n' +
@@ -914,7 +1144,16 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "    {\n" +
     '      "name": "标普500",\n' +
     '      "change": ' +
-    mkData["标普500"].change +
+    jsonNumberForPrompt(mkData["标普500"].moves && mkData["标普500"].moves.h24) +
+    ",\n" +
+    '      "h24": ' +
+    jsonNumberForPrompt(mkData["标普500"].moves && mkData["标普500"].moves.h24) +
+    ",\n" +
+    '      "d3": ' +
+    jsonNumberForPrompt(mkData["标普500"].moves && mkData["标普500"].moves.d3) +
+    ",\n" +
+    '      "d7": ' +
+    jsonNumberForPrompt(mkData["标普500"].moves && mkData["标普500"].moves.d7) +
     ",\n" +
     '      "catalyst": "直接驱动事件（30字内）",\n' +
     '      "structure": "趋势结构与机构信号（35字内）"\n' +
@@ -922,7 +1161,16 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "    {\n" +
     '      "name": "英伟达",\n' +
     '      "change": ' +
-    mkData["英伟达"].change +
+    jsonNumberForPrompt(mkData["英伟达"].moves && mkData["英伟达"].moves.h24) +
+    ",\n" +
+    '      "h24": ' +
+    jsonNumberForPrompt(mkData["英伟达"].moves && mkData["英伟达"].moves.h24) +
+    ",\n" +
+    '      "d3": ' +
+    jsonNumberForPrompt(mkData["英伟达"].moves && mkData["英伟达"].moves.d3) +
+    ",\n" +
+    '      "d7": ' +
+    jsonNumberForPrompt(mkData["英伟达"].moves && mkData["英伟达"].moves.d7) +
     ",\n" +
     '      "catalyst": "直接驱动事件（30字内）",\n' +
     '      "structure": "趋势结构与机构信号（35字内）"\n' +
@@ -930,7 +1178,16 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "    {\n" +
     '      "name": "比特币",\n' +
     '      "change": ' +
-    mkData["比特币"].change +
+    jsonNumberForPrompt(mkData["比特币"].moves && mkData["比特币"].moves.h24) +
+    ",\n" +
+    '      "h24": ' +
+    jsonNumberForPrompt(mkData["比特币"].moves && mkData["比特币"].moves.h24) +
+    ",\n" +
+    '      "d3": ' +
+    jsonNumberForPrompt(mkData["比特币"].moves && mkData["比特币"].moves.d3) +
+    ",\n" +
+    '      "d7": ' +
+    jsonNumberForPrompt(mkData["比特币"].moves && mkData["比特币"].moves.d7) +
     ",\n" +
     '      "catalyst": "直接驱动事件（30字内）",\n' +
     '      "structure": "趋势结构与机构信号（35字内）"\n' +
@@ -938,15 +1195,24 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "    {\n" +
     '      "name": "黄金",\n' +
     '      "change": ' +
-    mkData["黄金"].change +
+    jsonNumberForPrompt(mkData["黄金"].moves && mkData["黄金"].moves.h24) +
+    ",\n" +
+    '      "h24": ' +
+    jsonNumberForPrompt(mkData["黄金"].moves && mkData["黄金"].moves.h24) +
+    ",\n" +
+    '      "d3": ' +
+    jsonNumberForPrompt(mkData["黄金"].moves && mkData["黄金"].moves.d3) +
+    ",\n" +
+    '      "d7": ' +
+    jsonNumberForPrompt(mkData["黄金"].moves && mkData["黄金"].moves.d7) +
     ",\n" +
     '      "catalyst": "直接驱动事件（30字内）",\n' +
     '      "structure": "趋势结构与机构信号（35字内）"\n' +
     "    }\n" +
     "  ],\n" +
-    '  "cross_asset": "跨资产关联解读：综合以上5个资产的涨跌组合，当前整体风险偏好是什么？资金在不同资产间如何流动？有无异常的资产背离信号？（60字内）",\n' +
+    '  "cross_asset": "跨资产关联解读：以3d为主轴，结合24h冲击与7d背景，判断风险偏好、资金流向和资产背离（60字内）",\n' +
     '  "anomaly_alert": "定价背离/异动预警：指出哪个资产表现出了不合理的Alpha异动，揭示定价逻辑的断裂（例如黄金脱离实际利率锚定），并简述其潜在含义。若无明显异动，输出「无明显背离」。（50字内）",\n' +
-    '  "action_suggestion": "跨资产关联建议：针对当前的定价异动或整体资产关联状态，给小白投资者明确的操作或关注建议（例如建议观望、留意XX风险、减仓XX资产），并说明理由。（40字内）"\n' +
+    '  "action_suggestion": "阅读建议：指出今天阅读事件时应优先关注哪类线索，禁止写交易动作。（40字内）"\n' +
     "}\n" +
     bt +
     "\n"
@@ -956,6 +1222,7 @@ function buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData) {
 function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
   const mkData = realMarketData;
   const bt = "```";
+  const moveLine = marketMoveLineFromData(mkData);
   return (
     "当前时间：" +
     timeStr +
@@ -965,17 +1232,10 @@ function buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData) {
     "（" +
     fngClass +
     "）。\n" +
-    "主要资产24H涨跌：纳指 " +
-    mkData["纳指"].change +
-    "%，标普500 " +
-    mkData["标普500"].change +
-    "%，英伟达 " +
-    mkData["英伟达"].change +
-    "%，比特币 " +
-    mkData["比特币"].change +
-    "%，黄金 " +
-    mkData["黄金"].change +
-    "%。\n" +
+    "主要资产多周期涨跌（Worker 历史序列计算；24h=短线冲击，3d=短线延续，7d=背景趋势）：\n" +
+    moveLine +
+    "\n" +
+    "请把这些数字作为事件筛选背景，不要把单日 quote 异动误判为趋势，不要输出交易建议。\n" +
     "---\n\n" +
     "请使用Google Search工具搜集最新资讯，并严格按照以下 JSON 格式输出，不要带有前缀和解释，请仅输出一个 JSON 块：\n\n" +
     "【结构要求】\n" +
@@ -1287,13 +1547,20 @@ function extractJsonFence(text) {
 
 function fallbackDashboard(realMarketData, fngScore, fngClass) {
   const mkData = realMarketData;
-  const keyAssets = [
-    { name: "纳指", change: mkData["纳指"].change, catalyst: "（占位）数据源已就绪；催化需启用 LLM 后生成。", structure: "结构性判断待 LLM 输出。" },
-    { name: "标普500", change: mkData["标普500"].change, catalyst: "（占位）", structure: "（占位）" },
-    { name: "英伟达", change: mkData["英伟达"].change, catalyst: "（占位）", structure: "（占位）" },
-    { name: "比特币", change: mkData["比特币"].change, catalyst: "（占位）", structure: "（占位）" },
-    { name: "黄金", change: mkData["黄金"].change, catalyst: "（占位）", structure: "（占位）" },
-  ];
+  const keyAssets = MARKET_MOVE_ROWS.map((row) => {
+    const item = mkData[row.name] || {};
+    const moves = item.moves || {};
+    return {
+      name: row.name,
+      symbol: row.symbol,
+      change: moves.h24 ?? item.change,
+      h24: moves.h24 ?? null,
+      d3: moves.d3 ?? null,
+      d7: moves.d7 ?? null,
+      catalyst: "数据源已就绪；事件催化需启用 LLM 后生成。",
+      structure: "多周期结构判断待 LLM 输出。",
+    };
+  });
 
   let regime = "结构分化";
   const q = Number(mkData["纳指"].change);
@@ -1306,9 +1573,9 @@ function fallbackDashboard(realMarketData, fngScore, fngClass) {
     marketRegime: regime,
     keyAssets,
     crossAsset:
-      "多资产涨跌组合已拉取；跨资产传导与背离解读在已配置 GEMINI_API_KEY 且 YUQING_LLM_PROVIDER 为 gemini 或 auto（默认）时由模型生成。",
+      "多资产 24h/3d/7d 已计算；跨资产传导与背离解读在已配置 GEMINI_API_KEY 且 YUQING_LLM_PROVIDER 为 gemini 或 auto（默认）时由模型生成。",
     anomalyAlert: "无明显背离",
-    actionSuggestion: "建议先观察数据与新闻模块输出，勿据此单独做出交易决策。",
+    actionSuggestion: "先看三日延续，再读今日事件。",
   };
 }
 
@@ -1328,6 +1595,7 @@ async function buildReport(env, bodyIn) {
     news: true,
     timeline: true,
     ai: true,
+    githubTools: true,
     trends: true,
     ...(bodyIn && bodyIn.modules && typeof bodyIn.modules === "object" ? bodyIn.modules : {}),
   };
@@ -1336,6 +1604,7 @@ async function buildReport(env, bodyIn) {
   const trendsUseAiIntel = !(bodyIn && bodyIn.trendsUseAiIntel === false);
   const dailyEventFocus = !!(bodyIn && bodyIn.dailyEventFocus);
   const dualHeadlineLanes = !!(bodyIn && bodyIn.dualHeadlineLanes);
+  const trendsUseSearch = !!(bodyIn && bodyIn.trendsUseSearch);
 
   const force = !!(bodyIn && bodyIn.force);
   const generatedAt = new Date().toISOString();
@@ -1389,8 +1658,10 @@ async function buildReport(env, bodyIn) {
         news: modules.news,
         timeline: modules.timeline,
         ai: modules.ai,
+        githubTools: modules.githubTools,
         trends: modules.trends,
         trendsUseAiIntel,
+        trendsUseSearch,
         dailyEventFocus,
         dualHeadlineLanes,
       }),
@@ -1415,12 +1686,14 @@ async function buildReport(env, bodyIn) {
   let newsMd = "";
   let timelineMd = "";
   let aiMd = "";
+  let githubToolsMd = "";
   let trendsMd = "";
 
   const sections = {
     news: { markdown: "", items: [], status: "planned", message: null },
     timeline: { markdown: "", items: [], status: "planned", message: null },
     ai: { markdown: "", status: "planned", message: null },
+    githubTools: { markdown: "", status: "planned", message: null },
     trends: { markdown: "", status: "planned", message: null },
   };
 
@@ -1428,6 +1701,7 @@ async function buildReport(env, bodyIn) {
     sections.news = sectionsDisabledStatus("请在 Worker 设置 GEMINI_API_KEY（或 GOOGLE_API_KEY），并将 YUQING_LLM_PROVIDER 设为 gemini 或 auto（默认 auto：有密钥即启用）。");
     sections.timeline = sectionsDisabledStatus("同上。");
     sections.ai = { markdown: "", status: "disabled", message: "LLM 未启用", data: { aiIntel: [] } };
+    sections.githubTools = { markdown: "", status: "disabled", message: "LLM 未启用", data: { githubTools: [] } };
     sections.trends = { markdown: "", status: "disabled", message: "LLM 未启用" };
   } else {
     const streamSink =
@@ -1483,6 +1757,7 @@ async function buildReport(env, bodyIn) {
 
     const needMacro = modules.news || modules.timeline;
     const needAi = modules.ai;
+    const needGithubTools = modules.githubTools;
 
     let dailyTopStories = [];
     let dailyBriefs = [];
@@ -1654,13 +1929,44 @@ async function buildReport(env, bodyIn) {
         }
       })();
 
+    const githubToolsP =
+      needGithubTools &&
+      dailyEventFocus &&
+      (async () => {
+        try {
+          usedSearchAi = true;
+          const prompt = buildDailyGithubToolsPrompt(timeStr);
+          const model = proseModel(env, mode);
+          const text = await geminiGenerateContent(env, model, prompt, { googleSearch: true, temperature: 0.32 });
+          const inner = extractJsonFence(text);
+          const parsed = JSON.parse(inner);
+          const githubTools = normalizeDailyGithubToolItems(parsed.githubTools);
+          githubToolsMd = renderDailyGithubToolsMarkdownForTrends(githubTools);
+          sections.githubTools = {
+            markdown: githubToolsMd,
+            data: { githubTools },
+            status: githubToolsMd ? "ready" : "error",
+            message: null,
+          };
+          if (streamSink) {
+            try {
+              streamSink({ type: "partial", module: "githubTools", githubTools });
+            } catch (_) {}
+          }
+        } catch (e) {
+          const msg = String(e && e.message ? e.message : e);
+          warnings.push({ code: "githubToolsLlm", message: msg });
+          sections.githubTools = { markdown: "", data: { githubTools: [] }, status: "error", message: msg };
+        }
+      })();
+
     const runTrends = async () => {
       try {
         const prompt = dailyEventFocus
-          ? buildDailyTrendCluesPrompt(newsMd, timelineMd, aiMd, flashDataJsonText)
+          ? buildDailyTrendCluesPrompt(newsMd, timelineMd, aiMd, flashDataJsonText, githubToolsMd)
           : buildProTrendsPrompt(newsMd, timelineMd, aiMd, flashDataJsonText, trendsUseAiIntel ? "full" : "daily_event_above_trend");
         const model = trendsModel(env, mode);
-        trendsMd = await geminiGenerateContent(env, model, prompt, { googleSearch: false, temperature: 0.35 });
+        trendsMd = await geminiGenerateContent(env, model, prompt, { googleSearch: dailyEventFocus ? false : trendsUseSearch, temperature: 0.35 });
         sections.trends = { markdown: trendsMd, status: trendsMd ? "ready" : "error", message: null };
         if (streamSink && dailyEventFocus) {
           try {
@@ -1690,6 +1996,7 @@ async function buildReport(env, bodyIn) {
         topStoriesP || Promise.resolve(),
         dailyBriefsP || Promise.resolve(),
         aiP || Promise.resolve(),
+        githubToolsP || Promise.resolve(),
       ]);
       const macroTrend = dailyThemeFromStoriesAndBriefs(dailyTopStories, dailyBriefs);
       if (modules.news && sections.news.status === "ready") {
@@ -1726,6 +2033,9 @@ async function buildReport(env, bodyIn) {
     if (!needAi) {
       sections.ai = { markdown: "", status: "planned", message: "模块已关闭", data: { aiIntel: [] } };
     }
+    if (!needGithubTools) {
+      sections.githubTools = { markdown: "", status: "planned", message: "模块已关闭", data: { githubTools: [] } };
+    }
     llmStatus.capabilities.search = !!(usedSearchNews || usedSearchAi);
     if (streamSink) llmStatus.capabilities.stream = true;
   }
@@ -1740,7 +2050,7 @@ async function buildReport(env, bodyIn) {
     grounding: {
       factCount: factRows.length,
       itemIdsSample: groundingItemIds,
-      usedSearch: { news: usedSearchNews, ai: usedSearchAi },
+      usedSearch: { news: usedSearchNews, ai: usedSearchAi, trends: dailyEventFocus ? false : trendsUseSearch },
     },
     sources: {
       fng: sources.fng,
@@ -1788,8 +2098,10 @@ async function buildReport(env, bodyIn) {
           news: modules.news,
           timeline: modules.timeline,
           ai: modules.ai,
+          githubTools: modules.githubTools,
           trends: modules.trends,
           trendsUseAiIntel,
+          trendsUseSearch,
           dailyEventFocus,
           dualHeadlineLanes,
         }),
@@ -1922,6 +2234,23 @@ function dailyAiIntelFromFacts(rows) {
   return out;
 }
 
+function dailyGithubToolsFromFacts() {
+  return [
+    {
+      title: "等待 GitHub 工具雷达检索",
+      repo: "",
+      kind: "tool",
+      target: "通用",
+      date: new Date().toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }),
+      whyUseful: "事实池不回填 GitHub 工具雷达；该模块依赖 Gemini + Google Search 实时检索 GitHub。",
+      howToUse: "点击事件一览的实时扫描，等待 GitHub 工具雷达模块返回结果。",
+      fit: "低",
+      sourceName: "Yuqing Worker",
+      sourceUrl: "",
+    },
+  ];
+}
+
 function trendMdSubstantiveLines(md) {
   return String(md || "")
     .split(/\r?\n/)
@@ -1978,7 +2307,7 @@ async function buildDailyEventReport(env, opts) {
   let legacy = null;
   const passedModules = opts && opts.modules && typeof opts.modules === "object" 
     ? opts.modules 
-    : { dashboard: true, news: true, timeline: true, ai: true, trends: true };
+    : { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true };
     
   try {
     legacy = await buildReport(env, {
@@ -1988,6 +2317,7 @@ async function buildDailyEventReport(env, opts) {
       forceSearch: !!(opts && opts.forceSearch),
       dailyEventFocus: true,
       trendsUseAiIntel: true,
+      trendsUseSearch: !!(opts && opts.trendsUseSearch),
       dualHeadlineLanes: !!(opts && opts.dualHeadlineLanes),
       __streamSink: opts && opts.__streamSink,
       modules: passedModules,
@@ -2027,6 +2357,15 @@ async function buildDailyEventReport(env, opts) {
     legacy && legacy.sections && legacy.sections.ai && legacy.sections.ai.data && Array.isArray(legacy.sections.ai.data.aiIntel)
       ? legacy.sections.ai.data.aiIntel
       : dailyAiIntelFromFacts([]);
+  let githubTools =
+    legacy && legacy.sections && legacy.sections.githubTools && legacy.sections.githubTools.data && Array.isArray(legacy.sections.githubTools.data.githubTools)
+      ? legacy.sections.githubTools.data.githubTools
+      : dailyGithubToolsFromFacts();
+  if (passedModules.githubTools === false) {
+    githubTools = [];
+  } else if (!githubTools.length) {
+    githubTools = dailyGithubToolsFromFacts();
+  }
 
   const report = {
     title: "事件日报",
@@ -2037,6 +2376,7 @@ async function buildDailyEventReport(env, opts) {
     topStories,
     dynamicBriefs,
     aiIntel,
+    githubTools,
     trendRead: buildTrendReadFromDailyEventInputs(legacy, factRows.length),
     sources,
     quality: {
@@ -2505,12 +2845,18 @@ export default {
           return json({
             ok: true,
             settings: {
-              visibility: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
-              scanCoverage: { dashboard: true, news: true, timeline: true, ai: true, trends: true }
+              visibility: { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true },
+              scanCoverage: { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true }
             }
           });
         }
-        return json({ ok: true, settings: s });
+        return json({
+          ok: true,
+          settings: {
+            visibility: { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true, ...(s.visibility || {}) },
+            scanCoverage: { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true, ...(s.scanCoverage || {}) },
+          },
+        });
       } catch (e) {
         return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
       }
@@ -2535,6 +2881,7 @@ export default {
             news: !!v.news,
             timeline: !!v.timeline,
             ai: !!v.ai,
+            githubTools: !!v.githubTools,
             trends: !!v.trends
           },
           scanCoverage: {
@@ -2542,6 +2889,7 @@ export default {
             news: !!s.news,
             timeline: !!s.timeline,
             ai: !!s.ai,
+            githubTools: !!s.githubTools,
             trends: !!s.trends
           }
         };
@@ -2568,6 +2916,7 @@ export default {
           triggerType: "manual",
           forceSearch: !!(bodyIn && bodyIn.forceSearch),
           mode: bodyIn && bodyIn.mode,
+          trendsUseSearch: !!(bodyIn && bodyIn.trendsUseSearch),
           dualHeadlineLanes: !!(bodyIn && bodyIn.dualHeadlineLanes),
           modules: bodyIn && bodyIn.modules,
         });
@@ -2610,6 +2959,7 @@ export default {
               triggerType: "manual",
               forceSearch: !!(bodyIn && bodyIn.forceSearch),
               mode: bodyIn && bodyIn.mode,
+              trendsUseSearch: !!(bodyIn && bodyIn.trendsUseSearch),
               dualHeadlineLanes: !!(bodyIn && bodyIn.dualHeadlineLanes),
               modules: bodyIn && bodyIn.modules,
               __streamSink: (evt) => safeWrite(evt),

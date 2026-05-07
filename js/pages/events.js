@@ -20,11 +20,19 @@ const dailyEventState = {
 };
 
 const defaultDashboardSettings = {
-  visibility: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
-  scanCoverage: { dashboard: true, news: true, timeline: true, ai: true, trends: true }
+  visibility: { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true },
+  scanCoverage: { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true }
 };
 let __yuqingSettings = JSON.parse(JSON.stringify(defaultDashboardSettings));
 let __yuqingSettingsSaving = false;
+
+function normalizeDailyDashboardSettings(settings) {
+  const src = settings && typeof settings === "object" ? settings : {};
+  return {
+    visibility: { ...defaultDashboardSettings.visibility, ...(src.visibility || {}) },
+    scanCoverage: { ...defaultDashboardSettings.scanCoverage, ...(src.scanCoverage || {}) },
+  };
+}
 
 function dailyEscapeHtml(value) {
   return String(value == null ? "" : value)
@@ -93,7 +101,7 @@ function dailySlotLabel(row) {
 
 function dailyTriggerLabel(row) {
   const trigger = String(row && row.triggerType ? row.triggerType : "");
-  if (trigger === "manual") return "手动搜索";
+  if (trigger === "manual") return "实时扫描";
   return "定点触发";
 }
 
@@ -132,7 +140,20 @@ function dailyEnsureStreamPreviewShell() {
       topStories: [],
       dynamicBriefs: [],
       aiIntel: [],
-      trendRead: { strengthening: [], cracking: [], conclusion: "" },
+      githubTools: [],
+      trendRead: {
+        title: "日报线索合成",
+        summary: "",
+        worldNews: [],
+        techPulse: [],
+        financeBackdrop: [],
+        contradictions: [],
+        next72h: [],
+        strengthening: [],
+        cracking: [],
+        conclusion: "",
+        methodology: { usesGoogleSearch: false, inputOnly: true, mix: "重度世界新闻 + 中度科技 + 轻量金融背景" },
+      },
       sources: [],
       quality: { factCount: 0, sourceCoverage: 0, usedSearch: true, caveat: "" },
     },
@@ -166,6 +187,9 @@ function mergeDailyStreamEvent(evt) {
   if (evt.module === "aiIntel" && Array.isArray(evt.aiIntel)) {
     rep.aiIntel = evt.aiIntel;
   }
+  if (evt.module === "githubTools" && Array.isArray(evt.githubTools)) {
+    rep.githubTools = evt.githubTools;
+  }
   if (evt.module === "trends" && evt.trendRead && typeof evt.trendRead === "object") {
     rep.trendRead = evt.trendRead;
   }
@@ -197,28 +221,135 @@ function dailyRenderLink(ref) {
   return `<a href="${dailyEscapeHtml(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>${dailyEscapeHtml(label || href)}</a>`;
 }
 
+function dailyAssetMoveLabel(item) {
+  const raw = item && (item.asset || item.name || item.label || item.symbol || item.ticker || item.market);
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  const upper = s.toUpperCase();
+  if (s.includes("比特币") || upper === "BTC" || upper === "BTCUSDT" || upper.includes("BITCOIN")) return "BTC";
+  if (s.includes("黄金") || upper === "GOLD" || upper === "XAU" || upper === "XAUUSD" || upper === "GC=F") return "黄金";
+  if (s.includes("纳指") || upper === "NASDAQ" || upper === "NDX" || upper === "QQQ" || upper === "NQ=F") return "纳指";
+  if (s.includes("标普") || upper === "SPX" || upper === "SPY" || upper === "S&P 500" || upper === "ES=F") return "标普";
+  if (s.includes("英伟达") || upper === "NVDA" || upper === "NVIDIA") return "英伟达";
+  return s;
+}
+
+function dailyAssetMoveValue(item, keys) {
+  if (!item || typeof item !== "object") return null;
+  const bags = [item, item.moves, item.change, item.changes, item.performance, item.returns].filter((x) => x && typeof x === "object");
+  for (const bag of bags) {
+    for (const key of keys) {
+      if (bag[key] != null && bag[key] !== "") return bag[key];
+    }
+  }
+  return null;
+}
+
+function dailyFormatAssetMoveValue(value) {
+  if (value == null || value === "") return "";
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const pct = value;
+    return `${pct > 0 ? "+" : ""}${pct.toFixed(Math.abs(pct) >= 10 ? 1 : 2)}%`;
+  }
+  const s = String(value).trim();
+  if (!s) return "";
+  if (s.includes("%")) return s;
+  const n = Number(s);
+  if (Number.isFinite(n)) {
+    const pct = n;
+    return `${pct > 0 ? "+" : ""}${pct.toFixed(Math.abs(pct) >= 10 ? 1 : 2)}%`;
+  }
+  return s;
+}
+
+function dailyAssetMoveTone(value) {
+  const s = String(value || "").trim();
+  const n = Number(s.replace(/[%+,]/g, ""));
+  if (Number.isFinite(n)) {
+    if (n > 0) return "up";
+    if (n < 0) return "down";
+  }
+  if (/跌|down|bear|负/i.test(s)) return "down";
+  if (/涨|up|bull|正/i.test(s)) return "up";
+  return "flat";
+}
+
+function dailyCollectAssetMoves(temp) {
+  const arrays = [temp.assets, temp.assetMoves, temp.crossAssetMoves].filter(Array.isArray);
+  if (!arrays.length) return [];
+  const knownOrder = new Map([["BTC", 0], ["黄金", 1], ["纳指", 2], ["标普", 3], ["英伟达", 4]]);
+  const merged = new Map();
+  arrays.flat().forEach((raw) => {
+    const item = raw && typeof raw === "object" ? raw : { asset: raw };
+    const label = dailyAssetMoveLabel(item);
+    if (!label) return;
+    const prev = merged.get(label) || { label, move24h: "", move3d: "", move7d: "" };
+    const move24h = dailyFormatAssetMoveValue(dailyAssetMoveValue(item, ["24h", "h24", "day", "daily", "change24h", "pct24h", "return24h", "perf24h"]));
+    const move3d = dailyFormatAssetMoveValue(dailyAssetMoveValue(item, ["3d", "d3", "threeDay", "change3d", "pct3d", "return3d", "perf3d"]));
+    const move7d = dailyFormatAssetMoveValue(dailyAssetMoveValue(item, ["7d", "d7", "week", "weekly", "change7d", "pct7d", "return7d", "perf7d"]));
+    merged.set(label, {
+      label,
+      move24h: move24h || prev.move24h,
+      move3d: move3d || prev.move3d,
+      move7d: move7d || prev.move7d,
+    });
+  });
+  return Array.from(merged.values())
+    .filter((x) => x.move24h || x.move3d || x.move7d)
+    .sort((a, b) => (knownOrder.get(a.label) ?? 99) - (knownOrder.get(b.label) ?? 99))
+    .slice(0, 8);
+}
+
+function renderDailyAssetMoves(temp) {
+  const moves = dailyCollectAssetMoves(temp);
+  if (!moves.length) return "";
+  const cell = (label, value) => {
+    const text = value || "—";
+    return `<span class="${dailyAssetMoveTone(text)}"><small>${label}</small><strong>${dailyEscapeHtml(text)}</strong></span>`;
+  };
+  return `
+    <div class="daily-temperature-assets" aria-label="基础资产涨跌幅">
+      ${moves.map((x) => `
+        <article class="daily-temperature-asset-card">
+          <b>${dailyEscapeHtml(x.label)}</b>
+          <div>
+            ${cell("24h", x.move24h)}
+            ${cell("3d", x.move3d)}
+            ${cell("7d", x.move7d)}
+          </div>
+        </article>
+      `).join("")}
+    </div>`;
+}
+
 function renderDailyTemperature(row) {
   const temp = row.report.marketTemperature || {};
   const n = Math.max(0, Math.min(100, Number(temp.score) || 0));
   const details = [
-    temp.regime && temp.regime !== "信息中性" ? `阅读环境：${temp.regime}` : "",
-    temp.crossAsset ? `资产背景：${temp.crossAsset}` : "",
-    temp.anomaly && temp.anomaly !== "无" ? `噪音预警：${temp.anomaly}` : "",
-    temp.suggestion ? `建议：${temp.suggestion}` : "",
+    temp.regime && temp.regime !== "信息中性" ? { label: "阅读环境", value: temp.regime, tone: "info" } : null,
+    temp.crossAsset ? { label: "资产背景", value: temp.crossAsset, tone: "asset" } : null,
+    temp.anomaly && temp.anomaly !== "无" ? { label: "噪音预警", value: temp.anomaly, tone: "warn" } : null,
+    temp.suggestion ? { label: "建议", value: temp.suggestion, tone: "ok" } : null,
   ].filter(Boolean);
+  const assetMovesHtml = renderDailyAssetMoves(temp);
   return `
-    <section class="news-panel span-12 daily-brief-temperature" style="padding-bottom: 16px; view-transition-name: daily-temperature;">
-      <div class="news-panel-head" style="margin-bottom: 12px; border-bottom: none; padding-bottom: 0;">
+    <section class="news-panel span-12 daily-module-panel daily-module-temperature daily-brief-temperature" style="view-transition-name: daily-temperature;">
+      <div class="news-panel-head daily-module-head">
         <div>
           <span class="news-section-kicker">数字源于 Crypto Fear & Greed，仅作阅读背景</span>
-          <h3>信息温度 ${n} / 100</h3>
+          <h3>信息温度</h3>
+          <p class="daily-module-subtitle">先判断今天的阅读环境，再进入事件拆解。</p>
         </div>
-        <i class="ph ph-thermometer-simple"></i>
       </div>
-      <div class="daily-temperature-body" style="grid-template-columns: 1fr;">
-        <div>
-          <p style="font-size: 15px; font-weight: 500; margin-bottom: 8px;">${dailyEscapeHtml(temp.summary || "当前信息温度中性，可正常阅读各类来源信息。")}</p>
-          ${details.length ? `<div class="daily-temperature-meta" style="margin-top: 0;">${details.map((x) => `<span>${dailyEscapeHtml(x)}</span>`).join("")}</div>` : ""}
+      <div class="daily-temperature-body">
+        <div class="daily-temperature-score" aria-label="信息温度 ${n} 分">
+          <strong>${n}</strong>
+          <span>/ 100</span>
+        </div>
+        <div class="daily-temperature-main">
+          <p class="daily-temperature-summary">${dailyEscapeHtml(temp.summary || "当前信息温度中性，可正常阅读各类来源信息。")}</p>
+          ${details.length ? `<div class="daily-temperature-meta">${details.map((x) => `<span class="daily-temp-meta-${dailyEscapeHtml(x.tone)}"><b>${dailyEscapeHtml(x.label)}</b>${dailyEscapeHtml(x.value)}</span>`).join("")}</div>` : ""}
+          ${assetMovesHtml}
         </div>
       </div>
     </section>
@@ -265,7 +396,7 @@ function renderDailyTopStory(story, idx = 0) {
   }
   if (!impactsHtml) impactsHtml = `<span class="muted-text">等待资产传导确认。</span>`;
 
-  const watchHtml = item.nextWatch ? `<div class="news-story-watch daily-story-contract-line"><b>后续观察</b><span>${parseMarkdownInline(item.nextWatch)}</span></div>` : "";
+  const watchHtml = item.nextWatch ? `<div class="daily-story-section daily-story-section--watch"><b>后续观察</b><span>${parseMarkdownInline(item.nextWatch)}</span></div>` : "";
 
   const sourceTag = item.sourceUrl
     ? `<a href="${dailyEscapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(item.sourceName || "来源")}</a>`
@@ -273,17 +404,22 @@ function renderDailyTopStory(story, idx = 0) {
       ? `<span>${dailyEscapeHtml(item.sourceName)}</span>`
       : "";
   return `
-    <article class="news-story">
+    <article class="news-story daily-knowledge-card daily-top-story-card">
       <div class="news-story-body">
-        <div class="news-story-meta">
-          <span class="news-story-category">${dailyEscapeHtml(item.category || "今日头条")}</span>
-          ${sourceTag}
+        <div class="daily-story-header">
+          <div class="news-story-meta">
+            <span class="news-story-category">${dailyEscapeHtml(item.category || "今日头条")}</span>
+            <span>${dailyEscapeHtml(item.occurredAt || "近期")} · ${dailyEscapeHtml(item.duration || "正在持续")}</span>
+            ${sourceTag}
+          </div>
+          <span class="daily-story-index">${String(idx + 1).padStart(2, "0")}</span>
         </div>
-        <h3>${parseMarkdownInline(item.title || "暂无头条")}</h3>
-        <div class="news-story-watch daily-story-contract-line"><b>发生时间</b><span>${dailyEscapeHtml(item.occurredAt || "近期")} · ${dailyEscapeHtml(item.duration || "正在持续")}</span></div>
-        <div class="news-story-watch daily-story-contract-line"><b>事实锁定</b><span>${parseMarkdownInline(item.fact || "等待事实池补充。")}</span></div>
-        <div class="news-story-watch daily-story-contract-line"><b>结构拆解</b><div class="daily-column-lines">${structureHtml}</div></div>
-        <div class="news-story-watch daily-story-contract-line"><b>传导预判</b><div class="daily-column-lines">${impactsHtml}</div></div>
+        <h3 class="daily-story-title">${parseMarkdownInline(item.title || "暂无头条")}</h3>
+        <div class="daily-story-section daily-story-section--fact"><b>事实锁定</b><span>${parseMarkdownInline(item.fact || "等待事实池补充。")}</span></div>
+        <div class="daily-story-matrix">
+          <div class="daily-story-section daily-story-section--structure"><b>结构拆解</b><div class="daily-column-lines">${structureHtml}</div></div>
+          <div class="daily-story-section daily-story-section--impact"><b>传导预判</b><div class="daily-column-lines">${impactsHtml}</div></div>
+        </div>
         ${watchHtml}
       </div>
     </article>
@@ -297,6 +433,14 @@ function renderDailyTopStories(row) {
 function renderDailyBriefs(row) {
   const report = row && row.report ? row.report : {};
   const briefs = Array.isArray(report.dynamicBriefs) ? report.dynamicBriefs : [];
+  if (!briefs.length) {
+    return renderDailyPlaceholderCard({
+      category: "系统状态",
+      title: "等待下一轮事实采集",
+      fact: "暂未出现新的次级事件。",
+      note: "等待下一轮采集刷新后，再判断是否出现新的主题扩散。",
+    });
+  }
   return briefs
     .map(
       (item, idx) => {
@@ -307,19 +451,22 @@ function renderDailyBriefs(row) {
             : "";
         const description = item.description || item.detail || "";
         const analysis = item.analysis || item.watch || "";
+        const watch = item.watch && item.watch !== analysis ? item.watch : "";
         const timeStr = item.time ? `<span>${dailyEscapeHtml(item.time)}</span>` : "";
         return `
-        <article class="news-story">
+        <article class="news-story daily-knowledge-card daily-brief-story">
           <div class="news-story-body">
-            <div class="news-story-meta">
-              <span>${dailyEscapeHtml(item.category || "动态")}</span>
-              ${timeStr}
-              ${sourceTag}
+            <div class="daily-story-header">
+              <div class="news-story-meta">
+                <span class="news-story-category">${dailyEscapeHtml(item.category || "动态")}</span>
+                ${timeStr}
+                ${sourceTag}
+              </div>
             </div>
             <h3>${parseMarkdownInline(item.title || "")}</h3>
-            <div class="news-story-watch daily-story-contract-line"><b>事件</b><span>${parseMarkdownInline(item.body || "")}</span></div>
-            ${description ? `<div class="news-story-watch daily-story-contract-line"><b>描述</b><span>${parseMarkdownInline(description)}</span></div>` : ""}
-            ${analysis ? `<div class="news-story-watch"><b>简析</b><span>${parseMarkdownInline(analysis)}</span></div>` : ""}
+            <p class="daily-brief-copy">${parseMarkdownInline(item.body || description || "等待下一轮事实采集。")}</p>
+            ${analysis ? `<p class="daily-brief-copy muted"><b>判断</b>${parseMarkdownInline(analysis)}</p>` : ""}
+            ${watch ? `<p class="daily-brief-copy watch"><b>观察</b>${parseMarkdownInline(watch)}</p>` : ""}
           </div>
         </article>
       `;
@@ -329,9 +476,23 @@ function renderDailyBriefs(row) {
 }
 
 function renderDailyAi(row) {
-  return (row.report.aiIntel || [])
+  const report = row && row.report ? row.report : {};
+  const items = Array.isArray(report.aiIntel) ? report.aiIntel : [];
+  if (!items.length) {
+    return renderDailyPlaceholderCard({
+      category: "AI 情报站",
+      title: "等待高价值科技情报",
+      fact: "本轮暂未提取到值得单独保留的 AI 发布、工具或叙事变化。",
+      note: "实时扫描完成后，若有 S/A 级信息会补充到这里。",
+      extraClass: "daily-ai-placeholder",
+    });
+  }
+  return items
     .map(
       (item) => {
+        const fact = item.coreFact || item.what || "";
+        const value = item.actionableValue || item.use || "";
+        const rating = item.rating || item.attention || "";
         const source = item.sourceUrl
           ? `<a href="${dailyEscapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(item.sourceName || "来源")}</a>`
           : item.sourceName
@@ -340,9 +501,9 @@ function renderDailyAi(row) {
         return `<div class="daily-ai-card">
         <div>
           <h4>${parseMarkdownInline(item.title || "")}</h4>
-          <span class="daily-ai-date">发布日期：${dailyEscapeHtml(item.date || "近72小时")}</span>
-          <p><strong>新了什么：</strong>${parseMarkdownInline(item.what || "")}</p>
-          <p><strong>对我有什么用：</strong>${parseMarkdownInline(item.use || "")}</p>
+          <span class="daily-ai-date">发布日期：${dailyEscapeHtml(item.date || "近72小时")}${rating ? ` · ${dailyEscapeHtml(rating)}` : ""}</span>
+          <p><strong>核心突破</strong>${parseMarkdownInline(fact || "等待下一轮实时检索补齐。")}</p>
+          <p><strong>落地价值</strong>${parseMarkdownInline(value || "等待下一轮实时检索补齐。")}</p>
           ${source ? `<div class="news-source-inline">来源：${source}</div>` : ""}
         </div>
       </div>`;
@@ -351,21 +512,158 @@ function renderDailyAi(row) {
     .join("");
 }
 
+function renderDailyGithubTools(row) {
+  const report = row && row.report ? row.report : {};
+  const tools = Array.isArray(report.githubTools) ? report.githubTools : [];
+  if (!tools.length) {
+    return renderDailyPlaceholderCard({
+      category: "GitHub 工具雷达",
+      title: "等待工具雷达结果",
+      fact: "GitHub 工具雷达暂无结果。请确认本模块在扫描范围中已开启，并等待 Worker 完成本轮 Gemini + Google Search 检索。",
+      note: "这里会保留适合 Vibecoding 新人的 skill、plugin、MCP 或工具仓库。",
+      extraClass: "daily-github-placeholder",
+    });
+  }
+  return tools
+    .map((item) => {
+      const source = item.sourceUrl
+        ? `<a href="${dailyEscapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(item.sourceName || item.repo || "GitHub")}</a>`
+        : item.sourceName
+          ? dailyEscapeHtml(item.sourceName)
+          : "";
+      const repo = item.repo ? `<span class="daily-github-repo">${dailyEscapeHtml(item.repo)}</span>` : "";
+      return `<article class="daily-github-card">
+        <div class="daily-github-card-head">
+          <div>
+            <h4>${parseMarkdownInline(item.title || "GitHub AI 工具")}</h4>
+            <div class="daily-github-meta">
+              ${repo}
+              <span>${dailyEscapeHtml(item.kind || "tool")}</span>
+              <span>${dailyEscapeHtml(item.target || "通用")}</span>
+              <span>${dailyEscapeHtml(item.date || "近14天")}</span>
+            </div>
+          </div>
+          <strong class="daily-github-fit ${dailyEscapeHtml(item.fit || "中")}">${dailyEscapeHtml(item.fit || "中")}</strong>
+        </div>
+        <p><strong>为什么适合我</strong>${parseMarkdownInline(item.whyUseful || "")}</p>
+        <p><strong>第一步</strong>${parseMarkdownInline(item.howToUse || "")}</p>
+        ${source ? `<div class="news-source-inline">来源：${source}</div>` : ""}
+      </article>`;
+    })
+    .join("");
+}
+
+function renderDailyPlaceholderCard(options = {}) {
+  const category = options.category || "模块状态";
+  const title = options.title || "等待下一轮更新";
+  const fact = options.fact || "当前模块暂未返回可展示内容。";
+  const note = options.note || "模块保持预留，后续数据到达后会自动填充。";
+  const extraClass = options.extraClass || "";
+  return `
+    <article class="news-story daily-knowledge-card daily-placeholder-card ${dailyEscapeHtml(extraClass)}">
+      <div class="news-story-body">
+        <div class="daily-story-header">
+          <div class="news-story-meta">
+            <span class="news-story-category">${dailyEscapeHtml(category)}</span>
+            <span>预留卡片</span>
+          </div>
+        </div>
+        <h3>${dailyEscapeHtml(title)}</h3>
+        <div class="daily-story-section daily-story-section--fact"><b>当前状态</b><span>${dailyEscapeHtml(fact)}</span></div>
+        <div class="daily-story-section daily-story-section--watch"><b>后续观察</b><span>${dailyEscapeHtml(note)}</span></div>
+      </div>
+    </article>`;
+}
+
+function cleanTrendText(value) {
+  return String(value == null ? "" : value).trim();
+}
+
+function dailyTrendList(value) {
+  if (Array.isArray(value)) return value.filter((x) => x != null && x !== "");
+  if (value == null || value === "") return [];
+  return [value];
+}
+
+function dailyTrendEntryField(item, keys, fallback = "") {
+  if (!item || typeof item !== "object") return cleanTrendText(item || fallback);
+  for (const key of keys) {
+    if (item[key] != null && item[key] !== "") return cleanTrendText(item[key]);
+  }
+  return cleanTrendText(fallback);
+}
+
+function renderDailyTrendEvidence(item) {
+  if (!item || typeof item !== "object") return "";
+  const evidence = dailyTrendList(item.evidence || item.inputEvidence || item.modules || item.from)
+    .map((x) => cleanTrendText(x))
+    .filter(Boolean)
+    .slice(0, 3);
+  return evidence.length ? `<span class="muted-text">依据：${evidence.map(dailyEscapeHtml).join(" / ")}</span>` : "";
+}
+
+function renderDailyTrendRows(rows, fallbackText) {
+  const items = dailyTrendList(rows);
+  if (!items.length) return `<p class="muted-text">${dailyEscapeHtml(fallbackText)}</p>`;
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        return `<p>${parseMarkdownInline(item)}</p>`;
+      }
+      const title = dailyTrendEntryField(item, ["title", "signal", "checkpoint", "label", "topic", "name"]);
+      const body = dailyTrendEntryField(item, ["synthesis", "body", "summary", "why", "logic", "tension", "action", "signal"], fallbackText);
+      const watch = dailyTrendEntryField(item, ["watch", "nextWatch", "sourceHint", "verify", "next"]);
+      const evidence = renderDailyTrendEvidence(item);
+      const meta = [evidence, watch ? `<span class="muted-text">观察：${parseMarkdownInline(watch)}</span>` : ""].filter(Boolean).join("<br>");
+      return `<p>${title ? `<strong>${dailyEscapeHtml(title)}：</strong>` : ""}${parseMarkdownInline(body)}${meta ? `<br>${meta}` : ""}</p>`;
+    })
+    .join("");
+}
+
+function renderDailyTrendBlock(title, rows, cls, fallbackText) {
+  return `<div class="news-trend-block ${cls}">
+    <h4>${dailyEscapeHtml(title)}</h4>
+    ${renderDailyTrendRows(rows, fallbackText)}
+  </div>`;
+}
+
 function renderDailyTrend(row) {
   const report = row && row.report ? row.report : {};
   const t = report.trendRead || {};
   const macroTrend = report.macroTrend || "";
+  const hasStructuredTrend = !!(
+    t.summary ||
+    t.worldNews ||
+    t.techPulse ||
+    t.financeBackdrop ||
+    t.contradictions ||
+    t.next72h ||
+    (t.methodology && typeof t.methodology === "object")
+  );
+  if (hasStructuredTrend) {
+    const method = t.methodology && typeof t.methodology === "object" ? t.methodology : {};
+    const methodLine = method.mix || "重度世界新闻 + 中度科技 + 轻量金融背景";
+    const searchLine = method.usesGoogleSearch === true ? "趋势线索已使用额外检索" : "趋势线索未单独联网，只合成本轮上游模块";
+    const summary = t.summary || macroTrend || "本轮日报尚未形成足够清晰的合成主线。";
+    return [
+      `<div class="news-trend-block info" style="grid-column: 1 / -1;">
+        <h4>${dailyEscapeHtml(t.title || "日报线索合成")}</h4>
+        <p>${parseMarkdownInline(summary)}<br><span class="muted-text">方法：${dailyEscapeHtml(methodLine)}；${dailyEscapeHtml(searchLine)}。</span></p>
+      </div>`,
+      renderDailyTrendBlock("世界新闻主线", t.worldNews, "ok", "等待今日头条与动态速览形成更明确的世界新闻主线。"),
+      renderDailyTrendBlock("科技扩散脉冲", t.techPulse, "info", "等待 AI 情报站或 GitHub 工具雷达提供可落地的科技线索。"),
+      renderDailyTrendBlock("轻量金融背景", t.financeBackdrop, "info", "金融信息只作为阅读背景，不输出交易方向。"),
+      renderDailyTrendBlock("叙事裂缝", t.contradictions, "warn", "暂无明显叙事裂缝；继续等待来源互相印证。"),
+      renderDailyTrendBlock("0-72小时观察清单", dailyTrendList(t.next72h).length ? t.next72h : [t.conclusion], "info", "继续跟踪权威来源、主流媒体、产品发布或政策细节。"),
+    ].join("");
+  }
   const strengthening = macroTrend
     ? [macroTrend, ...(t.strengthening || []).filter((x) => x !== macroTrend).slice(0, 1)]
     : t.strengthening;
-  const block = (title, rows, cls) => `<div class="news-trend-block ${cls}">
-    <h4>${dailyEscapeHtml(title)}</h4>
-    ${(rows || []).map((x) => `<p>${parseMarkdownInline(x)}</p>`).join("")}
-  </div>`;
   return [
-    block("正在强化的信号", strengthening, "ok"),
-    block("正在裂变的信号", t.cracking, "warn"),
-    block("0-72小时观察结论", [t.conclusion], "info"),
+    renderDailyTrendBlock("正在强化的信号", strengthening, "ok", "最近72小时内的候选信息会在这里汇总，优先观察哪些主题正在连续出现。"),
+    renderDailyTrendBlock("正在裂变的信号", t.cracking, "warn", "若事实密度不足，先降低分歧判断权重，等待更多来源确认。"),
+    renderDailyTrendBlock("0-72小时观察结论", t.conclusion ? [t.conclusion] : [], "info", "24-72小时观察：跟踪高价值事件是否获得官方口径与主流来源共同确认。"),
   ].join("");
 }
 
@@ -462,10 +760,10 @@ function renderDailySettingsChrome() {
   const s = __yuqingSettings.scanCoverage;
   
   const mkToggle = (key, label, checked, type) => `
-    <label class="daily-setting-row">
+    <label class="daily-setting-row ${checked ? "is-on" : "is-off"}">
       <span>${dailyEscapeHtml(label)}</span>
       <div class="toggle-switch">
-        <input type="checkbox" class="daily-setting-cb" data-key="${key}" data-type="${type}" ${checked ? "checked" : ""}>
+        <input type="checkbox" class="daily-setting-cb" data-key="${key}" data-type="${type}" ${checked ? "checked" : ""} aria-label="${dailyEscapeHtml(label)}">
         <span class="slider"></span>
       </div>
     </label>
@@ -492,17 +790,19 @@ function renderDailySettingsChrome() {
           ${mkToggle("news", "今日头条", v.news, "visibility")}
           ${mkToggle("timeline", "动态速览", v.timeline, "visibility")}
           ${mkToggle("ai", "AI 情报站", v.ai, "visibility")}
+          ${mkToggle("githubTools", "GitHub 工具雷达", v.githubTools, "visibility")}
           ${mkToggle("trends", "趋势线索", v.trends, "visibility")}
         </div>
         
         <h4 style="margin: 32px 0 12px; color: var(--text);">实时扫描覆盖</h4>
-        <p class="muted-text" style="font-size: 13px; margin-bottom: 16px;">决定点击「实时扫描」时，云端 Worker 及大模型覆盖哪些模块。关闭模块可节省调用耗时与成本。</p>
+        <p class="muted-text" style="font-size: 13px; margin-bottom: 16px;">决定点击「实时扫描」时，云端 Worker 及大模型覆盖哪些模块。趋势线索不单独 Google 检索，只叠加分析已开启的上游模块。</p>
         <div class="daily-settings-group">
           ${mkToggle("dashboard", "信息温度", s.dashboard, "scan")}
           ${mkToggle("news", "今日头条", s.news, "scan")}
           ${mkToggle("timeline", "动态速览", s.timeline, "scan")}
           ${mkToggle("ai", "AI 情报站", s.ai, "scan")}
-          ${mkToggle("trends", "趋势线索", s.trends, "scan")}
+          ${mkToggle("githubTools", "GitHub 工具雷达", s.githubTools, "scan")}
+          ${mkToggle("trends", "趋势线索（叠加分析）", s.trends, "scan")}
         </div>
         
         <div style="margin-top: 32px; display: flex; justify-content: flex-end;">
@@ -515,15 +815,24 @@ function renderDailySettingsChrome() {
 }
 
 function renderDailyReportHeader(r) {
+  const status = dailySourceStatusText();
+  const slot = r ? dailySlotLabel(r) : "报告";
+  const trigger = r ? dailyTriggerLabel(r) : "云端读取";
   return `
     <div class="news-command daily-event-command" style="view-transition-name: daily-command-bar;">
       <div class="news-command-main daily-command-main">
         <div class="daily-report-trigger">
-          <span class="daily-report-trigger-label">日报生成时间</span>
+          <span class="daily-report-trigger-label">事件研究简报</span>
           <div class="daily-report-trigger-row">
             <i class="ph ph-clock" aria-hidden="true"></i>
             <strong>${dailyEscapeHtml(dailyFormatTriggeredSearchAt(r && r.generatedAt ? r.generatedAt : null))}</strong>
           </div>
+          <p>${dailyEscapeHtml(status)}</p>
+        </div>
+        <div class="daily-report-meta">
+          <span>${dailyEscapeHtml(slot)}</span>
+          <span>${dailyEscapeHtml(trigger)}</span>
+          <span>北京时间</span>
         </div>
       </div>
       <div class="news-command-actions">
@@ -541,18 +850,22 @@ function renderDailyReportHeader(r) {
     </div>`;
 }
 
+function dailyPanelClass(span, name, extra = "") {
+  return `news-panel span-${span} daily-module-panel daily-module-${name}${extra ? ` ${extra}` : ""}`;
+}
+
 function renderDailyReportGrid(r) {
   if (!r || !r.report) {
     const st = dailyEscapeHtml(dailyEventState.status || "暂无云端事件日报");
     return `
-    <div class="daily-event-empty">
+    <div class="daily-event-empty daily-dashboard-grid-empty">
       <p class="muted-text">${st}</p>
       <p class="muted-text">可用「实时扫描」写入一条至 D1，或打开 7 日报告库从历史记录中选择。</p>
     </div>`;
   }
 
   const v = __yuqingSettings.visibility;
-  let html = `<div class="news-intel-grid" style="view-transition-name: daily-grid;">`;
+  let html = `<div class="news-intel-grid daily-dashboard-grid" style="view-transition-name: daily-grid;">`;
   
   if (v.dashboard) {
     html += `\n${renderDailyTemperature(r)}`;
@@ -563,13 +876,13 @@ function renderDailyReportGrid(r) {
   
   if (showNews) {
     html += `
-      <section class="news-panel ${showTimeline ? "span-7" : "span-12"}" style="view-transition-name: daily-news;">
-        <div class="news-panel-head">
+      <section class="${dailyPanelClass(showTimeline ? 7 : 12, "news", showTimeline ? "daily-balanced-panel" : "daily-expanded-panel")}" style="view-transition-name: daily-news;">
+        <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">今日头条</span>
             <h3>高价值事件拆解</h3>
+            <p class="daily-module-subtitle">把单条事件拆成事实、结构与资产传导，而不是只看标题。</p>
           </div>
-          <i class="ph ph-newspaper"></i>
         </div>
         <div class="news-story-list">${renderDailyTopStories(r)}</div>
       </section>`;
@@ -577,13 +890,13 @@ function renderDailyReportGrid(r) {
   
   if (showTimeline) {
     html += `
-      <section class="news-panel ${showNews ? "span-5" : "span-12"}" style="view-transition-name: daily-timeline;">
-        <div class="news-panel-head">
+      <section class="${dailyPanelClass(showNews ? 5 : 12, "timeline", showNews ? "daily-balanced-panel daily-timeline-panel" : "daily-expanded-panel daily-timeline-panel")}" style="view-transition-name: daily-timeline;">
+        <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">动态速览</span>
             <h3>政治、经济、AI 与市场</h3>
+            <p class="daily-module-subtitle">用于快速发现新变量，不等同于交易方向。</p>
           </div>
-          <i class="ph ph-lightning"></i>
         </div>
         <div class="news-story-list compact">${renderDailyBriefs(r)}</div>
       </section>`;
@@ -591,33 +904,47 @@ function renderDailyReportGrid(r) {
   
   if (v.ai) {
     html += `
-      <section class="news-panel span-12" style="view-transition-name: daily-ai;">
-        <div class="news-panel-head">
+      <section class="${dailyPanelClass(12, "ai")}" style="view-transition-name: daily-ai;">
+        <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">AI 情报站</span>
             <h3>科技叙事与日常信息</h3>
+            <p class="daily-module-subtitle">保留可落地的突破、工具、发布与观察价值。</p>
           </div>
-          <i class="ph ph-brain"></i>
         </div>
         <div class="news-ai-list">${renderDailyAi(r)}</div>
+      </section>`;
+  }
+
+  if (v.githubTools) {
+    html += `
+      <section class="${dailyPanelClass(12, "github-tools")}" style="view-transition-name: daily-github-tools;">
+        <div class="news-panel-head daily-module-head">
+          <div>
+            <span class="news-section-kicker">GitHub 工具雷达</span>
+            <h3>适合 Vibecoding 新人的 skill / plugin / MCP</h3>
+            <p class="daily-module-subtitle">把工具发现整理成能马上试用的行动卡片。</p>
+          </div>
+        </div>
+        <div class="daily-github-grid">${renderDailyGithubTools(r)}</div>
       </section>`;
   }
   
   if (v.trends) {
     html += `
-      <section class="news-panel span-12" style="view-transition-name: daily-trends;">
-        <div class="news-panel-head">
+      <section class="${dailyPanelClass(12, "trends")}" style="view-transition-name: daily-trends;">
+        <div class="news-panel-head daily-module-head">
           <div>
-            <span class="news-section-kicker">趋势线索</span>
-            <h3>正在强化与裂变的信号</h3>
+            <span class="news-section-kicker">趋势线索 · 本轮叠加分析</span>
+            <h3>世界新闻主线、科技扩散与轻量金融背景</h3>
+            <p class="daily-module-subtitle">把模块间的共振、背离和 0-72 小时观察点收束起来。</p>
           </div>
-          <i class="ph ph-wave-sine"></i>
         </div>
         <div class="news-trend-grid">${renderDailyTrend(r)}</div>
       </section>`;
   }
   
-  if (!v.dashboard && !showNews && !showTimeline && !v.ai && !v.trends) {
+  if (!v.dashboard && !showNews && !showTimeline && !v.ai && !v.githubTools && !v.trends) {
     html += `
       <div class="daily-event-empty span-12" style="margin-top: 40px;">
         <p class="muted-text">所有模块均已隐藏</p>
@@ -666,21 +993,25 @@ function isDailyYuqingDrawerOpen() {
 function tryDailyGridScopedViewTransition(gridEl, gridInnerCallback) {
   if (!gridEl || typeof gridEl.startViewTransition !== "function") return false;
   const run = (opts) => {
+    let didUpdate = false;
+    const wrapped = () => {
+      didUpdate = true;
+      return gridInnerCallback();
+    };
     try {
-      gridEl.startViewTransition(opts);
-      return true;
+      if (opts === "direct") {
+        gridEl.startViewTransition(wrapped);
+      } else {
+        gridEl.startViewTransition({ [opts]: wrapped });
+      }
+      return didUpdate;
     } catch (_) {
       return false;
     }
   };
-  if (run({ callback: gridInnerCallback })) return true;
-  if (run({ update: gridInnerCallback })) return true;
-  try {
-    gridEl.startViewTransition(gridInnerCallback);
-    return true;
-  } catch (_) {
-    return false;
-  }
+  if (run("update")) return true;
+  if (run("callback")) return true;
+  return run("direct");
 }
 
 function renderYuqingDailyIntoDom(options) {
@@ -882,29 +1213,30 @@ async function generateDailyReport() {
   dailyEventState.streamPreviewRow = null;
   dailyEventState.loading = true;
   dailyEventState.status = canStream
-    ? "已连接流式通道：各模块检索完成后将逐段显示，全部完成后写入 D1。请勿关闭页面…"
-    : "正在触发单次全流程日报（信息温度、头条、速览、AI 情报并发检索 → 趋势归纳 → 写入 D1）。首次约 1～4 分钟，请勿关闭页面…";
+    ? "已连接流式通道：头条/速览/AI/GitHub 完成后逐段显示，趋势线索最后基于本轮结果叠加归纳并写入 D1。请勿关闭页面…"
+    : "正在触发单次全流程日报（信息温度、头条、速览、AI/GitHub → 趋势线索不联网归纳 → 写入 D1）。首次约 1～4 分钟，请勿关闭页面…";
   renderYuqingDailyIntoDom();
   __dailyScanTick = setInterval(() => {
     if (!dailyEventState.loading) return;
     const sec = Math.floor((Date.now() - tScanStart) / 1000);
     dailyEventState.status = canStream
-      ? `流式生成中（已等待 ${sec}s）… 若长时间停在某一模块，多为该路 Gemini 检索偏慢。`
-      : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为 Gemini 检索偏慢或网络中断。`;
+      ? `流式生成中（已等待 ${sec}s）… 趋势线索会等上游模块完成后再做本轮叠加分析。`
+      : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为上游检索偏慢或网络中断。`;
     renderYuqingDailyIntoDom();
   }, 8000);
-  let openArchiveAfter = false;
-  
   const s = __yuqingSettings.scanCoverage;
+  // 上游模块负责检索；趋势线索只吃本轮模块输出做二次合成。
   const payload = { 
     mode: "deep", 
     forceSearch: true, 
+    trendsUseSearch: false,
     dualHeadlineLanes: true,
     modules: {
       dashboard: !!s.dashboard,
       news: !!s.news,
       timeline: !!s.timeline,
       ai: !!s.ai,
+      githubTools: !!s.githubTools,
       trends: !!s.trends
     }
   };
@@ -937,14 +1269,13 @@ async function generateDailyReport() {
       dailyEventState.report = data.report;
       dailyEventState.source = "cloud";
       dailyEventState.status = canStream
-        ? "流式扫描已完成，已写入 D1（头条为双路检索合并，可在 Worker 请求体关闭 dualHeadlineLanes 以省检索）。"
-        : "单次扫描已完成，已写入 D1 并拉回本条（趋势基于温度+头条+速览+AI 情报归纳）。";
+        ? "流式扫描已完成，已写入 D1（趋势线索未单独联网，基于本轮上游模块叠加归纳）。"
+        : "单次扫描已完成，已写入 D1 并拉回本条（趋势线索基于温度+头条+速览+AI/GitHub 归纳）。";
       try {
         history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(data.report.id)}`);
       } catch (_) {}
       await loadDailyHistory();
       dailyEventState.archiveFilter = "manual";
-      openArchiveAfter = true;
     }
   } catch (e) {
     const msg = e && e.message ? e.message : String(e);
@@ -981,7 +1312,6 @@ async function generateDailyReport() {
     dailyEventState.loading = false;
     renderYuqingDailyIntoDom();
     renderYuqingDailyDrawersIntoDom();
-    if (openArchiveAfter) openDailyArchive();
   }
 }
 
@@ -1031,8 +1361,8 @@ async function saveDailySettings() {
   const drawer = document.getElementById("daily-settings-drawer");
   if (!drawer) return;
   
-  const v = { dashboard: true, news: true, timeline: true, ai: true, trends: true };
-  const s = { dashboard: true, news: true, timeline: true, ai: true, trends: true };
+  const v = { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true };
+  const s = { dashboard: true, news: true, timeline: true, ai: true, githubTools: true, trends: true };
   
   drawer.querySelectorAll('.daily-setting-cb[data-type="visibility"]').forEach(cb => {
     v[cb.getAttribute("data-key")] = cb.checked;
@@ -1124,6 +1454,8 @@ function bindYuqingDailyEvents() {
       const key = cb.getAttribute("data-key");
       if (__yuqingSettings.visibility) {
         __yuqingSettings.visibility[key] = cb.checked;
+        cb.closest(".daily-setting-row")?.classList.toggle("is-on", cb.checked);
+        cb.closest(".daily-setting-row")?.classList.toggle("is-off", !cb.checked);
         // 实时刷新页面布局。由于 Drawers 已分离出 root，这里刷新 root 不会影响 Drawer 的开启状态
         renderYuqingDailyIntoDom();
       }
@@ -1137,6 +1469,8 @@ function bindYuqingDailyEvents() {
       const key = cb.getAttribute("data-key");
       if (__yuqingSettings.scanCoverage) {
         __yuqingSettings.scanCoverage[key] = cb.checked;
+        cb.closest(".daily-setting-row")?.classList.toggle("is-on", cb.checked);
+        cb.closest(".daily-setting-row")?.classList.toggle("is-off", !cb.checked);
       }
     });
   });
@@ -1169,8 +1503,8 @@ function bindYuqingDailyEvents() {
 
 function pageYuqingEvents() {
   return html`
-    <div class="news-intel-shell">
-      <div id="daily-report-content">
+    <div class="news-intel-shell daily-workbench-shell">
+      <div id="daily-report-content" class="daily-report-content">
         <div id="daily-report-header"></div>
         <div id="daily-report-grid"></div>
       </div>
@@ -1191,7 +1525,7 @@ function initYuqingEvents() {
   if (typeof DataEngine !== "undefined" && typeof DataEngine.fetchYuqingEventDashboardSettings === "function") {
     DataEngine.fetchYuqingEventDashboardSettings().then(data => {
       if (data && data.settings) {
-        __yuqingSettings = data.settings;
+        __yuqingSettings = normalizeDailyDashboardSettings(data.settings);
         renderYuqingDailyIntoDom();
         renderYuqingDailyDrawersIntoDom();
       }

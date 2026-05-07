@@ -14,6 +14,11 @@ export {
 } from "./top-stories.js";
 export { buildDailyBriefsPrompt, normalizeDailyBriefItems, renderDailyBriefsMarkdown } from "./dynamic-briefs.js";
 export { buildDailyAiIntelPrompt, normalizeDailyAiIntelItems, renderDailyAiIntelMarkdownForTrends } from "./ai-intel.js";
+export {
+  buildDailyGithubToolsPrompt,
+  normalizeDailyGithubToolItems,
+  renderDailyGithubToolsMarkdownForTrends,
+} from "./github-tools.js";
 export { buildDailyTrendCluesPrompt, buildTrendReadFromDailyEventInputs } from "./trend-clues.js";
 
 /** bundle 标识（健康检查可读） */
