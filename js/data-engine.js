@@ -340,6 +340,50 @@ const DataEngine = {
     return data;
   },
 
+  async fetchYuqingModelSettings(opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/model-channels`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const timeoutMs = Math.min(45_000, Math.max(5_000, Number(opts.timeoutMs) || 20_000));
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    let res;
+    try {
+      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    } catch (e) {
+      const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
+      throw new Error(`获取模型通道设置失败（${url}）：${m}`);
+    } finally {
+      clearTimeout(t);
+      unsub();
+    }
+    return this.parseWorkerJsonResponse(res, "模型通道设置");
+  },
+
+  async updateYuqingModelSettings(settings, opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/model-channels`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const timeoutMs = Math.min(45_000, Math.max(5_000, Number(opts.timeoutMs) || 20_000));
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        cache: "no-store",
+        signal: ctrl.signal,
+        body: JSON.stringify(settings && typeof settings === "object" ? settings : {}),
+      });
+    } catch (e) {
+      const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
+      throw new Error(`保存模型通道设置失败（${url}）：${m}`);
+    } finally {
+      clearTimeout(t);
+      unsub();
+    }
+    return this.parseWorkerJsonResponse(res, "保存模型通道设置");
+  },
+
   async generateYuqingStructuredReport(kind = "sentiment_analysis", payload = {}, opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate`;
     const timeoutMs = Math.min(600_000, Math.max(5_000, Number(opts.timeoutMs) || 185_000));

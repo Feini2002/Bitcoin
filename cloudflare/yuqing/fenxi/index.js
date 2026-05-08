@@ -6,6 +6,14 @@
 
 export const YUQING_FENXI_PAGE = "sentiment_analysis";
 
+export {
+  calendarFromFacts,
+  marketStateFromLegacy,
+  opportunitiesFromInputs,
+  riskRadarFromInputs,
+  trendReadForSentiment,
+} from "./sentiment-logic.js";
+
 export function fenxiModuleShell() {
   return "fenxi";
 }

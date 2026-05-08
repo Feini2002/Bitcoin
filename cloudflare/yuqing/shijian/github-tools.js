@@ -5,30 +5,28 @@ export function buildDailyGithubToolsPrompt(timeStr) {
     "当前时间：" +
     timeStr +
     "。\n" +
-    "你是面向前沿开发者的『AI 兵器谱情报官』。请使用 Google Search 监听全网开发者社区（包括 X/Twitter、Hacker News、Reddit 及 GitHub Trending 等），寻找过去 14 天内引发热议、能显著提升 AI Coding (Vibecoding) 效率的新工具、MCP Server、Agent 框架或 IDE 插件。\n\n" +
-    "【一、 选材红线与优先级】\n" +
-    "1) 落脚点必须是代码：线索可以来自社交媒体，但最终推荐的工具必须有公开的 GitHub 仓库、配置说明或直接的下载/安装链接。\n" +
-    "2) 拒绝玩具：必须是有 README、有示例、普通开发者能直接 clone 下来跑通，或直接接入 Cursor / VS Code / Claude Code 的实用工具。\n" +
-    "3) 精品意识：宁缺毋滥。不要为了凑数推已经过气的老项目。如果没有真正惊艳的，推 3 个极品即可。\n\n" +
-    "【二、 深度拆解结构】\n" +
-    "每条工具必须以“向开发者安利”的极简干练口吻写出：\n" +
+    "你是面向前沿开发者的『AI 兵器谱情报官』。请严格遵循“双重验证”搜索策略，寻找并推荐过去 14 天内出现的新工具、MCP Server、Agent 框架或 IDE 插件。\n\n" +
+    "【一、 强制双重验证搜索策略】\n" +
+    "1) 第一层搜索：必须先限定只在 GitHub (site:github.com) 内搜索“能显著提升 AI Coding (Vibecoding) 效率的”内容（如果不确定有没有，尽力去搜）。\n" +
+    "2) 第二层验证：对搜到的 GitHub 项目，必须再去 X (Twitter)、Hacker News、Reddit 等社交媒体进行热度验证，确认它们在开发者社区确实被热议。\n" +
+    "3) 筛选：只提取在 GitHub 上有产出且在社媒上重合度、热度较高的 3-5 条硬核工具。\n\n" +
+    "【二、 选材红线与优先级】\n" +
+    "1) 唯一来源：最终输出的内容必须完全基于 GitHub 上的项目。\n" +
+    "2) 拒绝玩具：必须是有 README、普通开发者能直接跑通，或直接接入 Cursor / VS Code 等生态的实用工具。\n" +
+    "3) 严控时间：只能是过去 14 天内新建、首发或产生重大质变更新的项目，禁止拿旧项目凑数。\n\n" +
+    "【三、 深度拆解结构】\n" +
+    "每条工具以极简干练口吻写出：\n" +
     "- title：工具名 + 一句话定位（不超过 28 个字）。\n" +
-    "- repo：GitHub 仓库全名（如 owner/name），无则留空。\n" +
+    "- repo：GitHub 仓库全名（如 owner/name）。\n" +
     "- target：适配的生态（如 Cursor, Claude Code, MCP, VS Code, 或通用命令行）。\n" +
-    "- date：最近的开源日期、发布日期或在社区引爆讨论的日期。\n" +
-    "- whyUseful：核心痛点击穿。为什么在推特上火了？它帮 AI 程序员解决了什么恶心的问题？\n" +
-    "- howToUse：新手第一步怎么跑？（写出关键的安装命令，如 npm install / git clone，或指明需要在哪个配置里加链接）。\n" +
-    "- rating：只能是「S级」(神仙工具/必须安装)、「A级」(极大提效/强烈推荐) 或「B级」(潜力股/先加Star观测)。\n\n" +
-    "【三、 侦察搜寻路径（全网雷达）】\n" +
-    "打破只搜 GitHub 的局限，请交叉使用以下雷达扇区：\n" +
-    "1) 社交媒体爆款：'\"GitHub\" (MCP OR Cursor OR \"Claude Code\") site:twitter.com' / '\"built this weekend\" github AI coding'\n" +
-    "2) 极客社区推荐：site:news.ycombinator.com \"Show HN\" (MCP OR agent OR coding tool)\n" +
-    "3) 生态最新拼图：'Cursor rule templates' / 'MCP server release' / 'LangChain integration github'\n" +
-    "4) 黑马与前沿：'open source devin alternative' / 'autonomous coding agent github'\n\n" +
+    "- date：最近的开源日期或在社区引爆讨论的日期。\n" +
+    "- whyUseful：核心痛点击穿。为什么在社媒火了？它帮 AI 程序员解决了什么恶心的问题？\n" +
+    "- howToUse：新手第一步怎么跑？\n" +
+    "- rating：只能是「S级」(神仙工具)、「A级」(极大提效) 或「B级」(潜力股)。\n\n" +
     "【四、 输出格式】\n" +
     "仅输出一个 JSON 代码块，顶层字段为 githubTools（数组，精选 3~5 条）。每条必须包含：\n" +
     "title, repo, target, date, whyUseful, howToUse, rating, sourceName, sourceUrl。\n" +
-    "sourceUrl 请优先提供 GitHub 链接或引爆该讨论的社区链接。JSON 内文本保持极度硬核的情报体风格。"
+    "注意：sourceUrl 必须提供绝对有效的 GitHub 官方仓库链接（格式 https://github.com/...），不得提供其他任何网站的链接。"
   );
 }
 

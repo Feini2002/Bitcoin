@@ -5,6 +5,7 @@ const vm = require("vm");
 const ROOT = path.join(__dirname, "..");
 const workerPath = path.join(ROOT, "cloudflare", "yuqing", "yuqing-worker.js");
 const migrationPath = path.join(ROOT, "cloudflare", "migrations", "yuqing", "0002_reports.sql");
+const modelMigrationPath = path.join(ROOT, "cloudflare", "migrations", "yuqing", "0004_model_channels.sql");
 const wranglerPath = path.join(ROOT, "cloudflare", "wrangler.yuqing.toml");
 const dataEnginePath = path.join(ROOT, "js", "data-engine.js");
 const eventsPagePath = path.join(ROOT, "js", "pages", "events.js");
@@ -54,6 +55,7 @@ function loadWorkerContext() {
 
 const worker = fs.readFileSync(workerPath, "utf8");
 const migration = fs.readFileSync(migrationPath, "utf8");
+const modelMigration = fs.readFileSync(modelMigrationPath, "utf8");
 const wrangler = fs.readFileSync(wranglerPath, "utf8");
 const dataEngine = fs.readFileSync(dataEnginePath, "utf8");
 const eventsPage = fs.readFileSync(eventsPagePath, "utf8");
@@ -64,6 +66,7 @@ const trendClues = fs.readFileSync(trendCluesPath, "utf8");
 const ctx = loadWorkerContext();
 
 assertOk(/CREATE TABLE IF NOT EXISTS yuqing_reports/.test(migration), "migration creates yuqing_reports");
+assertOk(/model_channels/.test(modelMigration) && /yuqing_settings/.test(modelMigration), "model channel migration seeds yuqing_settings");
 for (const field of [
   "kind",
   "report_date",
@@ -142,9 +145,12 @@ for (const route of [
   "/api/yuqing/reports/item",
   "/api/yuqing/reports/generate",
   "/api/yuqing/reports/generate-stream",
+  "/api/yuqing/settings/model-channels",
 ]) {
   assertOk(worker.includes(route), `worker exposes ${route}`);
 }
+assertOk(worker.includes("readYuqingModelSettingsEnvelope") && worker.includes("resolveYuqingModel"), "worker resolves model channels before LLM calls");
+assertOk(worker.includes("gemini-3.1-pro-preview") && worker.includes("gemini-3.1-flash-lite-preview") && worker.includes("gemini-3-flash-preview"), "worker embeds approved Gemini model catalog");
 assertOk(worker.includes("DELETE FROM yuqing_reports WHERE generated_at < ?"), "worker prunes reports by retention");
 assertOk(worker.includes("createYuqingReport(env"), "worker has manual/scheduled report generation path");
 assertOk(worker.includes("kind: SENTIMENT_ANALYSIS_KIND"), "legacy report endpoint maps to sentiment_analysis");
@@ -172,6 +178,8 @@ for (const method of [
   "generateYuqingStructuredReport",
   "streamYuqingDailyEventReport",
   "fetchYuqingReportStatus",
+  "fetchYuqingModelSettings",
+  "updateYuqingModelSettings",
 ]) {
   assertOk(dataEngine.includes(method), `DataEngine has ${method}`);
 }

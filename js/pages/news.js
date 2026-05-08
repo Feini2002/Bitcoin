@@ -280,6 +280,482 @@ function renderIncremental(report) {
   `;
 }
 
+function analysisArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function analysisReportBody(row) {
+  return row && row.report && typeof row.report === "object" ? row.report : {};
+}
+
+function analysisMarketSnapshot(row) {
+  return row && row.marketSnapshot && typeof row.marketSnapshot === "object" ? row.marketSnapshot : {};
+}
+
+function analysisMarketEndpoint(row, key) {
+  const snap = analysisMarketSnapshot(row);
+  const data = snap && snap.data && typeof snap.data === "object" ? snap.data : {};
+  return data[key] && typeof data[key] === "object" ? data[key] : {};
+}
+
+function analysisSourceErrors(row) {
+  return analysisArray(row && row.sourceErrors);
+}
+
+function analysisCompactNumber(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "--";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(2)}K`;
+  return n.toFixed(2);
+}
+
+function analysisBriefText(value, fallback = "--") {
+  if (value == null || value === "") return fallback;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) return value.map((x) => analysisBriefText(x, "")).filter(Boolean).slice(0, 4).join(" / ") || fallback;
+  if (typeof value === "object") {
+    const direct = value.summary || value.status || value.message || value.label || value.text;
+    if (direct) return analysisBriefText(direct, fallback);
+    const keys = Object.keys(value).slice(0, 4);
+    return keys.length ? keys.join(" / ") : fallback;
+  }
+  return fallback;
+}
+
+function analysisSignedPct(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "--";
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n.toFixed(Math.abs(n) >= 10 ? 1 : 2)}%`;
+}
+
+function analysisStatusTone(ok, planned = false) {
+  if (planned) return "planned";
+  if (ok === true) return "ok";
+  if (ok === false) return "warn";
+  return "pending";
+}
+
+function analysisStatusLabel(tone) {
+  if (tone === "ok") return "已接入";
+  if (tone === "warn") return "有缺口";
+  if (tone === "planned") return "PLANNED";
+  return "待验证";
+}
+
+function analysisRegimeMeta(row) {
+  const report = analysisReportBody(row);
+  const state = report.marketState || {};
+  const q = analysisQuality(row);
+  const hasReport = !!(row && row.report);
+  const marketOk = q.marketSnapshotOk === true || analysisMarketSnapshot(row).ok === true;
+  const rawScore = Number(state.score);
+  const score = Number.isFinite(rawScore) ? Math.max(0, Math.min(100, Math.round(rawScore))) : null;
+  let code = "PENDING";
+  if (hasReport) {
+    if (!marketOk) code = "DATA_GAP";
+    else if (score != null && score >= 66) code = "RISK_ON";
+    else if (score != null && score <= 42) code = "RISK_OFF";
+    else code = "RISK_NEUTRAL";
+  }
+  const labels = {
+    PENDING: "等待报告",
+    DATA_GAP: "数据缺口",
+    RISK_ON: "Risk-On 确认中",
+    RISK_OFF: "Risk-Off 警戒",
+    RISK_NEUTRAL: "中性验证",
+  };
+  return {
+    code,
+    label: labels[code] || code,
+    score,
+    confidence: state.confidence,
+    bias: state.bias || labels[code] || "待确认",
+    summary:
+      state.summary ||
+      (hasReport
+        ? "已读取事件日报与市场快照，等待硬数据矩阵给出资金跟随确认。"
+        : "这里不再复刻第一页的信息温度；只展示资金面、风险偏好和可被下游 Agent 读取的结构化状态。"),
+    marketOk,
+  };
+}
+
+function analysisHardDataRows(row) {
+  const hasReport = !!(row && row.report);
+  const klines = analysisMarketEndpoint(row, "klines");
+  const derivatives = analysisMarketEndpoint(row, "derivatives");
+  const liquidations = analysisMarketEndpoint(row, "liquidations");
+  const derivSnapshot = analysisMarketEndpoint(row, "derivativesSnapshot");
+  const kData = klines.data || {};
+  const dData = derivatives.data || {};
+  const lData = liquidations.data || {};
+  const sData = derivSnapshot.data || {};
+  return [
+    {
+      key: "price_action",
+      label: "BTC 1h 价格行为",
+      value: klines.ok ? analysisSignedPct(kData.changePct) : "--",
+      sub: klines.ok ? `${Number(kData.count) || "--"} 根K线 · 最新 ${analysisEscapeHtml(kData.latestT || kData.lastSync || "--")}` : "等待 /api/d1/klines",
+      tone: hasReport ? analysisStatusTone(!!klines.ok) : "pending",
+      route: "#/chart",
+    },
+    {
+      key: "derivatives",
+      label: "资金费率 / OI / 基差",
+      value: derivatives.ok ? "快照可用" : "--",
+      sub: derivatives.ok ? analysisEscapeHtml(analysisBriefText(dData.sourceHealthSummary || dData.generatedAt, "衍生品矩阵已读取")) : "等待 /api/d1/derivatives",
+      tone: hasReport ? analysisStatusTone(!!derivatives.ok) : "pending",
+      route: "#/derivatives",
+    },
+    {
+      key: "liquidations",
+      label: "强平与清算分布",
+      value: liquidations.ok ? `L ${analysisCompactNumber(lData.totalLongNotional)} / S ${analysisCompactNumber(lData.totalShortNotional)}` : "--",
+      sub: liquidations.ok ? `${Number(lData.count) || 0} 条 · ${analysisEscapeHtml(lData.latestEventAt || "等待最新事件")}` : "等待 /api/d1/liquidations",
+      tone: hasReport ? analysisStatusTone(!!liquidations.ok) : "pending",
+      route: "#/heatmap",
+    },
+    {
+      key: "deriv_snapshot",
+      label: "衍生品 AI 快照",
+      value: derivSnapshot.ok ? analysisEscapeHtml(sData.profile || "brief") : "--",
+      sub: derivSnapshot.ok ? analysisEscapeHtml(analysisBriefText(sData.summary || sData.generatedAt, "摘要已生成")) : "等待 /api/ai/derivatives-snapshot",
+      tone: hasReport ? analysisStatusTone(!!derivSnapshot.ok) : "pending",
+      route: "#/derivatives",
+    },
+    {
+      key: "macro_calendar",
+      label: "宏观日历 timestamp",
+      value: "结构化时间",
+      sub: "只接受外部 API / 硬编码日历传入的 startsAtUtc；不允许 LLM 编造日期。",
+      tone: "planned",
+      route: "#/news-analysis",
+    },
+    {
+      key: "vol_yield",
+      label: "VIX / 美债收益率差",
+      value: "待接入",
+      sub: "后续接入宏观代理源后再参与 Risk-On / Risk-Off 分层。",
+      tone: "planned",
+      route: "#/news-analysis",
+    },
+  ];
+}
+
+function renderAnalysisRiskTemperature(row) {
+  const meta = analysisRegimeMeta(row);
+  const rows = analysisHardDataRows(row).slice(0, 4);
+  return `
+    <section class="news-panel span-12 daily-module-panel daily-module-temperature analysis-risk-module" aria-label="资金风险温度">
+      <div class="news-panel-head daily-module-head">
+        <div>
+          <span class="news-section-kicker">资金风险温度</span>
+          <h3>Risk-On / Risk-Off 资金面状态</h3>
+          <p class="daily-module-subtitle">顶部 Gauge 只看真实市场切片与风险偏好，不再复用事件页的信息热度。</p>
+        </div>
+      </div>
+      <div class="daily-temperature-body analysis-risk-body">
+        <div class="daily-temperature-score analysis-risk-score" aria-label="资金风险温度 ${meta.score == null ? "待验证" : `${meta.score} 分`}">
+          <strong>${meta.score == null ? "--" : meta.score}</strong>
+          <span>/ 100</span>
+        </div>
+        <div class="daily-temperature-main">
+          <p class="daily-temperature-summary">${analysisEscapeHtml(meta.summary)}</p>
+          <div class="daily-temperature-meta analysis-risk-meta">
+            <span class="daily-temp-meta-info"><b>macro_regime</b>${analysisEscapeHtml(meta.code)}</span>
+            <span class="${meta.marketOk ? "daily-temp-meta-ok" : "daily-temp-meta-warn"}"><b>market_snapshot_ok</b>${meta.marketOk ? "true" : "false"}</span>
+            <span><b>状态</b>${analysisEscapeHtml(meta.label)}</span>
+            <span><b>置信</b>${pctText(meta.confidence)}</span>
+          </div>
+          <div class="analysis-anchor-grid">
+            ${rows
+              .map(
+                (item) => `<a class="analysis-anchor-card ${analysisEscapeHtml(item.tone)}" href="${analysisEscapeHtml(item.route)}">
+                  <span>${analysisEscapeHtml(analysisStatusLabel(item.tone))}</span>
+                  <b>${analysisEscapeHtml(item.label)}</b>
+                  <strong>${item.value}</strong>
+                </a>`,
+              )
+              .join("")}
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderAnalysisHardDataMatrix(row) {
+  const rows = analysisHardDataRows(row);
+  return `
+    <div class="analysis-harddata-grid">
+      ${rows
+        .map(
+          (item) => `<a class="analysis-harddata-card ${analysisEscapeHtml(item.tone)}" href="${analysisEscapeHtml(item.route)}">
+            <div>
+              <span>${analysisEscapeHtml(analysisStatusLabel(item.tone))}</span>
+              <h4>${analysisEscapeHtml(item.label)}</h4>
+            </div>
+            <strong>${item.value}</strong>
+            <p>${item.sub}</p>
+          </a>`,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function analysisNarrativeItems(row) {
+  const report = analysisReportBody(row);
+  const hasReport = !!(row && row.report);
+  const q = analysisQuality(row);
+  const upstream = report.upstreamDaily || {};
+  const risks = analysisArray(report.riskRadar);
+  const opportunities = analysisArray(report.opportunityScanner);
+  if (!hasReport) {
+    return [
+      {
+        category: "叙事验证",
+        title: "等待上游事件进入二次定价验证",
+        fact: "事件一览生成后，本页只把可被价格、资金费率、OI、强平或宏观代理确认的叙事继续向下游传递。",
+        pricing: "待接入市场快照。",
+        downgrade: "没有硬数据时输出：仅见事件，未见资金跟随确认。",
+        watch: "等待手动二次分析或 09 / 14 / 22 定点任务。",
+        status: "待验证",
+      },
+    ];
+  }
+  const items = [];
+  if (upstream.title || upstream.id) {
+    items.push({
+      category: "上游日报",
+      title: upstream.title || "事件一览日报",
+      fact: upstream.generatedAt ? `引用事件日报 ${analysisFormatTime(upstream.generatedAt)}。` : "已引用上游事件日报。",
+      pricing: q.marketSnapshotOk ? "市场快照已接入，可继续判断资金是否跟随。" : "市场快照缺口存在，不能升级为交易确认。",
+      downgrade: q.marketSnapshotOk ? "若价格与资金项背离，结论仍需降级。" : "仅见事件，未见资金跟随确认。",
+      watch: "观察同一叙事是否被价格、资金费率/OI 与清算分布共同确认。",
+      status: q.marketSnapshotOk ? "可复核" : "降级",
+    });
+  }
+  risks.slice(0, 2).forEach((risk) => {
+    items.push({
+      category: `${riskLabel(risk.level)}风险`,
+      title: risk.title || "风险事件",
+      fact: risk.trigger || "等待风险触发条件。",
+      pricing: analysisArray(risk.assets).length ? `关联资产：${analysisArray(risk.assets).join(" / ")}` : "等待资产映射。",
+      downgrade: "除非硬数据同向，否则不把风险叙事升级为方向判断。",
+      watch: risk.response || "等待下一轮复核。",
+      status: risk.window || "48-72h",
+    });
+  });
+  opportunities.slice(0, 1).forEach((item) => {
+    items.push({
+      category: item.label || "条件队列",
+      title: item.direction || "等待交易条件",
+      fact: item.setup || "等待触发条件。",
+      pricing: `优先级 ${Number(item.priority) || 0}，只作为条件队列，不直接下单。`,
+      downgrade: item.invalidation || "价格反应与叙事背离即降级。",
+      watch: "等待市场结构复核。",
+      status: "条件",
+    });
+  });
+  return items.length ? items.slice(0, 4) : analysisNarrativeItems(null);
+}
+
+function renderAnalysisNarrativeValidation(row) {
+  return analysisNarrativeItems(row)
+    .map(
+      (item, idx) => `<article class="news-story daily-knowledge-card analysis-validation-card">
+        <div class="news-story-body">
+          <div class="daily-story-header">
+            <div class="news-story-meta">
+              <span class="news-story-category">${analysisEscapeHtml(item.category)}</span>
+              <span>${analysisEscapeHtml(item.status)}</span>
+            </div>
+            <span class="daily-story-index">${String(idx + 1).padStart(2, "0")}</span>
+          </div>
+          <h3 class="daily-story-title">${analysisEscapeHtml(item.title)}</h3>
+          <div class="daily-story-section daily-story-section--fact"><b>事件事实</b><span>${analysisEscapeHtml(item.fact)}</span></div>
+          <div class="daily-story-matrix">
+            <div class="daily-story-section"><b>定价证据</b><span>${analysisEscapeHtml(item.pricing)}</span></div>
+            <div class="daily-story-section"><b>结论降级</b><span>${analysisEscapeHtml(item.downgrade)}</span></div>
+          </div>
+          <div class="daily-story-section daily-story-section--watch"><b>后续证据</b><span>${analysisEscapeHtml(item.watch)}</span></div>
+        </div>
+      </article>`,
+    )
+    .join("");
+}
+
+function analysisCalendarRows(row) {
+  const rows = analysisArray(analysisReportBody(row).eventCalendar);
+  if (rows.length) return rows.slice(0, 6);
+  return [
+    {
+      title: "等待结构化财经日历",
+      startsAtUtc: "",
+      precision: "planned",
+      sourceName: "PLANNED",
+      confidence: 0,
+      impactScore: 0,
+      assets: ["CPI", "FOMC", "代币解锁"],
+      why: "本模块只渲染确定 timestamp；没有外部结构化时间时保持空框架。",
+    },
+  ];
+}
+
+function renderAnalysisCalendar(row) {
+  return analysisCalendarRows(row)
+    .map((event) => {
+      const precise = event.precision === "time";
+      const d = new Date(event.startsAtUtc);
+      const hasTime = event.startsAtUtc && !Number.isNaN(d.getTime());
+      const time = hasTime
+        ? precise
+          ? d.toLocaleString("zh-CN", { timeZone: event.displayTimezone || "Asia/Shanghai", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+          : `${d.toLocaleDateString("zh-CN", { timeZone: event.displayTimezone || "Asia/Shanghai", month: "2-digit", day: "2-digit" })} 日期级`
+        : "--";
+      const trust = Math.round(Number(event.confidence || 0) * 100);
+      const countdown = hasTime ? formatCalendarCountdown(event) : "不编造";
+      return `<div class="news-calendar-row analysis-calendar-row">
+        <div class="news-calendar-time">
+          <strong>${analysisEscapeHtml(time)}</strong>
+          <span>${analysisEscapeHtml(countdown)}</span>
+        </div>
+        <div class="news-calendar-main">
+          <h4>${analysisEscapeHtml(event.title || "待确认催化剂")}</h4>
+          <p>${analysisEscapeHtml(event.why || "等待确定性时间节点与影响面。")}</p>
+          <div class="news-tag-row">${analysisArray(event.assets).map((x) => `<span>${analysisEscapeHtml(x)}</span>`).join("")}</div>
+        </div>
+        <div class="news-calendar-score">
+          <strong>${Number(event.impactScore) || "--"}</strong>
+          <span>置信 ${trust}%</span>
+          <span>${analysisEscapeHtml(event.sourceName || "来源待定")}</span>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+function renderAnalysisRiskThresholds(row) {
+  const report = analysisReportBody(row);
+  const risks = analysisArray(report.riskRadar);
+  const ops = analysisArray(report.opportunityScanner);
+  const rows = [
+    ...risks.map((risk) => ({
+      tone: riskClass(risk.level),
+      label: `${riskLabel(risk.level)}风险 · ${risk.window || "当前"}`,
+      title: risk.title || "风险阈值",
+      body: risk.trigger || "等待触发条件。",
+      foot: risk.response || "等待后续响应规则。",
+    })),
+    ...ops.map((op) => ({
+      tone: scoreClass(op.priority),
+      label: op.label || "条件队列",
+      title: op.direction || "机会条件",
+      body: op.setup || "等待触发条件。",
+      foot: op.invalidation || "等待失效条件。",
+    })),
+  ];
+  const safeRows = rows.length
+    ? rows.slice(0, 4)
+    : [
+        {
+          tone: "pending",
+          label: "待验证",
+          title: "等待风险传导阈值",
+          body: "这里会把事件触发、资金确认和失效条件分开呈现。",
+          foot: "没有硬数据确认时不输出交易方向。",
+        },
+      ];
+  return safeRows
+    .map(
+      (item) => `<div class="news-risk-card analysis-threshold-card ${analysisEscapeHtml(item.tone)}">
+        <div class="news-risk-head"><span>${analysisEscapeHtml(item.label)}</span><strong>条件</strong></div>
+        <h4>${analysisEscapeHtml(item.title)}</h4>
+        <p>${analysisEscapeHtml(item.body)}</p>
+        <div class="news-risk-response">${analysisEscapeHtml(item.foot)}</div>
+      </div>`,
+    )
+    .join("");
+}
+
+function analysisAgentFlags(row) {
+  const report = analysisReportBody(row);
+  const meta = analysisRegimeMeta(row);
+  const q = analysisQuality(row);
+  const inc = report.incrementalSearch || {};
+  const sourceErrors = analysisSourceErrors(row);
+  const preciseCatalysts = analysisArray(report.eventCalendar).filter((x) => x && x.precision === "time" && x.startsAtUtc).length;
+  const hasReport = !!(row && row.report);
+  return [
+    { key: "macro_regime", value: meta.code, tone: meta.code === "DATA_GAP" ? "warn" : meta.code === "PENDING" ? "pending" : "ok" },
+    { key: "verified_catalyst", value: preciseCatalysts > 0 ? "true" : hasReport ? "false" : "pending", tone: preciseCatalysts > 0 ? "ok" : "pending" },
+    { key: "data_divergence", value: sourceErrors.length ? "true" : hasReport ? "false" : "pending", tone: sourceErrors.length ? "warn" : hasReport ? "ok" : "pending" },
+    { key: "market_snapshot_ok", value: q.marketSnapshotOk === true ? "true" : hasReport ? "false" : "pending", tone: hasReport ? (q.marketSnapshotOk ? "ok" : "warn") : "pending" },
+    { key: "incremental_search_used", value: inc.used === true ? "true" : hasReport ? "false" : "pending", tone: inc.used ? "warn" : "pending" },
+    { key: "llm_downgrade_required", value: q.marketSnapshotOk ? "false" : hasReport ? "true" : "pending", tone: hasReport ? (q.marketSnapshotOk ? "ok" : "warn") : "pending" },
+  ];
+}
+
+function renderAnalysisAgentContext(row) {
+  return `<div class="analysis-agent-grid">
+    ${analysisAgentFlags(row)
+      .map(
+        (flag) => `<div class="analysis-agent-flag ${analysisEscapeHtml(flag.tone)}">
+          <span>${analysisEscapeHtml(flag.key)}</span>
+          <strong>${analysisEscapeHtml(flag.value)}</strong>
+        </div>`,
+      )
+      .join("")}
+  </div>`;
+}
+
+function renderAnalysisAudit(row) {
+  const report = analysisReportBody(row);
+  const q = analysisQuality(row);
+  const inc = report.incrementalSearch || {};
+  const sourceErrors = analysisSourceErrors(row);
+  const upstream = report.upstreamDaily;
+  const checks = [
+    { label: "上游日报", value: upstream ? upstream.id || upstream.title || "已引用" : "待引用" },
+    { label: "事实池条数", value: row && row.report ? String(q.factCount || 0) : "待读取" },
+    { label: "源覆盖", value: row && row.report ? pctText(q.sourceCoverage) : "待读取" },
+    { label: "增量搜索", value: inc.used ? `已触发：${analysisArray(inc.reasons).join(" / ") || "手动或缺口触发"}` : row && row.report ? "未触发" : "待判断" },
+    { label: "错误源", value: sourceErrors.length ? sourceErrors.map((x) => x.source || x.message).join(" / ") : row && row.report ? "无显式错误" : "待检测" },
+  ];
+  return `<div class="analysis-audit-list">
+    ${checks.map((x) => `<div><span>${analysisEscapeHtml(x.label)}</span><strong>${analysisEscapeHtml(x.value)}</strong></div>`).join("")}
+    <p>${analysisEscapeHtml((q && q.caveat) || "本页是二次舆情研判，不构成投资建议。")}</p>
+  </div>`;
+}
+
+function renderAnalysisAiPremium(row) {
+  const items = analysisArray(analysisReportBody(row).aiIntel);
+  const safeItems = items.length
+    ? items.slice(0, 4)
+    : [
+        {
+          title: "等待科技叙事进入资金面复核",
+          relevance: "AI/科技新闻只有在风险偏好或资金流出现同向变化时，才提升为市场变量。",
+          watch: "等待事件一览 AI 情报站和市场快照同时可用。",
+          confidence: 0,
+        },
+      ];
+  return safeItems
+    .map(
+      (item) => `<article class="daily-ai-card analysis-ai-card">
+        <h4>${analysisEscapeHtml(item.title || "科技叙事")}</h4>
+        <span class="daily-ai-date">置信：${pctText(Number(item.confidence || 0) * 100)}</span>
+        <p><strong>叙事</strong>${analysisEscapeHtml(item.relevance || "等待叙事摘要。")}</p>
+        <p><strong>验证点</strong>${analysisEscapeHtml(item.watch || "等待资金面确认。")}</p>
+      </article>`,
+    )
+    .join("");
+}
+
 function renderReportArchive() {
   const items = analysisState.history.length ? analysisState.history : [];
   const curId = analysisCurrentReportId();
@@ -329,154 +805,137 @@ function renderNewsArchiveChrome() {
 function renderYuqingReport(row) {
   const chrome = renderNewsArchiveChrome();
   const r = row !== undefined && row !== null ? row : activeAnalysisReport();
-  const titleText = analysisEscapeHtml((r && r.report && r.report.title) || "舆情分析");
-  const subLine = `${analysisEscapeHtml(analysisFormatTime(r && r.generatedAt))} · ${analysisEscapeHtml(analysisSlotLabel(r))}`;
+  const report = analysisReportBody(r);
+  const meta = analysisRegimeMeta(r);
+  const upstream = report.upstreamDaily;
+  const titleText = analysisEscapeHtml((r && r.report && r.report.title) || "资金面舆情验证器");
+  const subLine = r && r.generatedAt ? `${analysisFormatTime(r.generatedAt)} · ${analysisSlotLabel(r)}` : "等待云端 D1 舆情分析";
+  const statusText = analysisEscapeHtml(analysisSourceStatusText());
+  const upstreamLabel = upstream
+    ? `<a href="${analysisEscapeHtml(upstream.href || "#/news")}">上游日报 ${analysisEscapeHtml(upstream.slot || "")}</a>`
+    : `<a href="#/news">上游日报待选择</a>`;
 
   const commandShell = `
-    <div class="news-command">
-      <div class="news-command-main">
+    <div class="news-command daily-event-command analysis-command">
+      <div class="news-command-main daily-command-main">
         <span class="news-live-dot ${analysisLiveDotClass()}"></span>
-        <div>
-          <h1>${titleText}</h1>
-          <p>${subLine}</p>
+        <div class="daily-report-trigger">
+          <div class="daily-report-trigger-title-row">
+            <span class="daily-report-trigger-label">${titleText}</span>
+            <div class="daily-report-meta daily-report-meta--title">
+              ${analysisStatusChipMarkup()}
+            </div>
+          </div>
+          <div class="daily-report-trigger-row">
+            <i class="ph ph-clock" aria-hidden="true"></i>
+            <strong>${analysisEscapeHtml(subLine)}</strong>
+            <span class="daily-report-trigger-tz">Asia/Shanghai</span>
+          </div>
+          <p>世界新闻与真实金融数据的交叉验证器：只把可被资金面确认的叙事传给下游 Agent。</p>
         </div>
       </div>
       <div class="news-command-actions">
-        ${analysisStatusChipMarkup()}
-        <button type="button" class="btn" id="news-generate-preview" ${analysisState.loading ? "disabled" : ""}>
+        <button type="button" class="btn" id="news-generate-preview" ${analysisState.loading ? "disabled" : ""} title="触发 sentiment_analysis 二次研判并写入 D1">
           <i class="ph ph-arrows-clockwise"></i><span>${analysisState.loading ? "分析中" : "手动二次分析"}</span>
         </button>
-        <button type="button" class="btn primary" id="news-open-archive">
+        <button type="button" class="btn primary" id="news-open-archive" title="打开最近 7 天舆情分析回档">
           <i class="ph ph-clock-counter-clockwise"></i><span>7日报告库</span>
         </button>
       </div>
     </div>`;
 
-  if (!r || !r.report) {
-    const hint = analysisEscapeHtml(analysisSourceStatusText());
-    return `${commandShell}
-    <div class="news-phase-strip">
-      <span><i class="ph ph-database"></i> ${hint}</span>
-      <span><i class="ph ph-calendar-check"></i> 定点二次分析 · 北京时间 09 / 14 / 22（Cron 固化）</span>
-    </div>
-    <div class="daily-event-empty">
-      <p class="muted-text">${hint}</p>
-      <p class="muted-text">可手动触发「手动二次分析」写入 D1，或打开 7 日报告库选择历史条目。</p>
-    </div>
-    ${chrome}`;
-  }
-
-  const report = r.report || {};
-  const state = report.marketState || {};
-  const q = analysisQuality(r);
-  const upstream = report.upstreamDaily;
   return `${commandShell}
 
-    <div class="news-phase-strip">
-      <span><i class="ph ph-database"></i> ${analysisEscapeHtml(analysisSourceStatusText())}</span>
-      <span><i class="ph ph-newspaper-clipping"></i> ${upstream ? `<a href="${analysisEscapeHtml(upstream.href || "#/news")}">上游日报 ${analysisEscapeHtml(upstream.slot || "")}</a>` : "上游日报缺失"}</span>
-      <span><i class="ph ph-calendar-check"></i> 09 / 14 / 22 · Asia/Shanghai</span>
+    <div class="news-phase-strip analysis-phase-strip">
+      <span><i class="ph ph-database"></i> ${statusText}</span>
+      <span><i class="ph ph-newspaper-clipping"></i> ${upstreamLabel}</span>
+      <span><i class="ph ph-chart-line-up"></i> macro_regime=${analysisEscapeHtml(meta.code)}</span>
+      <span><i class="ph ph-calendar-check"></i> 09 / 14 / 22 · 定点二次分析</span>
     </div>
 
-    ${renderAnalysisRefs(r)}
+    <div class="news-intel-grid daily-dashboard-grid analysis-dashboard-grid">
+      ${renderAnalysisRiskTemperature(r)}
 
-    <div class="news-intel-grid">
-      <section class="news-hero-card news-panel span-8">
-        <div class="news-hero-copy">
-          <div class="news-section-kicker">二次市场状态</div>
-          <h2>${analysisEscapeHtml(state.regime || "待确认")}</h2>
-          <p>${analysisEscapeHtml(state.summary || "")}</p>
-          <div class="news-hero-meta">
-            <span>方向 <strong>${analysisEscapeHtml(state.bias || "--")}</strong></span>
-            <span>置信 <strong>${pctText(state.confidence)}</strong></span>
-            <span>增量搜索 <strong>${report.incrementalSearch?.used ? "已触发" : "未触发"}</strong></span>
+      <section class="news-panel span-7 daily-module-panel daily-module-news daily-balanced-panel analysis-module-validation">
+        <div class="news-panel-head daily-module-head">
+          <div>
+            <span class="news-section-kicker">叙事定价验证</span>
+            <h3>只验证可被资金跟随的事件</h3>
+            <p class="daily-module-subtitle">把上游日报拆成事件事实、定价证据、降级规则和后续验证点。</p>
           </div>
         </div>
-        <div class="news-sentiment-gauge">
-          <svg viewBox="0 0 160 96" aria-hidden="true">
-            <path d="M20 82 A60 60 0 0 1 140 82" pathLength="100" class="news-gauge-bg"/>
-            <path d="M20 82 A60 60 0 0 1 140 82" pathLength="100" class="news-gauge-fg" style="stroke-dasharray:${Math.max(0, Math.min(100, Number(state.score) || 0))} 100"/>
-          </svg>
-          <strong>${Number(state.score) || 0}</strong>
-          <span>${analysisEscapeHtml(state.bias || "")}</span>
-        </div>
+        <div class="news-story-list">${renderAnalysisNarrativeValidation(r)}</div>
       </section>
 
-      <section class="news-panel span-4">
-        <div class="news-panel-head">
+      <section class="news-panel span-5 daily-module-panel daily-module-harddata analysis-module-harddata">
+        <div class="news-panel-head daily-module-head">
           <div>
-            <span class="news-section-kicker">市场监测叠加</span>
-            <h3>BTC 核心上下文</h3>
+            <span class="news-section-kicker">硬数据校验矩阵</span>
+            <h3>价格、衍生品、强平、宏观代理</h3>
+            <p class="daily-module-subtitle">每个来源必须说明接入状态，未接入的指标保留 PLANNED。</p>
           </div>
-          <i class="ph ph-chart-line-up"></i>
         </div>
-        <div class="news-asset-grid">${renderAssetMatrix(report)}</div>
+        ${renderAnalysisHardDataMatrix(r)}
       </section>
 
-      <section class="news-panel span-5">
-        <div class="news-panel-head">
+      <section class="news-panel span-7 daily-module-panel daily-module-calendar analysis-module-calendar">
+        <div class="news-panel-head daily-module-head">
           <div>
-            <span class="news-section-kicker">风险雷达</span>
-            <h3>未来 48-72h</h3>
-          </div>
-          <i class="ph ph-warning-diamond"></i>
-        </div>
-        <div class="news-risk-grid">${renderRiskRadar(report)}</div>
-      </section>
-
-      <section class="news-panel span-7">
-        <div class="news-panel-head">
-          <div>
-            <span class="news-section-kicker">机会扫描</span>
-            <h3>只列条件，不直接下单</h3>
-          </div>
-          <i class="ph ph-crosshair"></i>
-        </div>
-        <div class="news-op-list">${renderOpportunities(report)}</div>
-      </section>
-
-      <section class="news-panel span-7">
-        <div class="news-panel-head">
-          <div>
-            <span class="news-section-kicker">关键日历</span>
-            <h3>精确时间才显示倒计时</h3>
+            <span class="news-section-kicker">精准催化剂时间轴</span>
+            <h3>只渲染确定 timestamp</h3>
+            <p class="daily-module-subtitle">LLM 只解释影响面，不参与日期计算；没有来源时显示空框架。</p>
           </div>
           <i class="ph ph-calendar-dots"></i>
         </div>
-        <div class="news-calendar-list" id="news-calendar-list">${renderCalendar(report)}</div>
+        <div class="news-calendar-list" id="news-calendar-list">${renderAnalysisCalendar(r)}</div>
       </section>
 
-      <section class="news-panel span-5">
-        <div class="news-panel-head">
+      <section class="news-panel span-5 daily-module-panel daily-module-threshold analysis-module-threshold">
+        <div class="news-panel-head daily-module-head">
           <div>
-            <span class="news-section-kicker">去重与增量</span>
-            <h3>日报之外的新信息</h3>
+            <span class="news-section-kicker">风险传导阈值</span>
+            <h3>触发、确认、失效分层</h3>
+            <p class="daily-module-subtitle">输出条件队列，不直接替代交易执行。</p>
+          </div>
+          <i class="ph ph-warning-diamond"></i>
+        </div>
+        <div class="news-risk-grid">${renderAnalysisRiskThresholds(r)}</div>
+      </section>
+
+      <section class="news-panel span-6 daily-module-panel daily-module-agent analysis-module-agent">
+        <div class="news-panel-head daily-module-head">
+          <div>
+            <span class="news-section-kicker">Agent 结构化输出</span>
+            <h3>下游员工可直接读取的枚举</h3>
+            <p class="daily-module-subtitle">用布尔值、枚举和数据缺口标识，供订单流、策略与风控模块调阈值。</p>
+          </div>
+          <i class="ph ph-brackets-curly"></i>
+        </div>
+        ${renderAnalysisAgentContext(r)}
+      </section>
+
+      <section class="news-panel span-6 daily-module-panel daily-module-audit analysis-module-audit">
+        <div class="news-panel-head daily-module-head">
+          <div>
+            <span class="news-section-kicker">抗失真审计</span>
+            <h3>阻断 LLM 分析 LLM</h3>
+            <p class="daily-module-subtitle">记录事实池、增量搜索、错误源和结论降级依据。</p>
           </div>
           <i class="ph ph-funnel"></i>
         </div>
-        ${renderIncremental(report)}
+        ${renderAnalysisAudit(r)}
       </section>
 
-      <section class="news-panel span-6">
-        <div class="news-panel-head">
+      <section class="news-panel span-12 daily-module-panel daily-module-ai analysis-module-ai">
+        <div class="news-panel-head daily-module-head">
           <div>
-            <span class="news-section-kicker">AI 情报</span>
-            <h3>科技叙事对风险偏好的传导</h3>
+            <span class="news-section-kicker">科技叙事溢价复核</span>
+            <h3>AI / 工具 / 科技新闻如何进入风险偏好</h3>
+            <p class="daily-module-subtitle">保留科技叙事，但必须经过资金面与风险偏好二次筛选。</p>
           </div>
           <i class="ph ph-brain"></i>
         </div>
-        <div class="news-ai-list">${renderAiIntel(report)}</div>
-      </section>
-
-      <section class="news-panel span-6">
-        <div class="news-panel-head">
-          <div>
-            <span class="news-section-kicker">趋势研判</span>
-            <h3>信号强化与裂变</h3>
-          </div>
-          <i class="ph ph-wave-sine"></i>
-        </div>
-        <div class="news-trend-grid">${renderTrendRead(report)}</div>
+        <div class="news-ai-list">${renderAnalysisAiPremium(r)}</div>
       </section>
     </div>
 
@@ -662,8 +1121,7 @@ function bindNewsInnerEvents() {
 
 function pageNews() {
   return html`
-    <div class="news-intel-shell" id="news-scaffold-root">
-      ${typeof renderSentimentScaffoldStrip === "function" ? renderSentimentScaffoldStrip() : ""}
+    <div class="news-intel-shell daily-workbench-shell analysis-workbench-shell" id="news-scaffold-root">
       <div id="news-intel-content">${renderYuqingReport(activeAnalysisReport())}</div>
     </div>
   `;
@@ -674,7 +1132,7 @@ function initNews() {
   bindNewsInnerEvents();
   __yuqingAnalysisClock = setInterval(() => {
     const cal = document.getElementById("news-calendar-list");
-    if (cal) cal.innerHTML = renderCalendar(activeAnalysisReport().report || {});
+    if (cal) cal.innerHTML = renderAnalysisCalendar(activeAnalysisReport());
   }, 30_000);
   loadAnalysisReport(analysisHashReportId());
 }

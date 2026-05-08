@@ -1,6 +1,6 @@
 import { cleanText } from "./shared.js";
 
-function marketScoreFromSources(sources) {
+export function marketScoreFromSources(sources) {
   const fng = sources && sources.fng && sources.fng.ok ? Number(sources.fng.value) : 50;
   return Math.max(0, Math.min(100, Number.isFinite(fng) ? fng : 50));
 }

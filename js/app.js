@@ -127,10 +127,15 @@ function attachPageEvents() {
 }
 
 function tickClock() {
-  const now = new Date();
-  const s = now.toLocaleString("zh-CN", { hour12: false });
   const elTime = $("#nowTime");
-  if (elTime) elTime.textContent = s;
+  if (!elTime) return;
+  elTime.textContent = new Date().toLocaleTimeString("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function init() {

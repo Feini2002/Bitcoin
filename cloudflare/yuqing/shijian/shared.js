@@ -30,3 +30,8 @@ export function stringifyJsonForPrompt(value) {
     return "{}";
   }
 }
+
+export function itemSummary(it, fallback = "事实池未提供摘要，需结合来源标题保守阅读。") {
+  const s = String(it && (it.summary || it.body || it.description) || "").trim();
+  return s.length > 8 ? s : fallback;
+}

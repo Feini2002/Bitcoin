@@ -3,14 +3,17 @@
    ======================================================= */
 
 const DAILY_EVENT_KIND = "daily_event";
-let __yuqingDailyClock = null;
 let __yuqingDailyAbort = null;
 let __dailyScanTick = null;
+let __dailyStreamRenderTimer = null;
+let __dailyStreamRenderRaf = null;
 
 const dailyEventState = {
   report: null,
   /** 流式生成过程中用于即时渲染的临时行（不入库，done 后清空） */
   streamPreviewRow: null,
+  /** Worker token/delta 事件的前端缓冲，只在本轮流式生成期间展示 */
+  streamModules: {},
   history: [],
   status: "正在加载云端日报…",
   source: "loading",
@@ -105,8 +108,44 @@ function dailyTriggerLabel(row) {
   return "定点触发";
 }
 
+/** 事件一览页头徽章：手动扫描 vs 定点扫描 */
+function dailyHeaderScanBadge(row) {
+  if (!row || typeof row !== "object") return "";
+  const trigger = String(row.triggerType || "");
+  const slot = String(row.slot || "");
+  if (trigger === "manual" || slot.startsWith("manual")) return "手动扫描";
+  return "定点扫描";
+}
+
 function dailyActiveReport() {
   return dailyEventState.streamPreviewRow || dailyEventState.report;
+}
+
+function dailyClearScheduledStreamRender() {
+  if (__dailyStreamRenderTimer) {
+    clearTimeout(__dailyStreamRenderTimer);
+    __dailyStreamRenderTimer = null;
+  }
+  if (__dailyStreamRenderRaf) {
+    cancelAnimationFrame(__dailyStreamRenderRaf);
+    __dailyStreamRenderRaf = null;
+  }
+}
+
+function dailyResetStreamBuffers() {
+  dailyEventState.streamModules = {};
+  dailyClearScheduledStreamRender();
+}
+
+function dailyScheduleStreamRender() {
+  if (__dailyStreamRenderTimer || __dailyStreamRenderRaf) return;
+  __dailyStreamRenderTimer = setTimeout(() => {
+    __dailyStreamRenderTimer = null;
+    __dailyStreamRenderRaf = requestAnimationFrame(() => {
+      __dailyStreamRenderRaf = null;
+      renderYuqingDailyIntoDom({ skipViewTransition: true });
+    });
+  }, 90);
 }
 
 function dailyEnsureStreamPreviewShell() {
@@ -114,6 +153,7 @@ function dailyEnsureStreamPreviewShell() {
   const now = new Date().toISOString();
   dailyEventState.streamPreviewRow = {
     id: "",
+    previewId: `stream-${Date.now().toString(36)}`,
     kind: DAILY_EVENT_KIND,
     reportDate: "",
     slot: "manual",
@@ -195,22 +235,119 @@ function mergeDailyStreamEvent(evt) {
   }
 }
 
+function dailyStreamModuleLabel(module, streamKey = "") {
+  const key = String(streamKey || module || "").trim();
+  if (key === "topStories.primary") return "今日头条 · 主线";
+  if (key === "topStories.wire") return "今日头条 · 快讯";
+  const m = String(module || "").trim();
+  if (m === "temperature") return "当前信息温度";
+  if (m === "topStories") return "今日头条";
+  if (m === "dynamicBriefs") return "动态速览";
+  if (m === "aiIntel") return "AI 情报站";
+  if (m === "githubTools") return "GitHub 工具雷达";
+  if (m === "trends") return "趋势线索";
+  return m || "模型输出";
+}
+
+function mergeDailyStreamChunk(evt) {
+  if (!evt || evt.type !== "chunk") return;
+  const module = String(evt.module || "misc").trim() || "misc";
+  const streamKey = String(evt.streamKey || module).trim() || module;
+  const delta = String(evt.delta || "");
+  if (!delta) return;
+  dailyEnsureStreamPreviewShell();
+  const prev = dailyEventState.streamModules[streamKey] || {
+    module,
+    streamKey,
+    label: dailyStreamModuleLabel(module, streamKey),
+    text: "",
+    updatedAt: 0,
+  };
+  dailyEventState.streamModules[streamKey] = {
+    ...prev,
+    module,
+    streamKey,
+    label: evt.label ? String(evt.label) : prev.label || dailyStreamModuleLabel(module, streamKey),
+    text: `${prev.text || ""}${delta}`,
+    updatedAt: Date.now(),
+  };
+}
+
+function dailyStreamEntriesForModule(module) {
+  const m = String(module || "").trim();
+  return Object.values(dailyEventState.streamModules || {})
+    .filter((entry) => entry && entry.module === m && String(entry.text || "").trim())
+    .sort((a, b) => String(a.streamKey || "").localeCompare(String(b.streamKey || "")));
+}
+
+function dailyCleanLiveStreamText(value) {
+  let s = String(value || "")
+    .replace(/```(?:json|markdown)?/gi, "")
+    .replace(/```/g, "")
+    .trim();
+  if (s.length > 1200) s = `…${s.slice(-1200)}`;
+  return s;
+}
+
+function dailyModuleHasStructuredData(module, row) {
+  const report = row && row.report ? row.report : {};
+  if (module === "temperature") {
+    const temp = report.marketTemperature || {};
+    return !!(temp.summary && temp.summary !== "等待信息温度模块…");
+  }
+  if (module === "topStories") {
+    return Array.isArray(report.topStories) && report.topStories.length > 0;
+  }
+  if (module === "dynamicBriefs") {
+    return Array.isArray(report.dynamicBriefs) && report.dynamicBriefs.length > 0;
+  }
+  if (module === "aiIntel") {
+    return Array.isArray(report.aiIntel) && report.aiIntel.length > 0;
+  }
+  if (module === "githubTools") {
+    return Array.isArray(report.githubTools) && report.githubTools.length > 0;
+  }
+  if (module === "trends") {
+    const t = report.trendRead || {};
+    return !!(
+      t.summary ||
+      t.conclusion ||
+      (Array.isArray(t.worldNews) && t.worldNews.length) ||
+      (Array.isArray(t.next72h) && t.next72h.length)
+    );
+  }
+  return false;
+}
+
+function renderDailyLiveStreamCards(module, row) {
+  if (!row || row.status !== "streaming" || dailyModuleHasStructuredData(module, row)) return "";
+  const entries = dailyStreamEntriesForModule(module);
+  if (!entries.length) return "";
+  return entries
+    .map((entry) => {
+      const text = dailyCleanLiveStreamText(entry.text);
+      if (!text) return "";
+      return `<article class="daily-knowledge-card daily-stream-card">
+        <div class="daily-stream-card-head">
+          <span>正在输出</span>
+          <strong>${dailyEscapeHtml(entry.label || dailyStreamModuleLabel(module, entry.streamKey))}</strong>
+        </div>
+        <p class="daily-stream-copy">${parseMarkdownInline(text)}</p>
+      </article>`;
+    })
+    .join("");
+}
+
 function dailyCurrentReportId() {
-  const row = dailyEventState.report;
-  return row && row.id ? String(row.id) : "";
+  const row = dailyActiveReport();
+  if (row && row.id) return String(row.id);
+  if (row && row.previewId) return String(row.previewId);
+  return "";
 }
 
 function dailyQuality(row) {
   if (!row || typeof row !== "object") return {};
   return row.quality || (row.report && row.report.quality) || (row.grounding && row.grounding.quality) || {};
-}
-
-function dailySourceStatusText() {
-  if (dailyEventState.streamPreviewRow) return `流式预览：${dailyEventState.status || "生成中"}`;
-  if (dailyEventState.source === "cloud") return "云端 D1 报告已接入";
-  if (dailyEventState.source === "error") return `数据源切换中：${dailyEventState.status}`;
-  if (dailyEventState.source === "loading") return "正在读取云端 D1 报告...";
-  return dailyEventState.status || "待机";
 }
 
 function dailyRenderLink(ref) {
@@ -332,17 +469,14 @@ function renderDailyTemperature(row) {
     temp.suggestion ? { label: "建议", value: temp.suggestion, tone: "ok" } : null,
   ].filter(Boolean);
   const assetMovesHtml = renderDailyAssetMoves(temp);
+  const liveHtml = renderDailyLiveStreamCards("temperature", row);
   return `
-    <section class="news-panel span-12 daily-module-panel daily-module-temperature daily-brief-temperature" style="view-transition-name: daily-temperature;">
+    <section class="news-panel span-12 daily-module-panel daily-module-temperature daily-brief-temperature" style="view-transition-name: daily-temperature;" aria-label="当前信息温度">
       <div class="news-panel-head daily-module-head">
-        <div>
-          <span class="news-section-kicker">数字源于 Crypto Fear & Greed，仅作阅读背景</span>
-          <h3>信息温度</h3>
-          <p class="daily-module-subtitle">先判断今天的阅读环境，再进入事件拆解。</p>
-        </div>
+        <h3>当前信息温度</h3>
       </div>
       <div class="daily-temperature-body">
-        <div class="daily-temperature-score" aria-label="信息温度 ${n} 分">
+        <div class="daily-temperature-score" aria-label="当前信息温度 ${n} 分">
           <strong>${n}</strong>
           <span>/ 100</span>
         </div>
@@ -350,6 +484,7 @@ function renderDailyTemperature(row) {
           <p class="daily-temperature-summary">${dailyEscapeHtml(temp.summary || "当前信息温度中性，可正常阅读各类来源信息。")}</p>
           ${details.length ? `<div class="daily-temperature-meta">${details.map((x) => `<span class="daily-temp-meta-${dailyEscapeHtml(x.tone)}"><b>${dailyEscapeHtml(x.label)}</b>${dailyEscapeHtml(x.value)}</span>`).join("")}</div>` : ""}
           ${assetMovesHtml}
+          ${liveHtml}
         </div>
       </div>
     </section>
@@ -427,12 +562,16 @@ function renderDailyTopStory(story, idx = 0) {
 }
 
 function renderDailyTopStories(row) {
+  const liveHtml = renderDailyLiveStreamCards("topStories", row);
+  if (liveHtml) return liveHtml;
   return dailyTopStories(row).slice(0, 5).map((story, idx) => renderDailyTopStory(story, idx)).join("");
 }
 
 function renderDailyBriefs(row) {
   const report = row && row.report ? row.report : {};
   const briefs = Array.isArray(report.dynamicBriefs) ? report.dynamicBriefs : [];
+  const liveHtml = renderDailyLiveStreamCards("dynamicBriefs", row);
+  if (!briefs.length && liveHtml) return liveHtml;
   if (!briefs.length) {
     return renderDailyPlaceholderCard({
       category: "系统状态",
@@ -478,6 +617,8 @@ function renderDailyBriefs(row) {
 function renderDailyAi(row) {
   const report = row && row.report ? row.report : {};
   const items = Array.isArray(report.aiIntel) ? report.aiIntel : [];
+  const liveHtml = renderDailyLiveStreamCards("aiIntel", row);
+  if (!items.length && liveHtml) return liveHtml;
   if (!items.length) {
     return renderDailyPlaceholderCard({
       category: "AI 情报站",
@@ -492,6 +633,7 @@ function renderDailyAi(row) {
       (item) => {
         const fact = item.coreFact || item.what || "";
         const value = item.actionableValue || item.use || "";
+        const scenario = item.applicationScenario || item.scenario || "";
         const rating = item.rating || item.attention || "";
         const source = item.sourceUrl
           ? `<a href="${dailyEscapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${dailyEscapeHtml(item.sourceName || "来源")}</a>`
@@ -502,8 +644,9 @@ function renderDailyAi(row) {
         <div>
           <h4>${parseMarkdownInline(item.title || "")}</h4>
           <span class="daily-ai-date">发布日期：${dailyEscapeHtml(item.date || "近72小时")}${rating ? ` · ${dailyEscapeHtml(rating)}` : ""}</span>
-          <p><strong>核心突破</strong>${parseMarkdownInline(fact || "等待下一轮实时检索补齐。")}</p>
-          <p><strong>落地价值</strong>${parseMarkdownInline(value || "等待下一轮实时检索补齐。")}</p>
+          <p><strong>核心突破：</strong>${parseMarkdownInline(fact || "等待下一轮实时检索补齐。")}</p>
+          <p><strong>落地价值：</strong>${parseMarkdownInline(value || "等待下一轮实时检索补齐。")}</p>
+          ${scenario ? `<p><strong>应用场景：</strong>${parseMarkdownInline(scenario)}</p>` : ""}
           ${source ? `<div class="news-source-inline">来源：${source}</div>` : ""}
         </div>
       </div>`;
@@ -515,6 +658,8 @@ function renderDailyAi(row) {
 function renderDailyGithubTools(row) {
   const report = row && row.report ? row.report : {};
   const tools = Array.isArray(report.githubTools) ? report.githubTools : [];
+  const liveHtml = renderDailyLiveStreamCards("githubTools", row);
+  if (!tools.length && liveHtml) return liveHtml;
   if (!tools.length) {
     return renderDailyPlaceholderCard({
       category: "GitHub 工具雷达",
@@ -531,24 +676,16 @@ function renderDailyGithubTools(row) {
         : item.sourceName
           ? dailyEscapeHtml(item.sourceName)
           : "";
-      const repo = item.repo ? `<span class="daily-github-repo">${dailyEscapeHtml(item.repo)}</span>` : "";
-      return `<article class="daily-github-card">
-        <div class="daily-github-card-head">
-          <div>
-            <h4>${parseMarkdownInline(item.title || "GitHub AI 工具")}</h4>
-            <div class="daily-github-meta">
-              ${repo}
-              <span>${dailyEscapeHtml(item.kind || "tool")}</span>
-              <span>${dailyEscapeHtml(item.target || "通用")}</span>
-              <span>${dailyEscapeHtml(item.date || "近14天")}</span>
-            </div>
-          </div>
-          <strong class="daily-github-fit ${dailyEscapeHtml(item.fit || "中")}">${dailyEscapeHtml(item.fit || "中")}</strong>
+      const rating = item.rating || item.fit || "";
+      return `<div class="daily-ai-card">
+        <div>
+          <h4>${parseMarkdownInline(item.title || "GitHub AI 工具")}</h4>
+          <span class="daily-ai-date">发布日期：${dailyEscapeHtml(item.date || "近14天")}${rating ? ` · ${dailyEscapeHtml(rating)}` : ""}</span>
+          <p><strong>为什么适合我：</strong>${parseMarkdownInline(item.whyUseful || "")}</p>
+          <p><strong>第一步：</strong>${parseMarkdownInline(item.howToUse || "")}</p>
+          ${source ? `<div class="news-source-inline">来源：${source}</div>` : ""}
         </div>
-        <p><strong>为什么适合我</strong>${parseMarkdownInline(item.whyUseful || "")}</p>
-        <p><strong>第一步</strong>${parseMarkdownInline(item.howToUse || "")}</p>
-        ${source ? `<div class="news-source-inline">来源：${source}</div>` : ""}
-      </article>`;
+      </div>`;
     })
     .join("");
 }
@@ -629,6 +766,8 @@ function renderDailyTrendBlock(title, rows, cls, fallbackText) {
 
 function renderDailyTrend(row) {
   const report = row && row.report ? row.report : {};
+  const liveHtml = renderDailyLiveStreamCards("trends", row);
+  if (liveHtml) return liveHtml;
   const t = report.trendRead || {};
   const macroTrend = report.macroTrend || "";
   const hasStructuredTrend = !!(
@@ -720,10 +859,12 @@ function renderDailyArchiveList() {
         : "";
       return `${dateHead}<div class="news-archive-row">
         <button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${dailyEscapeHtml(item.id)}">
-        <span>${dailyEscapeHtml(dailySlotLabel(item))}</span>
-        <strong>${dailyEscapeHtml(title)}</strong>
-        <em>${dailyEscapeHtml(dailyFormatTime(item.generatedAt))}</em>
-        <small>${dailyEscapeHtml(dailyTriggerLabel(item))}</small>
+          <span class="news-archive-slot">${dailyEscapeHtml(dailySlotLabel(item))}</span>
+          <strong>${dailyEscapeHtml(title)}</strong>
+          <span class="news-archive-meta">
+            <em>${dailyEscapeHtml(dailyFormatTime(item.generatedAt))}</em>
+            <small>${dailyEscapeHtml(dailyTriggerLabel(item))}</small>
+          </span>
       </button>${deleteBtn}</div>`;
     })
     .join("");
@@ -738,15 +879,13 @@ function renderDailyArchiveFilters() {
 
 function renderDailyArchiveChrome() {
   return `
-    <div class="news-archive-backdrop" id="daily-archive-backdrop" hidden></div>
-    <aside class="news-archive-drawer" id="daily-archive-drawer" aria-hidden="true">
+    <div class="news-archive-backdrop daily-drawer-backdrop" id="daily-archive-backdrop" hidden></div>
+    <aside class="news-archive-drawer daily-drawer daily-archive-drawer" id="daily-archive-drawer" aria-hidden="true">
       <div class="news-archive-head">
         <div>
-          <span class="news-section-kicker">最近 7 天</span>
-          <h3>事件日报回档</h3>
-          <p class="daily-archive-sub">定点班次（北京时间 00 / 08 / 12 / 20）与「实时扫描」都会写入此列表，切换报告请用 7 日报告库。</p>
+          <h3>7 日报告库</h3>
         </div>
-        <button type="button" class="btn" id="daily-close-archive" title="关闭报告库">
+        <button type="button" class="btn daily-drawer-close" id="daily-close-archive" title="关闭报告库">
           <i class="ph ph-x"></i><span>关闭</span>
         </button>
       </div>
@@ -759,53 +898,65 @@ function renderDailySettingsChrome() {
   const v = __yuqingSettings.visibility;
   const s = __yuqingSettings.scanCoverage;
   
-  const mkToggle = (key, label, checked, type) => `
-    <label class="daily-setting-row ${checked ? "is-on" : "is-off"}">
-      <span>${dailyEscapeHtml(label)}</span>
-      <div class="toggle-switch">
-        <input type="checkbox" class="daily-setting-cb" data-key="${key}" data-type="${type}" ${checked ? "checked" : ""} aria-label="${dailyEscapeHtml(label)}">
-        <span class="slider"></span>
-      </div>
-    </label>
-  `;
+  const mkToggle = (key, label, checked, type) => {
+    const hint = type === "scan" ? "纳入实时扫描" : "本页显示";
+    return `
+      <label class="daily-setting-row ${checked ? "is-on" : "is-off"}">
+        <span class="daily-setting-copy">
+          <strong>${dailyEscapeHtml(label)}</strong>
+          <small>${dailyEscapeHtml(hint)}</small>
+        </span>
+        <div class="toggle-switch">
+          <input type="checkbox" class="daily-setting-cb" data-key="${key}" data-type="${type}" ${checked ? "checked" : ""} aria-label="${dailyEscapeHtml(label)}">
+          <span class="slider"></span>
+        </div>
+      </label>
+    `;
+  };
 
   return `
-    <div class="news-archive-backdrop" id="daily-settings-backdrop" hidden></div>
-    <aside class="news-archive-drawer" id="daily-settings-drawer" aria-hidden="true">
+    <div class="news-archive-backdrop daily-drawer-backdrop" id="daily-settings-backdrop" hidden></div>
+    <aside class="news-archive-drawer daily-drawer daily-settings-drawer" id="daily-settings-drawer" aria-hidden="true">
       <div class="news-archive-head">
         <div>
-          <span class="news-section-kicker">云端全局设置</span>
           <h3>事件一览设置</h3>
-          <p class="daily-archive-sub">多设备同步。修改后保存实时生效。</p>
         </div>
-        <button type="button" class="btn" id="daily-close-settings" title="关闭设置">
+        <button type="button" class="btn daily-drawer-close" id="daily-close-settings" title="关闭设置">
           <i class="ph ph-x"></i><span>关闭</span>
         </button>
       </div>
-      <div class="daily-settings-body" style="padding: 0 24px;">
-        <h4 style="margin: 24px 0 12px; color: var(--text);">仪表盘可见度</h4>
-        <p class="muted-text" style="font-size: 13px; margin-bottom: 16px;">仅影响本页面显示，不影响后台生成内容。</p>
-        <div class="daily-settings-group">
-          ${mkToggle("dashboard", "信息温度", v.dashboard, "visibility")}
-          ${mkToggle("news", "今日头条", v.news, "visibility")}
-          ${mkToggle("timeline", "动态速览", v.timeline, "visibility")}
-          ${mkToggle("ai", "AI 情报站", v.ai, "visibility")}
-          ${mkToggle("githubTools", "GitHub 工具雷达", v.githubTools, "visibility")}
-          ${mkToggle("trends", "趋势线索", v.trends, "visibility")}
-        </div>
-        
-        <h4 style="margin: 32px 0 12px; color: var(--text);">实时扫描覆盖</h4>
-        <p class="muted-text" style="font-size: 13px; margin-bottom: 16px;">决定点击「实时扫描」时，云端 Worker 及大模型覆盖哪些模块。趋势线索不单独 Google 检索，只叠加分析已开启的上游模块。</p>
-        <div class="daily-settings-group">
-          ${mkToggle("dashboard", "信息温度", s.dashboard, "scan")}
-          ${mkToggle("news", "今日头条", s.news, "scan")}
-          ${mkToggle("timeline", "动态速览", s.timeline, "scan")}
-          ${mkToggle("ai", "AI 情报站", s.ai, "scan")}
-          ${mkToggle("githubTools", "GitHub 工具雷达", s.githubTools, "scan")}
-          ${mkToggle("trends", "趋势线索（叠加分析）", s.trends, "scan")}
-        </div>
-        
-        <div style="margin-top: 32px; display: flex; justify-content: flex-end;">
+      <div class="daily-settings-body">
+        <section class="daily-settings-section">
+          <div class="daily-settings-section-head">
+            <h4>仪表盘可见度</h4>
+            <p>只影响当前页面，不改变后台生成内容。</p>
+          </div>
+          <div class="daily-settings-group">
+            ${mkToggle("dashboard", "信息温度", v.dashboard, "visibility")}
+            ${mkToggle("news", "今日头条", v.news, "visibility")}
+            ${mkToggle("timeline", "动态速览", v.timeline, "visibility")}
+            ${mkToggle("ai", "AI 情报站", v.ai, "visibility")}
+            ${mkToggle("githubTools", "GitHub 工具雷达", v.githubTools, "visibility")}
+            ${mkToggle("trends", "趋势线索", v.trends, "visibility")}
+          </div>
+        </section>
+
+        <section class="daily-settings-section">
+          <div class="daily-settings-section-head">
+            <h4>实时扫描覆盖</h4>
+            <p>决定点击「实时扫描」时 Worker 与模型会跑哪些模块；趋势线索只做上游结果的归纳。</p>
+          </div>
+          <div class="daily-settings-group">
+            ${mkToggle("dashboard", "信息温度", s.dashboard, "scan")}
+            ${mkToggle("news", "今日头条", s.news, "scan")}
+            ${mkToggle("timeline", "动态速览", s.timeline, "scan")}
+            ${mkToggle("ai", "AI 情报站", s.ai, "scan")}
+            ${mkToggle("githubTools", "GitHub 工具雷达", s.githubTools, "scan")}
+            ${mkToggle("trends", "趋势线索（叠加分析）", s.trends, "scan")}
+          </div>
+        </section>
+
+        <div class="daily-settings-actions">
           <button type="button" class="btn primary" id="daily-save-settings" ${__yuqingSettingsSaving ? "disabled" : ""}>
             ${__yuqingSettingsSaving ? '<i class="ph ph-spinner-gap spin"></i><span>保存中</span>' : '<i class="ph ph-floppy-disk"></i><span>保存并应用</span>'}
           </button>
@@ -815,28 +966,26 @@ function renderDailySettingsChrome() {
 }
 
 function renderDailyReportHeader(r) {
-  const status = dailySourceStatusText();
-  const slot = r ? dailySlotLabel(r) : "报告";
-  const trigger = r ? dailyTriggerLabel(r) : "云端读取";
+  const badge = r ? dailyHeaderScanBadge(r) : "";
+  const badgeHtml =
+    badge !== ""
+      ? `<div class="daily-report-meta daily-report-meta--title"><span>${dailyEscapeHtml(badge)}</span></div>`
+      : "";
   return `
     <div class="news-command daily-event-command" style="view-transition-name: daily-command-bar;">
       <div class="news-command-main daily-command-main">
         <div class="daily-report-trigger">
-          <span class="daily-report-trigger-label">事件研究简报</span>
+          <div class="daily-report-trigger-title-row">
+            <span class="daily-report-trigger-label">世界情报收集</span>
+            ${badgeHtml}
+          </div>
           <div class="daily-report-trigger-row">
             <i class="ph ph-clock" aria-hidden="true"></i>
             <strong>${dailyEscapeHtml(dailyFormatTriggeredSearchAt(r && r.generatedAt ? r.generatedAt : null))}</strong>
           </div>
-          <p>${dailyEscapeHtml(status)}</p>
-        </div>
-        <div class="daily-report-meta">
-          <span>${dailyEscapeHtml(slot)}</span>
-          <span>${dailyEscapeHtml(trigger)}</span>
-          <span>北京时间</span>
         </div>
       </div>
       <div class="news-command-actions">
-        <div class="daily-clock-pill"><i class="ph ph-clock"></i><span id="daily-clock">--</span></div>
         <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="单次请求 Worker：NDJSON 流式返回，模块就绪即显示；温度/头条/速览/AI 并行检索（头条可双路），趋势最后归纳；完成后写入 D1（约 1～5 分钟）">
           <i class="ph ph-rocket-launch"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
         </button>
@@ -961,18 +1110,6 @@ function renderYuqingDailyReport(row) {
   return renderDailyReportHeader(r) + renderDailyReportGrid(r);
 }
 
-function refreshYuqingDailyClock() {
-  const el = document.getElementById("daily-clock");
-  if (!el) return;
-  el.textContent = new Date().toLocaleTimeString("zh-CN", {
-    timeZone: "Asia/Shanghai",
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
 let __lastDailyRenderedId = null;
 let __lastDailyRenderedLoading = null;
 
@@ -1023,6 +1160,8 @@ function renderYuqingDailyIntoDom(options) {
   const report = dailyActiveReport();
   const reportId = dailyCurrentReportId();
   const isLoading = !!dailyEventState.loading;
+  const streamMode = isLoading || !!(report && report.status === "streaming");
+  root.classList.toggle("is-streaming", streamMode);
 
   // 仅重绘 Grid：优先 #daily-report-grid 元素级 VT（命名组仍参与形变；快照不盖住 fixed 侧栏）。
   const gridOnlyRefresh =
@@ -1031,7 +1170,7 @@ function renderYuqingDailyIntoDom(options) {
     !!String(header.innerHTML || "").trim() &&
     reportId === __lastDailyRenderedId &&
     isLoading === __lastDailyRenderedLoading;
-  const skipViewTransition = options && options.skipViewTransition === true;
+  const skipViewTransition = streamMode || (options && options.skipViewTransition === true);
 
   const updateDom = () => {
     if (header && grid) {
@@ -1045,7 +1184,6 @@ function renderYuqingDailyIntoDom(options) {
       root.innerHTML = renderYuqingDailyReport(report);
     }
     bindYuqingDailyEvents();
-    refreshYuqingDailyClock();
   };
 
   const drawerOpen = isDailyYuqingDrawerOpen();
@@ -1053,7 +1191,6 @@ function renderYuqingDailyIntoDom(options) {
   const gridInnerOnly = () => {
     grid.innerHTML = renderDailyReportGrid(report);
     bindYuqingDailyEvents();
-    refreshYuqingDailyClock();
   };
 
   if (skipViewTransition) {
@@ -1167,6 +1304,7 @@ async function loadDailyReport(reportId = "") {
     return;
   }
   dailyEventState.streamPreviewRow = null;
+  dailyResetStreamBuffers();
   if (__yuqingDailyAbort) __yuqingDailyAbort.abort();
   __yuqingDailyAbort = new AbortController();
   dailyEventState.source = "loading";
@@ -1211,18 +1349,19 @@ async function generateDailyReport() {
     __dailyScanTick = null;
   }
   dailyEventState.streamPreviewRow = null;
+  dailyResetStreamBuffers();
   dailyEventState.loading = true;
   dailyEventState.status = canStream
     ? "已连接流式通道：头条/速览/AI/GitHub 完成后逐段显示，趋势线索最后基于本轮结果叠加归纳并写入 D1。请勿关闭页面…"
     : "正在触发单次全流程日报（信息温度、头条、速览、AI/GitHub → 趋势线索不联网归纳 → 写入 D1）。首次约 1～4 分钟，请勿关闭页面…";
-  renderYuqingDailyIntoDom();
+  renderYuqingDailyIntoDom({ skipViewTransition: true });
   __dailyScanTick = setInterval(() => {
     if (!dailyEventState.loading) return;
     const sec = Math.floor((Date.now() - tScanStart) / 1000);
     dailyEventState.status = canStream
       ? `流式生成中（已等待 ${sec}s）… 趋势线索会等上游模块完成后再做本轮叠加分析。`
       : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为上游检索偏慢或网络中断。`;
-    renderYuqingDailyIntoDom();
+    renderYuqingDailyIntoDom({ skipViewTransition: true });
   }, 8000);
   const s = __yuqingSettings.scanCoverage;
   // 上游模块负责检索；趋势线索只吃本轮模块输出做二次合成。
@@ -1250,14 +1389,21 @@ async function generateDailyReport() {
         onEvent: async (evt) => {
           if (evt.type === "start") {
             dailyEventState.status = "流式通道已建立，等待各模块…";
-            renderYuqingDailyIntoDom();
+            renderYuqingDailyIntoDom({ skipViewTransition: true });
+            return;
+          }
+          if (evt.type === "chunk") {
+            mergeDailyStreamChunk(evt);
+            dailyEventState.source = "cloud";
+            dailyEventState.status = `正在输出：${dailyStreamModuleLabel(evt.module, evt.streamKey)}`;
+            dailyScheduleStreamRender();
             return;
           }
           if (evt.type === "partial") {
             mergeDailyStreamEvent(evt);
             dailyEventState.source = "cloud";
             dailyEventState.status = `已更新：${evt.module || "模块"}`;
-            renderYuqingDailyIntoDom();
+            renderYuqingDailyIntoDom({ skipViewTransition: true });
           }
         },
       });
@@ -1284,7 +1430,7 @@ async function generateDailyReport() {
     if (maybeTimeout) {
       dailyEventState.status = "请求中断或超时，正在尝试从 D1 读取最新一条事件日报…";
       dailyEventState.source = "loading";
-      renderYuqingDailyIntoDom();
+      renderYuqingDailyIntoDom({ skipViewTransition: true });
       try {
         await loadDailyReport("");
         const row = dailyEventState.report;
@@ -1310,7 +1456,8 @@ async function generateDailyReport() {
       __dailyScanTick = null;
     }
     dailyEventState.loading = false;
-    renderYuqingDailyIntoDom();
+    dailyClearScheduledStreamRender();
+    renderYuqingDailyIntoDom({ skipViewTransition: true });
     renderYuqingDailyDrawersIntoDom();
   }
 }
@@ -1517,10 +1664,7 @@ function initYuqingEvents() {
   disposeYuqingEvents();
   renderYuqingDailyIntoDom();
   renderYuqingDailyDrawersIntoDom();
-  
-  refreshYuqingDailyClock();
-  __yuqingDailyClock = setInterval(refreshYuqingDailyClock, 1000);
-  
+
   // 异步加载云端设置，不阻塞主报告拉取
   if (typeof DataEngine !== "undefined" && typeof DataEngine.fetchYuqingEventDashboardSettings === "function") {
     DataEngine.fetchYuqingEventDashboardSettings().then(data => {
@@ -1540,10 +1684,13 @@ function initYuqingEvents() {
 function disposeYuqingEvents() {
   __lastDailyRenderedId = null;
   __lastDailyRenderedLoading = null;
-  if (__yuqingDailyClock) {
-    clearInterval(__yuqingDailyClock);
-    __yuqingDailyClock = null;
+  if (__dailyScanTick) {
+    clearInterval(__dailyScanTick);
+    __dailyScanTick = null;
   }
+  dailyResetStreamBuffers();
+  dailyEventState.streamPreviewRow = null;
+  dailyEventState.loading = false;
   if (__yuqingDailyAbort) {
     __yuqingDailyAbort.abort();
     __yuqingDailyAbort = null;

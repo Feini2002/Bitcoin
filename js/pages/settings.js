@@ -68,6 +68,153 @@ function settingsYuqingNextRunLabel(cfg) {
   return d.toLocaleString("zh-CN", { hour12: false });
 }
 
+const SETTINGS_MODEL_CATALOG = [
+  { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro Preview", tier: "深度", hint: "复杂归纳、二次研判、首席策略类任务" },
+  { id: "gemini-3.1-flash-lite-preview", label: "Gemini 3.1 Flash Lite Preview", tier: "轻量", hint: "低成本、短文本、状态与温度类任务" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview", tier: "快速", hint: "实时检索、事件扫描、常规模块生成" },
+];
+
+const SETTINGS_MODEL_TARGETS = [
+  { id: "daily_event.dashboard", group: "事件一览", page: "事件一览", module: "信息温度", status: "active", defaultModel: "gemini-3.1-flash-lite-preview", note: "市场温度 JSON 与低延迟状态摘要。" },
+  { id: "daily_event.news", group: "事件一览", page: "事件一览", module: "今日头条", status: "active", defaultModel: "gemini-3-flash-preview", note: "Google Search 事件检索与结构化头条。" },
+  { id: "daily_event.timeline", group: "事件一览", page: "事件一览", module: "动态速览", status: "active", defaultModel: "gemini-3-flash-preview", note: "实时动态简报与来源归纳。" },
+  { id: "daily_event.ai", group: "事件一览", page: "事件一览", module: "AI 情报站", status: "active", defaultModel: "gemini-3-flash-preview", note: "AI 行业新闻检索与可用性提炼。" },
+  { id: "daily_event.githubTools", group: "事件一览", page: "事件一览", module: "GitHub 工具雷达", status: "active", defaultModel: "gemini-3-flash-preview", note: "开发工具与开源项目动态检索。" },
+  { id: "daily_event.trends", group: "事件一览", page: "事件一览", module: "趋势线索", status: "active", defaultModel: "gemini-3.1-flash-lite-preview", note: "基于本轮模块输出的二次叠加。" },
+  { id: "sentiment_analysis.dashboard", group: "舆情分析", page: "舆情分析", module: "市场状态", status: "active", defaultModel: "gemini-3.1-flash-lite-preview", note: "二次分析页的市场温度与状态底座。" },
+  { id: "sentiment_analysis.news", group: "舆情分析", page: "舆情分析", module: "事件复盘", status: "active", defaultModel: "gemini-3.1-pro-preview", note: "复盘上游事件、动态速览与宏观主线。" },
+  { id: "sentiment_analysis.ai", group: "舆情分析", page: "舆情分析", module: "AI 线索复核", status: "active", defaultModel: "gemini-3.1-pro-preview", note: "将 AI 事件放回市场语境做二次筛选。" },
+  { id: "sentiment_analysis.trends", group: "舆情分析", page: "舆情分析", module: "趋势研判", status: "active", defaultModel: "gemini-3.1-pro-preview", note: "综合上游日报、事实池与市场快照。" },
+  { id: "agent.chief", group: "员工 Agent", page: "智囊团", module: "首席策略官", status: "reserved", defaultModel: "gemini-3.1-pro-preview", note: "预留：未来总控汇总与最终策略指引。" },
+  { id: "agent.env", group: "员工 Agent", page: "智囊团", module: "环境评估员", status: "reserved", defaultModel: "gemini-3-flash-preview", note: "预留：未来读取行情、波动率与宏观环境。" },
+  { id: "agent.flow", group: "员工 Agent", page: "智囊团", module: "盘口流动性官", status: "reserved", defaultModel: "gemini-3-flash-preview", note: "预留：未来读取足迹图、成交分布与强平。" },
+  { id: "agent.deriv", group: "员工 Agent", page: "智囊团", module: "衍生品情报官", status: "reserved", defaultModel: "gemini-3-flash-preview", note: "预留：未来读取资金费率、OI、期权与基差。" },
+  { id: "agent.risk", group: "员工 Agent", page: "智囊团", module: "风控官", status: "reserved", defaultModel: "gemini-3-flash-preview", note: "预留：未来读取仓位、风险预算与异常模式。" },
+];
+
+let __settingsModelConfig = null;
+
+function defaultSettingsModelConfig() {
+  const effective = {};
+  SETTINGS_MODEL_TARGETS.forEach((target) => {
+    effective[target.id] = target.defaultModel;
+  });
+  return {
+    ok: true,
+    d1Ready: false,
+    source: "fallback",
+    catalog: SETTINGS_MODEL_CATALOG,
+    targets: SETTINGS_MODEL_TARGETS,
+    settings: { version: 1, assignments: {}, updatedAt: null },
+    effective,
+    warning: null,
+  };
+}
+
+function normalizeSettingsModelConfig(data) {
+  const fallback = defaultSettingsModelConfig();
+  const src = data && typeof data === "object" ? data : {};
+  const catalog = Array.isArray(src.catalog) && src.catalog.length ? src.catalog : fallback.catalog;
+  const targets = Array.isArray(src.targets) && src.targets.length ? src.targets : fallback.targets;
+  const settings = src.settings && typeof src.settings === "object" ? src.settings : fallback.settings;
+  const assignments = settings.assignments && typeof settings.assignments === "object" ? settings.assignments : {};
+  const effectiveSrc = src.effective && typeof src.effective === "object" ? src.effective : {};
+  const effective = {};
+  targets.forEach((target) => {
+    effective[target.id] = String(effectiveSrc[target.id] || assignments[target.id] || target.defaultModel || fallback.effective[target.id] || "");
+  });
+  return {
+    ...fallback,
+    ...src,
+    catalog,
+    targets,
+    settings: { ...settings, assignments },
+    effective,
+  };
+}
+
+function settingsModelSourceLabel(cfg) {
+  if (cfg.source === "d1") return "D1 已保存";
+  if (cfg.warning) return "读取降级";
+  return cfg.d1Ready ? "默认/环境变量" : "本地默认";
+}
+
+function settingsModelOptions(catalog, selected) {
+  const known = new Set((catalog || []).map((m) => m.id));
+  const extra = selected && !known.has(selected)
+    ? `<option value="${escapeHtml(selected)}" selected>环境变量 · ${escapeHtml(selected)}</option>`
+    : "";
+  return extra + (catalog || []).map((model) => `
+    <option value="${escapeHtml(model.id)}" ${model.id === selected ? "selected" : ""}>
+      ${escapeHtml(model.label || model.id)}
+    </option>
+  `).join("");
+}
+
+function renderSettingsModelChannels(config) {
+  const cfg = normalizeSettingsModelConfig(config);
+  const groups = [];
+  cfg.targets.forEach((target) => {
+    if (!groups.includes(target.group)) groups.push(target.group);
+  });
+  const updatedAt = cfg.settings && cfg.settings.updatedAt ? formatD1Time(cfg.settings.updatedAt) : "尚未保存";
+  return `
+    <div class="settings-model-summary">
+      <div class="cloud-status-card">
+        <span>配置来源</span>
+        <strong>${escapeHtml(settingsModelSourceLabel(cfg))}</strong>
+        <em>${cfg.d1Ready ? "Worker 已绑定 D1" : "D1 不可写时仅展示默认值"}</em>
+      </div>
+      <div class="cloud-status-card">
+        <span>内置模型</span>
+        <strong>${cfg.catalog.length}</strong>
+        <em>${cfg.catalog.map((m) => escapeHtml(m.tier || "")).filter(Boolean).join(" / ")}</em>
+      </div>
+      <div class="cloud-status-card">
+        <span>最后保存</span>
+        <strong>${escapeHtml(updatedAt)}</strong>
+        <em>${cfg.warning ? escapeHtml(cfg.warning) : "保存后下一次 Worker 请求立即生效"}</em>
+      </div>
+    </div>
+    <div class="settings-model-groups">
+      ${groups.map((group) => {
+        const rows = cfg.targets.filter((target) => target.group === group).map((target) => {
+          const selected = cfg.effective[target.id] || target.defaultModel;
+          return `
+            <label class="settings-model-row" data-model-row="${escapeHtml(target.id)}">
+              <span class="settings-model-row-main">
+                <span class="settings-model-row-title">
+                  ${escapeHtml(target.module)}
+                  <em class="settings-model-row-badge ${target.status === "reserved" ? "reserved" : "active"}">${target.status === "reserved" ? "预留" : "已接入"}</em>
+                </span>
+                <span class="settings-model-row-note">${escapeHtml(target.note || target.page || "")}</span>
+              </span>
+              <select class="settings-model-select" data-model-target="${escapeHtml(target.id)}" data-default-model="${escapeHtml(target.defaultModel)}" aria-label="${escapeHtml(target.module)}模型">
+                ${settingsModelOptions(cfg.catalog, selected)}
+              </select>
+            </label>
+          `;
+        }).join("");
+        return `
+          <section class="settings-model-group">
+            <div class="settings-model-group-head">
+              <strong>${escapeHtml(group)}</strong>
+              <span>${rows ? `${cfg.targets.filter((target) => target.group === group).length} 个通道` : "暂无通道"}</span>
+            </div>
+            <div class="settings-model-rows">${rows}</div>
+          </section>
+        `;
+      }).join("")}
+    </div>
+    <div class="settings-actions settings-model-actions">
+      <button type="button" class="btn" data-model-action="refresh"><i class="ph ph-arrows-clockwise"></i><span>重新读取</span></button>
+      <button type="button" class="btn" data-model-action="reset"><i class="ph ph-arrow-counter-clockwise"></i><span>恢复默认</span></button>
+      <button type="button" class="btn primary" data-model-action="save"><i class="ph ph-floppy-disk"></i><span>保存模型配置</span></button>
+      <span class="settings-actions-msg" id="settings-model-msg"></span>
+    </div>
+  `;
+}
+
 function pageSettings() {
   const current = getTheme();
   const themeLabel = current === "dark" ? "深色" : "浅色";
@@ -159,6 +306,19 @@ function pageSettings() {
             </div>
             <span class="settings-actions-msg" id="settings-yuqing-msg"></span>
           </div>
+        </div>
+      </section>
+
+      <section class="settings-panel" id="settings-model-panel">
+        <div class="settings-panel-head">
+          <div class="settings-panel-icon settings-panel-icon--model" aria-hidden="true"><i class="ph ph-cpu"></i></div>
+          <div>
+            <h2 class="settings-panel-title">模型通道</h2>
+            <p class="settings-panel-desc">按页面、模块与员工预留通道分配模型；保存后写入舆情 Worker 绑定的 D1，下一次生成请求优先读取这里。</p>
+          </div>
+        </div>
+        <div id="settings-model-content">
+          ${renderSettingsModelChannels(__settingsModelConfig || defaultSettingsModelConfig())}
         </div>
       </section>
 
@@ -599,8 +759,107 @@ function initSettingsYuqingSchedule() {
   refreshSettingsYuqingNext(readSettingsYuqingScheduleDraft());
 }
 
+function showSettingsModelMsg(text) {
+  const msg = document.getElementById("settings-model-msg");
+  if (msg) msg.textContent = text || "";
+}
+
+function renderSettingsModelConfigIntoDom(config) {
+  const content = document.getElementById("settings-model-content");
+  if (!content) return;
+  __settingsModelConfig = normalizeSettingsModelConfig(config);
+  content.innerHTML = renderSettingsModelChannels(__settingsModelConfig);
+}
+
+function collectSettingsModelAssignments() {
+  const assignments = {};
+  document.querySelectorAll("[data-model-target]").forEach((el) => {
+    const key = el.getAttribute("data-model-target") || "";
+    const value = String(el.value || "").trim();
+    if (key && value) assignments[key] = value;
+  });
+  return assignments;
+}
+
+function setSettingsModelBusy(panel, busy) {
+  if (!panel) return;
+  panel.querySelectorAll("[data-model-action], [data-model-target]").forEach((el) => {
+    el.disabled = !!busy;
+  });
+}
+
+function resetSettingsModelSelects(panel) {
+  if (!panel) return;
+  panel.querySelectorAll("[data-model-target]").forEach((el) => {
+    const def = el.getAttribute("data-default-model") || "";
+    if (def) el.value = def;
+  });
+}
+
+async function loadSettingsModelChannels() {
+  if (typeof DataEngine === "undefined" || typeof DataEngine.fetchYuqingModelSettings !== "function") {
+    renderSettingsModelConfigIntoDom(defaultSettingsModelConfig());
+    showSettingsModelMsg("数据引擎未加载，暂用内置默认。");
+    return;
+  }
+  showSettingsModelMsg("正在读取模型通道…");
+  try {
+    const data = await DataEngine.fetchYuqingModelSettings({ timeoutMs: 25_000 });
+    renderSettingsModelConfigIntoDom(data);
+    showSettingsModelMsg(data && data.warning ? `已降级读取：${data.warning}` : "已读取 D1 模型通道。");
+  } catch (e) {
+    renderSettingsModelConfigIntoDom(defaultSettingsModelConfig());
+    showSettingsModelMsg("读取失败，暂用内置默认：" + (e && e.message ? e.message : e));
+  }
+}
+
+function initSettingsModelChannels() {
+  const panel = document.getElementById("settings-model-panel");
+  if (!panel || panel.dataset.bound) return;
+  panel.dataset.bound = "1";
+
+  panel.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-model-action]");
+    if (!btn) return;
+    const action = btn.getAttribute("data-model-action");
+    if (action === "reset") {
+      resetSettingsModelSelects(panel);
+      showSettingsModelMsg("已恢复为内置默认，点击保存后写入 D1。");
+      return;
+    }
+    if (action === "refresh") {
+      setSettingsModelBusy(panel, true);
+      try {
+        await loadSettingsModelChannels();
+      } finally {
+        setSettingsModelBusy(panel, false);
+      }
+      return;
+    }
+    if (action !== "save") return;
+    if (typeof DataEngine === "undefined" || typeof DataEngine.updateYuqingModelSettings !== "function") {
+      showSettingsModelMsg("数据引擎未加载，无法保存。");
+      return;
+    }
+    setSettingsModelBusy(panel, true);
+    showSettingsModelMsg("正在保存到 D1…");
+    try {
+      const data = await DataEngine.updateYuqingModelSettings({ assignments: collectSettingsModelAssignments() }, { timeoutMs: 25_000 });
+      renderSettingsModelConfigIntoDom(data);
+      showSettingsModelMsg("已保存，下一次生成请求会读取新模型。");
+    } catch (err) {
+      showSettingsModelMsg("保存失败：" + (err && err.message ? err.message : err));
+    } finally {
+      setSettingsModelBusy(panel, false);
+    }
+  });
+
+  loadSettingsModelChannels();
+}
+
 function initSettingsPage() {
   initSettingsYuqingSchedule();
+  initSettingsModelChannels();
 
   const syncBtn = document.getElementById("settings-cloud-sync");
   const statusBtn = document.getElementById("settings-cloud-status");

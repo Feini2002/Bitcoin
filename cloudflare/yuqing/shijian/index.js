@@ -3,7 +3,8 @@
  * 本目录按页面内容块拆分 prompt 与 schema，主 Worker 只负责路由、D1 与调度。
  */
 
-export { buildDailyTemperature, buildDailyTemperaturePrompt } from "./temperature.js";
+export { cleanText, itemSummary } from "./shared.js";
+export { buildDailyTemperature, buildDailyTemperaturePrompt, marketScoreFromSources } from "./temperature.js";
 export {
   buildDailyTopStoriesPrompt,
   buildDailyTopStoriesWirePrompt,

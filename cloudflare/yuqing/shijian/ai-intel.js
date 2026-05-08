@@ -16,6 +16,7 @@ export function buildDailyAiIntelPrompt(timeStr) {
     "- date：确切的发布或披露日期。\n" +
     "- coreFact (核心突破)：只讲干货。它引入了什么新的 API 机制？提供了什么新工具集？与其他产品产生了怎样的联动？\n" +
     "- actionableValue (落地价值)：它能帮开发者/创作者省掉什么步骤？扩展了什么应用边界？写出 1~2 个最致命的实际业务场景。\n" +
+    "- applicationScenario (应用场景)：针对普通人（非极客但对 AI 感兴趣的正常职工）说明这个词条搜索分析出来后，他们可以拿来做什么。或者说对普通人的工作流有什么效率提升，生活中有什么便利。\n" +
     "- rating (关注评级)：只能是「S级」(重塑工作流/立刻接入)、「A级」(生态重要拼图/大幅提效) 或「B级」(值得记录的更新)。\n\n" +
     "【三、 侦察搜寻路径】\n" +
     "建议交叉检索：\n" +
@@ -24,8 +25,8 @@ export function buildDailyAiIntelPrompt(timeStr) {
     "3) 官方动向：site:openai.com/blog OR developers.googleblog.com OR anthropic.com/news\n\n" +
     "【四、 格式输出】\n" +
     "仅输出一个 JSON 代码块，顶层字段为 aiIntel（数组，4~5 条）。每条必须包含：\n" +
-    "title, date, coreFact, actionableValue, rating, sourceName, sourceUrl。\n" +
-    "记住：你的受众是高阶开发者与 AI 重度用户，只喂给他们“能直接武装到牙齿”的生态工具与能力扩展。"
+    "title, date, coreFact, actionableValue, applicationScenario, rating, sourceName, sourceUrl。\n" +
+    "记住：你的受众是高阶开发者与 AI 重度用户，只喂给他们“能直接武装到牙齿”的生态工具与能力扩展，不要假大空的AI情绪化营销方面的内容。"
   );
 }
 
@@ -47,6 +48,7 @@ export function normalizeDailyAiIntelItems(raw) {
       date: cleanText(it.date || it.publishDate || "", bjtDateLabel(), 48),
       coreFact: cleanText(it.coreFact || it.what || it.news || it.summary, "", 500),
       actionableValue: cleanText(it.actionableValue || it.use || it.valueForUser || it.impact, "", 500),
+      applicationScenario: cleanText(it.applicationScenario || it.scenario || "", "", 500),
       rating,
       sourceName: normalizeSourceName(it.sourceName || it.source || "Google 检索", "Google 检索"),
       sourceUrl: normalizeSourceUrl(it.sourceUrl || it.url || ""),
@@ -73,12 +75,14 @@ export function renderDailyAiIntelMarkdownForTrends(items) {
     .map((item) => {
       const fact = item.coreFact || item.what;
       const value = item.actionableValue || item.use;
+      const scenario = item.applicationScenario || item.scenario;
       const rate = item.rating || item.attention;
       return [
         `### ${markdownTitle(item.title, "AI 情报")}`,
         `发布日期：${cleanText(item.date, "", 48)} · 评级：**${cleanText(rate, "B级", 16)}**`,
         `核心突破：${cleanText(fact, "暂缺细节", 400)}`,
         `落地价值：${cleanText(value, "暂缺落地场景推演", 400)}`,
+        `应用场景：${cleanText(scenario, "暂缺应用场景", 400)}`,
       ].join("\n\n");
     })
     .join("\n\n")
