@@ -5,7 +5,7 @@
 const HEATMAP_SYMBOL = "BTCUSDT";
 const HEATMAP_STATE_KEY = "bitdesk.heatmap.settings";
 const HEATMAP_STATE_VERSION = 2;
-const HEATMAP_CLOUD_POLL_MS = 12_000;
+const HEATMAP_CLOUD_POLL_MS = 30_000;
 const HEATMAP_CLOUD_STALE_MS = 2 * 60 * 1000;
 let heatmapStream = null;
 let heatmapRefreshTimer = null;
@@ -19,6 +19,13 @@ let heatmapPressureStatus = { loading: false, derivError: "", klinesError: "", u
 let heatmapPressureTimer = null;
 let heatmapPressureInFlight = false;
 let heatmapAutoWindowPromoted = false;
+
+function heatmapD1RangeForWindow(windowValue) {
+  const w = String(windowValue || "24h");
+  if (w === "all") return "30d";
+  if (w === "24h") return "24h";
+  return "7d";
+}
 
 function defaultHeatmapState() {
   return {
@@ -1064,7 +1071,8 @@ async function refreshHeatmapCloudStatus(wake) {
       : await DataEngine.fetchLiquidationStatus();
     heatmapCloudStatus = { ok: true, ...(data || {}) };
     if (typeof DataEngine.fetchLiquidationBuckets === "function") {
-      heatmapCloudBuckets = await DataEngine.fetchLiquidationBuckets(HEATMAP_SYMBOL, "30d", { includeActive: true });
+      const state = currentHeatmapStateFromDom();
+      heatmapCloudBuckets = await DataEngine.fetchLiquidationBuckets(HEATMAP_SYMBOL, heatmapD1RangeForWindow(state.window), { includeActive: true });
       maybePromoteHeatmapWindowForCloudHistory();
     }
   } catch (e) {

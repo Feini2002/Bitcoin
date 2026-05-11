@@ -14,6 +14,56 @@ const analysisState = {
   loading: false,
 };
 
+const analysisModuleRegistry = [
+  { key: "riskRegime", label: "资金风险温度", hint: "Risk-On / Risk-Off 资金面状态", planned: false },
+  { key: "hardDataMatrix", label: "硬数据校验矩阵", hint: "价格、衍生品、强平、宏观代理", planned: false },
+  { key: "narrativeValidation", label: "叙事定价验证", hint: "只验证可被资金跟随的事件", planned: false },
+  { key: "catalystCalendar", label: "精准催化剂时间轴", hint: "只渲染确定 timestamp", planned: true },
+  { key: "riskThresholds", label: "风险传导阈值", hint: "触发、确认、失效分层", planned: false },
+  { key: "agentContext", label: "Agent 结构化输出", hint: "下游员工可读枚举", planned: false },
+  { key: "distortionAudit", label: "抗失真审计", hint: "记录事实池、搜索和降级依据", planned: false },
+  { key: "techPremium", label: "科技叙事溢价复核", hint: "AI / 工具 / 科技新闻复核", planned: true },
+];
+
+const analysisSearchScopes = [
+  { key: "factFill", label: "事实补齐搜索", hint: "补足事实池缺口" },
+  { key: "narrativePricing", label: "叙事定价验证搜索", hint: "后续绑定 narrative_id", planned: true },
+  { key: "aiTech", label: "AI / 科技线索搜索", hint: "科技叙事补充来源" },
+  { key: "macroEvents", label: "宏观事件搜索", hint: "后续接结构化宏观源", planned: true },
+];
+
+function analysisBoolMap(items, src, fallback = true) {
+  const box = src && typeof src === "object" ? src : {};
+  const out = {};
+  for (const item of items) out[item.key] = Object.prototype.hasOwnProperty.call(box, item.key) ? !!box[item.key] : !!fallback;
+  return out;
+}
+
+function defaultAnalysisSettings() {
+  return {
+    version: 1,
+    visibility: analysisBoolMap(analysisModuleRegistry, null, true),
+    analysisCoverage: analysisBoolMap(analysisModuleRegistry, null, true),
+    searchCoverage: analysisBoolMap(analysisSearchScopes, null, true),
+    updatedAt: null,
+  };
+}
+
+function normalizeAnalysisSettings(settings) {
+  const src = settings && typeof settings === "object" ? settings : {};
+  const d = defaultAnalysisSettings();
+  return {
+    version: 1,
+    visibility: analysisBoolMap(analysisModuleRegistry, src.visibility || d.visibility, true),
+    analysisCoverage: analysisBoolMap(analysisModuleRegistry, src.analysisCoverage || src.scanCoverage || d.analysisCoverage, true),
+    searchCoverage: analysisBoolMap(analysisSearchScopes, src.searchCoverage || d.searchCoverage, true),
+    updatedAt: src.updatedAt || src.updated_at || null,
+  };
+}
+
+let __yuqingAnalysisSettings = defaultAnalysisSettings();
+let __yuqingAnalysisSettingsSaving = false;
+
 function analysisEscapeHtml(value) {
   return String(value == null ? "" : value)
     .replace(/&/g, "&amp;")
@@ -802,12 +852,86 @@ function renderNewsArchiveChrome() {
   `;
 }
 
+function renderAnalysisSettingsChrome() {
+  const settings = normalizeAnalysisSettings(__yuqingAnalysisSettings);
+  const mkToggle = (item, checked, type) => {
+    const hint = type === "visibility"
+      ? "本页显示"
+      : type === "analysis"
+        ? "纳入二次分析"
+        : "纳入搜索覆盖";
+    return `
+      <label class="daily-setting-row ${checked ? "is-on" : "is-off"}">
+        <span>
+          <strong>${analysisEscapeHtml(item.label)}${item.planned ? ' <em class="scaffold-planned-tag">PLANNED</em>' : ""}</strong>
+          <small>${analysisEscapeHtml(hint)} · ${analysisEscapeHtml(item.hint || "")}</small>
+        </span>
+        <input type="checkbox" class="daily-setting-cb analysis-setting-cb" data-type="${analysisEscapeHtml(type)}" data-key="${analysisEscapeHtml(item.key)}" ${checked ? "checked" : ""} />
+      </label>`;
+  };
+
+  return `
+    <div class="news-archive-backdrop daily-drawer-backdrop" id="analysis-settings-backdrop" hidden></div>
+    <aside class="news-archive-drawer daily-drawer daily-settings-drawer" id="analysis-settings-drawer" aria-hidden="true">
+      <div class="news-archive-head">
+        <div>
+          <span class="news-section-kicker">Phase 0.5</span>
+          <h3>舆情分析设置</h3>
+        </div>
+        <button type="button" class="btn daily-drawer-close" id="analysis-close-settings" title="关闭设置">
+          <i class="ph ph-x"></i><span>关闭</span>
+        </button>
+      </div>
+      <div class="daily-settings-body">
+        <section class="daily-settings-section">
+          <div class="daily-settings-section-head">
+            <h4>仪表盘可见度</h4>
+            <p>只影响当前页面显示，不改变云端生成内容。</p>
+          </div>
+          <div class="daily-settings-group">
+            ${analysisModuleRegistry.map((item) => mkToggle(item, settings.visibility[item.key], "visibility")).join("")}
+          </div>
+        </section>
+
+        <section class="daily-settings-section">
+          <div class="daily-settings-section-head">
+            <h4>二次分析覆盖</h4>
+            <p>决定手动二次分析或定点任务时 Worker 会纳入哪些模块。</p>
+          </div>
+          <div class="daily-settings-group">
+            ${analysisModuleRegistry.map((item) => mkToggle(item, settings.analysisCoverage[item.key], "analysis")).join("")}
+          </div>
+        </section>
+
+        <section class="daily-settings-section">
+          <div class="daily-settings-section-head">
+            <h4>搜索覆盖范围</h4>
+            <p>只控制增量搜索与定向验证搜索；行情、衍生品和强平数据不走搜索开关。</p>
+          </div>
+          <div class="daily-settings-group">
+            ${analysisSearchScopes.map((item) => mkToggle(item, settings.searchCoverage[item.key], "search")).join("")}
+          </div>
+        </section>
+
+        <div class="daily-settings-actions">
+          <button type="button" class="btn primary" id="analysis-save-settings" ${__yuqingAnalysisSettingsSaving ? "disabled" : ""}>
+            ${__yuqingAnalysisSettingsSaving ? '<i class="ph ph-spinner-gap spin"></i><span>保存中</span>' : '<i class="ph ph-floppy-disk"></i><span>保存并应用</span>'}
+          </button>
+        </div>
+      </div>
+    </aside>`;
+}
+
+function renderNewsDrawersChrome() {
+  return `${renderNewsArchiveChrome()}${renderAnalysisSettingsChrome()}`;
+}
+
 function renderYuqingReport(row) {
-  const chrome = renderNewsArchiveChrome();
   const r = row !== undefined && row !== null ? row : activeAnalysisReport();
   const report = analysisReportBody(r);
   const meta = analysisRegimeMeta(r);
   const upstream = report.upstreamDaily;
+  const visibility = normalizeAnalysisSettings(__yuqingAnalysisSettings).visibility;
   const titleText = analysisEscapeHtml((r && r.report && r.report.title) || "资金面舆情验证器");
   const subLine = r && r.generatedAt ? `${analysisFormatTime(r.generatedAt)} · ${analysisSlotLabel(r)}` : "等待云端 D1 舆情分析";
   const statusText = analysisEscapeHtml(analysisSourceStatusText());
@@ -838,6 +962,9 @@ function renderYuqingReport(row) {
         <button type="button" class="btn" id="news-generate-preview" ${analysisState.loading ? "disabled" : ""} title="触发 sentiment_analysis 二次研判并写入 D1">
           <i class="ph ph-arrows-clockwise"></i><span>${analysisState.loading ? "分析中" : "手动二次分析"}</span>
         </button>
+        <button type="button" class="btn secondary" id="analysis-open-settings" title="配置舆情分析模块可见度、二次分析覆盖与搜索范围">
+          <i class="ph ph-gear"></i><span>设置</span>
+        </button>
         <button type="button" class="btn primary" id="news-open-archive" title="打开最近 7 天舆情分析回档">
           <i class="ph ph-clock-counter-clockwise"></i><span>7日报告库</span>
         </button>
@@ -854,9 +981,9 @@ function renderYuqingReport(row) {
     </div>
 
     <div class="news-intel-grid daily-dashboard-grid analysis-dashboard-grid">
-      ${renderAnalysisRiskTemperature(r)}
+      ${visibility.riskRegime ? renderAnalysisRiskTemperature(r) : ""}
 
-      <section class="news-panel span-7 daily-module-panel daily-module-news daily-balanced-panel analysis-module-validation">
+      ${visibility.narrativeValidation ? `<section class="news-panel span-7 daily-module-panel daily-module-news daily-balanced-panel analysis-module-validation">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">叙事定价验证</span>
@@ -865,9 +992,9 @@ function renderYuqingReport(row) {
           </div>
         </div>
         <div class="news-story-list">${renderAnalysisNarrativeValidation(r)}</div>
-      </section>
+      </section>` : ""}
 
-      <section class="news-panel span-5 daily-module-panel daily-module-harddata analysis-module-harddata">
+      ${visibility.hardDataMatrix ? `<section class="news-panel span-5 daily-module-panel daily-module-harddata analysis-module-harddata">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">硬数据校验矩阵</span>
@@ -876,9 +1003,9 @@ function renderYuqingReport(row) {
           </div>
         </div>
         ${renderAnalysisHardDataMatrix(r)}
-      </section>
+      </section>` : ""}
 
-      <section class="news-panel span-7 daily-module-panel daily-module-calendar analysis-module-calendar">
+      ${visibility.catalystCalendar ? `<section class="news-panel span-7 daily-module-panel daily-module-calendar analysis-module-calendar">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">精准催化剂时间轴</span>
@@ -888,9 +1015,9 @@ function renderYuqingReport(row) {
           <i class="ph ph-calendar-dots"></i>
         </div>
         <div class="news-calendar-list" id="news-calendar-list">${renderAnalysisCalendar(r)}</div>
-      </section>
+      </section>` : ""}
 
-      <section class="news-panel span-5 daily-module-panel daily-module-threshold analysis-module-threshold">
+      ${visibility.riskThresholds ? `<section class="news-panel span-5 daily-module-panel daily-module-threshold analysis-module-threshold">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">风险传导阈值</span>
@@ -900,9 +1027,9 @@ function renderYuqingReport(row) {
           <i class="ph ph-warning-diamond"></i>
         </div>
         <div class="news-risk-grid">${renderAnalysisRiskThresholds(r)}</div>
-      </section>
+      </section>` : ""}
 
-      <section class="news-panel span-6 daily-module-panel daily-module-agent analysis-module-agent">
+      ${visibility.agentContext ? `<section class="news-panel span-6 daily-module-panel daily-module-agent analysis-module-agent">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">Agent 结构化输出</span>
@@ -912,9 +1039,9 @@ function renderYuqingReport(row) {
           <i class="ph ph-brackets-curly"></i>
         </div>
         ${renderAnalysisAgentContext(r)}
-      </section>
+      </section>` : ""}
 
-      <section class="news-panel span-6 daily-module-panel daily-module-audit analysis-module-audit">
+      ${visibility.distortionAudit ? `<section class="news-panel span-6 daily-module-panel daily-module-audit analysis-module-audit">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">抗失真审计</span>
@@ -924,9 +1051,9 @@ function renderYuqingReport(row) {
           <i class="ph ph-funnel"></i>
         </div>
         ${renderAnalysisAudit(r)}
-      </section>
+      </section>` : ""}
 
-      <section class="news-panel span-12 daily-module-panel daily-module-ai analysis-module-ai">
+      ${visibility.techPremium ? `<section class="news-panel span-12 daily-module-panel daily-module-ai analysis-module-ai">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">科技叙事溢价复核</span>
@@ -936,17 +1063,23 @@ function renderYuqingReport(row) {
           <i class="ph ph-brain"></i>
         </div>
         <div class="news-ai-list">${renderAnalysisAiPremium(r)}</div>
-      </section>
+      </section>` : ""}
     </div>
-
-    ${chrome}
   `;
 }
 
-function renderNewsIntoDom() {
+function renderNewsDrawersIntoDom() {
+  const root = document.getElementById("news-drawers-root");
+  if (!root) return;
+  root.innerHTML = renderNewsDrawersChrome();
+  bindNewsInnerEvents();
+}
+
+function renderNewsIntoDom(options = {}) {
   const root = document.getElementById("news-intel-content");
   if (!root) return;
   root.innerHTML = renderYuqingReport(activeAnalysisReport());
+  if (!options.skipDrawers) renderNewsDrawersIntoDom();
   bindNewsInnerEvents();
 }
 
@@ -968,6 +1101,69 @@ function closeNewsArchive() {
     drawer.setAttribute("aria-hidden", "true");
   }
   if (backdrop) backdrop.hidden = true;
+}
+
+function openAnalysisSettings() {
+  const drawer = document.getElementById("analysis-settings-drawer");
+  const backdrop = document.getElementById("analysis-settings-backdrop");
+  if (drawer) {
+    drawer.classList.add("open");
+    drawer.setAttribute("aria-hidden", "false");
+  }
+  if (backdrop) backdrop.hidden = false;
+}
+
+function closeAnalysisSettings() {
+  const drawer = document.getElementById("analysis-settings-drawer");
+  const backdrop = document.getElementById("analysis-settings-backdrop");
+  if (drawer) {
+    drawer.classList.remove("open");
+    drawer.setAttribute("aria-hidden", "true");
+  }
+  if (backdrop) backdrop.hidden = true;
+}
+
+async function loadAnalysisSettings() {
+  if (typeof DataEngine === "undefined" || typeof DataEngine.fetchYuqingSentimentAnalysisSettings !== "function") return;
+  try {
+    const data = await DataEngine.fetchYuqingSentimentAnalysisSettings();
+    if (data && data.settings) {
+      __yuqingAnalysisSettings = normalizeAnalysisSettings(data.settings);
+      renderNewsIntoDom();
+    }
+  } catch (_) {
+    console.warn("无法拉取云端舆情分析设置，使用默认配置。");
+  }
+}
+
+async function saveAnalysisSettings() {
+  if (typeof DataEngine === "undefined" || typeof DataEngine.updateYuqingSentimentAnalysisSettings !== "function") return;
+  const drawer = document.getElementById("analysis-settings-drawer");
+  if (!drawer) return;
+  const next = normalizeAnalysisSettings(__yuqingAnalysisSettings);
+  drawer.querySelectorAll('.analysis-setting-cb[data-type="visibility"]').forEach((cb) => {
+    next.visibility[cb.getAttribute("data-key")] = cb.checked;
+  });
+  drawer.querySelectorAll('.analysis-setting-cb[data-type="analysis"]').forEach((cb) => {
+    next.analysisCoverage[cb.getAttribute("data-key")] = cb.checked;
+  });
+  drawer.querySelectorAll('.analysis-setting-cb[data-type="search"]').forEach((cb) => {
+    next.searchCoverage[cb.getAttribute("data-key")] = cb.checked;
+  });
+  __yuqingAnalysisSettings = next;
+  __yuqingAnalysisSettingsSaving = true;
+  renderNewsIntoDom();
+  openAnalysisSettings();
+  try {
+    const data = await DataEngine.updateYuqingSentimentAnalysisSettings(__yuqingAnalysisSettings);
+    if (data && data.settings) __yuqingAnalysisSettings = normalizeAnalysisSettings(data.settings);
+  } catch (e) {
+    alert("保存舆情分析设置失败：" + (e.message || String(e)));
+  } finally {
+    __yuqingAnalysisSettingsSaving = false;
+    renderNewsIntoDom();
+    openAnalysisSettings();
+  }
 }
 
 async function loadAnalysisHistory() {
@@ -1053,7 +1249,23 @@ async function generateAnalysisReport() {
   analysisState.status = "正在触发二次舆情分析...";
   renderNewsIntoDom();
   try {
-    const data = await DataEngine.generateYuqingStructuredReport(SENTIMENT_ANALYSIS_KIND, { mode: "deep" }, { timeoutMs: 190_000 });
+    const settings = normalizeAnalysisSettings(__yuqingAnalysisSettings);
+    const data = await DataEngine.generateYuqingStructuredReport(
+      SENTIMENT_ANALYSIS_KIND,
+      {
+        mode: "deep",
+        forceSearch: Object.values(settings.searchCoverage || {}).some(Boolean),
+        analysisSettings: settings,
+        modules: {
+          dashboard: settings.analysisCoverage.riskRegime || settings.analysisCoverage.hardDataMatrix || settings.analysisCoverage.agentContext,
+          news: settings.analysisCoverage.narrativeValidation || settings.analysisCoverage.riskThresholds,
+          timeline: settings.analysisCoverage.catalystCalendar,
+          ai: settings.analysisCoverage.techPremium,
+          trends: settings.analysisCoverage.distortionAudit || settings.analysisCoverage.narrativeValidation,
+        },
+      },
+      { timeoutMs: 190_000 }
+    );
     if (data && data.report) {
       analysisState.report = data.report;
       analysisState.source = "cloud";
@@ -1083,6 +1295,11 @@ function bindNewsInnerEvents() {
     open.dataset.bound = "1";
     open.addEventListener("click", openNewsArchive);
   }
+  const openSettings = document.getElementById("analysis-open-settings");
+  if (openSettings && !openSettings.dataset.bound) {
+    openSettings.dataset.bound = "1";
+    openSettings.addEventListener("click", openAnalysisSettings);
+  }
   const close = document.getElementById("news-close-archive");
   if (close && !close.dataset.bound) {
     close.dataset.bound = "1";
@@ -1093,6 +1310,48 @@ function bindNewsInnerEvents() {
     backdrop.dataset.bound = "1";
     backdrop.addEventListener("click", closeNewsArchive);
   }
+  const closeSettings = document.getElementById("analysis-close-settings");
+  if (closeSettings && !closeSettings.dataset.bound) {
+    closeSettings.dataset.bound = "1";
+    closeSettings.addEventListener("click", closeAnalysisSettings);
+  }
+  const settingsBackdrop = document.getElementById("analysis-settings-backdrop");
+  if (settingsBackdrop && !settingsBackdrop.dataset.bound) {
+    settingsBackdrop.dataset.bound = "1";
+    settingsBackdrop.addEventListener("click", closeAnalysisSettings);
+  }
+  const saveSettings = document.getElementById("analysis-save-settings");
+  if (saveSettings && !saveSettings.dataset.bound) {
+    saveSettings.dataset.bound = "1";
+    saveSettings.addEventListener("click", saveAnalysisSettings);
+  }
+  document.querySelectorAll('.analysis-setting-cb[data-type="visibility"]').forEach((cb) => {
+    if (cb.dataset.boundLive) return;
+    cb.dataset.boundLive = "1";
+    cb.addEventListener("change", () => {
+      const key = cb.getAttribute("data-key");
+      if (__yuqingAnalysisSettings.visibility && key) {
+        __yuqingAnalysisSettings.visibility[key] = cb.checked;
+        cb.closest(".daily-setting-row")?.classList.toggle("is-on", cb.checked);
+        cb.closest(".daily-setting-row")?.classList.toggle("is-off", !cb.checked);
+        renderNewsIntoDom({ skipDrawers: true });
+      }
+    });
+  });
+  document.querySelectorAll('.analysis-setting-cb[data-type="analysis"], .analysis-setting-cb[data-type="search"]').forEach((cb) => {
+    if (cb.dataset.boundSetting) return;
+    cb.dataset.boundSetting = "1";
+    cb.addEventListener("change", () => {
+      const key = cb.getAttribute("data-key");
+      const type = cb.getAttribute("data-type");
+      const target = type === "search" ? __yuqingAnalysisSettings.searchCoverage : __yuqingAnalysisSettings.analysisCoverage;
+      if (target && key) {
+        target[key] = cb.checked;
+        cb.closest(".daily-setting-row")?.classList.toggle("is-on", cb.checked);
+        cb.closest(".daily-setting-row")?.classList.toggle("is-off", !cb.checked);
+      }
+    });
+  });
   document.querySelectorAll(".news-archive-item").forEach((btn) => {
     if (btn.dataset.bound) return;
     btn.dataset.bound = "1";
@@ -1123,6 +1382,7 @@ function pageNews() {
   return html`
     <div class="news-intel-shell daily-workbench-shell analysis-workbench-shell" id="news-scaffold-root">
       <div id="news-intel-content">${renderYuqingReport(activeAnalysisReport())}</div>
+      <div id="news-drawers-root">${renderNewsDrawersChrome()}</div>
     </div>
   `;
 }
@@ -1134,6 +1394,7 @@ function initNews() {
     const cal = document.getElementById("news-calendar-list");
     if (cal) cal.innerHTML = renderAnalysisCalendar(activeAnalysisReport());
   }, 30_000);
+  loadAnalysisSettings();
   loadAnalysisReport(analysisHashReportId());
 }
 

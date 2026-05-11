@@ -1,14 +1,11 @@
 /* =======================================================
    数据引擎 Data Engine
-   仅负责调用云端 Worker + D1 的 K 线接口。
-   不再使用浏览器 IndexedDB：历史数据存在 Cloudflare D1，
-   实时 K 线跳动由 chart.js 内 Binance kline WebSocket 负责；主图标题：aggTrade/现货线路 WS + 币安 REST 轮询兜底（均非 D1/K 线序列）。
-   ======================================================= */
+   仅负责调用云�?Worker + D1 �?K 线接口�?   不再使用浏览�?IndexedDB：历史数据存�?Cloudflare D1�?   实时 K 线跳动由 chart.js �?Binance kline WebSocket 负责；主图标题：aggTrade/现货线路 WS + 币安 REST 轮询兜底（均�?D1/K 线序列）�?   ======================================================= */
 
 const DataEngine = {
   SUPPORTED_INTERVALS: ["5m", "15m", "1h", "4h", "1d", "3d", "1w"],
 
-  /** Worker 基址：固定使用已部署 Cloudflare Worker。 */
+  /** Worker 基址：固定使用已部署 Cloudflare Worker�?*/
   apiBase() {
     if (typeof getBitDataApiBase === "function") {
       return getBitDataApiBase();
@@ -19,7 +16,7 @@ const DataEngine = {
     return "https://btc.feiniwork.com";
   },
 
-  /** Cloudflare「舆情日报」Worker 根 URL（独立于 btc.feiniwork.com）。 */
+  /** Cloudflare「舆情日报」Worker �?URL（独立于 btc.feiniwork.com）�?*/
   yuqingApiBase() {
     if (typeof getYuqingApiBase === "function") {
       return String(getYuqingApiBase()).replace(/\/$/, "");
@@ -41,6 +38,13 @@ const DataEngine = {
     return () => parentSignal.removeEventListener("abort", onAbort);
   },
 
+  workerFetch(url, init = {}) {
+    return fetch(url, {
+      credentials: "include",
+      ...(init || {}),
+    });
+  },
+
   async parseWorkerJsonResponse(res, label = "Worker") {
     const text = await res.text().catch(() => "");
     let data = null;
@@ -58,7 +62,7 @@ const DataEngine = {
       throw new Error(`${label} ${res.status}${detail ? ": " + detail : ""}`);
     }
     if (!data || typeof data !== "object") {
-      throw new Error(`${label} 返回格式错误：不是 JSON 对象`);
+      throw new Error(`${label} 返回格式错误：不�?JSON 对象`);
     }
     return data;
   },
@@ -66,7 +70,7 @@ const DataEngine = {
   /** @param {{ signal?: AbortSignal }} opts */
   async fetchYuqingHealth(opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/health`;
-    const res = await fetch(url, { cache: "no-store", signal: opts.signal });
+    const res = await this.workerFetch(url, { cache: "no-store", signal: opts.signal });
     if (!res.ok) {
       let detail = "";
       try {
@@ -85,10 +89,10 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), 30_000);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法访问舆情数据源 ${url}：${m}`);
+      throw new Error(`无法访问舆情数据�?${url}�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -98,7 +102,7 @@ const DataEngine = {
       try {
         detail = (await res.text()).slice(0, 240);
       } catch (_) {}
-      throw new Error(`舆情数据源接口 ${res.status}${detail ? ": " + detail : ""}`);
+      throw new Error(`舆情数据源接�?${res.status}${detail ? ": " + detail : ""}`);
     }
     return res.json();
   },
@@ -110,12 +114,12 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), 30_000);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       clearTimeout(t);
       unsub();
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法访问舆情 latest ${url}：${m}`);
+      throw new Error(`无法访问舆情 latest ${url}�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -141,12 +145,12 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), 30_000);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       clearTimeout(t);
       unsub();
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法访问舆情 items：${m}`);
+      throw new Error(`无法访问舆情 items�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -171,12 +175,12 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), 20_000);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       clearTimeout(t);
       unsub();
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法访问舆情 history：${m}`);
+      throw new Error(`无法访问舆情 history�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -190,8 +194,7 @@ const DataEngine = {
   },
 
   /**
-   * 生成舆情日报全文（服务端编排 + 可选 LLM）。
-   * @param {{ mode?: string, modules?: object, force?: boolean }} payload
+   * 生成舆情日报全文（服务端编排 + 可�?LLM）�?   * @param {{ mode?: string, modules?: object, force?: boolean }} payload
    * @param {{ signal?: AbortSignal, timeoutMs?: number }} opts
    */
   async generateYuqingReport(payload = {}, opts = {}) {
@@ -206,10 +209,10 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), Math.min(30_000, Math.max(5_000, Number(opts.timeoutMs) || 15_000)));
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法读取舆情报告 latest：${m}`);
+      throw new Error(`无法读取舆情报告 latest�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -230,10 +233,10 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), Math.min(30_000, Math.max(5_000, Number(opts.timeoutMs) || 15_000)));
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法读取舆情报告 history：${m}`);
+      throw new Error(`无法读取舆情报告 history�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -254,10 +257,10 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), Math.min(30_000, Math.max(5_000, Number(opts.timeoutMs) || 15_000)));
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法读取舆情报告 item：${m}`);
+      throw new Error(`无法读取舆情报告 item�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -278,10 +281,10 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), Math.min(25_000, Math.max(5_000, Number(opts.timeoutMs) || 15_000)));
     let res;
     try {
-      res = await fetch(url, { method: "DELETE", cache: "no-store", signal: ctrl.signal, headers: { Accept: "application/json" } });
+      res = await this.workerFetch(url, { method: "DELETE", cache: "no-store", signal: ctrl.signal, headers: { Accept: "application/json" } });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法删除舆情报告：${m}`);
+      throw new Error(`无法删除舆情报告�?{m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -300,10 +303,10 @@ const DataEngine = {
     const unsub = this.attachAbort(opts.signal, ctrl);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       unsub();
-      throw new Error(`获取舆情设置失败（${url}）：${e.message || String(e)}`);
+      throw new Error(`获取舆情设置失败�?{url}）：${e.message || String(e)}`);
     }
     unsub();
     const data = await res.json().catch(() => null);
@@ -320,7 +323,7 @@ const DataEngine = {
     const unsub = this.attachAbort(opts.signal, ctrl);
     let res;
     try {
-      res = await fetch(url, {
+      res = await this.workerFetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -329,13 +332,59 @@ const DataEngine = {
       });
     } catch (e) {
       unsub();
-      throw new Error(`更新舆情设置失败（${url}）：${e.message || String(e)}`);
+      throw new Error(`更新舆情设置失败�?{url}）：${e.message || String(e)}`);
     }
     unsub();
     const data = await res.json().catch(() => null);
     if (!res.ok) {
       const hint = data && (data.error || data.message);
       throw new Error(`更新舆情设置接口 ${res.status}${hint ? `: ${hint}` : ""}`);
+    }
+    return data;
+  },
+
+  async fetchYuqingSentimentAnalysisSettings(opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/sentiment-analysis`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    let res;
+    try {
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
+    } catch (e) {
+      unsub();
+      throw new Error(`获取舆情分析设置失败�?{url}）：${e.message || String(e)}`);
+    }
+    unsub();
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const hint = data && (data.error || data.message);
+      throw new Error(`获取舆情分析设置接口 ${res.status}${hint ? `: ${hint}` : ""}`);
+    }
+    return data;
+  },
+
+  async updateYuqingSentimentAnalysisSettings(settings, opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/sentiment-analysis`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    let res;
+    try {
+      res = await this.workerFetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        cache: "no-store",
+        signal: ctrl.signal,
+        body: JSON.stringify(settings && typeof settings === "object" ? settings : {}),
+      });
+    } catch (e) {
+      unsub();
+      throw new Error(`保存舆情分析设置失败�?{url}）：${e.message || String(e)}`);
+    }
+    unsub();
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const hint = data && (data.error || data.message);
+      throw new Error(`保存舆情分析设置接口 ${res.status}${hint ? `: ${hint}` : ""}`);
     }
     return data;
   },
@@ -348,10 +397,10 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
-      throw new Error(`获取模型通道设置失败（${url}）：${m}`);
+      throw new Error(`获取模型通道设置失败�?{url}）：${m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -367,7 +416,7 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     let res;
     try {
-      res = await fetch(url, {
+      res = await this.workerFetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         cache: "no-store",
@@ -376,7 +425,7 @@ const DataEngine = {
       });
     } catch (e) {
       const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
-      throw new Error(`保存模型通道设置失败（${url}）：${m}`);
+      throw new Error(`保存模型通道设置失败�?{url}）：${m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -392,7 +441,7 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     let res;
     try {
-      res = await fetch(url, {
+      res = await this.workerFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         cache: "no-store",
@@ -411,7 +460,7 @@ const DataEngine = {
             : e && e.message
               ? e.message
               : String(e);
-      throw new Error(`舆情报告生成失败（${url}）：${m}`);
+      throw new Error(`舆情报告生成失败�?{url}）：${m}`);
     }
     clearTimeout(t);
     unsub();
@@ -432,7 +481,7 @@ const DataEngine = {
     const onEvent = typeof opts.onEvent === "function" ? opts.onEvent : () => {};
     let res;
     try {
-      res = await fetch(url, {
+      res = await this.workerFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         cache: "no-store",
@@ -451,7 +500,7 @@ const DataEngine = {
           : e && e.message
             ? e.message
             : String(e);
-      throw new Error(`舆情流式生成失败（${url}）：${m}`);
+      throw new Error(`舆情流式生成失败�?{url}）：${m}`);
     }
     if (!res.ok) {
       clearTimeout(t);
@@ -499,7 +548,7 @@ const DataEngine = {
       } catch (_) {}
     }
     if (lastDone && lastDone.report) return lastDone;
-    throw new Error("流式响应未返回完整报告");
+    throw new Error("stream response missing completed report");
   },
 
   async fetchYuqingReportStatus(opts = {}) {
@@ -563,8 +612,7 @@ const DataEngine = {
   },
 
   /**
-   * 从 Worker /api/d1/klines 读取云端存储的 K 线（已按升序、最多 2000 根）。
-   * 返回 [{t,o,h,l,c,v}, ...]
+   * �?Worker /api/d1/klines 读取云端存储�?K 线（已按升序、最�?2000 根）�?   * 返回 [{t,o,h,l,c,v}, ...]
    */
   async fetchKlinesFromD1(symbol, interval, limit = 2000, opts = {}) {
     const q = new URLSearchParams({ symbol, interval, limit: String(limit) });
@@ -574,11 +622,11 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), 30_000);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: opts.cache || "default", signal: ctrl.signal });
     } catch (e) {
       const m = (e && e.name === "AbortError") ? "请求超时(30s)" : (e && e.message ? e.message : String(e));
       throw new Error(
-        `无法访问 ${url}。请确认已部署 Worker 可访问，或检查当前网络。原错误: ${m}`
+        `无法访问 ${url}。请确认已部�?Worker 可访问，或检查当前网络。原错误: ${m}`
       );
     } finally {
       clearTimeout(t);
@@ -586,7 +634,7 @@ const DataEngine = {
     if (!res.ok) {
       let detail = "";
       try { detail = (await res.text()).slice(0, 200); } catch (_) {}
-      throw new Error(`D1 K 线接口 ${res.status}${detail ? ": " + detail : ""}`);
+      throw new Error(`D1 K 线接�?${res.status}${detail ? ": " + detail : ""}`);
     }
     const data = await res.json().catch(() => null);
     if (!data || !Array.isArray(data.klines)) {
@@ -625,9 +673,7 @@ const DataEngine = {
   },
 
   /**
-   * 设置页/运维入口：触发已部署 Worker 手动同步 K 线到其绑定的 Cloudflare D1。
-   * 设置页用于全周期运维同步；图表页只在当前周期落后或手动按钮触发时调用当前周期同步。
-   */
+   * 设置�?运维入口：触发已部署 Worker 手动同步 K 线到其绑定的 Cloudflare D1�?   * 设置页用于全周期运维同步；图表页只在当前周期落后或手动按钮触发时调用当前周期同步�?   */
   async triggerCloudSync(symbol, interval = "all", wait = true, opts = {}) {
     if (wait && typeof wait === "object") {
       opts = wait;
@@ -644,13 +690,13 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     let res;
     try {
-      res = await fetch(url, { method: "POST", cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { method: "POST", cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = (e && e.name === "AbortError")
         ? `请求超时(${Math.round(timeoutMs / 1000)}s)`
         : (e && e.message ? e.message : String(e));
       throw new Error(
-        `无法触发 D1 手动同步：浏览器连不上已部署 Worker (${this.apiBase()})。请检查网络、代理、CORS 或 Worker 可用性。原错误: ${m}`
+        `无法触发 D1 手动同步：浏览器连不上已部署 Worker (${this.apiBase()})。请检查网络、代理、CORS �?Worker 可用性。原错误: ${m}`
       );
     } finally {
       clearTimeout(t);
@@ -662,46 +708,47 @@ const DataEngine = {
     } catch (e) {
       const msg = e && e.message ? e.message : String(e);
       let hint = "";
-      if (/451|restricted|region|geo/i.test(msg)) hint = "疑似上游地域限制，请检查 Worker 的 Binance 反代或 Bybit 兜底。";
-      else if (/429/.test(msg)) hint = "疑似上游限流，请稍后重试。";
-      else if (/502|503/.test(msg)) hint = "Worker 可达，但上游行情源或 D1 写入失败，请查看 Worker 日志。";
-      throw new Error(`${msg}${hint ? `（${hint}）` : ""}`);
+      if (/451|restricted|region|geo/i.test(msg)) hint = "upstream geo restriction; check Binance proxy or Bybit fallback";
+      else if (/429/.test(msg)) hint = "upstream rate limited; retry later";
+      else if (/502|503/.test(msg)) hint = "Worker reachable but upstream source or D1 write failed";
+      throw new Error(`${msg}${hint ? `�?{hint}）` : ""}`);
     }
     return data;
   },
 
   /**
-   * 查看已部署 Worker 绑定 D1 当前各周期的存储概况与最近同步结果。
-   */
+   * 查看已部�?Worker 绑定 D1 当前各周期的存储概况与最近同步结果�?   */
   async fetchCloudStatus(opts = {}) {
-    const url = `${this.apiBase()}/api/d1/status`;
+    const q = new URLSearchParams();
+    if (opts && opts.detail != null && String(opts.detail) !== "") q.set("detail", String(opts.detail));
+    const url = `${this.apiBase()}/api/d1/status${q.toString() ? "?" + q.toString() : ""}`;
     const ctrl = new AbortController();
     const unsub = this.attachAbort(opts.signal, ctrl);
     const timeoutMs = Math.min(60_000, Math.max(5_000, Number(opts.timeoutMs) || 20_000));
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: opts.cache || "default", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError"
         ? `请求超时(${Math.round(timeoutMs / 1000)}s)`
         : e && e.message ? e.message : String(e);
-      throw new Error(`无法读取 D1 状态：浏览器连不上已部署 Worker (${url})。原错误: ${m}`);
+      throw new Error(`无法读取 D1 状态：浏览器连不上已部�?Worker (${url})。原错误: ${m}`);
     } finally {
       clearTimeout(t);
       unsub();
     }
-    return this.parseWorkerJsonResponse(res, "D1 状态");
+    return this.parseWorkerJsonResponse(res, "D1 status");
   },
 
   async fetchLiquidationStatus() {
-    const res = await fetch(`${this.apiBase()}/api/d1/liquidations/status`, { cache: "no-store" });
+    const res = await this.workerFetch(`${this.apiBase()}/api/d1/liquidations/status`, { cache: "default" });
     if (!res.ok) throw new Error(`liquidation status ${res.status}`);
     return res.json();
   },
 
   async wakeLiquidationCollector() {
-    const res = await fetch(`${this.apiBase()}/api/d1/liquidations/wake`, { method: "POST", cache: "no-store" });
+    const res = await this.workerFetch(`${this.apiBase()}/api/d1/liquidations/wake`, { method: "POST", cache: "no-store" });
     if (!res.ok) throw new Error(`liquidation wake ${res.status}`);
     return res.json();
   },
@@ -709,7 +756,7 @@ const DataEngine = {
   async fetchLiquidationBuckets(symbol = "BTCUSDT", range = "30d", opts = {}) {
     const q = new URLSearchParams({ symbol, range });
     if (opts && opts.includeActive) q.set("includeActive", "1");
-    const res = await fetch(`${this.apiBase()}/api/d1/liquidations?${q.toString()}`, { cache: "no-store" });
+    const res = await this.workerFetch(`${this.apiBase()}/api/d1/liquidations?${q.toString()}`, { cache: opts.cache || "default" });
     if (!res.ok) throw new Error(`liquidation buckets ${res.status}`);
     return res.json();
   },
@@ -717,7 +764,7 @@ const DataEngine = {
   async fetchDerivatives(symbol = "BTCUSDT", range = "30d", opts = {}) {
     const q = new URLSearchParams({ symbol, range });
     if (opts && opts.sync != null && String(opts.sync) !== "") q.set("sync", String(opts.sync));
-    const res = await fetch(`${this.apiBase()}/api/d1/derivatives?${q.toString()}`, { cache: "no-store" });
+    const res = await this.workerFetch(`${this.apiBase()}/api/d1/derivatives?${q.toString()}`, { cache: opts.cache || "default" });
     if (!res.ok) {
       let detail = "";
       try { detail = (await res.text()).slice(0, 200); } catch (_) {}
@@ -766,7 +813,7 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), 8_000);
     let res;
     try {
-      res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时(8s)" : e && e.message ? e.message : String(e);
       throw new Error(`legacy onchain fallback ${m}`);
@@ -806,7 +853,7 @@ const DataEngine = {
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     let res;
     try {
-      res = await fetch(`${this.apiBase()}/api/d1/derivatives/sync?${q.toString()}`, {
+      res = await this.workerFetch(`${this.apiBase()}/api/d1/derivatives/sync?${q.toString()}`, {
         cache: "no-store",
         signal: ctrl.signal,
       });
@@ -817,7 +864,7 @@ const DataEngine = {
       }
       const raw = e && e.message ? String(e.message) : String(e);
       if (/Failed to fetch|NetworkError|NETWORK_ERROR/i.test(raw)) {
-        throw new Error(`浏览器无法连接云端 Worker：请检查网络 / 代理 / 广告拦截插件。原错误：${raw}`);
+        throw new Error(`浏览器无法连接云�?Worker：请检查网�?/ 代理 / 广告拦截插件。原错误�?{raw}`);
       }
       throw new Error(raw);
     } finally {
@@ -827,19 +874,18 @@ const DataEngine = {
     if (!res.ok) {
       let hint = "";
       if (res.status === 451 || (data && String(data.error || "").toLowerCase().includes("restricted"))) {
-        hint = "疑似上游地域限制，请检查 Cloudflare Worker BINANCE_FAPI_ORIGIN 反代或稍后重试";
-      } else if (res.status === 429) hint = "疑似限流（429），请降低同步频率或稍后重试";
-      else if (res.status === 502 || res.status === 503) hint = "Worker 可达但上游不可用或 D1 异常";
+        hint = "upstream geo restriction; check Cloudflare Worker BINANCE_FAPI_ORIGIN or retry later";
+      } else if (res.status === 429) hint = "疑似限流�?29），请降低同步频率或稍后重试";
+      else if (res.status === 502 || res.status === 503) hint = "Worker 可达但上游不可用�?D1 异常";
       throw new Error(
-        `derivatives sync HTTP ${res.status}${data && data.error ? `: ${data.error}` : ""}${hint ? `（${hint}）` : ""}`,
+        `derivatives sync HTTP ${res.status}${data && data.error ? `: ${data.error}` : ""}${hint ? `�?{hint}）` : ""}`,
       );
     }
     return data;
   },
 
   /**
-   * 页面「同步云端」：若核心指标已旧，阻塞修复对应分组；否则 fast(wait) + hourly 后台维护。
-   * @returns {Promise<{ fast: object|null, repair: object|null, hourlyQueued: boolean, fastError: string|null, repairError: string|null }>}
+   * 页面「同步云端」：若核心指标已旧，阻塞修复对应分组；否�?fast(wait) + hourly 后台维护�?   * @returns {Promise<{ fast: object|null, repair: object|null, hourlyQueued: boolean, fastError: string|null, repairError: string|null }>}
    */
   async triggerDerivativesSyncStages(symbol = "BTCUSDT", opts = {}) {
     const hourlyFireAndForget = !(opts && opts.hourly === false);
@@ -888,7 +934,7 @@ const DataEngine = {
 
     if (hourlyFireAndForget && !lockBusy) {
       const q = new URLSearchParams({ symbol, groups: "hourly", wait: "0", force: "0" });
-      fetch(`${this.apiBase()}/api/d1/derivatives/sync?${q.toString()}`, { cache: "no-store" }).catch(() => {});
+      this.workerFetch(`${this.apiBase()}/api/d1/derivatives/sync?${q.toString()}`, { cache: "no-store" }).catch(() => {});
       out.hourlyQueued = true;
     } else if (hourlyFireAndForget && lockBusy) {
       out.hourlySkipped = true;
@@ -918,7 +964,7 @@ const DataEngine = {
   },
 
   async fetchDerivativesStatus() {
-    const res = await fetch(`${this.apiBase()}/api/d1/derivatives/status`, { cache: "no-store" });
+    const res = await this.workerFetch(`${this.apiBase()}/api/d1/derivatives/status`, { cache: "default" });
     if (!res.ok) throw new Error(`derivatives status ${res.status}`);
     return res.json();
   },
@@ -1017,12 +1063,12 @@ const DataEngine = {
     return candidates[0] ? candidates[0].toISOString() : null;
   },
 
-  /** 历史兼容别名：实际只读 D1，不触发写库；新调用优先用 fetchKlinesFromD1。 */
+  /** 历史兼容别名：实际只�?D1，不触发写库；新调用优先�?fetchKlinesFromD1�?*/
   async syncKlines(symbol, interval, limit = 2000, opts = {}) {
     return await this.fetchKlinesFromD1(symbol, interval, limit, opts);
   },
 
-  /** 字符串周期 → 毫秒 */
+  /** 字符串周�?�?毫秒 */
   getIntervalMs(interval) {
     const map = {
       "1m": 60 * 1000,

@@ -7296,6 +7296,39 @@ html[data-theme="dark"] .daily-temperature-asset-card {
   color: #0369a1;
 }
 
+.daily-archive-cost-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(129, 150, 176, 0.2);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.daily-archive-cost-summary div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.daily-archive-cost-summary span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.daily-archive-cost-summary strong {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
 .daily-archive-empty {
   margin: 2px 0;
   padding: 14px;
@@ -7670,6 +7703,41 @@ html[data-theme="dark"] .yuqing-delete-modal-sheet {
   flex-wrap: wrap;
   gap: 7px 10px;
   align-items: center;
+}
+
+.news-archive-cost-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.news-archive-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 23px;
+  max-width: 100%;
+  padding: 3px 7px;
+  border: 1px solid rgba(20, 184, 166, 0.2);
+  border-radius: 999px;
+  background: rgba(240, 253, 250, 0.8);
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.news-archive-cost.is-total {
+  border-color: rgba(14, 165, 233, 0.18);
+  background: rgba(240, 249, 255, 0.76);
+  color: #0369a1;
+}
+
+.news-archive-cost.is-missing {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(248, 250, 252, 0.76);
+  color: #64748b;
 }
 
 .news-archive-item em,
@@ -8599,6 +8667,110 @@ html[data-theme="dark"] .yuqing-delete-modal-sheet {
   box-shadow: 0 14px 34px rgba(31, 45, 68, 0.08);
 }
 
+.daily-workbench-shell .news-command-actions .btn.is-scanning {
+  cursor: wait;
+  opacity: 1;
+  box-shadow: 0 12px 28px rgba(14, 165, 233, 0.24);
+}
+
+.daily-scan-status-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: -10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.94), rgba(240, 253, 250, 0.84)),
+    rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 30px rgba(31, 45, 68, 0.07);
+}
+
+.daily-scan-status-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.daily-scan-pulse {
+  position: relative;
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: #0ea5e9;
+  box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.3);
+  animation: daily-scan-pulse 1.5s ease-out infinite;
+}
+
+.daily-scan-status-main strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.daily-scan-status-main p {
+  margin: 4px 0 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.daily-scan-status-meta,
+.daily-scan-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.daily-scan-status-meta span,
+.daily-scan-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  color: #536275;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.daily-scan-step b,
+.daily-scan-step small {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.daily-scan-step small {
+  color: #64748b;
+  font-weight: 650;
+}
+
+.daily-scan-step.is-active {
+  border-color: rgba(14, 165, 233, 0.3);
+  background: rgba(224, 242, 254, 0.78);
+  color: #0369a1;
+}
+
+.daily-scan-step.is-done {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: rgba(236, 253, 245, 0.8);
+  color: #047857;
+}
+
+@keyframes daily-scan-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.32); }
+  70% { box-shadow: 0 0 0 9px rgba(14, 165, 233, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+}
+
 .daily-workbench-shell .daily-command-main {
   gap: 18px;
   flex: 1;
@@ -9184,6 +9356,133 @@ html[data-theme="dark"] .yuqing-delete-modal-sheet {
   line-height: 1.62;
 }
 
+.daily-workbench-shell .daily-trend-brief {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 14px;
+  border-color: rgba(14, 165, 233, 0.28);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.daily-trend-brief-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.daily-trend-brief-head span,
+.daily-trend-method {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.daily-workbench-shell .daily-trend-verdict {
+  margin: 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.7;
+}
+
+.daily-trend-paragraphs {
+  display: grid;
+  gap: 8px;
+  max-width: 980px;
+}
+
+.daily-trend-close-section {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.daily-trend-close-section h5 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.daily-trend-finding-list {
+  display: grid;
+  gap: 10px;
+}
+
+.daily-trend-finding {
+  display: grid;
+  gap: 4px;
+  padding-left: 10px;
+  border-left: 2px solid rgba(14, 165, 233, 0.28);
+}
+
+.daily-trend-finding strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.daily-trend-finding span {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.daily-trend-finding a {
+  color: #0369a1;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.daily-trend-watchline {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.daily-trend-watchline li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.daily-trend-watchline li > span {
+  color: #0ea5e9;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.daily-trend-watchline em {
+  color: #64748b;
+  font-style: normal;
+}
+
+.daily-trend-uncertainty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 251, 235, 0.62);
+}
+
+.daily-trend-uncertainty b {
+  color: #92400e;
+  font-size: 12px;
+}
+
+.daily-trend-uncertainty span {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .daily-workbench-shell .daily-event-empty {
   margin-top: 0;
   border-radius: 8px;
@@ -9471,6 +9770,17 @@ html[data-theme="dark"] .yuqing-delete-modal-sheet {
 
   .daily-workbench-shell .news-command.daily-event-command {
     padding: 14px;
+  }
+
+  .daily-scan-status-panel {
+    margin-top: -8px;
+    padding: 13px;
+  }
+
+  .daily-scan-status-main,
+  .daily-scan-status-meta,
+  .daily-scan-steps {
+    align-items: flex-start;
   }
 
   .daily-workbench-shell .daily-command-main,

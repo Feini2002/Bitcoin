@@ -30,7 +30,7 @@ class_name = "LiquidationCollector"
 tag = "v1"
 new_sqlite_classes = ["LiquidationCollector"]
 
-# 定时触发：每 5 分钟一次，由 Worker 内部按时间判断需要同步哪些周期。
+# 定时触发：每分钟一次；Worker 内部按时间判断 K 线周期，footprint/强平/衍生品各自用冷却与增量逻辑控频。
 # 免费版 Workers 的 Cron Triggers 也支持。
 [triggers]
 crons = ["* * * * *"]
@@ -40,6 +40,16 @@ crons = ["* * * * *"]
 # LLM：`BTC_LLM_PROVIDER=none|gemini|auto`（默认 auto，有密钥则视为可用；亦可在控制台设置）
 [vars]
 BTC_LLM_PROVIDER = "auto"
+ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com"
+# Cloudflare Access JWT defense-in-depth:
+# 1) Create an Access self-hosted app for btc.feiniwork.com/*.
+# 2) Copy the app AUD tag and set ACCESS_AUD in the Cloudflare dashboard.
+# 3) Set ACCESS_TEAM_DOMAIN to <your-team>.cloudflareaccess.com.
+# 4) Set ACCESS_JWT_REQUIRED=true after both values are present.
+# ACCESS_TEAM_DOMAIN = "CHANGE_ME.cloudflareaccess.com"
+# ACCESS_AUD = "CHANGE_ME"
+# ACCESS_ALLOWED_EMAILS = "you@example.com"
+# ACCESS_JWT_REQUIRED = "true"
 
 # 可选的反代基址（仅当 Cloudflare 直连 fapi 被 451 时使用）。
 # 对应代码里的 BINANCE_FAPI_ORIGIN。

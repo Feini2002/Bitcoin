@@ -611,7 +611,7 @@ function renderKlineStatusTable(data) {
       <tr>
         <td><strong>${escapeHtml(interval)}</strong></td>
         <td><span class="cloud-status-pill ${level}">${label}</span></td>
-        <td>${count ? `${count} / ${Number(data?.maxPerInterval || 2000)}` : "0"}</td>
+        <td>${count ? `${count}${countRow?.estimated ? "（估算）" : ` / ${Number(data?.maxPerInterval || 2000)}`}` : "0"}</td>
         <td>${escapeHtml(formatD1Time(countRow?.minT))} - ${escapeHtml(formatD1Time(latestT))}</td>
         <td>${escapeHtml(formatD1Age(latestT))}</td>
         <td>${syncRow ? escapeHtml(formatD1Time(syncRow.last_run)) : "暂无记录"}</td>
@@ -665,6 +665,7 @@ function renderCloudStatusSummary(data) {
     <div class="cloud-status-help">
       <strong>真实架构：</strong>
       Pages 静态页请求 ${escapeHtml(apiBase || "已配置 Worker")}；图表页默认只读 D1，但打开后发现当前周期明显落后或点击右上角按钮时会同步当前周期；设置页的「立即同步 D1」用于全周期手动写库。Cron 仍是常规维护入口，每个周期最多保留最近 ${Number(data.maxPerInterval || 2000)} 根。
+      ${data.lightweight ? " 当前为轻量状态：行数来自状态表推导，详细统计请点手动刷新状态。" : ""}
     </div>
     <div class="cloud-status-cards">
       <div class="cloud-status-card">
@@ -896,8 +897,10 @@ function initSettingsPage() {
       showMsg("数据引擎未加载，请刷新页面后重试。");
       return null;
     }
-    const data = await DataEngine.fetchCloudStatus({ timeoutMs: 25_000 });
-    if (manualSync) data._manualSync = manualSync;
+    const detail = manualSync ? "1" : "0";
+    const syncPayload = manualSync && !manualSync.detailOnly ? manualSync : null;
+    const data = await DataEngine.fetchCloudStatus({ timeoutMs: 25_000, detail });
+    if (syncPayload) data._manualSync = syncPayload;
     showOutput(data);
     return data;
   };
@@ -946,7 +949,7 @@ function initSettingsPage() {
       setBusy(true);
       showMsg("正在查询 D1 状态…");
       try {
-        await refreshStatus(null);
+        await refreshStatus({ detailOnly: true });
         showMsg("已获取 D1 状态。");
       } catch (e) {
         showMsg("状态读取失败: " + (e && e.message ? e.message : e));
@@ -970,7 +973,7 @@ function initSettingsPage() {
         syncData = await DataEngine.triggerCloudSync("BTCUSDT", "all", true, { timeoutMs: 150_000 });
         showMsg(summarizeManualSyncMessage(syncData) + " 正在刷新状态…");
         try {
-          const statusData = await DataEngine.fetchCloudStatus({ timeoutMs: 25_000 });
+          const statusData = await DataEngine.fetchCloudStatus({ timeoutMs: 25_000, detail: "1" });
           statusData._manualSync = syncData;
           showOutput(statusData, { sync: syncData, status: statusData });
           showMsg(summarizeManualSyncMessage(syncData) + " 已刷新 D1 状态。");

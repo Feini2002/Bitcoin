@@ -19,7 +19,21 @@ import {
   loadRecentItems,
   pruneOldItems,
 } from "./yuqing-facts.js";
-import { YUQING_FENXI_PAGE, calendarFromFacts, fenxiModuleShell, marketStateFromLegacy, opportunitiesFromInputs, riskRadarFromInputs, trendReadForSentiment } from "./fenxi/index.js";
+import {
+  YUQING_FENXI_PAGE,
+  YUQING_FENXI_MODULES,
+  YUQING_FENXI_SEARCH_SCOPES,
+  YUQING_FENXI_SETTING_KEY,
+  calendarFromFacts,
+  defaultFenxiDashboardSettings,
+  fenxiModuleShell,
+  fenxiSettingsSnapshot,
+  marketStateFromLegacy,
+  normalizeFenxiDashboardSettings,
+  opportunitiesFromInputs,
+  riskRadarFromInputs,
+  trendReadForSentiment,
+} from "./fenxi/index.js";
 import {
   YUQING_SHIJIAN_PAGE,
   buildDailyAiIntelPrompt,
@@ -45,8 +59,9 @@ import {
   renderDailyTopStoriesMarkdown,
   shijianModuleShell,
 } from "./shijian/index.js";
+import { accessCorsHeaders, accessServiceHeaders, requireCloudflareAccess } from "../access-auth.js";
 
-const WORKER_BUILD = "yuqing-worker/1.4.2-daily-delta-stream";
+const WORKER_BUILD = "yuqing-worker/1.4.3-trend-search";
 
 /** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
 const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
@@ -90,6 +105,56 @@ const YUQING_MODEL_CATALOG = [
   },
 ];
 const YUQING_MODEL_IDS = new Set(YUQING_MODEL_CATALOG.map((m) => m.id));
+const YUQING_MODEL_PRICING = {
+  "gemini-3.1-pro-preview": {
+    inputPer1mUsd: { underOrEqual200k: 2, over200k: 4 },
+    outputPer1mUsd: { underOrEqual200k: 12, over200k: 18 },
+    searchPer1kUsd: 14,
+    searchBilling: "gemini3_search_query",
+  },
+  "gemini-3.1-pro-preview-customtools": {
+    inputPer1mUsd: { underOrEqual200k: 2, over200k: 4 },
+    outputPer1mUsd: { underOrEqual200k: 12, over200k: 18 },
+    searchPer1kUsd: 14,
+    searchBilling: "gemini3_search_query",
+  },
+  "gemini-3.1-flash-lite": {
+    inputPer1mUsd: 0.25,
+    outputPer1mUsd: 1.5,
+    searchPer1kUsd: 14,
+    searchBilling: "gemini3_search_query",
+  },
+  "gemini-3.1-flash-lite-preview": {
+    inputPer1mUsd: 0.25,
+    outputPer1mUsd: 1.5,
+    searchPer1kUsd: 14,
+    searchBilling: "gemini3_search_query",
+  },
+  "gemini-3-flash-preview": {
+    inputPer1mUsd: 0.5,
+    outputPer1mUsd: 3,
+    searchPer1kUsd: 14,
+    searchBilling: "gemini3_search_query",
+  },
+  "gemini-2.5-pro": {
+    inputPer1mUsd: { underOrEqual200k: 1.25, over200k: 2.5 },
+    outputPer1mUsd: { underOrEqual200k: 10, over200k: 15 },
+    searchPer1kUsd: 35,
+    searchBilling: "grounded_prompt",
+  },
+  "gemini-2.5-flash": {
+    inputPer1mUsd: 0.3,
+    outputPer1mUsd: 2.5,
+    searchPer1kUsd: 35,
+    searchBilling: "grounded_prompt",
+  },
+  "gemini-2.5-flash-lite": {
+    inputPer1mUsd: 0.1,
+    outputPer1mUsd: 0.4,
+    searchPer1kUsd: 35,
+    searchBilling: "grounded_prompt",
+  },
+};
 const YUQING_MODEL_TARGETS = [
   {
     id: "daily_event.dashboard",
@@ -281,13 +346,10 @@ function maintenanceEnabled(env) {
 }
 
 function corsHeaders(extra = {}) {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Accept",
+  return accessCorsHeaders(null, {
     "Access-Control-Expose-Headers": "X-Worker-Build, X-Yuqing-Worker",
     ...extra,
-  };
+  });
 }
 
 function json(body, status = 200, extraHeaders = {}) {
@@ -559,6 +621,9 @@ function decodeReportRow(row) {
   if (!row) return null;
   const grounding = safeJsonParse(row.grounding_json || row.groundingJson, {});
   const report = safeJsonParse(row.report_json || row.reportJson, {});
+  const costEstimate =
+    (grounding && grounding.costEstimate && typeof grounding.costEstimate === "object" ? grounding.costEstimate : null) ||
+    (report && report.costEstimate && typeof report.costEstimate === "object" ? report.costEstimate : null);
   return {
     id: String(row.id || ""),
     kind: String(row.kind || ""),
@@ -569,6 +634,7 @@ function decodeReportRow(row) {
     status: String(row.status || "ready"),
     sourceRefs: safeJsonParse(row.source_refs_json || row.sourceRefsJson, []),
     grounding,
+    costEstimate,
     marketSnapshot: safeJsonParse(row.market_snapshot_json || row.marketSnapshotJson, {}),
     report,
     quality: report && report.quality ? report.quality : grounding && grounding.quality ? grounding.quality : {},
@@ -648,6 +714,7 @@ function reportListSummary(row) {
     status: row.status,
     title: row.report && (row.report.title || row.report.headline || row.report.summaryTitle),
     quality: row.report && row.report.quality ? row.report.quality : row.grounding && row.grounding.quality,
+    costEstimate: row.costEstimate || (row.grounding && row.grounding.costEstimate) || null,
   };
 }
 
@@ -691,9 +758,9 @@ function marketApiBase(env) {
   return raw.replace(/\/$/, "");
 }
 
-async function fetchJsonOptional(url, timeoutMs = 12_000) {
+async function fetchJsonOptional(url, timeoutMs = 12_000, headers = {}) {
   try {
-    const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } }, timeoutMs);
+    const res = await fetchWithTimeout(url, { headers: { Accept: "application/json", ...headers } }, timeoutMs);
     const text = await res.text();
     const data = text ? safeJsonParse(text, null) : null;
     if (!res.ok) return { ok: false, status: res.status, error: data && (data.error || data.message) ? String(data.error || data.message) : text.slice(0, 180) };
@@ -800,7 +867,10 @@ async function fetchMarketContext(env) {
     derivativesSnapshot: `${base}/api/ai/derivatives-snapshot?profile=brief`,
   };
   const entries = await Promise.all(
-    Object.entries(endpoints).map(async ([key, url]) => [key, compactMarketEndpoint(key, { url, ...(await fetchJsonOptional(url, 15_000)) })]),
+    Object.entries(endpoints).map(async ([key, url]) => [
+      key,
+      compactMarketEndpoint(key, { url, ...(await fetchJsonOptional(url, 15_000, accessServiceHeaders(env))) }),
+    ]),
   );
   const byKey = Object.fromEntries(entries);
   const errors = Object.entries(byKey)
@@ -1649,6 +1719,168 @@ function geminiApiErrorMessage(payload, fallbackText) {
     : String(fallbackText || "").slice(0, 200);
 }
 
+function yuqingUsdCnyRate(env) {
+  const raw = env && env.YUQING_COST_USD_CNY != null ? Number(env.YUQING_COST_USD_CNY) : 7;
+  return Number.isFinite(raw) && raw > 0 ? raw : 7;
+}
+
+function yuqingGeminiPricing(modelId, promptTokens) {
+  const id = String(modelId || "").toLowerCase();
+  const over200k = Number(promptTokens || 0) > 200000;
+  const exact = YUQING_MODEL_PRICING[id];
+  const row =
+    exact ||
+    (id.includes("3.1-pro")
+      ? YUQING_MODEL_PRICING["gemini-3.1-pro-preview"]
+      : id.includes("3.1-flash-lite")
+        ? YUQING_MODEL_PRICING["gemini-3.1-flash-lite"]
+        : id.includes("2.5-pro")
+          ? YUQING_MODEL_PRICING["gemini-2.5-pro"]
+          : id.includes("2.5-flash-lite")
+            ? YUQING_MODEL_PRICING["gemini-2.5-flash-lite"]
+            : id.includes("2.5-flash")
+              ? YUQING_MODEL_PRICING["gemini-2.5-flash"]
+              : id.includes("gemini-3")
+                ? YUQING_MODEL_PRICING["gemini-3-flash-preview"]
+                : null);
+  const pick = (value) => (value && typeof value === "object" ? (over200k ? value.over200k : value.underOrEqual200k) : value);
+  if (row) {
+    return {
+      pricingModelId: exact ? id : "family_fallback",
+      inputPer1mUsd: pick(row.inputPer1mUsd),
+      outputPer1mUsd: pick(row.outputPer1mUsd),
+      searchPer1kUsd: row.searchPer1kUsd,
+      searchBilling: row.searchBilling,
+    };
+  }
+  return { pricingModelId: "estimated_unknown_gemini", inputPer1mUsd: 0.5, outputPer1mUsd: 3, searchPer1kUsd: 14, searchBilling: "estimated_search_query" };
+}
+
+function geminiMetadataForCost(payload) {
+  const candidate = payload && payload.candidates && payload.candidates[0] ? payload.candidates[0] : {};
+  const grounding = candidate.groundingMetadata || candidate.grounding_metadata || payload?.groundingMetadata || payload?.grounding_metadata || {};
+  const queries = Array.isArray(grounding.webSearchQueries)
+    ? grounding.webSearchQueries
+    : Array.isArray(grounding.web_search_queries)
+      ? grounding.web_search_queries
+      : [];
+  const chunks = Array.isArray(grounding.groundingChunks)
+    ? grounding.groundingChunks
+    : Array.isArray(grounding.grounding_chunks)
+      ? grounding.grounding_chunks
+      : [];
+  const supports = Array.isArray(grounding.groundingSupports)
+    ? grounding.groundingSupports
+    : Array.isArray(grounding.grounding_supports)
+      ? grounding.grounding_supports
+      : [];
+  return {
+    usage: payload && (payload.usageMetadata || payload.usage_metadata) ? payload.usageMetadata || payload.usage_metadata : {},
+    webSearchQueries: [...new Set(queries.map((q) => String(q || "").trim()).filter(Boolean))],
+    groundingChunkCount: chunks.length,
+    groundingSupportCount: supports.length,
+  };
+}
+
+function geminiCostEntry(env, modelId, opts, payload) {
+  const meta = geminiMetadataForCost(payload);
+  const usage = meta.usage || {};
+  const promptTokens = Number(usage.promptTokenCount || usage.prompt_token_count || 0) || 0;
+  const candidateTokens = Number(usage.candidatesTokenCount || usage.candidates_token_count || 0) || 0;
+  const thoughtsTokens = Number(usage.thoughtsTokenCount || usage.thoughts_token_count || 0) || 0;
+  const outputTokens = candidateTokens + thoughtsTokens;
+  const totalTokens = Number(usage.totalTokenCount || usage.total_token_count || promptTokens + outputTokens) || 0;
+  const googleSearch = !!(opts && opts.googleSearch);
+  const pricing = yuqingGeminiPricing(modelId, promptTokens);
+  const queryCount = meta.webSearchQueries.length;
+  const hasGrounding = queryCount > 0 || meta.groundingChunkCount > 0 || meta.groundingSupportCount > 0;
+  const billableSearchUnits = googleSearch
+    ? pricing.searchBilling === "grounded_prompt"
+      ? 1
+      : Math.max(1, queryCount)
+    : 0;
+  const inputUsd = (promptTokens / 1000000) * pricing.inputPer1mUsd;
+  const outputUsd = (outputTokens / 1000000) * pricing.outputPer1mUsd;
+  const searchUsd = (billableSearchUnits / 1000) * pricing.searchPer1kUsd;
+  const totalUsd = inputUsd + outputUsd + searchUsd;
+  const usdCny = yuqingUsdCnyRate(env);
+  return {
+    provider: "gemini",
+    model: String(modelId || ""),
+    targetId: opts && opts.targetId ? String(opts.targetId) : "",
+    module: opts && opts.costModule ? String(opts.costModule) : "",
+    googleSearch,
+    hasGrounding,
+    usage: { promptTokens, outputTokens, candidateTokens, thoughtsTokens, totalTokens },
+    search: {
+      billing: pricing.searchBilling,
+      queryCount,
+      billableUnits: billableSearchUnits,
+      webSearchQueries: meta.webSearchQueries.slice(0, 12),
+      groundingChunkCount: meta.groundingChunkCount,
+      groundingSupportCount: meta.groundingSupportCount,
+    },
+    pricing: { ...pricing, usdCny, source: "gemini_api_pricing_snapshot_2026-05-11" },
+    costUsd: Number(totalUsd.toFixed(6)),
+    costCny: Number((totalUsd * usdCny).toFixed(4)),
+    inputCostUsd: Number(inputUsd.toFixed(6)),
+    outputCostUsd: Number(outputUsd.toFixed(6)),
+    searchCostUsd: Number(searchUsd.toFixed(6)),
+    searchCostCny: Number((searchUsd * usdCny).toFixed(4)),
+    estimated: true,
+  };
+}
+
+function createYuqingCostTracker() {
+  const calls = [];
+  return {
+    add(entry) {
+      if (entry && typeof entry === "object") calls.push(entry);
+    },
+    summary() {
+      const totals = calls.reduce(
+        (acc, c) => {
+          acc.callCount += 1;
+          acc.searchCallCount += c.googleSearch ? 1 : 0;
+          acc.searchQueryCount += Number(c.search && c.search.queryCount) || 0;
+          acc.billableSearchUnits += Number(c.search && c.search.billableUnits) || 0;
+          acc.promptTokens += Number(c.usage && c.usage.promptTokens) || 0;
+          acc.outputTokens += Number(c.usage && c.usage.outputTokens) || 0;
+          acc.totalTokens += Number(c.usage && c.usage.totalTokens) || 0;
+          acc.totalUsd += Number(c.costUsd) || 0;
+          acc.totalCny += Number(c.costCny) || 0;
+          acc.searchUsd += Number(c.searchCostUsd) || 0;
+          acc.searchCny += Number(c.searchCostCny) || 0;
+          return acc;
+        },
+        { callCount: 0, searchCallCount: 0, searchQueryCount: 0, billableSearchUnits: 0, promptTokens: 0, outputTokens: 0, totalTokens: 0, totalUsd: 0, totalCny: 0, searchUsd: 0, searchCny: 0 },
+      );
+      const usdCnyRate = calls.reduce((rate, c) => {
+        if (rate) return rate;
+        const v = Number(c && c.pricing && c.pricing.usdCny);
+        return Number.isFinite(v) && v > 0 ? v : 0;
+      }, 0) || 7;
+      const totalCny = Number(totals.totalCny.toFixed(4));
+      const searchCny = Number(totals.searchCny.toFixed(4));
+      return {
+        ...totals,
+        totalUsd: Number(totals.totalUsd.toFixed(6)),
+        totalCny,
+        totalCostCny: totalCny,
+        searchUsd: Number(totals.searchUsd.toFixed(6)),
+        searchCny,
+        searchCostCny: searchCny,
+        searchQueries: totals.searchQueryCount,
+        usdCnyRate: Number(usdCnyRate.toFixed(4)),
+        currency: "CNY",
+        estimated: true,
+        note: "Google Search grounding 的网页正文 token 不可见；搜索费按 Gemini grounding 计费单位估算。",
+        calls: calls.slice(),
+      };
+    },
+  };
+}
+
 async function geminiGenerateContent(env, modelId, prompt, opts) {
   const key = getGeminiKey(env);
   if (!key) throw new Error("GEMINI_API_KEY / GOOGLE_API_KEY 未配置");
@@ -1684,6 +1916,11 @@ async function geminiGenerateContent(env, modelId, prompt, opts) {
 
   const out = geminiCandidateText(j);
   if (!out) throw new Error("Gemini 返回无 candidates/parts");
+  if (opts && typeof opts.usageSink === "function") {
+    try {
+      opts.usageSink(geminiCostEntry(env, modelId, opts, j));
+    } catch (_) {}
+  }
   return out.trim();
 }
 
@@ -1725,6 +1962,8 @@ async function geminiStreamGenerateContent(env, modelId, prompt, opts) {
     const dec = new TextDecoder();
     let buf = "";
     let out = "";
+    let lastCostPayload = null;
+    let lastGroundingPayload = null;
     const consumeLine = (line) => {
       const trimmed = String(line || "").trim();
       if (!trimmed) return;
@@ -1736,6 +1975,9 @@ async function geminiStreamGenerateContent(env, modelId, prompt, opts) {
       } catch (_) {
         return;
       }
+      if (payload && (payload.usageMetadata || payload.usage_metadata)) lastCostPayload = payload;
+      const c0 = payload && payload.candidates && payload.candidates[0] ? payload.candidates[0] : null;
+      if (c0 && (c0.groundingMetadata || c0.grounding_metadata)) lastGroundingPayload = payload;
       const delta = geminiCandidateText(payload);
       if (!delta) return;
       out += delta;
@@ -1759,6 +2001,23 @@ async function geminiStreamGenerateContent(env, modelId, prompt, opts) {
     if (tail) buf += tail;
     if (buf.trim()) consumeLine(buf);
     if (!out) throw new Error("Gemini 流式响应无 candidates/parts");
+    if (lastCostPayload && lastGroundingPayload && lastCostPayload !== lastGroundingPayload) {
+      const groundingCandidate = lastGroundingPayload.candidates && lastGroundingPayload.candidates[0] ? lastGroundingPayload.candidates[0] : {};
+      lastCostPayload = {
+        ...lastCostPayload,
+        candidates: [
+          {
+            ...((lastCostPayload.candidates && lastCostPayload.candidates[0]) || {}),
+            groundingMetadata: groundingCandidate.groundingMetadata || groundingCandidate.grounding_metadata,
+          },
+        ],
+      };
+    }
+    if (opts && typeof opts.usageSink === "function" && lastCostPayload) {
+      try {
+        opts.usageSink(geminiCostEntry(env, modelId, opts, lastCostPayload));
+      } catch (_) {}
+    }
     return out.trim();
   } finally {
     clearTimeout(tid);
@@ -1898,6 +2157,10 @@ async function buildReport(env, bodyIn) {
     llmStatus.models.used[targetId] = resolved;
     return resolved.modelId;
   };
+  const costTracker = createYuqingCostTracker();
+  const trackCost = (targetId, module) => (entry) => {
+    costTracker.add({ ...entry, targetId, module });
+  };
 
   let factRows = [];
   if (d1Bound(env)) {
@@ -1910,6 +2173,7 @@ async function buildReport(env, bodyIn) {
   const groundingItemIds = factRows.slice(0, 48).map((r) => r.id);
   let usedSearchNews = false;
   let usedSearchAi = false;
+  let usedSearchTrends = false;
 
   let cacheHit = false;
   const ttlSec = 600;
@@ -1982,9 +2246,13 @@ async function buildReport(env, bodyIn) {
             ? buildDailyTemperaturePrompt(timeStr, fngScore, fngClass, realMarketData)
             : buildFlashPrompt(timeStr, fngScore, fngClass, realMarketData);
           const model = pickModel(dailyEventFocus ? "daily_event.dashboard" : "sentiment_analysis.dashboard");
+          const targetId = dailyEventFocus ? "daily_event.dashboard" : "sentiment_analysis.dashboard";
           const text = await geminiGenerateContent(env, model, prompt, {
+            targetId,
+            costModule: "dashboard",
             temperature: 0.1,
             googleSearch: false,
+            usageSink: trackCost(targetId, "dashboard"),
             streamText: dailyEventFocus ? makeDailyTextStreamer(streamSink, "temperature") : null,
           });
           const inner = extractJsonFence(text);
@@ -2040,8 +2308,14 @@ async function buildReport(env, bodyIn) {
         try {
           usedSearchNews = true;
           const prompt = buildProNewsPrompt(timeStr, fngScore, fngClass, realMarketData);
-          const model = pickModel("sentiment_analysis.news");
-          const combined = await geminiGenerateContent(env, model, prompt, { googleSearch: true });
+          const targetId = "sentiment_analysis.news";
+          const model = pickModel(targetId);
+          const combined = await geminiGenerateContent(env, model, prompt, {
+            targetId,
+            costModule: "news",
+            googleSearch: true,
+            usageSink: trackCost(targetId, "news"),
+          });
           const inner = extractJsonFence(combined);
           const parsed = JSON.parse(inner);
           const topStories = normalizeDailyTopStoryItems(parsed.topStories, []);
@@ -2087,14 +2361,18 @@ async function buildReport(env, bodyIn) {
       (async () => {
         try {
           usedSearchNews = true;
-          const model = pickModel("daily_event.news");
+          const targetId = "daily_event.news";
+          const model = pickModel(targetId);
           let rawList = [];
           if (dualHeadlineLanes) {
             const [ra, rb] = await Promise.all([
               (async () => {
                 const text = await geminiGenerateContent(env, model, buildDailyTopStoriesPrompt(timeStr), {
+                  targetId,
+                  costModule: "topStories.primary",
                   googleSearch: true,
                   temperature: 0.25,
+                  usageSink: trackCost(targetId, "topStories.primary"),
                   streamText: makeDailyTextStreamer(streamSink, "topStories", "topStories.primary", "今日头条 · 主线"),
                 });
                 const inner = extractJsonFence(text);
@@ -2103,8 +2381,11 @@ async function buildReport(env, bodyIn) {
               })(),
               (async () => {
                 const text = await geminiGenerateContent(env, model, buildDailyTopStoriesWirePrompt(timeStr), {
+                  targetId,
+                  costModule: "topStories.wire",
                   googleSearch: true,
                   temperature: 0.28,
+                  usageSink: trackCost(targetId, "topStories.wire"),
                   streamText: makeDailyTextStreamer(streamSink, "topStories", "topStories.wire", "今日头条 · 快讯"),
                 });
                 const inner = extractJsonFence(text);
@@ -2116,8 +2397,11 @@ async function buildReport(env, bodyIn) {
           } else {
             const prompt = buildDailyTopStoriesPrompt(timeStr);
             const text = await geminiGenerateContent(env, model, prompt, {
+              targetId,
+              costModule: "topStories",
               googleSearch: true,
               temperature: 0.25,
+              usageSink: trackCost(targetId, "topStories"),
               streamText: makeDailyTextStreamer(streamSink, "topStories"),
             });
             const inner = extractJsonFence(text);
@@ -2152,10 +2436,14 @@ async function buildReport(env, bodyIn) {
         try {
           usedSearchNews = true;
           const prompt = buildDailyBriefsPrompt(timeStr);
-          const model = pickModel("daily_event.timeline");
+          const targetId = "daily_event.timeline";
+          const model = pickModel(targetId);
           const text = await geminiGenerateContent(env, model, prompt, {
+            targetId,
+            costModule: "dynamicBriefs",
             googleSearch: true,
             temperature: 0.3,
+            usageSink: trackCost(targetId, "dynamicBriefs"),
             streamText: makeDailyTextStreamer(streamSink, "dynamicBriefs"),
           });
           const inner = extractJsonFence(text);
@@ -2187,10 +2475,14 @@ async function buildReport(env, bodyIn) {
         try {
           usedSearchAi = true;
           const prompt = dailyEventFocus ? buildDailyAiIntelPrompt(timeStr) : buildProAIJsonPrompt(timeStr);
-          const model = pickModel(dailyEventFocus ? "daily_event.ai" : "sentiment_analysis.ai");
+          const targetId = dailyEventFocus ? "daily_event.ai" : "sentiment_analysis.ai";
+          const model = pickModel(targetId);
           const text = await geminiGenerateContent(env, model, prompt, {
+            targetId,
+            costModule: "ai",
             googleSearch: true,
             temperature: 0.35,
+            usageSink: trackCost(targetId, "ai"),
             streamText: dailyEventFocus ? makeDailyTextStreamer(streamSink, "aiIntel") : null,
           });
           const inner = extractJsonFence(text);
@@ -2222,10 +2514,14 @@ async function buildReport(env, bodyIn) {
         try {
           usedSearchAi = true;
           const prompt = buildDailyGithubToolsPrompt(timeStr);
-          const model = pickModel("daily_event.githubTools");
+          const targetId = "daily_event.githubTools";
+          const model = pickModel(targetId);
           const text = await geminiGenerateContent(env, model, prompt, {
+            targetId,
+            costModule: "githubTools",
             googleSearch: true,
             temperature: 0.32,
+            usageSink: trackCost(targetId, "githubTools"),
             streamText: makeDailyTextStreamer(streamSink, "githubTools"),
           });
           const inner = extractJsonFence(text);
@@ -2255,10 +2551,16 @@ async function buildReport(env, bodyIn) {
         const prompt = dailyEventFocus
           ? buildDailyTrendCluesPrompt(newsMd, timelineMd, aiMd, flashDataJsonText, githubToolsMd)
           : buildProTrendsPrompt(newsMd, timelineMd, aiMd, flashDataJsonText, trendsUseAiIntel ? "full" : "daily_event_above_trend");
-        const model = pickModel(dailyEventFocus ? "daily_event.trends" : "sentiment_analysis.trends");
+        const targetId = dailyEventFocus ? "daily_event.trends" : "sentiment_analysis.trends";
+        const trendSearchEnabled = dailyEventFocus ? true : trendsUseSearch;
+        if (trendSearchEnabled) usedSearchTrends = true;
+        const model = pickModel(targetId);
         trendsMd = await geminiGenerateContent(env, model, prompt, {
-          googleSearch: dailyEventFocus ? false : trendsUseSearch,
+          targetId,
+          costModule: "trends",
+          googleSearch: trendSearchEnabled,
           temperature: 0.35,
+          usageSink: trackCost(targetId, "trends"),
           streamText: dailyEventFocus ? makeDailyTextStreamer(streamSink, "trends") : null,
         });
         sections.trends = { markdown: trendsMd, status: trendsMd ? "ready" : "error", message: null };
@@ -2330,10 +2632,11 @@ async function buildReport(env, bodyIn) {
     if (!needGithubTools) {
       sections.githubTools = { markdown: "", status: "planned", message: "模块已关闭", data: { githubTools: [] } };
     }
-    llmStatus.capabilities.search = !!(usedSearchNews || usedSearchAi);
+    llmStatus.capabilities.search = !!(usedSearchNews || usedSearchAi || usedSearchTrends);
     if (streamSink) llmStatus.capabilities.stream = true;
   }
 
+  const costEstimate = costTracker.summary();
   const out = {
     ok: true,
     workerBuild: WORKER_BUILD,
@@ -2344,7 +2647,7 @@ async function buildReport(env, bodyIn) {
     grounding: {
       factCount: factRows.length,
       itemIdsSample: groundingItemIds,
-      usedSearch: { news: usedSearchNews, ai: usedSearchAi, trends: dailyEventFocus ? false : trendsUseSearch },
+      usedSearch: { news: usedSearchNews, ai: usedSearchAi, trends: usedSearchTrends },
     },
     sources: {
       fng: sources.fng,
@@ -2353,6 +2656,7 @@ async function buildReport(env, bodyIn) {
       errors: sources.errors,
     },
     llmStatus,
+    costEstimate,
     dashboard: {
       sentimentSummary: dashboard.sentimentSummary,
       marketRegime: dashboard.marketRegime,
@@ -2375,7 +2679,7 @@ async function buildReport(env, bodyIn) {
           "on_demand",
           mode,
           JSON.stringify(out.grounding),
-          JSON.stringify({ dashboard: out.dashboard, sections: out.sections, llmStatus: out.llmStatus }),
+          JSON.stringify({ dashboard: out.dashboard, sections: out.sections, llmStatus: out.llmStatus, costEstimate: out.costEstimate }),
         )
         .run();
     } catch (_) {}
@@ -2647,7 +2951,7 @@ async function buildDailyEventReport(env, opts) {
     quality: {
       factCount: factRows.length,
       sourceCoverage: Math.min(100, Math.max(20, sources.length * 14 + Math.min(30, factRows.length))),
-      usedSearch: !!(legacy && legacy.grounding && legacy.grounding.usedSearch && (legacy.grounding.usedSearch.news || legacy.grounding.usedSearch.ai)),
+      usedSearch: !!(legacy && legacy.grounding && legacy.grounding.usedSearch && (legacy.grounding.usedSearch.news || legacy.grounding.usedSearch.ai || legacy.grounding.usedSearch.trends)),
       ingestRows: ingestResult ? Number(ingestResult.insertedRows || 0) : 0,
       caveat: "覆盖率按来源数量、事实密度与可追溯程度估算。",
     },
@@ -2666,6 +2970,7 @@ async function buildDailyEventReport(env, opts) {
       itemIdsSample: factRows.slice(0, 32).map((r) => r.id),
       ingest: ingestResult,
       quality: report.quality,
+      costEstimate: legacy && legacy.costEstimate ? legacy.costEstimate : createYuqingCostTracker().summary(),
     },
     marketSnapshot: { sources: agg.sources, realMarketData: agg.realMarketData },
     report,
@@ -2683,6 +2988,13 @@ async function buildSentimentAnalysisReport(env, opts) {
   const triggerType = normalizeTriggerType(opts && opts.triggerType);
   const slot = opts && opts.slot ? String(opts.slot) : bjtSlotLabel(SENTIMENT_ANALYSIS_KIND, generatedAt);
   const sourceErrors = [];
+  const settingsEnvelope = await readFenxiDashboardSettings(env, opts && (opts.analysisSettings || opts.settings));
+  const analysisSettings = settingsEnvelope.settings;
+  const analysisCoverage = analysisSettings.analysisCoverage || {};
+  const searchCoverage = analysisSettings.searchCoverage || {};
+  if (settingsEnvelope.error) {
+    sourceErrors.push({ source: "fenxi_settings", message: settingsEnvelope.error });
+  }
   let daily = null;
   try {
     daily = await loadLatestYuqingReport(env.YUQING_DB, DAILY_EVENT_KIND);
@@ -2696,9 +3008,10 @@ async function buildSentimentAnalysisReport(env, opts) {
     dailyAgeMs: dailyAgeMs(daily),
     factCount: factRows.length,
     marketErrors: marketSnapshot.errors,
-    forceSearch: !!(opts && opts.forceSearch),
+    forceSearch: !!(opts && opts.forceSearch) && !!(searchCoverage.factFill || searchCoverage.narrativePricing || searchCoverage.aiTech || searchCoverage.macroEvents),
   });
-  if (inc.useSearch) {
+  const useIncrementalSearch = shouldRunFenxiIncrementalSearch(inc, analysisSettings);
+  if (useIncrementalSearch) {
     try {
       const ingest = await ingestFactPool(env, { aggregateSources });
       sourceErrors.push(...(ingest.ingestErrors || []));
@@ -2715,11 +3028,13 @@ async function buildSentimentAnalysisReport(env, opts) {
     legacy = await buildReport(env, {
       mode: opts && opts.mode ? opts.mode : "deep",
       force: true,
-      allowSearch: inc.useSearch,
+      allowSearch: useIncrementalSearch,
       forceSearch: !!(opts && opts.forceSearch),
       modelId: opts && opts.modelId,
       modelAssignments: opts && opts.modelAssignments,
-      modules: { dashboard: true, news: true, timeline: true, ai: true, trends: true },
+      modules: opts && opts.modules && typeof opts.modules === "object"
+        ? opts.modules
+        : fenxiLegacyModulesFromCoverage(analysisCoverage),
     });
     if (legacy && Array.isArray(legacy.warnings)) sourceErrors.push(...legacy.warnings);
   } catch (e) {
@@ -2738,7 +3053,13 @@ async function buildSentimentAnalysisReport(env, opts) {
     { type: "market", label: "强平雷达", href: "#/heatmap", route: "heatmap" },
     ...sourceRefsFromFacts(factRows.filter((x) => !excludedSourceIds.includes(x.id)), 8),
   ];
-  const incrementalSearch = { used: inc.useSearch, reasons: inc.reasons, excludedSourceIds };
+  const incrementalSearch = {
+    used: useIncrementalSearch,
+    requested: inc.useSearch,
+    reasons: inc.reasons,
+    excludedSourceIds,
+    searchCoverage,
+  };
   const report = {
     title: "BTC 核心跨资产情报日报",
     upstreamDaily: daily
@@ -2750,29 +3071,32 @@ async function buildSentimentAnalysisReport(env, opts) {
           href: `#/news?reportId=${encodeURIComponent(daily.id)}`,
         }
       : null,
-    marketState: marketStateFromLegacy(legacy, marketSnapshot),
-    riskRadar: riskRadarFromInputs(daily, marketSnapshot, factRows),
-    opportunityScanner: opportunitiesFromInputs(daily, marketSnapshot),
-    eventCalendar: calendarFromFacts(factRows),
-    aiIntel: (
-      legacy && legacy.sections && legacy.sections.ai && legacy.sections.ai.data && Array.isArray(legacy.sections.ai.data.aiIntel)
-        ? legacy.sections.ai.data.aiIntel
-        : dailyAiIntelFromFacts(aiFacts)
-    ).map((x) => ({
-      title: x.title,
-      relevance: x.use || "",
-      watch: x.what || "",
-      confidence: x.attention === "高" ? 0.72 : 0.58,
-      sourceName: x.sourceName || "",
-      sourceUrl: x.sourceUrl || "",
-    })),
-    trendRead: trendReadForSentiment(legacy, incrementalSearch),
+    marketState: analysisCoverage.riskRegime === false ? marketStateFromLegacy(null, { ok: false, errors: [] }) : marketStateFromLegacy(legacy, marketSnapshot),
+    riskRadar: analysisCoverage.riskThresholds === false ? [] : riskRadarFromInputs(daily, marketSnapshot, factRows),
+    opportunityScanner: analysisCoverage.riskThresholds === false ? [] : opportunitiesFromInputs(daily, marketSnapshot),
+    eventCalendar: analysisCoverage.catalystCalendar === false ? [] : calendarFromFacts(factRows),
+    aiIntel: analysisCoverage.techPremium === false
+      ? []
+      : (
+          legacy && legacy.sections && legacy.sections.ai && legacy.sections.ai.data && Array.isArray(legacy.sections.ai.data.aiIntel)
+            ? legacy.sections.ai.data.aiIntel
+            : dailyAiIntelFromFacts(aiFacts)
+        ).map((x) => ({
+          title: x.title,
+          relevance: x.use || "",
+          watch: x.what || "",
+          confidence: x.attention === "高" ? 0.72 : 0.58,
+          sourceName: x.sourceName || "",
+          sourceUrl: x.sourceUrl || "",
+        })),
+    trendRead: analysisCoverage.distortionAudit === false ? { title: "趋势研判已关闭", summary: "本轮设置未纳入抗失真/趋势研判。", strengthening: [], weakening: [] } : trendReadForSentiment(legacy, incrementalSearch),
     incrementalSearch,
+    settingsSnapshot: fenxiSettingsSnapshot(analysisSettings),
     quality: {
       factCount: factRows.length,
       sourceCoverage: Math.min(100, Math.max(20, factRows.length + (marketSnapshot.ok ? 35 : 10))),
       marketSnapshotOk: !!marketSnapshot.ok,
-      usedSearch: inc.useSearch,
+      usedSearch: useIncrementalSearch,
       caveat: "本页是二次舆情研判，不构成投资建议。",
     },
   };
@@ -2790,7 +3114,10 @@ async function buildSentimentAnalysisReport(env, opts) {
       factCount: factRows.length,
       itemIdsSample: factRows.slice(0, 32).map((r) => r.id),
       incrementalSearch,
+      settingsSnapshot: fenxiSettingsSnapshot(analysisSettings),
+      settingsSource: settingsEnvelope.source,
       quality: report.quality,
+      costEstimate: legacy && legacy.costEstimate ? legacy.costEstimate : createYuqingCostTracker().summary(),
     },
     marketSnapshot,
     report,
@@ -2826,6 +3153,47 @@ async function putYuqingSettings(db, key, settings) {
     `INSERT INTO yuqing_settings (key, value_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
      ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = CURRENT_TIMESTAMP`
   ).bind(key, JSON.stringify(settings)).run();
+}
+
+async function readFenxiDashboardSettings(env, override) {
+  if (override && typeof override === "object") {
+    return { settings: normalizeFenxiDashboardSettings(override), source: "request", error: null };
+  }
+  if (!d1Bound(env)) {
+    return { settings: defaultFenxiDashboardSettings(), source: "fallback", error: "D1 未绑定" };
+  }
+  try {
+    const raw = await getYuqingSettings(env.YUQING_DB, YUQING_FENXI_SETTING_KEY);
+    return {
+      settings: normalizeFenxiDashboardSettings(raw),
+      source: raw ? "d1" : "fallback",
+      error: null,
+    };
+  } catch (e) {
+    return {
+      settings: defaultFenxiDashboardSettings(),
+      source: "fallback",
+      error: String(e && e.message ? e.message : e),
+    };
+  }
+}
+
+function fenxiLegacyModulesFromCoverage(coverage) {
+  const c = coverage && typeof coverage === "object" ? coverage : {};
+  return {
+    dashboard: c.riskRegime !== false || c.hardDataMatrix !== false || c.agentContext !== false,
+    news: c.narrativeValidation !== false || c.riskThresholds !== false,
+    timeline: c.catalystCalendar !== false,
+    ai: c.techPremium !== false,
+    githubTools: false,
+    trends: c.distortionAudit !== false || c.narrativeValidation !== false,
+  };
+}
+
+function shouldRunFenxiIncrementalSearch(inc, settings) {
+  if (!inc || !inc.useSearch) return false;
+  const scopes = settings && settings.searchCoverage ? settings.searchCoverage : {};
+  return !!(scopes.factFill || scopes.narrativePricing || scopes.aiTech || scopes.macroEvents);
 }
 
 /** ---- 兼容旧路径：Finnhub 代理 ---- */
@@ -2879,6 +3247,8 @@ export default {
 
     const url = new URL(request.url);
     const path = url.pathname;
+    const accessDenied = await requireCloudflareAccess(request, env, json);
+    if (accessDenied) return accessDenied;
 
     if (path === "/finnhub-bulk" || path === "/api/yuqing/finnhub-bulk") {
       const rl = await checkRateLimit(request, "finnhub", 40);
@@ -3105,6 +3475,52 @@ export default {
       }
     }
 
+    if (path === "/api/yuqing/settings/sentiment-analysis" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "fenxi_settings_get", 100);
+      if (rl) return rl;
+      const envelope = await readFenxiDashboardSettings(env, null);
+      return json({
+        ok: true,
+        workerBuild: WORKER_BUILD,
+        d1Ready: d1Bound(env),
+        source: envelope.source,
+        modules: YUQING_FENXI_MODULES,
+        searchScopes: YUQING_FENXI_SEARCH_SCOPES,
+        settings: envelope.settings,
+        warning: envelope.error || null,
+      });
+    }
+
+    if (path === "/api/yuqing/settings/sentiment-analysis" && request.method === "PUT") {
+      const rl = await checkRateLimit(request, "fenxi_settings_put", 20);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定", d1Ready: false }, 503);
+      let bodyIn;
+      try {
+        bodyIn = await request.json();
+      } catch (_) {
+        return json({ ok: false, error: "格式错误" }, 400);
+      }
+      try {
+        const settings = {
+          ...normalizeFenxiDashboardSettings(bodyIn),
+          updatedAt: new Date().toISOString(),
+        };
+        await putYuqingSettings(env.YUQING_DB, YUQING_FENXI_SETTING_KEY, settings);
+        return json({
+          ok: true,
+          workerBuild: WORKER_BUILD,
+          d1Ready: true,
+          source: "d1",
+          modules: YUQING_FENXI_MODULES,
+          searchScopes: YUQING_FENXI_SEARCH_SCOPES,
+          settings,
+        });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
     if (path === "/api/yuqing/reports/generate" && request.method === "POST") {
       const rl = await checkRateLimit(request, "reports_generate", 8);
       if (rl) return rl;
@@ -3126,6 +3542,7 @@ export default {
           modelId: bodyIn && bodyIn.modelId,
           modelAssignments: bodyIn && (bodyIn.modelAssignments || bodyIn.modelOverrides || bodyIn.models),
           modules: bodyIn && bodyIn.modules,
+          analysisSettings: bodyIn && (bodyIn.analysisSettings || bodyIn.settings),
         });
         return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report: out });
       } catch (e) {
@@ -3307,6 +3724,8 @@ export default {
           triggerType: "manual",
           forceSearch: !!(bodyIn && (bodyIn.forceSearch || bodyIn.allowSearch)),
           mode: bodyIn && bodyIn.mode,
+          modules: bodyIn && bodyIn.modules,
+          analysisSettings: bodyIn && (bodyIn.analysisSettings || bodyIn.settings),
         });
         return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report: out });
       } catch (e) {
@@ -3359,6 +3778,8 @@ export default {
           "PUT /api/yuqing/settings/model-channels",
           "GET /api/yuqing/settings/event-dashboard",
           "PUT /api/yuqing/settings/event-dashboard",
+          "GET /api/yuqing/settings/sentiment-analysis",
+          "PUT /api/yuqing/settings/sentiment-analysis",
           "POST /api/yuqing/reports/generate",
           "POST /api/yuqing/reports/generate-stream",
           "POST /api/yuqing/report (compat: sentiment_analysis)",

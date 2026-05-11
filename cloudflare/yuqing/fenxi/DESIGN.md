@@ -780,6 +780,42 @@ PLANNED：
 
 - 文档检查。
 
+### Phase 0.5：设置与模块注册框架
+
+目标：
+
+- 先落舆情分析页设置抽屉、D1 持久化和 Worker 可读取配置。
+- 不实现具体分析算法，不删除任何 PLANNED。
+- 为后续逐模块填入建立统一模块 key、默认设置和设置快照。
+
+文件：
+
+- `cloudflare/yuqing/fenxi/index.js`
+- `cloudflare/yuqing/yuqing-worker.js`
+- `js/data-engine.js`
+- `js/pages/news.js`
+- `styles.css` 如需补样式
+
+输出：
+
+- D1 设置 key：`sentiment_analysis_dashboard`
+- 前端设置：`visibility`、`analysisCoverage`、`searchCoverage`
+- Worker 报告快照：`report.settingsSnapshot` 与 `grounding.settingsSnapshot`
+- 设置接口：`GET/PUT /api/yuqing/settings/sentiment-analysis`
+
+边界：
+
+- `visibility` 只影响页面显示。
+- `analysisCoverage` 影响手动/定点二次分析纳入哪些模块。
+- `searchCoverage` 只影响增量搜索和未来定向验证搜索，不控制行情、衍生品、强平等硬数据源。
+- 老报告没有设置快照时，前端使用默认配置展示。
+
+验证：
+
+- `npm.cmd run lint`
+- `npm.cmd run verify:yuqing`
+- 若同时改 Worker 生成路径，补跑 `npm.cmd run verify:api`
+
 ### Phase 1：无行为变化的文件拆分
 
 目标：

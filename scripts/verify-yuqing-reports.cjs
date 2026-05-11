@@ -82,6 +82,22 @@ for (const field of [
 ]) {
   assertOk(new RegExp(`\\b${field}\\b`).test(migration), `migration has ${field}`);
 }
+assertOk(worker.includes("createYuqingCostTracker") && worker.includes("geminiCostEntry"), "worker estimates Gemini usage and search cost");
+assertOk(worker.includes("costEstimate: legacy && legacy.costEstimate"), "worker persists cost estimate inside report grounding");
+assertOk(worker.includes("YUQING_COST_USD_CNY") && worker.includes("usdCnyRate") && worker.includes(": 7;"), "worker defaults cost conversion to 7 CNY per USD");
+assertOk(worker.includes("totalCostCny") && worker.includes("searchCostCny") && worker.includes("searchQueries"), "worker exposes cost aliases for archive compatibility");
+const p31ProSmall = ctx.yuqingGeminiPricing("gemini-3.1-pro-preview", 200000);
+const p31ProLarge = ctx.yuqingGeminiPricing("gemini-3.1-pro-preview", 200001);
+const p31Lite = ctx.yuqingGeminiPricing("gemini-3.1-flash-lite", 1000);
+const p31LitePreview = ctx.yuqingGeminiPricing("gemini-3.1-flash-lite-preview", 1000);
+assertOk(p31ProSmall.inputPer1mUsd === 2 && p31ProSmall.outputPer1mUsd === 12 && p31ProSmall.searchPer1kUsd === 14, "Gemini 3.1 Pro pricing matches official <=200k standard rate");
+assertOk(p31ProLarge.inputPer1mUsd === 4 && p31ProLarge.outputPer1mUsd === 18 && p31ProLarge.searchPer1kUsd === 14, "Gemini 3.1 Pro pricing matches official >200k standard rate");
+assertOk(p31Lite.inputPer1mUsd === 0.25 && p31Lite.outputPer1mUsd === 1.5 && p31Lite.searchPer1kUsd === 14, "Gemini 3.1 Flash Lite pricing matches official standard rate");
+assertOk(p31LitePreview.inputPer1mUsd === 0.25 && p31LitePreview.outputPer1mUsd === 1.5 && p31LitePreview.searchPer1kUsd === 14, "Gemini 3.1 Flash Lite Preview pricing matches official standard rate");
+assertOk(worker.includes("pricingModelId") && worker.includes("gemini_api_pricing_snapshot_2026-05-11"), "worker records exact pricing key for each LLM cost entry");
+const modelSwitchEnvelope = { settings: { assignments: { "daily_event.trends": "gemini-3.1-pro-preview" } } };
+const modelSwitchResolved = ctx.resolveYuqingModel({}, modelSwitchEnvelope, "daily_event.trends", {});
+assertOk(modelSwitchResolved.modelId === "gemini-3.1-pro-preview" && modelSwitchResolved.source === "d1", "worker resolves D1 model channel before costing LLM calls");
 
 assertOk(/crons\s*=\s*\["0 0,1,4,6,12,14,16 \* \* \*"\]/.test(wrangler), "wrangler cron covers BJT report slots");
 
@@ -160,15 +176,18 @@ assertOk(temperature.includes("24h=短线冲击") && temperature.includes("3d=�
 assertOk(temperature.includes("assets") && temperature.includes("normalizeTemperatureAssets"), "temperature payload exposes asset move rows");
 assertOk(shijianIndex.includes("buildDailyGithubToolsPrompt") && shijianIndex.includes("./github-tools.js"), "shijian exports github tools module");
 assertOk(githubTools.includes("normalizeDailyGithubToolItems") && githubTools.includes("renderDailyGithubToolsMarkdownForTrends"), "github tools module normalizes and renders trends input");
-assertOk(trendClues.includes("不使用 Google Search") && trendClues.includes("只基于下方输入做二次叠加分析"), "trend clues prompt is input-only by default");
-assertOk(trendClues.includes("重度世界新闻 + 中度科技 + 轻量金融背景") && trendClues.includes("worldNews"), "trend clues prompt uses daily editorial structure");
+assertOk(trendClues.includes("必须使用 Google Search") && trendClues.includes("外部搜索校准"), "trend clues prompt uses Google Search calibration");
+assertOk(trendClues.includes("closingRead") && trendClues.includes("searchFindings") && trendClues.includes("watchline"), "trend clues prompt uses closing editorial structure");
 assertOk(worker.includes("module: \"githubTools\"") && worker.includes("normalizeDailyGithubToolItems(parsed.githubTools)"), "worker streams github tools partials");
 assertOk(worker.includes("githubTools: modules.githubTools") && worker.includes("dailyGithubToolsFromFacts()"), "worker persists github tools module state and fallback");
-assertOk(worker.includes("trendsUseSearch") && worker.includes("googleSearch: dailyEventFocus ? false : trendsUseSearch"), "worker keeps daily trend clues off Google Search by default");
+assertOk(worker.includes("const trendSearchEnabled = dailyEventFocus ? true : trendsUseSearch") && worker.includes("usedSearchTrends") && worker.includes("googleSearch: trendSearchEnabled"), "worker enables and records search for daily trend clues");
 assertOk(eventsPage.includes("githubTools: !!s.githubTools") && eventsPage.includes("mergeDailyStreamEvent(evt)"), "events page sends and merges github tools stream data");
 assertOk(eventsPage.includes("renderDailyGithubTools") && eventsPage.includes("GitHub 工具雷达暂无结果"), "events page renders github tools with empty state");
-assertOk(eventsPage.includes("trendsUseSearch: false") && eventsPage.includes("趋势线索 · 本轮叠加分析"), "events page marks trend clues as upstream synthesis");
+assertOk(eventsPage.includes("trendsUseSearch: true") && eventsPage.includes("趋势线索 · 外部校准收束") && eventsPage.includes("daily-trend-brief"), "events page marks trend clues as searched closing read");
+assertOk(eventsPage.includes("趋势线索会等上游完成后再做外部搜索校准") && eventsPage.includes("最新外部来源里校准"), "events page copy aligns trend clues with searched closing read");
 assertOk(eventsPage.includes("daily-temperature-assets") && eventsPage.includes("move3d") && eventsPage.includes("move7d"), "events page renders temperature asset moves");
+assertOk(eventsPage.includes("历史报告与费用") && eventsPage.includes("renderDailyArchiveCostSummary"), "events page renders report archive cost summary");
+assertOk(eventsPage.includes("有搜索费") && eventsPage.includes("dailyArchiveSearchCostCny"), "events page filters reports by search cost");
 
 for (const method of [
   "fetchYuqingReportLatest",

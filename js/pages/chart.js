@@ -1,7 +1,7 @@
 /* =======================================================
    行情工作台
    - 初始历史数据走 Worker /api/d1/klines（Cloudflare D1 缓存，币安源）
-   - 浏览器每 60s 只读 D1；打开后若当前周期明显落后会触发一次当前周期同步，右上角按钮也会同步并重读当前周期。
+   - 浏览器每 60s 只读 D1 小窗口；打开后若当前周期明显落后会触发一次当前周期同步，右上角按钮也会同步并重读当前周期。
    - 实时 K 线由 Binance WebSocket（当前周期的 kline stream）补齐 OHLC。
    - 主图标题栏「最新价」独立推送：优先 Binance aggTrade WebSocket（U 本位/现货线路自动切换 + 解析组合流包装），
      网络/CORS 受阻时用币安公开 REST 最新价与 Worker「BIT_DATA_API_BASE」上的 /api/binance/ticker/price 轮询兜底（非 D1、非 K 线序列）。
@@ -15,6 +15,7 @@ const CHART_HEADLINE_REST_PAUSE_AFTER_WS_MS = 2000;
 /** 已连接但长时间收不到 aggTrade 时切换 spot/futures 线路 */
 const CHART_HEADLINE_WS_STALL_SWITCH_MS = 7000;
 const CHART_D1_POLL_MS = 60 * 1000;
+const CHART_D1_POLL_LIMIT = 20;
 const CHART_D1_SYNC_TIMEOUT_MS = 90 * 1000;
 const CHART_D1_AUTO_SYNC_STALE_BARS = 2;
 const CHART_D1_AUTO_SYNC_COOLDOWN_MS = 5 * 60 * 1000;
@@ -1077,7 +1078,7 @@ async function chartPollHeadlinePriceRest() {
     try {
       const r = await fetch(
         `${tickerProxyBase}/api/binance/ticker/price?symbol=${encodeURIComponent(want)}`,
-        { cache: "no-store", mode: "cors" },
+        { cache: "no-store", mode: "cors", credentials: "include" },
       );
       if (!r.ok) return;
       const j = await r.json();
@@ -1717,9 +1718,12 @@ function klineOpenMatchesActiveInterval(tMs, interval) {
 
 function mergeD1RowsWithLiveRows(d1Rows) {
   const incoming = normalizeKlineRows(d1Rows);
-  if (!incoming.length) return [];
+  if (!incoming.length) return chartOhlcv.slice();
   const lastD1T = incoming[incoming.length - 1].t;
   const byTime = new Map();
+  chartOhlcv.forEach((row) => {
+    if (row && Number.isFinite(row.t)) byTime.set(row.t, row);
+  });
   incoming.forEach((row) => byTime.set(row.t, row));
   const iv = currentInterval;
   for (const row of chartOhlcv) {
@@ -1773,7 +1777,7 @@ function queueD1Poll(reason) {
   const myGen = chartD1PollGen;
   chartD1PollInFlight = true;
 
-  DataEngine.fetchKlinesFromD1(symbol, interval, 2000, { sync: "0" })
+  DataEngine.fetchKlinesFromD1(symbol, interval, CHART_D1_POLL_LIMIT, { sync: "0" })
     .then(async (raw) => {
       if (myGen !== chartD1PollGen || symbol !== CHART_SYMBOL || interval !== currentInterval) return;
       if (!Array.isArray(raw) || raw.length === 0) return;
@@ -1876,7 +1880,7 @@ async function loadChartData(symbol, interval, opts = {}) {
   startChartWs(symbol, interval);
 
   try {
-    const rawData = await DataEngine.fetchKlinesFromD1(symbol, interval, 2000, { sync: "0" });
+    const rawData = await DataEngine.fetchKlinesFromD1(symbol, interval, 2000, { sync: "auto" });
     if (myGen !== chartLoadGen) return;
 
     if (!Array.isArray(rawData) || rawData.length === 0) {

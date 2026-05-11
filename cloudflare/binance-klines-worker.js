@@ -1,3 +1,5 @@
+import { accessCorsHeaders, requireCloudflareAccess } from "./access-auth.js";
+
 /**
  * Cloudflare Worker：币安 U 本位永续 K 线的云端数据层
  *
@@ -48,6 +50,7 @@ const FOOTPRINT_FETCH_LIMIT = 1000;
 /** Cron / 手动 footprint 单次最多拉取的 aggTrades 页数（每页 FOOTPRINT_FETCH_LIMIT）；增大以追上 last_trade_id 积压，避免前台「延迟/503」误判。*/
 const FOOTPRINT_MAX_FETCH_PAGES = 14;
 const FOOTPRINT_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
+const FOOTPRINT_READ_CACHE_SECONDS = 20;
 const MAX_KLINES_PER_INTERVAL = 2000;
 const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
@@ -58,6 +61,10 @@ const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
 const WORKER_BUILD = "btc-worker/3.7.9-gemini-llm-sync";
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
+const KLINE_READ_CACHE_SECONDS = 8;
+const DERIVATIVE_READ_CACHE_SECONDS = 30;
+const LIQUIDATION_READ_CACHE_SECONDS = 20;
+const STATUS_READ_CACHE_SECONDS = 30;
 const LIQUIDATION_SYMBOL = DEFAULT_SYMBOL;
 const LIQUIDATION_BUCKET_MS = 5 * 60 * 1000;
 const LIQUIDATION_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
@@ -158,10 +165,6 @@ const ONCHAIN_RELIABILITY = {
 };
 
 const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS, HEAD",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Max-Age": "86400",
   "Access-Control-Expose-Headers":
     "X-Worker-Build, X-Proxy-Target, X-Data-Source, X-Upstream-Status, X-Upstream-Error, X-Failover-Chain, X-Worker-Note, X-D1-Count, X-D1-Latest-T, X-D1-Auto-Sync, X-D1-Auto-Sync-Ok, X-D1-Manual-Sync, X-D1-Footprint-Count, X-D1-Footprint-Synced",
 };
@@ -171,7 +174,14 @@ const CORS = {
  * ============================================================= */
 
 function headersMerge(extra) {
-  return new Headers({ ...CORS, ...Object.fromEntries(Object.entries(extra || {})) });
+  return new Headers(accessCorsHeaders(null, { ...CORS, ...Object.fromEntries(Object.entries(extra || {})) }));
+}
+
+function publicCacheHeader(maxAgeSeconds, staleSeconds = 30) {
+  const maxAge = Math.max(0, Math.round(Number(maxAgeSeconds) || 0));
+  const stale = Math.max(0, Math.round(Number(staleSeconds) || 0));
+  if (!maxAge) return "no-store";
+  return `public, max-age=${maxAge}, stale-while-revalidate=${stale}`;
 }
 
 function json(body, status = 200, extraHeaders = {}) {
@@ -710,10 +720,16 @@ async function fetchAggTradesFromBinance(env, { symbol, limit, fromId, startTime
 }
 
 async function d1QueryLatestMeta(env, symbol, interval) {
-  const row = await env.DB.prepare(
-    "SELECT MAX(t) AS maxT, COUNT(*) AS cnt FROM klines WHERE symbol = ?1 AND interval = ?2"
+  const latest = await env.DB.prepare(
+    "SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1"
   ).bind(symbol, interval).first();
-  return { maxT: Number(row?.maxT || 0), count: Number(row?.cnt || 0) };
+  const status = await env.DB.prepare(
+    "SELECT last_t, last_count FROM sync_status WHERE symbol = ?1 AND interval = ?2"
+  ).bind(symbol, interval).first();
+  return {
+    maxT: Number(latest?.t || status?.last_t || 0),
+    count: Number(status?.last_count || (latest ? 1 : 0)),
+  };
 }
 
 /** 批量 INSERT OR REPLACE 后按 2000 根上限 prune */
@@ -3687,7 +3703,10 @@ async function handleReadDerivatives(_request, env, url, ctx) {
   if (sync === "1" || sync === "true") {
     syncResult = await syncDerivativesOne(env, symbol, { interaction: "read_blocking", groups: "core" });
     const freshPayload = await readDerivativesPayload(env, symbol, range);
-    return json({ ...freshPayload, syncResult }, 200, { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-d1-derivatives" });
+    return json({ ...freshPayload, syncResult }, 200, {
+      "Cache-Control": "no-store",
+      "X-Data-Source": "cloudflare-d1-derivatives",
+    });
   }
   if (sync !== "0" && sync !== "false" && sync !== "off") {
     const staleCore = derivativeCoreStaleKeysFromFreshness(payload.dataFreshness);
@@ -3709,7 +3728,10 @@ async function handleReadDerivatives(_request, env, url, ctx) {
       syncResult = syncResult || { ok: true, queued: true, groups, staleCoreMetrics: staleCore };
     }
   }
-  return json({ ...payload, syncResult }, 200, { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-d1-derivatives" });
+  return json({ ...payload, syncResult }, 200, {
+    "Cache-Control": publicCacheHeader(syncResult ? 0 : DERIVATIVE_READ_CACHE_SECONDS, 60),
+    "X-Data-Source": "cloudflare-d1-derivatives",
+  });
 }
 
 async function handleManualDerivativesSync(_request, env, url, ctx) {
@@ -4395,7 +4417,11 @@ async function handleReadLiquidations(_request, env, url) {
   const symbol = String(url.searchParams.get("symbol") || LIQUIDATION_SYMBOL).toUpperCase();
   const range = String(url.searchParams.get("range") || "30d");
   const includeActive = ["1", "true", "yes", "on"].includes(String(url.searchParams.get("includeActive") || "").toLowerCase());
-  const rangeMs = range === "7d" ? 7 * 24 * 60 * 60 * 1000 : LIQUIDATION_RETENTION_MS;
+  const rangeMs = (range === "24h" || range === "1d")
+    ? 24 * 60 * 60 * 1000
+    : range === "7d"
+      ? 7 * 24 * 60 * 60 * 1000
+      : LIQUIDATION_RETENTION_MS;
   const since = Date.now() - rangeMs;
   const { results } = await env.DB.prepare(
     `SELECT symbol, exchange, bucket_start, long_notional, short_notional, long_count, short_count,
@@ -4430,7 +4456,10 @@ async function handleReadLiquidations(_request, env, url) {
     sources,
     freshness,
     buckets: rows,
-  }, 200, { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-d1-liquidations" });
+  }, 200, {
+    "Cache-Control": publicCacheHeader(LIQUIDATION_READ_CACHE_SECONDS, 40),
+    "X-Data-Source": "cloudflare-d1-liquidations",
+  });
 }
 
 /* =============================================================
@@ -4455,21 +4484,22 @@ async function handleReadKlines(_request, env, url) {
   let meta = null;
   let status = null;
   let syncResult = null;
-  try {
-    meta = await d1QueryLatestMeta(env, symbol, interval);
-  } catch (_) {}
-  try {
-    status = await env.DB.prepare(
-      "SELECT last_run, last_count, last_ok, last_error FROM sync_status WHERE symbol = ?1 AND interval = ?2"
-    ).bind(symbol, interval).first();
-  } catch (_) {}
+  if (allowAutoSync) {
+    try {
+      meta = await d1QueryLatestMeta(env, symbol, interval);
+    } catch (_) {}
+    try {
+      status = await env.DB.prepare(
+        "SELECT last_run, last_count, last_ok, last_error FROM sync_status WHERE symbol = ?1 AND interval = ?2"
+      ).bind(symbol, interval).first();
+    } catch (_) {}
 
-  if (
-    allowAutoSync &&
-    isKlineTailStaleForRead(meta && meta.maxT, interval) &&
-    !recentlyTriedKlineSync(status)
-  ) {
-    syncResult = await syncKlinesOne(env, symbol, interval);
+    if (
+      isKlineTailStaleForRead(meta && meta.maxT, interval) &&
+      !recentlyTriedKlineSync(status)
+    ) {
+      syncResult = await syncKlinesOne(env, symbol, interval);
+    }
   }
 
   const { results } = await env.DB.prepare(
@@ -4510,7 +4540,7 @@ async function handleReadKlines(_request, env, url) {
         "X-D1-Latest-T": String(latestT),
         "X-D1-Auto-Sync": syncResult ? "1" : "0",
         "X-D1-Auto-Sync-Ok": syncResult ? String(syncResult.ok ? 1 : 0) : "",
-        "Cache-Control": "public, max-age=10",
+        "Cache-Control": publicCacheHeader(syncResult ? 0 : KLINE_READ_CACHE_SECONDS, 20),
       }),
     }
   );
@@ -4577,7 +4607,7 @@ async function handleManualSync(request, env, url, ctx) {
   );
 }
 
-async function handleReadFootprint(_request, env, url) {
+async function handleReadFootprint(_request, env, url, ctx) {
   if (!env.DB) return json({ error: "D1 binding missing" }, 500);
 
   const symbol = String(url.searchParams.get("symbol") || DEFAULT_SYMBOL).toUpperCase();
@@ -4597,21 +4627,25 @@ async function handleReadFootprint(_request, env, url) {
   let status = await env.DB.prepare(
     "SELECT last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status WHERE symbol = ?1"
   ).bind(symbol).first();
-  let availableBase = await footprintBarCount(env, symbol);
   if (forceSync) {
     syncResult = await syncFootprintOne(env, symbol);
   } else if (
     allowAutoSync &&
-    isFootprintTailStaleForRead(status, Number(availableBase?.maxT || 0)) &&
+    isFootprintTailStaleForRead(status, 0) &&
     !recentlyTriedFootprintSync(status)
   ) {
-    syncResult = await syncFootprintOne(env, symbol);
+    const run = () => syncFootprintOne(env, symbol);
+    syncResult = { ok: true, queued: true, reason: "read_auto", symbol };
+    if (ctx && typeof ctx.waitUntil === "function") {
+      ctx.waitUntil(run());
+    } else {
+      syncResult = await run();
+    }
   }
   if (syncResult) {
     status = await env.DB.prepare(
       "SELECT last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status WHERE symbol = ?1"
     ).bind(symbol).first();
-    availableBase = await footprintBarCount(env, symbol);
   }
 
   const mult = Math.max(1, Math.ceil(intervalMs(interval) / intervalMs(FOOTPRINT_BASE_INTERVAL)));
@@ -4624,6 +4658,9 @@ async function handleReadFootprint(_request, env, url) {
   ).bind(symbol, FOOTPRINT_BASE_INTERVAL, baseLimit).all();
   const rows = (results || []).slice().reverse();
   const bars = mergeFootprintRows(rows, interval, tickSize).slice(-limit);
+  const availableBaseRows = rows.length;
+  const availableBaseMinT = rows.length ? Number(rows[0].t || 0) : 0;
+  const availableBaseMaxT = rows.length ? Number(rows[rows.length - 1].t || 0) : 0;
 
   return new Response(
     JSON.stringify({
@@ -4637,9 +4674,9 @@ async function handleReadFootprint(_request, env, url) {
       latestT: bars.length ? bars[bars.length - 1].t : 0,
       baseInterval: FOOTPRINT_BASE_INTERVAL,
       maxBaseBars: FOOTPRINT_MAX_BARS,
-      availableBaseBars: Number(availableBase?.cnt || 0),
-      availableBaseMinT: Number(availableBase?.minT || 0),
-      availableBaseMaxT: Number(availableBase?.maxT || 0),
+      availableBaseBars: availableBaseRows,
+      availableBaseMinT,
+      availableBaseMaxT,
       lastSync: status || null,
       syncResult,
       bars,
@@ -4651,7 +4688,7 @@ async function handleReadFootprint(_request, env, url) {
         "X-Data-Source": "cloudflare-d1-footprint",
         "X-D1-Footprint-Count": String(bars.length),
         "X-D1-Footprint-Synced": syncResult ? "1" : "0",
-        "Cache-Control": "no-store",
+        "Cache-Control": publicCacheHeader(syncResult && !syncResult.queued ? 0 : FOOTPRINT_READ_CACHE_SECONDS, 30),
       }),
     }
   );
@@ -4940,8 +4977,102 @@ async function handleProxyTickerPrice(_request, env, url) {
   );
 }
 
-async function handleStatus(_request, env) {
+async function handleStatus(_request, env, url) {
   if (!env.DB) return json({ error: "D1 binding missing" }, 500);
+  const detail = ["1", "true", "full", "counts"].includes(
+    String(url && url.searchParams ? url.searchParams.get("detail") || "" : "").toLowerCase()
+  );
+  if (!detail) {
+    const { results: statusRaw } = await env.DB.prepare(
+      "SELECT symbol, interval, last_run, last_t, last_count, last_ok, last_error FROM sync_status"
+    ).all();
+    const { results: footprintStatusRaw } = await env.DB.prepare(
+      "SELECT symbol, last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status"
+    ).all();
+    let derivativeStatusRaw = [];
+    try {
+      const status = await env.DB.prepare(
+        "SELECT symbol, metric, last_run, last_count, last_ok, last_error FROM derivative_sync_status ORDER BY symbol, metric"
+      ).all();
+      derivativeStatusRaw = status.results || [];
+    } catch (_) {}
+    const derivativeSourceHealthRaw = await readDerivativeSourceHealthAllSafe(env);
+    const klineCounts = (statusRaw || []).map((row) => ({
+      symbol: row.symbol,
+      interval: row.interval,
+      cnt: Number(row.last_t || 0) > 0 ? Math.max(1, Number(row.last_count || 0)) : 0,
+      minT: null,
+      maxT: Number(row.last_t || 0),
+      estimated: true,
+      estimateSource: "sync_status",
+    }));
+    const footprintCounts = (footprintStatusRaw || []).map((row) => ({
+      symbol: row.symbol,
+      interval: FOOTPRINT_BASE_INTERVAL,
+      cnt: Number(row.last_trade_time || 0) > 0 ? Math.max(1, Number(row.last_count || 0)) : 0,
+      minT: null,
+      maxT: Number(row.last_trade_time || 0),
+      estimated: true,
+      estimateSource: "footprint_sync_status",
+    }));
+    const derivativeCounts = (derivativeStatusRaw || []).map((row) => ({
+      symbol: row.symbol,
+      metric: row.metric,
+      cnt: Number(row.last_count || 0),
+      minT: null,
+      maxT: null,
+      estimated: true,
+      estimateSource: "derivative_sync_status",
+    }));
+    return json(
+      {
+        ok: true,
+        lightweight: true,
+        detailEndpoint: "/api/d1/status?detail=1",
+        workerBuild: WORKER_BUILD,
+        generatedAt: Date.now(),
+        dataSource: "cloudflare-d1-status",
+        kline: {
+          symbol: DEFAULT_SYMBOL,
+          upstream: "Binance FAPI with Bybit linear and OKX swap failover",
+          binanceOriginMode: binanceUpstreamMode(env),
+          alternateFailover: klineAlternateFailoverEnabled(env),
+          readEndpoint: "/api/d1/klines?symbol=BTCUSDT&interval=15m&limit=2000&sync=0",
+          manualSyncEndpoint: "/api/d1/sync?symbol=BTCUSDT&interval=all&wait=1",
+          readAutoSyncMinMs: KLINE_READ_AUTO_SYNC_MIN_MS,
+          cron: "Workers Cron writes due intervals; Pages chart reads D1 and only queues repair when stale",
+        },
+        supportedIntervals: SUPPORTED_INTERVALS,
+        maxPerInterval: MAX_KLINES_PER_INTERVAL,
+        counts: klineCounts,
+        status: statusRaw || [],
+        footprint: {
+          baseInterval: FOOTPRINT_BASE_INTERVAL,
+          maxBaseBars: FOOTPRINT_MAX_BARS,
+          apiMaxLimit: FOOTPRINT_API_MAX_LIMIT,
+          counts: footprintCounts,
+          status: footprintStatusRaw || [],
+        },
+        liquidation: {
+          interval: "5m",
+          retentionDays: 30,
+          counts: [],
+          lightweight: true,
+        },
+        derivatives: {
+          retentionDays: 30,
+          metrics: DERIVATIVE_METRICS,
+          counts: derivativeCounts,
+          status: derivativeStatusRaw,
+          sourceHealth: derivativeSourceHealthRaw,
+          workerBuild: WORKER_BUILD,
+          binanceOriginMode: binanceUpstreamMode(env),
+        },
+      },
+      200,
+      { "Cache-Control": publicCacheHeader(STATUS_READ_CACHE_SECONDS, 60) }
+    );
+  }
   const { results: countsRaw } = await env.DB.prepare(
     "SELECT symbol, interval, COUNT(*) AS cnt, MIN(t) AS minT, MAX(t) AS maxT FROM klines GROUP BY symbol, interval"
   ).all();
@@ -5017,7 +5148,7 @@ async function handleStatus(_request, env) {
       },
     },
     200,
-    { "Cache-Control": "no-store" }
+    { "Cache-Control": publicCacheHeader(STATUS_READ_CACHE_SECONDS, 60) }
   );
 }
 
@@ -5517,11 +5648,13 @@ export default {
 
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/$/, "") || "/";
+    const accessDenied = await requireCloudflareAccess(request, env, json);
+    if (accessDenied) return accessDenied;
 
     if (path === "/api/d1/klines") return handleReadKlines(request, env, url);
     if (path === "/api/d1/sync") return handleManualSync(request, env, url, ctx);
-    if (path === "/api/d1/status") return handleStatus(request, env);
-    if (path === "/api/d1/footprint") return handleReadFootprint(request, env, url);
+    if (path === "/api/d1/status") return handleStatus(request, env, url);
+    if (path === "/api/d1/footprint") return handleReadFootprint(request, env, url, ctx);
     if (path === "/api/d1/footprint/sync") return handleManualFootprintSync(request, env, url, ctx);
     if (path === "/api/d1/liquidations") return handleReadLiquidations(request, env, url);
     if (path === "/api/d1/liquidations/status") return handleLiquidationCollectorStatus(env);
@@ -5559,7 +5692,7 @@ export default {
   },
 
   /**
-   * Cron 触发：每 5 分钟一次。按当前 UTC 时间决定需要同步的周期。
+   * Cron 触发：每分钟一次。按当前 UTC 时间决定需要同步的 K 线周期。
    * @param {{scheduledTime: number, cron: string}} event
    * @param {object} env
    * @param {ExecutionContext} ctx

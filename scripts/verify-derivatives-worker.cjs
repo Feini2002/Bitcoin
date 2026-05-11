@@ -17,6 +17,7 @@ function assert(name, cond, detail) {
 (async () => {
   const file = path.join(__dirname, "..", "cloudflare", "binance-klines-worker.js");
   let src = fs.readFileSync(file, "utf8");
+  src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
   src = src.replace(/export default\s*\{/, "const __workerDefault = {");
   const mod = await import(`data:text/javascript;base64,${Buffer.from(src, "utf8").toString("base64")}`);
   const hooks = mod.__footprintTestHooks;

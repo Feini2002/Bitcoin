@@ -21,6 +21,18 @@ YUQING_LLM_MODEL_FLASH = "gemini-3.1-flash-lite-preview"
 YUQING_LLM_MODEL_PRO = "gemini-3.1-flash-lite-preview"
 YUQING_LLM_MODEL_TRENDS = "gemini-3.1-flash-lite-preview"
 YUQING_LLM_MODEL_FAST_PROSE = "gemini-3.1-flash-lite-preview"
+ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com"
+# Cloudflare Access JWT defense-in-depth:
+# 1) Create an Access self-hosted app for yuqing.feiniwork.com/*.
+# 2) Copy the app AUD tag and set ACCESS_AUD in the Cloudflare dashboard.
+# 3) Set ACCESS_TEAM_DOMAIN to <your-team>.cloudflareaccess.com.
+# 4) Set ACCESS_JWT_REQUIRED=true after both values are present.
+# ACCESS_TEAM_DOMAIN = "CHANGE_ME.cloudflareaccess.com"
+# ACCESS_AUD = "CHANGE_ME"
+# ACCESS_ALLOWED_EMAILS = "you@example.com"
+# ACCESS_JWT_REQUIRED = "true"
+# Optional service token headers for calls from yuqing -> btc when btc is also Access-protected:
+# ACCESS_SERVICE_CLIENT_ID and ACCESS_SERVICE_CLIENT_SECRET should be encrypted Worker secrets.
 # MAINTENANCE_MODE = "false"
 
 # D1（舆情专用，与 btc 无关）。请先执行：

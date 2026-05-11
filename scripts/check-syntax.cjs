@@ -39,10 +39,14 @@ for (const file of files) {
   }
   let src = fs.readFileSync(file, "utf8");
   if (rel.replace(/\\/g, "/") === "cloudflare/binance-klines-worker.js") {
+    src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
     src = src
       .replace(/\bexport\s+class\s+LiquidationCollector\b/, "class LiquidationCollector")
       .replace(/\bexport\s+const\s+__footprintTestHooks\s*=/, "const __footprintTestHooks =")
       .replace(/\bexport\s+default\s*\{/, "const __workerDefault = {");
+  }
+  if (relNorm === "cloudflare/access-auth.js") {
+    src = src.replace(/^\s*export\s+/gm, "");
   }
   if (relNorm === "cloudflare/yuqing/yuqing-worker.js") {
     let ys = src;

@@ -15,7 +15,7 @@ const VALUE_AREA_RATIO = 0.7;
 const DELTA_NEUTRAL_SHARE = 0.05;
 const STORAGE_PREFIX = "bitdesk.orderflow.footprint";
 const WS_RECONNECT_MS = 3000;
-const POLL_MS = 10000;
+const POLL_MS = 30000;
 const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 
   const INTERVAL_MS = {
@@ -1527,8 +1527,13 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         let source = "";
         for (const base of this.apiBases()) {
           try {
+            if (typeof document !== "undefined" && document.hidden) {
+              this.polling = false;
+              return;
+            }
             const res = await fetch(`${base}/api/d1/footprint?${q.toString()}`, {
-              cache: "no-store",
+              cache: "default",
+              credentials: "include",
             });
             if (!res.ok) throw new Error(`${base} HTTP ${res.status}`);
             const parsed = await res.json();

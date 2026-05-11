@@ -1,4 +1,4 @@
-import { cleanText } from "./shared.js";
+import { cleanText, normalizeSourceName, normalizeSourceUrl } from "./shared.js";
 
 function substantiveLines(md) {
   return String(md || "")
@@ -84,6 +84,59 @@ function flattenForLegacy(rows) {
     .filter(Boolean);
 }
 
+function normalizeParagraphs(value, fallback, limit = 4) {
+  const rows = Array.isArray(value)
+    ? value
+    : String(value || "")
+        .split(/\n{2,}/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+  const out = rows
+    .map((item) => {
+      if (item && typeof item === "object" && !Array.isArray(item)) {
+        return cleanText(item.text || item.body || item.summary || item.synthesis, "", 360);
+      }
+      return cleanText(item, "", 360);
+    })
+    .filter(Boolean)
+    .slice(0, limit);
+  return out.length ? out : [cleanText(fallback, "本轮日报仍需更多外部来源校准，先按已确认事实保守阅读。", 260)];
+}
+
+function normalizeSearchFindings(value) {
+  return arrayOf(value)
+    .slice(0, 4)
+    .map((item, idx) => {
+      const src = item && typeof item === "object" && !Array.isArray(item) ? item : { finding: item };
+      const finding = cleanText(src.finding || src.summary || src.body || src.evidence || src.fact, "", 260);
+      if (!finding) return null;
+      return {
+        title: cleanText(src.title || src.topic || src.label || `外部校准 ${idx + 1}`, `外部校准 ${idx + 1}`, 64),
+        finding,
+        relation: cleanText(src.relation || src.why || src.linkToDaily || src.meaning || "", "", 180),
+        sourceName: normalizeSourceName(src.sourceName || src.source || src.publisher || "Google Search", "Google Search"),
+        sourceUrl: normalizeSourceUrl(src.sourceUrl || src.url || src.href || ""),
+      };
+    })
+    .filter(Boolean);
+}
+
+function normalizeWatchline(value) {
+  return arrayOf(value)
+    .slice(0, 5)
+    .map((item, idx) => {
+      const src = item && typeof item === "object" && !Array.isArray(item) ? item : { why: item };
+      const why = cleanText(src.why || src.reason || src.watch || src.body || src.synthesis || src.next, "", 180);
+      if (!why) return null;
+      return {
+        title: cleanText(src.title || src.topic || src.label || `继续阅读 ${idx + 1}`, `继续阅读 ${idx + 1}`, 64),
+        why,
+        sourceHint: cleanText(src.sourceHint || src.source || src.where || src.verify || "", "", 120),
+      };
+    })
+    .filter(Boolean);
+}
+
 function normalizeDailyTrendReadPayload(payload, fallbackMacro, factCount, fallbackLines) {
   const src = payload && typeof payload === "object" ? payload.trendRead || payload : {};
   const worldNews = normalizeTrendEntries(
@@ -122,11 +175,27 @@ function normalizeDailyTrendReadPayload(payload, fallbackMacro, factCount, fallb
     (fallbackLines && fallbackLines.length
       ? pickSectionLine(fallbackLines, "主线", "本轮日报尚未形成足够清晰的合成主线。")
       : `最近72小时内已有 ${factCount} 条候选，先按事实密度和来源可靠性阅读。`);
-  const summary = cleanText(src.summary || src.editorialSummary || src.brief || fallbackSummary, fallbackSummary, 260);
-  const title = cleanText(src.title || "日报线索合成", "日报线索合成", 48);
+  const summary = cleanText(
+    src.verdict || src.summary || src.editorialSummary || src.brief || fallbackSummary,
+    fallbackSummary,
+    260,
+  );
+  const title = cleanText(src.title || "总编辑收束", "总编辑收束", 48);
+  const closingRead = normalizeParagraphs(
+    src.closingRead || src.editorialRead || src.narrative || src.paragraphs || src.body,
+    summary,
+    4,
+  );
+  const searchFindings = normalizeSearchFindings(src.searchFindings || src.externalChecks || src.verifications || src.outsideAir);
+  const watchline = normalizeWatchline(src.watchline || src.nextRead || src.readNext || src.next72h || src.checklist || src.observationList);
+  const uncertainty = cleanText(
+    src.uncertainty || src.openQuestion || src.caveat || src.contradiction || "",
+    searchFindings.length ? "外部搜索已校准主要事实，但事件后续仍取决于权威来源是否继续补充细节。" : "外部校准证据不足，先按上游模块保守阅读。",
+    220,
+  );
   const conclusion =
     cleanText(src.conclusion, "", 220) ||
-    (next72h[0] ? `0-72小时观察：${next72h[0].synthesis}` : "0-72小时观察：等待上游模块补充更多权威来源与具体细节。");
+    (watchline[0] ? `${watchline[0].title}：${watchline[0].why}` : "接下来继续跟踪权威来源、主流媒体与产品/政策细节。");
 
   const strengthening = [
     summary,
@@ -138,6 +207,11 @@ function normalizeDailyTrendReadPayload(payload, fallbackMacro, factCount, fallb
   return {
     title,
     summary,
+    verdict: summary,
+    closingRead,
+    searchFindings,
+    watchline,
+    uncertainty,
     worldNews,
     techPulse,
     financeBackdrop,
@@ -147,47 +221,55 @@ function normalizeDailyTrendReadPayload(payload, fallbackMacro, factCount, fallb
     cracking: cracking.length ? cracking : ["暂无明显叙事裂缝；先等待更多来源互相印证。"],
     conclusion,
     methodology: {
-      usesGoogleSearch: false,
-      inputOnly: true,
-      mix: "重度世界新闻 + 中度科技 + 轻量金融背景",
+      usesGoogleSearch: true,
+      inputOnly: false,
+      mode: "上游模块 + 外部搜索校准",
+      role: "全球日报收束编辑",
+      promptVersion: "daily-trend-search-v1",
     },
   };
 }
 
 export function buildDailyTrendCluesPrompt(newsText, timelineText, aiText, temperatureJsonText, githubToolsText = "") {
   return (
-    "你是事件日报的『总编辑 + 情报合成官』。你接手的是同一次「事件一览」已经完成的上游模块：信息温度、今日头条、动态速览、AI 情报站、GitHub 工具雷达。\n" +
-    "默认规则：你不使用 Google Search，不发起任何联网检索；只基于下方输入做二次叠加分析。禁止新增事实、禁止编造来源、禁止把输入里没有的事件当成最新进展。\n\n" +
+    "你是全球日报的『收束主编 + 外部校准员』。你接手的是同一次「事件一览」已经完成的上游模块：信息温度、今日头条、动态速览、AI 情报站、GitHub 工具雷达。\n" +
+    "你的任务不是再切出世界新闻、科技、金融、观察清单几个栏目，而是打开一扇窗：用 Google Search 校准上游模块是否遗漏了最新事实、是否已有权威来源补充、是否存在反向证据，然后写成一段真正的收尾短评。\n\n" +
     "【页面定位】\n" +
-    "这个子页面是事件一览，更像一份日报：重度世界新闻 + 中度科技 + 轻量金融背景。它与金融有关，但最后一段不是交易研判，不输出买卖方向、利多利空或仓位建议。\n" +
-    "配比原则：世界新闻/地缘/政策/宏观事件约 55%；AI、科技产品与开发者生态约 30%；金融市场温度与资产波动只占约 15%，仅作为阅读背景。\n\n" +
+    "这个子页面是事件日报，不是交易研判。允许保留上游模块的强个性，但你的语气要像给忙碌读者写最后一段编辑按语：把最值得带走的公共事实、科技变化和阅读背景收成一个判断框架。\n" +
+    "金融市场、资产价格、F&G、BTC/美股/黄金等只允许作为“阅读环境”和“信息热度”的背景，不输出买入、卖出、利多、利空、仓位、交易方向或风险资产押注。\n\n" +
     "【上游输入】\n" +
     "1. 信息温度（轻量金融背景，只用于判断阅读环境）：\n" + (temperatureJsonText || "（暂无）") + "\n\n" +
     "2. 今日头条（世界新闻主线）：\n" + (newsText || "（暂无）") + "\n\n" +
     "3. 动态速览（补充世界新闻、经济、科技、监管分支）：\n" + (timelineText || "（暂无）") + "\n\n" +
     "4. AI 情报站（中度科技层）：\n" + (aiText || "（暂无）") + "\n\n" +
     "5. GitHub 工具雷达（只在能说明技术扩散时使用）：\n" + (githubToolsText || "（暂无）") + "\n\n" +
-    "【合成方法论】\n" +
-    "1) 先找跨模块重复出现的主题，不用单条信息强行造趋势。\n" +
-    "2) 世界新闻优先：把头条和速览里的政治、地缘、政策、宏观事件串成日报主线。\n" +
-    "3) 科技居中：只提真实改变工作流、产品链或开发者生态的 AI/工具线索，不写泛泛的模型宣传。\n" +
-    "4) 金融轻放：信息温度、BTC/美股/黄金等只解释阅读背景和噪音，不转成投资结论。\n" +
-    "5) 对分歧保持诚实：输入不够时写“证据不足”，不要补新闻。\n\n" +
+    "【搜索校准方法】\n" +
+    "1) 必须使用 Google Search。不要泛搜“today news”，而是围绕上游出现的具体标题、人物、机构、政策名、产品名做 3-6 次定向检索。\n" +
+    "2) 优先找 Reuters / Bloomberg / AP / Financial Times / WSJ / The Verge / TechCrunch / 官方公告 / 监管机构 / 公司博客 / GitHub 官方仓库等可追溯来源。\n" +
+    "3) 搜索目标不是堆新闻，而是回答三个问题：上游判断有没有被新事实更新？有没有权威来源确认或纠偏？读者接下来应该继续看哪条线？\n" +
+    "4) 不要为了显得完整而硬塞金融解释；如果金融只是在背景里，就明确写成“背景”，不要写成交易信号。\n" +
+    "5) 如果搜索没有找到足够强的外部证据，就坦白写证据不足，不要补故事。\n\n" +
+    "【写作要求】\n" +
+    "1) 输出是一段收尾短评，不是切蛋糕式栏目。closingRead 用 2-4 个自然段串起来，段落之间要有递进。\n" +
+    "2) 先给一句 verdict：今天读者离开页面前最该带走的一句话。\n" +
+    "3) searchFindings 只放真实搜索校准到的关键补充，每条必须有 sourceName；有 URL 就放 sourceUrl。\n" +
+    "4) watchline 是“接下来读什么”，不是交易动作；每条写成可验证的后续阅读线索。\n" +
+    "5) 允许有态度，但态度必须来自事实密度、来源质量和外部校准，而不是市场方向。\n\n" +
     "【输出格式】\n" +
     "仅输出 JSON，顶层字段为 trendRead。结构如下：\n" +
     "{\n" +
     "  \"trendRead\": {\n" +
-    "    \"title\": \"日报线索合成\",\n" +
-    "    \"summary\": \"一段 60-110 字的总编辑摘要，说明今日世界新闻主线、科技扩散与金融背景如何叠加。\",\n" +
-    "    \"worldNews\": [{ \"title\": \"主线名称\", \"synthesis\": \"只基于头条/速览归纳的合成判断\", \"evidence\": [\"今日头条\", \"动态速览\"], \"watch\": \"下一步看什么权威来源或时间节点\" }],\n" +
-    "    \"techPulse\": [{ \"title\": \"科技线索\", \"synthesis\": \"AI 情报或 GitHub 工具如何补充日报主线\", \"evidence\": [\"AI 情报站\"], \"watch\": \"看发布、Release、API 或采用迹象\" }],\n" +
-    "    \"financeBackdrop\": [{ \"title\": \"轻量金融背景\", \"synthesis\": \"信息温度/跨资产只作为阅读背景\", \"evidence\": [\"信息温度\"], \"watch\": \"看是否影响信息热度而非交易方向\" }],\n" +
-    "    \"contradictions\": [{ \"title\": \"叙事裂缝\", \"synthesis\": \"哪些地方仍缺少互证或存在预期差\", \"evidence\": [\"对应模块名\"], \"watch\": \"如何证实或证伪\" }],\n" +
-    "    \"next72h\": [{ \"title\": \"观察点\", \"synthesis\": \"可执行的观察动作\", \"evidence\": [\"对应模块名\"], \"watch\": \"具体看官方、主流媒体、产品发布或数据细节\" }],\n" +
-    "    \"conclusion\": \"一句 0-72 小时观察结论，不写交易建议。\"\n" +
+    "    \"title\": \"总编辑收束\",\n" +
+    "    \"verdict\": \"45-90 字，一句话写今天最该带走的总判断。\",\n" +
+    "    \"closingRead\": [\"自然段1\", \"自然段2\", \"自然段3\"],\n" +
+    "    \"searchFindings\": [{ \"title\": \"外部校准点\", \"finding\": \"搜索补到或纠偏的事实\", \"relation\": \"它如何改变/确认上游模块\", \"sourceName\": \"来源名\", \"sourceUrl\": \"https://...\" }],\n" +
+    "    \"watchline\": [{ \"title\": \"接下来读什么\", \"why\": \"为什么要继续看\", \"sourceHint\": \"建议关注的来源或口径\" }],\n" +
+    "    \"uncertainty\": \"本轮仍无法确认或需要防止误读的地方。\",\n" +
+    "    \"conclusion\": \"一句收束结论，不写交易建议。\",\n" +
+    "    \"methodology\": { \"usesGoogleSearch\": true, \"inputOnly\": false, \"mode\": \"上游模块 + 外部搜索校准\" }\n" +
     "  }\n" +
     "}\n" +
-    "数量要求：worldNews 2-3 条，techPulse 1-2 条，financeBackdrop 1 条，contradictions 1-2 条，next72h 3-5 条。"
+    "数量要求：closingRead 2-4 段；searchFindings 2-4 条；watchline 3-5 条。"
   );
 }
 
@@ -202,8 +284,9 @@ export function buildTrendReadFromDailyEventInputs(legacy, factCount) {
   const hasLlm = lines.length > 0;
   return normalizeDailyTrendReadPayload(
     {
-      title: "日报线索合成",
+      title: "总编辑收束",
       summary: macroTrend || (hasLlm ? pickSectionLine(lines, "主线", "本轮日报主线仍在形成中。") : ""),
+      closingRead: hasLlm ? lines.slice(0, 3) : [],
       worldNews: hasLlm ? [pickSectionLine(lines, "世界", pickSectionLine(lines, "升温", "多个主题正在获得新的来源确认，适合作为今日阅读主线。"))] : [],
       techPulse: hasLlm ? [pickSectionLine(lines, "科技", "科技线索暂未形成足够明确的扩散脉冲。")] : [],
       financeBackdrop: hasLlm ? [pickSectionLine(lines, "金融", "金融信息仅作为阅读背景，不构成交易方向。")] : [],

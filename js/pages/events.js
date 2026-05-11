@@ -3,7 +3,9 @@
    ======================================================= */
 
 const DAILY_EVENT_KIND = "daily_event";
-let __yuqingDailyAbort = null;
+let __yuqingDailyLoadAbort = null;
+let __yuqingDailyScanAbort = null;
+let __dailyScanPromise = null;
 let __dailyScanTick = null;
 let __dailyStreamRenderTimer = null;
 let __dailyStreamRenderRaf = null;
@@ -18,8 +20,11 @@ const dailyEventState = {
   status: "正在加载云端日报…",
   source: "loading",
   loading: false,
-  /** 报告库抽屉筛选：all | scheduled | manual（实时扫描） */
+  /** 报告库抽屉筛选：all | scheduled | manual | costed | free */
   archiveFilter: "all",
+  scanStartedAt: 0,
+  scanStage: "",
+  scanProgress: {},
 };
 
 const defaultDashboardSettings = {
@@ -61,6 +66,11 @@ function dailyHashReportId() {
   } catch (_) {
     return "";
   }
+}
+
+function dailyIsEventsRoute() {
+  const id = String(location.hash || "").replace(/^#\/?/, "").split("?")[0];
+  return id === "news";
 }
 
 function dailyFormatTime(value) {
@@ -182,17 +192,17 @@ function dailyEnsureStreamPreviewShell() {
       aiIntel: [],
       githubTools: [],
       trendRead: {
-        title: "日报线索合成",
+        title: "总编辑收束",
         summary: "",
-        worldNews: [],
-        techPulse: [],
-        financeBackdrop: [],
-        contradictions: [],
-        next72h: [],
+        verdict: "",
+        closingRead: [],
+        searchFindings: [],
+        watchline: [],
+        uncertainty: "",
         strengthening: [],
         cracking: [],
         conclusion: "",
-        methodology: { usesGoogleSearch: false, inputOnly: true, mix: "重度世界新闻 + 中度科技 + 轻量金融背景" },
+        methodology: { usesGoogleSearch: true, inputOnly: false, mode: "上游模块 + 外部搜索校准" },
       },
       sources: [],
       quality: { factCount: 0, sourceCoverage: 0, usedSearch: true, caveat: "" },
@@ -233,6 +243,7 @@ function mergeDailyStreamEvent(evt) {
   if (evt.module === "trends" && evt.trendRead && typeof evt.trendRead === "object") {
     rep.trendRead = evt.trendRead;
   }
+  dailyMarkScanProgress(evt.module, "done");
 }
 
 function dailyStreamModuleLabel(module, streamKey = "") {
@@ -247,6 +258,82 @@ function dailyStreamModuleLabel(module, streamKey = "") {
   if (m === "githubTools") return "GitHub 工具雷达";
   if (m === "trends") return "趋势线索";
   return m || "模型输出";
+}
+
+function dailyScanModuleLabels() {
+  return {
+    temperature: "温度",
+    topStories: "头条",
+    dynamicBriefs: "速览",
+    aiIntel: "AI",
+    githubTools: "GitHub",
+    trends: "趋势",
+  };
+}
+
+function dailyResetScanProgress() {
+  const s = __yuqingSettings.scanCoverage || {};
+  dailyEventState.scanProgress = {
+    temperature: s.dashboard === false ? "skip" : "pending",
+    topStories: s.news === false ? "skip" : "pending",
+    dynamicBriefs: s.timeline === false ? "skip" : "pending",
+    aiIntel: s.ai === false ? "skip" : "pending",
+    githubTools: s.githubTools === false ? "skip" : "pending",
+    trends: s.trends === false ? "skip" : "pending",
+  };
+}
+
+function dailyMarkScanProgress(module, status) {
+  const m = String(module || "").trim();
+  const map = {
+    dashboard: "temperature",
+    news: "topStories",
+    timeline: "dynamicBriefs",
+    ai: "aiIntel",
+  };
+  const key = map[m] || m;
+  if (!key || !dailyEventState.scanProgress || !(key in dailyEventState.scanProgress)) return;
+  if (dailyEventState.scanProgress[key] === "done" && status !== "error") return;
+  dailyEventState.scanProgress[key] = status;
+}
+
+function dailyScanElapsedLabel() {
+  const start = Number(dailyEventState.scanStartedAt) || 0;
+  if (!start) return "0s";
+  const sec = Math.max(0, Math.floor((Date.now() - start) / 1000));
+  if (sec < 60) return `${sec}s`;
+  return `${Math.floor(sec / 60)}m ${String(sec % 60).padStart(2, "0")}s`;
+}
+
+function renderDailyScanStatusPanel() {
+  if (!dailyEventState.loading) return "";
+  const labels = dailyScanModuleLabels();
+  const progress = dailyEventState.scanProgress || {};
+  const steps = Object.keys(labels)
+    .filter((key) => progress[key] !== "skip")
+    .map((key) => {
+      const state = progress[key] || "pending";
+      const icon = state === "done" ? "ph-check-circle" : state === "active" ? "ph-spinner-gap spin" : "ph-circle";
+      const text = state === "done" ? "完成" : state === "active" ? "进行中" : "等待";
+      return `<span class="daily-scan-step is-${dailyEscapeHtml(state)}"><i class="ph ${icon}" aria-hidden="true"></i><b>${dailyEscapeHtml(labels[key])}</b><small>${text}</small></span>`;
+    })
+    .join("");
+  const status = dailyEscapeHtml(dailyEventState.status || dailyEventState.scanStage || "扫描进行中…");
+  return `
+    <div class="daily-scan-status-panel" role="status" aria-live="polite">
+      <div class="daily-scan-status-main">
+        <span class="daily-scan-pulse" aria-hidden="true"></span>
+        <div>
+          <strong>${dailyEscapeHtml(dailyEventState.scanStage || "实时扫描进行中")}</strong>
+          <p>${status}</p>
+        </div>
+      </div>
+      <div class="daily-scan-status-meta">
+        <span><i class="ph ph-timer" aria-hidden="true"></i>${dailyEscapeHtml(dailyScanElapsedLabel())}</span>
+        <span><i class="ph ph-arrows-clockwise" aria-hidden="true"></i>切换页面后继续运行</span>
+      </div>
+      <div class="daily-scan-steps">${steps}</div>
+    </div>`;
 }
 
 function mergeDailyStreamChunk(evt) {
@@ -271,6 +358,7 @@ function mergeDailyStreamChunk(evt) {
     text: `${prev.text || ""}${delta}`,
     updatedAt: Date.now(),
   };
+  dailyMarkScanProgress(module, "active");
 }
 
 function dailyStreamEntriesForModule(module) {
@@ -311,7 +399,11 @@ function dailyModuleHasStructuredData(module, row) {
     const t = report.trendRead || {};
     return !!(
       t.summary ||
+      t.verdict ||
       t.conclusion ||
+      (Array.isArray(t.closingRead) && t.closingRead.length) ||
+      (Array.isArray(t.searchFindings) && t.searchFindings.length) ||
+      (Array.isArray(t.watchline) && t.watchline.length) ||
       (Array.isArray(t.worldNews) && t.worldNews.length) ||
       (Array.isArray(t.next72h) && t.next72h.length)
     );
@@ -764,12 +856,94 @@ function renderDailyTrendBlock(title, rows, cls, fallbackText) {
   </div>`;
 }
 
+function renderDailyTrendSearchFindings(items) {
+  const rows = dailyTrendList(items).filter((item) => item && typeof item === "object" && !Array.isArray(item)).slice(0, 4);
+  if (!rows.length) return "";
+  return `<div class="daily-trend-close-section">
+    <h5>外部校准</h5>
+    <div class="daily-trend-finding-list">
+      ${rows
+        .map((item) => {
+          const title = dailyTrendEntryField(item, ["title", "topic", "label"], "校准点");
+          const finding = dailyTrendEntryField(item, ["finding", "summary", "body", "evidence", "fact"], "外部来源仍待补强。");
+          const relation = dailyTrendEntryField(item, ["relation", "why", "linkToDaily", "meaning"]);
+          const sourceName = dailyTrendEntryField(item, ["sourceName", "source", "publisher"], "来源");
+          const sourceUrl = dailyTrendEntryField(item, ["sourceUrl", "url", "href"]);
+          const source = dailyRenderLink({ label: sourceName, href: sourceUrl });
+          return `<div class="daily-trend-finding">
+            <strong>${dailyEscapeHtml(title)}</strong>
+            <p>${parseMarkdownInline(finding)}</p>
+            <span>${source}${relation ? ` · ${dailyEscapeHtml(relation)}` : ""}</span>
+          </div>`;
+        })
+        .join("")}
+    </div>
+  </div>`;
+}
+
+function renderDailyTrendWatchline(items) {
+  const rows = dailyTrendList(items).slice(0, 5);
+  if (!rows.length) return "";
+  return `<div class="daily-trend-close-section">
+    <h5>接下来读</h5>
+    <ul class="daily-trend-watchline">
+      ${rows
+        .map((item, idx) => {
+          if (!item || typeof item !== "object" || Array.isArray(item)) {
+            return `<li><span>${String(idx + 1).padStart(2, "0")}</span><p>${parseMarkdownInline(item)}</p></li>`;
+          }
+          const title = dailyTrendEntryField(item, ["title", "topic", "label"], "继续阅读");
+          const why = dailyTrendEntryField(item, ["why", "reason", "watch", "body", "synthesis", "next"], "等待权威来源补充。");
+          const sourceHint = dailyTrendEntryField(item, ["sourceHint", "source", "where", "verify"]);
+          return `<li>
+            <span>${String(idx + 1).padStart(2, "0")}</span>
+            <p><strong>${dailyEscapeHtml(title)}：</strong>${parseMarkdownInline(why)}${sourceHint ? `<br><em>${dailyEscapeHtml(sourceHint)}</em>` : ""}</p>
+          </li>`;
+        })
+        .join("")}
+    </ul>
+  </div>`;
+}
+
 function renderDailyTrend(row) {
   const report = row && row.report ? row.report : {};
   const liveHtml = renderDailyLiveStreamCards("trends", row);
   if (liveHtml) return liveHtml;
   const t = report.trendRead || {};
   const macroTrend = report.macroTrend || "";
+  const hasClosingTrend = !!(
+    t.verdict ||
+    t.closingRead ||
+    t.searchFindings ||
+    t.watchline ||
+    t.uncertainty ||
+    (t.methodology && t.methodology.promptVersion === "daily-trend-search-v1")
+  );
+  if (hasClosingTrend) {
+    const method = t.methodology && typeof t.methodology === "object" ? t.methodology : {};
+    const mode = method.mode || "上游模块 + 外部搜索校准";
+    const searchLine = method.usesGoogleSearch === false ? "未记录额外检索" : "已做外部检索校准";
+    const verdict = t.verdict || t.summary || macroTrend || "本轮日报仍需更多外部来源校准，先按已确认事实保守阅读。";
+    const paragraphs = dailyTrendList(t.closingRead || t.editorialRead || t.narrative || [])
+      .map((x) => cleanTrendText(typeof x === "object" ? x.text || x.body || x.summary || x.synthesis : x))
+      .filter(Boolean)
+      .slice(0, 4);
+    const body = paragraphs.length ? paragraphs : [verdict];
+    return `<article class="news-trend-block daily-trend-brief">
+      <div class="daily-trend-brief-head">
+        <h4>${dailyEscapeHtml(t.title || "总编辑收束")}</h4>
+        <span>${dailyEscapeHtml(searchLine)}</span>
+      </div>
+      <p class="daily-trend-verdict">${parseMarkdownInline(verdict)}</p>
+      <div class="daily-trend-paragraphs">
+        ${body.map((p) => `<p>${parseMarkdownInline(p)}</p>`).join("")}
+      </div>
+      ${renderDailyTrendSearchFindings(t.searchFindings || t.externalChecks || t.verifications)}
+      ${t.uncertainty ? `<div class="daily-trend-uncertainty"><b>仍需留白</b><span>${parseMarkdownInline(t.uncertainty)}</span></div>` : ""}
+      ${renderDailyTrendWatchline(t.watchline || t.nextRead || t.readNext)}
+      <div class="daily-trend-method">方法：${dailyEscapeHtml(mode)}。</div>
+    </article>`;
+  }
   const hasStructuredTrend = !!(
     t.summary ||
     t.worldNews ||
@@ -782,7 +956,7 @@ function renderDailyTrend(row) {
   if (hasStructuredTrend) {
     const method = t.methodology && typeof t.methodology === "object" ? t.methodology : {};
     const methodLine = method.mix || "重度世界新闻 + 中度科技 + 轻量金融背景";
-    const searchLine = method.usesGoogleSearch === true ? "趋势线索已使用额外检索" : "趋势线索未单独联网，只合成本轮上游模块";
+    const searchLine = method.usesGoogleSearch === true ? "趋势线索已使用外部校准" : "未记录外部校准，仅展示旧版合成结果";
     const summary = t.summary || macroTrend || "本轮日报尚未形成足够清晰的合成主线。";
     return [
       `<div class="news-trend-block info" style="grid-column: 1 / -1;">
@@ -836,8 +1010,87 @@ function dailyArchiveFilteredHistory() {
     const t = String(item.triggerType || "").toLowerCase();
     if (mode === "manual") return t === "manual";
     if (mode === "scheduled") return t !== "manual";
+    const searchCost = dailyArchiveSearchCostCny(item);
+    if (mode === "costed") return searchCost != null && searchCost > 0;
+    if (mode === "free") return searchCost == null || searchCost <= 0;
     return true;
   });
+}
+
+function dailyArchiveCostEstimate(item) {
+  if (!item || typeof item !== "object") return null;
+  if (item.costEstimate && typeof item.costEstimate === "object") return item.costEstimate;
+  if (item.grounding && item.grounding.costEstimate && typeof item.grounding.costEstimate === "object") return item.grounding.costEstimate;
+  if (item.report && item.report.costEstimate && typeof item.report.costEstimate === "object") return item.report.costEstimate;
+  return null;
+}
+
+function dailyArchiveCostNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function dailyArchiveSearchCostCny(item) {
+  const est = dailyArchiveCostEstimate(item);
+  if (!est) return null;
+  return dailyArchiveCostNumber(est.searchCny ?? est.searchCostCny ?? est.searchCost?.cny ?? est.search?.costCny);
+}
+
+function dailyArchiveTotalCostCny(item) {
+  const est = dailyArchiveCostEstimate(item);
+  if (!est) return null;
+  return dailyArchiveCostNumber(est.totalCny ?? est.totalCostCny ?? est.costCny ?? est.total?.cny ?? est.total?.costCny);
+}
+
+function dailyFormatCostCny(value) {
+  const n = dailyArchiveCostNumber(value);
+  if (n == null) return "待记录";
+  if (n === 0) return "¥0.0000";
+  if (n < 0.01) return `¥${n.toFixed(4)}`;
+  return `¥${n.toFixed(2)}`;
+}
+
+function renderDailyArchiveCostLine(item) {
+  const est = dailyArchiveCostEstimate(item);
+  if (!est) return `<span class="news-archive-cost is-missing"><i class="ph ph-receipt"></i>费用待记录</span>`;
+  const searchCny = dailyArchiveSearchCostCny(item);
+  const totalCny = dailyArchiveTotalCostCny(item);
+  const billable = Number(est.billableSearchUnits || est.searchBillableUnits || 0);
+  const queries = Number(est.searchQueryCount || est.searchQueries || est.search?.queryCount || 0);
+  const unitText = billable > 0 || queries > 0 ? ` · ${Math.max(billable, queries)}次` : "";
+  return `<span class="news-archive-cost"><i class="ph ph-magnifying-glass"></i>搜索 ${dailyFormatCostCny(searchCny)}${unitText}</span><span class="news-archive-cost is-total"><i class="ph ph-currency-cny"></i>总计 ${dailyFormatCostCny(totalCny)}</span>`;
+}
+
+function renderDailyArchiveCostSummary() {
+  const rows = dailyEventState.history || [];
+  const filtered = dailyArchiveFilteredHistory();
+  const sum = (items, pick) => items.reduce((acc, item) => acc + (dailyArchiveCostNumber(pick(item)) || 0), 0);
+  const searchTotal = sum(rows, dailyArchiveSearchCostCny);
+  const filteredSearch = sum(filtered, dailyArchiveSearchCostCny);
+  const totalCost = sum(rows, dailyArchiveTotalCostCny);
+  const searchUnits = rows.reduce((acc, item) => {
+    const est = dailyArchiveCostEstimate(item);
+    return acc + (Number(est && (est.billableSearchUnits || est.searchBillableUnits || est.searchQueryCount || est.searchQueries || est.search?.queryCount)) || 0);
+  }, 0);
+  return `
+    <div class="daily-archive-cost-summary">
+      <div>
+        <span>7日搜索费</span>
+        <strong>${dailyFormatCostCny(searchTotal)}</strong>
+      </div>
+      <div>
+        <span>当前筛选</span>
+        <strong>${dailyFormatCostCny(filteredSearch)}</strong>
+      </div>
+      <div>
+        <span>综合估算</span>
+        <strong>${dailyFormatCostCny(totalCost)}</strong>
+      </div>
+      <div>
+        <span>搜索计费次</span>
+        <strong>${dailyEscapeHtml(String(searchUnits))}</strong>
+      </div>
+    </div>`;
 }
 
 function renderDailyArchiveList() {
@@ -865,6 +1118,7 @@ function renderDailyArchiveList() {
             <em>${dailyEscapeHtml(dailyFormatTime(item.generatedAt))}</em>
             <small>${dailyEscapeHtml(dailyTriggerLabel(item))}</small>
           </span>
+          <span class="news-archive-cost-row">${renderDailyArchiveCostLine(item)}</span>
       </button>${deleteBtn}</div>`;
     })
     .join("");
@@ -874,7 +1128,7 @@ function renderDailyArchiveFilters() {
   const cur = dailyEventState.archiveFilter || "all";
   const mk = (key, label) =>
     `<button type="button" class="daily-archive-filter ${cur === key ? "active" : ""}" data-archive-filter="${dailyEscapeHtml(key)}" role="tab" aria-selected="${cur === key ? "true" : "false"}">${dailyEscapeHtml(label)}</button>`;
-  return `<div class="daily-archive-filters" role="tablist">${mk("all", "全部")}${mk("scheduled", "定点班次")}${mk("manual", "实时扫描")}</div>`;
+  return `<div class="daily-archive-filters" role="tablist">${mk("all", "全部")}${mk("scheduled", "定点班次")}${mk("manual", "实时扫描")}${mk("costed", "有搜索费")}${mk("free", "无/未记录")}</div>`;
 }
 
 function renderDailyArchiveChrome() {
@@ -883,13 +1137,14 @@ function renderDailyArchiveChrome() {
     <aside class="news-archive-drawer daily-drawer daily-archive-drawer" id="daily-archive-drawer" aria-hidden="true">
       <div class="news-archive-head">
         <div>
-          <h3>7 日报告库</h3>
+          <h3>历史报告与费用</h3>
         </div>
         <button type="button" class="btn daily-drawer-close" id="daily-close-archive" title="关闭报告库">
           <i class="ph ph-x"></i><span>关闭</span>
         </button>
       </div>
       ${renderDailyArchiveFilters()}
+      ${renderDailyArchiveCostSummary()}
       <div class="news-archive-list">${renderDailyArchiveList()}</div>
     </aside>`;
 }
@@ -944,7 +1199,7 @@ function renderDailySettingsChrome() {
         <section class="daily-settings-section">
           <div class="daily-settings-section-head">
             <h4>实时扫描覆盖</h4>
-            <p>决定点击「实时扫描」时 Worker 与模型会跑哪些模块；趋势线索只做上游结果的归纳。</p>
+            <p>决定点击「实时扫描」时 Worker 与模型会跑哪些模块；趋势线索会等上游完成后再做外部搜索校准。</p>
           </div>
           <div class="daily-settings-group">
             ${mkToggle("dashboard", "信息温度", s.dashboard, "scan")}
@@ -952,7 +1207,7 @@ function renderDailySettingsChrome() {
             ${mkToggle("timeline", "动态速览", s.timeline, "scan")}
             ${mkToggle("ai", "AI 情报站", s.ai, "scan")}
             ${mkToggle("githubTools", "GitHub 工具雷达", s.githubTools, "scan")}
-            ${mkToggle("trends", "趋势线索（叠加分析）", s.trends, "scan")}
+            ${mkToggle("trends", "趋势线索（外部校准）", s.trends, "scan")}
           </div>
         </section>
 
@@ -971,6 +1226,8 @@ function renderDailyReportHeader(r) {
     badge !== ""
       ? `<div class="daily-report-meta daily-report-meta--title"><span>${dailyEscapeHtml(badge)}</span></div>`
       : "";
+  const scanStatusHtml = renderDailyScanStatusPanel();
+  const scanButtonClass = dailyEventState.loading ? "btn primary is-scanning" : "btn primary";
   return `
     <div class="news-command daily-event-command" style="view-transition-name: daily-command-bar;">
       <div class="news-command-main daily-command-main">
@@ -986,17 +1243,18 @@ function renderDailyReportHeader(r) {
         </div>
       </div>
       <div class="news-command-actions">
-        <button type="button" class="btn primary" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="单次请求 Worker：NDJSON 流式返回，模块就绪即显示；温度/头条/速览/AI 并行检索（头条可双路），趋势最后归纳；完成后写入 D1（约 1～5 分钟）">
-          <i class="ph ph-rocket-launch"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
+        <button type="button" class="${scanButtonClass}" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="单次请求 Worker：NDJSON 流式返回，模块就绪即显示；温度/头条/速览/AI 并行检索（头条可双路），趋势最后归纳；完成后写入 D1（约 1～5 分钟）">
+          <i class="ph ${dailyEventState.loading ? "ph-spinner-gap spin" : "ph-rocket-launch"}"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
         </button>
         <button type="button" class="btn primary" id="daily-open-archive">
-          <i class="ph ph-clock-counter-clockwise"></i><span>7日报告库</span>
+          <i class="ph ph-clock-counter-clockwise"></i><span>历史报告与费用</span>
         </button>
         <button type="button" class="btn secondary" id="daily-open-settings" title="配置仪表盘模块可见度与实时扫描覆盖范围">
           <i class="ph ph-gear"></i><span>设置</span>
         </button>
       </div>
-    </div>`;
+    </div>
+    ${scanStatusHtml}`;
 }
 
 function dailyPanelClass(span, name, extra = "") {
@@ -1084,9 +1342,9 @@ function renderDailyReportGrid(r) {
       <section class="${dailyPanelClass(12, "trends")}" style="view-transition-name: daily-trends;">
         <div class="news-panel-head daily-module-head">
           <div>
-            <span class="news-section-kicker">趋势线索 · 本轮叠加分析</span>
-            <h3>世界新闻主线、科技扩散与轻量金融背景</h3>
-            <p class="daily-module-subtitle">把模块间的共振、背离和 0-72 小时观察点收束起来。</p>
+            <span class="news-section-kicker">趋势线索 · 外部校准收束</span>
+            <h3>总编辑收束</h3>
+            <p class="daily-module-subtitle">把上游线索放进最新外部来源里校准，收成一段可继续追踪的判断。</p>
           </div>
         </div>
         <div class="news-trend-grid">${renderDailyTrend(r)}</div>
@@ -1174,7 +1432,7 @@ function renderYuqingDailyIntoDom(options) {
 
   const updateDom = () => {
     if (header && grid) {
-      if (reportId !== __lastDailyRenderedId || isLoading !== __lastDailyRenderedLoading || !header.innerHTML.trim()) {
+      if (isLoading || reportId !== __lastDailyRenderedId || isLoading !== __lastDailyRenderedLoading || !header.innerHTML.trim()) {
         header.innerHTML = renderDailyReportHeader(report);
         __lastDailyRenderedId = reportId;
         __lastDailyRenderedLoading = isLoading;
@@ -1247,6 +1505,10 @@ function renderYuqingDailyDrawersIntoDom() {
     if (filterContainer) {
       filterContainer.outerHTML = renderDailyArchiveFilters();
     }
+    const costSummary = archiveDrawer.querySelector(".daily-archive-cost-summary");
+    if (costSummary) {
+      costSummary.outerHTML = renderDailyArchiveCostSummary();
+    }
     
     // 设置侧边栏通常不怎么变，若有实时预览逻辑也在 bind 里处理了
   }
@@ -1257,8 +1519,8 @@ function renderYuqingDailyDrawersIntoDom() {
 async function loadDailyHistory() {
   if (typeof DataEngine === "undefined" || typeof DataEngine.fetchYuqingReportHistory !== "function") return;
   try {
-    const data = await DataEngine.fetchYuqingReportHistory(DAILY_EVENT_KIND, 7, { signal: __yuqingDailyAbort?.signal });
-    if (data && Array.isArray(data.items) && data.items.length) dailyEventState.history = data.items;
+    const data = await DataEngine.fetchYuqingReportHistory(DAILY_EVENT_KIND, 7, { signal: __yuqingDailyLoadAbort?.signal });
+    if (data && Array.isArray(data.items)) dailyEventState.history = data.items;
   } catch (_) {}
 }
 
@@ -1296,7 +1558,12 @@ async function deleteDailyArchiveEntry(id) {
   }
 }
 
-async function loadDailyReport(reportId = "") {
+async function loadDailyReport(reportId = "", options = {}) {
+  if (dailyEventState.loading && !(options && options.force === true)) {
+    renderYuqingDailyIntoDom({ skipViewTransition: true });
+    renderYuqingDailyDrawersIntoDom();
+    return;
+  }
   if (typeof DataEngine === "undefined") {
     dailyEventState.source = "error";
     dailyEventState.status = "DataEngine 不可用";
@@ -1305,15 +1572,16 @@ async function loadDailyReport(reportId = "") {
   }
   dailyEventState.streamPreviewRow = null;
   dailyResetStreamBuffers();
-  if (__yuqingDailyAbort) __yuqingDailyAbort.abort();
-  __yuqingDailyAbort = new AbortController();
+  if (__yuqingDailyLoadAbort) __yuqingDailyLoadAbort.abort();
+  __yuqingDailyLoadAbort = new AbortController();
+  const loadSignal = __yuqingDailyLoadAbort.signal;
   dailyEventState.source = "loading";
   dailyEventState.status = "正在读取云端 D1 报告...";
   renderYuqingDailyIntoDom();
   try {
     const data = reportId
-      ? await DataEngine.fetchYuqingReportItem(reportId, { signal: __yuqingDailyAbort.signal })
-      : await DataEngine.fetchYuqingReportLatest(DAILY_EVENT_KIND, { signal: __yuqingDailyAbort.signal });
+      ? await DataEngine.fetchYuqingReportItem(reportId, { signal: loadSignal })
+      : await DataEngine.fetchYuqingReportLatest(DAILY_EVENT_KIND, { signal: loadSignal });
     const report = data && data.report;
     if (report) {
       dailyEventState.report = report;
@@ -1325,6 +1593,7 @@ async function loadDailyReport(reportId = "") {
       dailyEventState.status = data && data.d1Ready === false ? "D1 未绑定或迁移未执行" : "暂无云端日报";
     }
   } catch (e) {
+    if (loadSignal.aborted) return;
     dailyEventState.report = null;
     dailyEventState.source = "error";
     dailyEventState.status = e && e.message ? e.message : String(e);
@@ -1335,13 +1604,17 @@ async function loadDailyReport(reportId = "") {
 }
 
 async function generateDailyReport() {
+  if (__dailyScanPromise || dailyEventState.loading) return __dailyScanPromise;
   if (typeof DataEngine === "undefined") return;
   const canStream = typeof DataEngine.streamYuqingDailyEventReport === "function";
   const canGen = typeof DataEngine.generateYuqingStructuredReport === "function";
   if (!canStream && !canGen) return;
-  if (__yuqingDailyAbort) __yuqingDailyAbort.abort();
-  __yuqingDailyAbort = new AbortController();
-  const scanSignal = __yuqingDailyAbort.signal;
+  if (__yuqingDailyLoadAbort) {
+    __yuqingDailyLoadAbort.abort();
+    __yuqingDailyLoadAbort = null;
+  }
+  __yuqingDailyScanAbort = new AbortController();
+  const scanSignal = __yuqingDailyScanAbort.signal;
   const reportIdBefore = dailyCurrentReportId();
   const tScanStart = Date.now();
   if (__dailyScanTick) {
@@ -1350,25 +1623,30 @@ async function generateDailyReport() {
   }
   dailyEventState.streamPreviewRow = null;
   dailyResetStreamBuffers();
+  dailyResetScanProgress();
+  dailyEnsureStreamPreviewShell();
   dailyEventState.loading = true;
+  dailyEventState.scanStartedAt = tScanStart;
+  dailyEventState.scanStage = canStream ? "实时扫描已启动" : "云端扫描已启动";
   dailyEventState.status = canStream
-    ? "已连接流式通道：头条/速览/AI/GitHub 完成后逐段显示，趋势线索最后基于本轮结果叠加归纳并写入 D1。请勿关闭页面…"
-    : "正在触发单次全流程日报（信息温度、头条、速览、AI/GitHub → 趋势线索不联网归纳 → 写入 D1）。首次约 1～4 分钟，请勿关闭页面…";
+    ? "正在连接流式通道：切换到其他页面不会中断，本页回来后会继续显示进度。"
+    : "正在触发单次全流程日报：切换到其他页面不会中断，完成后会自动回填本页。";
   renderYuqingDailyIntoDom({ skipViewTransition: true });
   __dailyScanTick = setInterval(() => {
     if (!dailyEventState.loading) return;
     const sec = Math.floor((Date.now() - tScanStart) / 1000);
+    dailyEventState.scanStage = canStream ? "实时扫描运行中" : "云端扫描运行中";
     dailyEventState.status = canStream
-      ? `流式生成中（已等待 ${sec}s）… 趋势线索会等上游模块完成后再做本轮叠加分析。`
+      ? `流式生成中（已等待 ${sec}s）… 趋势线索会等上游模块完成后再做外部搜索校准。`
       : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为上游检索偏慢或网络中断。`;
     renderYuqingDailyIntoDom({ skipViewTransition: true });
   }, 8000);
   const s = __yuqingSettings.scanCoverage;
-  // 上游模块负责检索；趋势线索只吃本轮模块输出做二次合成。
+  // 上游模块先完成个性化检索；趋势线索再追加一次外部校准收束。
   const payload = { 
     mode: "deep", 
     forceSearch: true, 
-    trendsUseSearch: false,
+    trendsUseSearch: true,
     dualHeadlineLanes: true,
     modules: {
       dashboard: !!s.dashboard,
@@ -1380,6 +1658,7 @@ async function generateDailyReport() {
     }
   };
   
+  __dailyScanPromise = (async () => {
   try {
     let data = null;
     if (canStream) {
@@ -1388,12 +1667,14 @@ async function generateDailyReport() {
         signal: scanSignal,
         onEvent: async (evt) => {
           if (evt.type === "start") {
+            dailyEventState.scanStage = "流式通道已建立";
             dailyEventState.status = "流式通道已建立，等待各模块…";
             renderYuqingDailyIntoDom({ skipViewTransition: true });
             return;
           }
           if (evt.type === "chunk") {
             mergeDailyStreamChunk(evt);
+            dailyEventState.scanStage = "模块正在输出";
             dailyEventState.source = "cloud";
             dailyEventState.status = `正在输出：${dailyStreamModuleLabel(evt.module, evt.streamKey)}`;
             dailyScheduleStreamRender();
@@ -1401,6 +1682,7 @@ async function generateDailyReport() {
           }
           if (evt.type === "partial") {
             mergeDailyStreamEvent(evt);
+            dailyEventState.scanStage = "模块结果已更新";
             dailyEventState.source = "cloud";
             dailyEventState.status = `已更新：${evt.module || "模块"}`;
             renderYuqingDailyIntoDom({ skipViewTransition: true });
@@ -1412,14 +1694,20 @@ async function generateDailyReport() {
     }
     dailyEventState.streamPreviewRow = null;
     if (data && data.report) {
+      Object.keys(dailyEventState.scanProgress || {}).forEach((key) => {
+        if (dailyEventState.scanProgress[key] !== "skip") dailyEventState.scanProgress[key] = "done";
+      });
       dailyEventState.report = data.report;
       dailyEventState.source = "cloud";
+      dailyEventState.scanStage = "实时扫描已完成";
       dailyEventState.status = canStream
-        ? "流式扫描已完成，已写入 D1（趋势线索未单独联网，基于本轮上游模块叠加归纳）。"
-        : "单次扫描已完成，已写入 D1 并拉回本条（趋势线索基于温度+头条+速览+AI/GitHub 归纳）。";
-      try {
-        history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(data.report.id)}`);
-      } catch (_) {}
+        ? "流式扫描已完成，已写入 D1（趋势线索已追加外部搜索校准）。"
+        : "单次扫描已完成，已写入 D1 并拉回本条（趋势线索已基于上游模块和外部搜索收束）。";
+      if (dailyIsEventsRoute()) {
+        try {
+          history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(data.report.id)}`);
+        } catch (_) {}
+      }
       await loadDailyHistory();
       dailyEventState.archiveFilter = "manual";
     }
@@ -1428,11 +1716,12 @@ async function generateDailyReport() {
     dailyEventState.streamPreviewRow = null;
     const maybeTimeout = /超时|AbortError|aborted|network/i.test(msg);
     if (maybeTimeout) {
+      dailyEventState.scanStage = "正在回读 D1";
       dailyEventState.status = "请求中断或超时，正在尝试从 D1 读取最新一条事件日报…";
       dailyEventState.source = "loading";
       renderYuqingDailyIntoDom({ skipViewTransition: true });
       try {
-        await loadDailyReport("");
+        await loadDailyReport("", { force: true });
         const row = dailyEventState.report;
         if (row && row.id && row.id !== reportIdBefore && row.report) {
           dailyEventState.source = "cloud";
@@ -1448,6 +1737,7 @@ async function generateDailyReport() {
       }
     } else {
       dailyEventState.source = "error";
+      dailyEventState.scanStage = "实时扫描失败";
       dailyEventState.status = msg;
     }
   } finally {
@@ -1456,10 +1746,15 @@ async function generateDailyReport() {
       __dailyScanTick = null;
     }
     dailyEventState.loading = false;
+    dailyEventState.scanStartedAt = 0;
+    __yuqingDailyScanAbort = null;
+    __dailyScanPromise = null;
     dailyClearScheduledStreamRender();
     renderYuqingDailyIntoDom({ skipViewTransition: true });
     renderYuqingDailyDrawersIntoDom();
   }
+  })();
+  return __dailyScanPromise;
 }
 
 function openDailyArchive() {
@@ -1677,23 +1972,31 @@ function initYuqingEvents() {
       console.warn("无法拉取云端事件一览设置，使用默认配置。");
     });
   }
-  
-  loadDailyReport(dailyHashReportId());
+
+  if (dailyEventState.loading) {
+    renderYuqingDailyIntoDom({ skipViewTransition: true });
+    renderYuqingDailyDrawersIntoDom();
+  } else {
+    loadDailyReport(dailyHashReportId());
+  }
 }
 
 function disposeYuqingEvents() {
   __lastDailyRenderedId = null;
   __lastDailyRenderedLoading = null;
-  if (__dailyScanTick) {
-    clearInterval(__dailyScanTick);
-    __dailyScanTick = null;
+  if (__yuqingDailyLoadAbort) {
+    __yuqingDailyLoadAbort.abort();
+    __yuqingDailyLoadAbort = null;
   }
-  dailyResetStreamBuffers();
-  dailyEventState.streamPreviewRow = null;
-  dailyEventState.loading = false;
-  if (__yuqingDailyAbort) {
-    __yuqingDailyAbort.abort();
-    __yuqingDailyAbort = null;
+  dailyClearScheduledStreamRender();
+  if (!dailyEventState.loading) {
+    if (__dailyScanTick) {
+      clearInterval(__dailyScanTick);
+      __dailyScanTick = null;
+    }
+    dailyResetStreamBuffers();
+    dailyEventState.streamPreviewRow = null;
+    dailyEventState.scanStartedAt = 0;
   }
 }
 
