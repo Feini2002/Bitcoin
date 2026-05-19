@@ -83,6 +83,9 @@ CREATE TABLE IF NOT EXISTS liquidation_5m_buckets (
 CREATE INDEX IF NOT EXISTS idx_liquidation_5m_symbol_t
   ON liquidation_5m_buckets (symbol, bucket_start DESC);
 
+CREATE INDEX IF NOT EXISTS idx_liquidation_5m_bucket_start
+  ON liquidation_5m_buckets (bucket_start);
+
 -- Derivatives panel: lightweight public market time series.
 -- Metrics include funding_binance, funding_deribit, oi_binance, oi_deribit,
 -- dvol, vix, vix3m, move, and long_short.
@@ -99,6 +102,9 @@ CREATE TABLE IF NOT EXISTS derivative_timeseries (
 
 CREATE INDEX IF NOT EXISTS idx_derivative_timeseries_sym_metric_t
   ON derivative_timeseries (symbol, metric, t DESC);
+
+CREATE INDEX IF NOT EXISTS idx_derivative_timeseries_t
+  ON derivative_timeseries (t);
 
 -- Deribit option surface snapshots for 25-delta skew and compact smile views.
 CREATE TABLE IF NOT EXISTS derivative_option_surface (

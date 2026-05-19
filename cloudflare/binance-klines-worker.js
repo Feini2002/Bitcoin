@@ -729,6 +729,7 @@ async function d1QueryLatestMeta(env, symbol, interval) {
   return {
     maxT: Number(latest?.t || status?.last_t || 0),
     count: Number(status?.last_count || (latest ? 1 : 0)),
+    hasRows: !!latest,
   };
 }
 
@@ -758,22 +759,14 @@ async function persistKlines(env, symbol, interval, rawKlines) {
     await env.DB.batch(stmts.slice(i, i + CHUNK));
   }
 
+  const latestT = rawKlines.reduce((max, row) => Math.max(max, Number(row && row[0]) || 0), 0);
   let pruned = 0;
-  const countRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS cnt FROM klines WHERE symbol = ?1 AND interval = ?2"
-  ).bind(symbol, interval).first();
-  const total = Number(countRow?.cnt || 0);
-  if (total > MAX_KLINES_PER_INTERVAL) {
+  if (latestT > 0) {
+    const cutoff = latestT - intervalMs(interval) * MAX_KLINES_PER_INTERVAL;
     const res = await env.DB.prepare(
-      `DELETE FROM klines
-         WHERE symbol = ?1 AND interval = ?2
-           AND t NOT IN (
-             SELECT t FROM klines
-              WHERE symbol = ?1 AND interval = ?2
-              ORDER BY t DESC LIMIT ?3
-           )`
-    ).bind(symbol, interval, MAX_KLINES_PER_INTERVAL).run();
-    pruned = res?.meta?.changes || Math.max(0, total - MAX_KLINES_PER_INTERVAL);
+      "DELETE FROM klines WHERE symbol = ?1 AND interval = ?2 AND t < ?3"
+    ).bind(symbol, interval, cutoff).run();
+    pruned = res?.meta?.changes || 0;
   }
 
   return { inserted: stmts.length, pruned };
@@ -813,7 +806,7 @@ async function syncKlinesOne(env, symbol, interval) {
     return { ok: false, symbol, interval, error: err };
   }
 
-  const bulkFill = meta.count === 0;
+  const bulkFill = !meta.hasRows;
   const fetchArgs = bulkFill
     ? { symbol, interval, limit: MAX_KLINES_PER_INTERVAL }
     : { symbol, interval, startTime: meta.maxT, limit: BINANCE_MAX_LIMIT_PER_REQUEST };
@@ -928,10 +921,21 @@ function recomputeFootprintBar(bar) {
   };
 }
 
-function footprintBarCount(env, symbol) {
-  return env.DB.prepare(
-    "SELECT COUNT(*) AS cnt, MIN(t) AS minT, MAX(t) AS maxT FROM footprint_bars WHERE symbol = ?1 AND interval = ?2"
+async function footprintBarMeta(env, symbol) {
+  const latest = await env.DB.prepare(
+    "SELECT t FROM footprint_bars WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1"
   ).bind(symbol, FOOTPRINT_BASE_INTERVAL).first();
+  const oldest = latest
+    ? await env.DB.prepare(
+      "SELECT t FROM footprint_bars WHERE symbol = ?1 AND interval = ?2 ORDER BY t ASC LIMIT 1"
+    ).bind(symbol, FOOTPRINT_BASE_INTERVAL).first()
+    : null;
+  return {
+    cnt: latest ? 1 : 0,
+    minT: Number(oldest?.t || 0),
+    maxT: Number(latest?.t || 0),
+    estimated: true,
+  };
 }
 
 function ingestTradeIntoFootprintBars(map, trade) {
@@ -1058,22 +1062,14 @@ async function persistFootprintBars(env, symbol, barMap) {
   ));
   await env.DB.batch(stmts);
 
+  const latestT = bars.reduce((max, bar) => Math.max(max, Number(bar && bar.t) || 0), 0);
   let pruned = 0;
-  const countRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS cnt FROM footprint_bars WHERE symbol = ?1 AND interval = ?2"
-  ).bind(symbol, FOOTPRINT_BASE_INTERVAL).first();
-  const total = Number(countRow?.cnt || 0);
-  if (total > FOOTPRINT_MAX_BARS) {
+  if (latestT > 0) {
+    const cutoff = latestT - intervalMs(FOOTPRINT_BASE_INTERVAL) * FOOTPRINT_MAX_BARS;
     const res = await env.DB.prepare(
-      `DELETE FROM footprint_bars
-        WHERE symbol = ?1 AND interval = ?2
-          AND t NOT IN (
-            SELECT t FROM footprint_bars
-             WHERE symbol = ?1 AND interval = ?2
-             ORDER BY t DESC LIMIT ?3
-          )`
-    ).bind(symbol, FOOTPRINT_BASE_INTERVAL, FOOTPRINT_MAX_BARS).run();
-    pruned = res?.meta?.changes || Math.max(0, total - FOOTPRINT_MAX_BARS);
+      "DELETE FROM footprint_bars WHERE symbol = ?1 AND interval = ?2 AND t < ?3"
+    ).bind(symbol, FOOTPRINT_BASE_INTERVAL, cutoff).run();
+    pruned = res?.meta?.changes || 0;
   }
   return { written: bars.length, pruned };
 }
@@ -1096,7 +1092,7 @@ async function updateFootprintStatus(env, symbol, { ok, lastTradeId, lastTradeTi
 
 async function syncFootprintOne(env, symbol) {
   if (!env.DB) return { ok: false, symbol, error: "D1 binding missing" };
-  const before = await footprintBarCount(env, symbol);
+  const before = await footprintBarMeta(env, symbol);
   const status = await readFootprintStatus(env, symbol);
   let nextFromId = status.lastTradeId > 0 ? status.lastTradeId + 1 : null;
   const allTrades = [];
@@ -1173,7 +1169,7 @@ async function syncFootprintBackfill(env, symbol, opts = {}) {
     FOOTPRINT_BACKFILL_MAX_WINDOWS,
     Math.max(1, parseInt(String(opts.windows || FOOTPRINT_BACKFILL_DEFAULT_WINDOWS), 10) || FOOTPRINT_BACKFILL_DEFAULT_WINDOWS)
   );
-  const meta = await footprintBarCount(env, symbol);
+  const meta = await footprintBarMeta(env, symbol);
   let cursorEnd = Number(opts.endTime || meta?.minT || Date.now());
   if (!Number.isFinite(cursorEnd) || cursorEnd <= 0) cursorEnd = Date.now();
   cursorEnd = Math.min(cursorEnd, Date.now());
@@ -1690,12 +1686,14 @@ async function releaseDerivativeSyncLock(env, lockKey, owner) {
 async function readDerivativeGroupedMaxTsForSymbol(env, symbol) {
   if (!env || !env.DB) return {};
   try {
-    const { results } = await env.DB.prepare(
-      `SELECT metric, MAX(t) AS mx FROM derivative_timeseries WHERE symbol = ?1 GROUP BY metric`
-    ).bind(String(symbol)).all();
     const out = {};
-    for (const r of results || []) {
-      if (r.metric && Number.isFinite(Number(r.mx))) out[String(r.metric)] = Number(r.mx);
+    const stmt = env.DB.prepare(
+      "SELECT t FROM derivative_timeseries WHERE symbol = ?1 AND metric = ?2 ORDER BY t DESC LIMIT 1"
+    );
+    for (const metric of DERIVATIVE_METRICS) {
+      const r = await stmt.bind(String(symbol), metric).first();
+      const mx = Number(r?.t || 0);
+      if (Number.isFinite(mx) && mx > 0) out[metric] = mx;
     }
     return out;
   } catch (_) {
@@ -3753,26 +3751,44 @@ async function handleManualDerivativesSync(_request, env, url, ctx) {
   return json(await run(), 200, { "Cache-Control": "no-store" });
 }
 
-async function handleDerivativesStatus(_request, env) {
+async function handleDerivativesStatus(_request, env, url) {
   if (!env.DB) return json({ error: "D1 binding missing" }, 500);
   const symUpper = String(DEFAULT_SYMBOL).toUpperCase();
   const nowDiag = Date.now();
-  const { results: countsRaw } = await env.DB.prepare(
-    "SELECT symbol, metric, COUNT(*) AS cnt, MIN(t) AS minT, MAX(t) AS maxT FROM derivative_timeseries GROUP BY symbol, metric"
-  ).all();
+  const detail = ["1", "true", "full", "counts"].includes(
+    String(url && url.searchParams ? url.searchParams.get("detail") || "" : "").toLowerCase()
+  );
   const { results: statusRaw } = await env.DB.prepare(
     "SELECT symbol, metric, last_run, last_count, last_ok, last_error FROM derivative_sync_status ORDER BY symbol, metric"
   ).all();
   const sourceHealth = await readDerivativeSourceHealthAllSafe(env);
 
-  const countsForSym = (countsRaw || []).filter(
-    (row) =>
-      DERIVATIVE_METRICS.includes(row.metric) && String(row.symbol || "").toUpperCase() === symUpper
-  );
   const statusForSym = (statusRaw || []).filter(
     (row) =>
       DERIVATIVE_METRICS.includes(row.metric) && String(row.symbol || "").toUpperCase() === symUpper
   );
+  let countsForSym = [];
+  if (detail) {
+    const { results: countsRaw } = await env.DB.prepare(
+      "SELECT symbol, metric, COUNT(*) AS cnt, MIN(t) AS minT, MAX(t) AS maxT FROM derivative_timeseries GROUP BY symbol, metric"
+    ).all();
+    countsForSym = (countsRaw || []).filter(
+      (row) =>
+        DERIVATIVE_METRICS.includes(row.metric) && String(row.symbol || "").toUpperCase() === symUpper
+    );
+  } else {
+    const latestByMetric = await readDerivativeGroupedMaxTsForSymbol(env, symUpper);
+    const statusByMetric = Object.fromEntries(statusForSym.map((row) => [String(row.metric), row]));
+    countsForSym = DERIVATIVE_METRICS.map((metric) => ({
+      symbol: symUpper,
+      metric,
+      cnt: Number(statusByMetric[metric]?.last_count || 0),
+      minT: null,
+      maxT: Number(latestByMetric[metric] || 0),
+      estimated: true,
+      estimateSource: "latest-row+derivative_sync_status",
+    })).filter((row) => Number(row.maxT || 0) > 0 || Number(row.cnt || 0) > 0);
+  }
   let mhCompoundMapStatus = {};
   try {
     mhCompoundMapStatus = await readDerivativeMetricHealthMap(env, symUpper);
@@ -3792,6 +3808,8 @@ async function handleDerivativesStatus(_request, env) {
   const stalenessReasons = buildDerivativeStaleReasonLines(metricHealth);
 
   return json({
+    lightweight: !detail,
+    detailEndpoint: "/api/d1/derivatives/status?detail=1",
     retentionDays: 30,
     metrics: DERIVATIVE_METRICS,
     counts: countsForSym,
@@ -3827,6 +3845,85 @@ async function handleDerivativesSnapshot(_request, env, url) {
     }
   }
   return json(compact, 200, { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-ai-derivatives-snapshot" });
+}
+
+async function handleAnalysisSnapshot(_request, env, url) {
+  if (!env.DB) return json({ error: "D1 binding missing" }, 500);
+  const symbol = String(url.searchParams.get("symbol") || DEFAULT_SYMBOL).toUpperCase();
+  const profile = String(url.searchParams.get("profile") || "brief").toLowerCase();
+  const klineLimit = profile === "wide" ? 240 : 120;
+  const footprintLimit = profile === "wide" ? 144 : 72;
+  const now = Date.now();
+  const since24h = now - 24 * 60 * 60 * 1000;
+
+  const { results: klineRaw } = await env.DB.prepare(
+    "SELECT t, o, h, l, c, v FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT ?3"
+  ).bind(symbol, "1h", klineLimit).all();
+  const { results: footprintRaw } = await env.DB.prepare(
+    `SELECT t, o, h, l, c, buy_vol, sell_vol, delta, volume, poc_price, last_trade_id
+       FROM footprint_bars
+      WHERE symbol = ?1 AND interval = ?2
+      ORDER BY t DESC LIMIT ?3`
+  ).bind(symbol, FOOTPRINT_BASE_INTERVAL, footprintLimit).all();
+  const { results: liquidationRaw } = await env.DB.prepare(
+    `SELECT exchange,
+            SUM(long_notional) AS longNotional,
+            SUM(short_notional) AS shortNotional,
+            SUM(long_count) AS longCount,
+            SUM(short_count) AS shortCount,
+            MAX(bucket_start) AS latestBucketStart
+       FROM liquidation_5m_buckets
+      WHERE symbol = ?1 AND bucket_start >= ?2
+      GROUP BY exchange`
+  ).bind(symbol, since24h).all();
+  const derivativeLatestTs = await readDerivativeGroupedMaxTsForSymbol(env, symbol);
+  const { results: derivativeStatusRaw } = await env.DB.prepare(
+    "SELECT symbol, metric, last_run, last_count, last_ok, last_error FROM derivative_sync_status WHERE symbol = ?1 ORDER BY metric"
+  ).bind(symbol).all();
+
+  const klines = (klineRaw || []).slice().reverse().map((r) => ({
+    t: Number(r.t), o: Number(r.o), h: Number(r.h), l: Number(r.l), c: Number(r.c), v: Number(r.v),
+  }));
+  const footprint = (footprintRaw || []).slice().reverse().map((r) => ({
+    t: Number(r.t),
+    o: Number(r.o),
+    h: Number(r.h),
+    l: Number(r.l),
+    c: Number(r.c),
+    delta: Number(r.delta || 0),
+    volume: Number(r.volume || 0),
+    buyVol: Number(r.buy_vol || 0),
+    sellVol: Number(r.sell_vol || 0),
+    pocPrice: r.poc_price == null ? null : Number(r.poc_price),
+    lastTradeId: Number(r.last_trade_id || 0),
+  }));
+
+  return json(
+    {
+      ok: true,
+      profile,
+      symbol,
+      generatedAt: now,
+      purpose: "llm-brief-input",
+      limits: { klineInterval: "1h", klineLimit, footprintInterval: FOOTPRINT_BASE_INTERVAL, footprintLimit },
+      klines,
+      footprint,
+      liquidations24h: (liquidationRaw || []).map((r) => ({
+        exchange: r.exchange,
+        longNotional: Number(r.longNotional || 0),
+        shortNotional: Number(r.shortNotional || 0),
+        longCount: Number(r.longCount || 0),
+        shortCount: Number(r.shortCount || 0),
+        latestBucketStart: Number(r.latestBucketStart || 0),
+      })),
+      derivatives: {
+        latestTsByMetric: derivativeLatestTs,
+        status: derivativeStatusRaw || [],
+      },
+    },
+    200,
+    { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-d1-analysis-snapshot" }
+  );
 }
 
 async function handleReadOnchain(_request, env, url) {
@@ -5661,9 +5758,10 @@ export default {
     if (path === "/api/d1/liquidations/wake") return handleLiquidationWake(env);
     if (path === "/api/d1/derivatives") return handleReadDerivatives(request, env, url, ctx);
     if (path === "/api/d1/derivatives/sync") return handleManualDerivativesSync(request, env, url, ctx);
-    if (path === "/api/d1/derivatives/status") return handleDerivativesStatus(request, env);
+    if (path === "/api/d1/derivatives/status") return handleDerivativesStatus(request, env, url);
     if (path === "/api/d1/derivatives/origin-check") return handleDerivativesOriginProbe(request, env);
     if (path === "/api/d1/onchain") return handleReadOnchain(request, env, url);
+    if (path === "/api/d1/analysis-snapshot") return handleAnalysisSnapshot(request, env, url);
     if (path === "/api/ai/llm-status") return handleAiLlmStatus(request, env);
     if (path === "/api/ai/derivatives-snapshot") return handleDerivativesSnapshot(request, env, url);
 

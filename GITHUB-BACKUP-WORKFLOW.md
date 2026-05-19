@@ -20,13 +20,15 @@
 
 ## Cursor Agent / 托管 Agent 收尾顺序（写死约定）
 
-在**除非用户明确指定（要求部署或推送）**时，由 Agent 对本仓库所做的任务，收尾顺序默认仅包含**校验**。只有在获得明确指令后，才执行以下完整顺序：
+Agent 对本仓库做完改动后，默认先校验，再按影响面部署 Cloudflare；**GitHub commit / push / PR 仍然只在用户明确要求时执行**。
 
 1. **校验**（与 `.cursor/rules/auto-build-deploy.mdc` 一致）  
    - 至少：`npm run lint`  
    - 按改动范围补足：`verify-indicator-math`、`verify:footprint`、`verify:api` 等（以 `AGENTS.md` 验证矩阵为准）。
-2. **Cloudflare（仅按需）**
-   - 仅在用户指令要求「部署」或「上线」时执行。
+2. **Cloudflare（默认执行）**
+   - 前端、静态资源、规则/文档、脚本或共享逻辑改动后部署 Pages。
+   - Worker 改动后部署对应 Worker；同时影响 Pages 与 Worker 时，先 Worker 后 Pages。
+   - 用户明确说「先不部署」「只本地改」「暂不上线」时才跳过。
 3. **GitHub 推送逻辑与脑内决策树（仅按需）**
    - 仅在用户指令要求「推送 GitHub」、「上传」、「同步」或「备份」时执行。
    - Agent 在执行 Git 备份前，**必须**在后台（脑内）按以下逻辑走一遍，收束行为边界：
@@ -55,7 +57,7 @@
      1. 检出并提交 `git checkout -b <branch-name>`；
      2. 推送 `git push -u origin <branch-name>`。
 
-**不包含代码变更的对话**（仅答疑、查阅）：不强制 commit／push。
+**不包含仓库改动的对话**（仅答疑、查阅）：不强制部署、commit 或 push。
 
 **异常退出机制**：若部署或验证在克隆工作区彻底失败，且不符合「阶段性保存」的诉求，必须向用户汇报失败原因；在未确认修复前不要强行合入 `main`，以免把明显坏的状态推上去。
 
@@ -79,4 +81,4 @@
 
 ## 修订记录
 
-- 调整为仅按需备份：除非用户明确指令要求，否则默认不部署 Cloudflare 或推送 GitHub。
+- 2026-05-19：调整为默认完成 Cloudflare 部署；GitHub 仍仅在用户明确指令后 commit / push / PR。

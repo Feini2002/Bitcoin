@@ -433,6 +433,152 @@ const DataEngine = {
     return this.parseWorkerJsonResponse(res, "保存模型通道设置");
   },
 
+  async fetchYuqingExecutionChannelSettings(opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/execution-channels`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const timeoutMs = Math.min(45_000, Math.max(5_000, Number(opts.timeoutMs) || 20_000));
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    let res;
+    try {
+      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
+    } catch (e) {
+      const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
+      throw new Error(`获取执行通道设置失败（${url}）：${m}`);
+    } finally {
+      clearTimeout(t);
+      unsub();
+    }
+    return this.parseWorkerJsonResponse(res, "执行通道设置");
+  },
+
+  async updateYuqingExecutionChannelSettings(settings, opts = {}) {
+    const url = `${this.yuqingApiBase()}/api/yuqing/settings/execution-channels`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const timeoutMs = Math.min(45_000, Math.max(5_000, Number(opts.timeoutMs) || 20_000));
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    let res;
+    try {
+      res = await this.workerFetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        cache: "no-store",
+        signal: ctrl.signal,
+        body: JSON.stringify(settings && typeof settings === "object" ? settings : {}),
+      });
+    } catch (e) {
+      const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
+      throw new Error(`保存执行通道设置失败（${url}）：${m}`);
+    } finally {
+      clearTimeout(t);
+      unsub();
+    }
+    return this.parseWorkerJsonResponse(res, "保存执行通道设置");
+  },
+
+  async readYuqingExecutionChannelSettings(opts = {}) {
+    return this.fetchYuqingExecutionChannelSettings(opts);
+  },
+
+  async saveYuqingExecutionChannelSettings(settings, opts = {}) {
+    return this.updateYuqingExecutionChannelSettings(settings, opts);
+  },
+
+  yuqingCodexTaskReport(data) {
+    const src = data && typeof data === "object" ? data : {};
+    const task = src.task && typeof src.task === "object" ? src.task : src;
+    const result = task.result && typeof task.result === "object" ? task.result : src.result;
+    return src.report || task.report || (result && result.report) || null;
+  },
+
+  yuqingCodexTaskStatus(data) {
+    const src = data && typeof data === "object" ? data : {};
+    const task = src.task && typeof src.task === "object" ? src.task : src;
+    return String(task.status || src.status || task.phase || src.phase || "").toLowerCase();
+  },
+
+  waitForYuqingTaskDelay(ms, signal) {
+    return new Promise((resolve, reject) => {
+      if (signal && signal.aborted) {
+        reject(new DOMException("Aborted", "AbortError"));
+        return;
+      }
+      const t = setTimeout(() => {
+        if (signal && typeof signal.removeEventListener === "function") signal.removeEventListener("abort", onAbort);
+        resolve();
+      }, ms);
+      const onAbort = () => {
+        clearTimeout(t);
+        reject(new DOMException("Aborted", "AbortError"));
+      };
+      if (signal && typeof signal.addEventListener === "function") signal.addEventListener("abort", onAbort, { once: true });
+    });
+  },
+
+  async pollYuqingCodexTask(taskId, opts = {}) {
+    const id = String(taskId || "").trim();
+    if (!id) throw new Error("Codex 任务缺少 id，无法轮询");
+    const timeoutMs = Math.min(900_000, Math.max(30_000, Number(opts.taskTimeoutMs) || Number(opts.timeoutMs) || 600_000));
+    const intervalMs = Math.min(12_000, Math.max(1_500, Number(opts.pollIntervalMs) || 2_000));
+    const onStatus = typeof opts.onTaskStatus === "function" ? opts.onTaskStatus : () => {};
+    const notify = (payload) => {
+      try {
+        onStatus(payload);
+      } catch (_) {}
+    };
+    const startedAt = Date.now();
+    let lastData = null;
+    let lastStatus = "";
+    notify({ phase: "queued", status: "queued", task: { id } });
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const remaining = timeoutMs - (Date.now() - startedAt);
+      const ctrl = new AbortController();
+      const unsub = this.attachAbort(opts.signal, ctrl);
+      const t = setTimeout(() => ctrl.abort(), Math.min(30_000, Math.max(2_000, remaining)));
+      let res;
+      try {
+        const q = new URLSearchParams({ id });
+        const url = `${this.yuqingApiBase()}/api/yuqing/codex/tasks?${q.toString()}`;
+        res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
+      } catch (e) {
+        const m = e && e.name === "AbortError" ? "请求超时或页面已切换" : e && e.message ? e.message : String(e);
+        throw new Error(`Codex 任务轮询失败：${m}`);
+      } finally {
+        clearTimeout(t);
+        unsub();
+      }
+
+      const data = await this.parseWorkerJsonResponse(res, "Codex 任务状态");
+      lastData = data;
+      const task = data.task && typeof data.task === "object" ? data.task : data;
+      const status = this.yuqingCodexTaskStatus(data);
+      const report = this.yuqingCodexTaskReport(data);
+      if (status !== lastStatus) {
+        lastStatus = status;
+        notify({ phase: status || "running", status, task, data });
+      } else {
+        notify({ phase: status || "running", status, task, data });
+      }
+      if (report) {
+        notify({ phase: "completed", status: status || "completed", task, data });
+        return data.report ? data : { ...data, report };
+      }
+      if (["failed", "error", "cancelled", "canceled", "timeout", "expired"].includes(status)) {
+        const detail = task.error || task.message || data.error || data.message || "Codex CLI 任务失败";
+        throw new Error(String(detail));
+      }
+      if (["completed", "complete", "succeeded", "success", "done"].includes(status)) {
+        throw new Error("Codex CLI 任务已完成，但 Worker 未返回报告");
+      }
+
+      await this.waitForYuqingTaskDelay(Math.min(intervalMs, Math.max(250, timeoutMs - (Date.now() - startedAt))), opts.signal);
+    }
+    const finalStatus = this.yuqingCodexTaskStatus(lastData);
+    throw new Error(`Codex CLI 任务等待超时（${Math.round(timeoutMs / 1000)}s${finalStatus ? `，最后状态：${finalStatus}` : ""}）`);
+  },
+
   async generateYuqingStructuredReport(kind = "sentiment_analysis", payload = {}, opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate`;
     const timeoutMs = Math.min(600_000, Math.max(5_000, Number(opts.timeoutMs) || 185_000));
@@ -469,12 +615,15 @@ const DataEngine = {
       const hint = data && (data.error || data.message);
       throw new Error(`舆情报告接口 ${res.status}${hint ? `: ${hint}` : ""}`);
     }
+    if (data && data.task && data.task.id && !this.yuqingCodexTaskReport(data)) {
+      return this.pollYuqingCodexTask(data.task.id, opts);
+    }
     return data;
   },
 
   async streamYuqingDailyEventReport(payload = {}, opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate-stream`;
-    const timeoutMs = Math.min(600_000, Math.max(30_000, Number(opts.timeoutMs) || 420_000));
+    const timeoutMs = Math.min(900_000, Math.max(30_000, Number(opts.timeoutMs) || 600_000));
     const ctrl = new AbortController();
     const unsub = this.attachAbort(opts.signal, ctrl);
     const t = setTimeout(() => ctrl.abort(), timeoutMs);

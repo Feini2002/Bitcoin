@@ -3,6 +3,14 @@
    ======================================================= */
 
 const DAILY_EVENT_KIND = "daily_event";
+const DAILY_ARCHIVE_HISTORY_DAYS = 30;
+const DAILY_PENDING_PREVIEW_KEY = "bitdesk.yuqing.daily_event.pending.preview";
+const DAILY_PENDING_PREVIEW_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+const DAILY_ARCHIVE_FILTERS = [
+  { key: "all", label: "全部" },
+  { key: "recent30", label: "近30天", days: 30 },
+  { key: "recent7", label: "近七天", days: 7 },
+];
 let __yuqingDailyLoadAbort = null;
 let __yuqingDailyScanAbort = null;
 let __dailyScanPromise = null;
@@ -20,7 +28,7 @@ const dailyEventState = {
   status: "正在加载云端日报…",
   source: "loading",
   loading: false,
-  /** 报告库抽屉筛选：all | scheduled | manual | costed | free */
+  /** 报告库抽屉筛选：all | recent30 | recent7 */
   archiveFilter: "all",
   scanStartedAt: 0,
   scanStage: "",
@@ -131,6 +139,116 @@ function dailyActiveReport() {
   return dailyEventState.streamPreviewRow || dailyEventState.report;
 }
 
+function dailyReportTimeMs(row) {
+  const t = row && row.generatedAt ? Date.parse(row.generatedAt) : 0;
+  return Number.isFinite(t) && t > 0 ? t : 0;
+}
+
+function dailyReportIsReady(row) {
+  return String(row && row.status ? row.status : "ready") === "ready";
+}
+
+function dailyCloudReportShouldReplacePending(report, pending) {
+  if (!pending) return true;
+  if (!report) return false;
+  const reportTime = dailyReportTimeMs(report);
+  const pendingTime = dailyReportTimeMs(pending);
+  if (dailyReportIsReady(report) && (report.id === pending.id || reportTime >= pendingTime)) return true;
+  return reportTime > pendingTime + 1000;
+}
+
+function dailyCompactStreamModules(modules) {
+  const out = {};
+  Object.entries(modules || {}).forEach(([key, entry]) => {
+    if (!entry || typeof entry !== "object") return;
+    const text = String(entry.text || "");
+    out[key] = {
+      ...entry,
+      text: text.length > 4000 ? text.slice(-4000) : text,
+    };
+  });
+  return out;
+}
+
+function dailyReadPendingPreview() {
+  try {
+    const raw = localStorage.getItem(DAILY_PENDING_PREVIEW_KEY);
+    if (!raw) return null;
+    const box = JSON.parse(raw);
+    const row = box && box.row && typeof box.row === "object" ? box.row : null;
+    const savedAt = Number(box && box.savedAt) || 0;
+    const rowTime = dailyReportTimeMs(row);
+    const ageBase = Math.max(savedAt, rowTime);
+    if (!row || row.kind !== DAILY_EVENT_KIND || dailyReportIsReady(row) || !ageBase || Date.now() - ageBase > DAILY_PENDING_PREVIEW_MAX_AGE_MS) {
+      localStorage.removeItem(DAILY_PENDING_PREVIEW_KEY);
+      return null;
+    }
+    return box;
+  } catch (_) {
+    try {
+      localStorage.removeItem(DAILY_PENDING_PREVIEW_KEY);
+    } catch (__) {}
+    return null;
+  }
+}
+
+function dailyWritePendingPreview() {
+  const row = dailyEventState.streamPreviewRow;
+  if (!row || dailyReportIsReady(row)) return;
+  try {
+    localStorage.setItem(
+      DAILY_PENDING_PREVIEW_KEY,
+      JSON.stringify({
+        savedAt: Date.now(),
+        row,
+        status: dailyEventState.status || "",
+        scanStage: dailyEventState.scanStage || "",
+        scanProgress: dailyEventState.scanProgress || {},
+        streamModules: dailyCompactStreamModules(dailyEventState.streamModules),
+      }),
+    );
+  } catch (_) {}
+}
+
+function dailyClearPendingPreview() {
+  try {
+    localStorage.removeItem(DAILY_PENDING_PREVIEW_KEY);
+  } catch (_) {}
+}
+
+function dailyRestorePendingPreview() {
+  const box = dailyReadPendingPreview();
+  if (!box) return false;
+  dailyEventState.streamPreviewRow = box.row;
+  dailyEventState.report = box.row;
+  dailyEventState.streamModules = box.streamModules || {};
+  dailyEventState.scanProgress = box.scanProgress || {};
+  dailyEventState.scanStage = box.scanStage || "刷新前的实时扫描";
+  dailyEventState.status = box.status || "已恢复刷新前的事件日报生成预览，正在核对 D1 是否已有完整报告。";
+  dailyEventState.source = "cloud";
+  return true;
+}
+
+function dailyRenderSoon() {
+  setTimeout(() => {
+    renderYuqingDailyIntoDom({ skipViewTransition: true });
+    renderYuqingDailyDrawersIntoDom();
+  }, 0);
+}
+
+function dailyForceRenderReport(row) {
+  const root = document.getElementById("daily-report-content");
+  if (!root) return;
+  root.innerHTML = `
+    <div id="daily-report-header">${renderDailyReportHeader(row)}</div>
+    <div id="daily-report-grid">${renderDailyReportGrid(row)}</div>
+  `;
+  const active = row || dailyActiveReport();
+  __lastDailyRenderedId = active && (active.id || active.previewId) ? String(active.id || active.previewId) : "";
+  __lastDailyRenderedLoading = !!dailyEventState.loading;
+  bindYuqingDailyEvents();
+}
+
 function dailyClearScheduledStreamRender() {
   if (__dailyStreamRenderTimer) {
     clearTimeout(__dailyStreamRenderTimer);
@@ -153,6 +271,7 @@ function dailyScheduleStreamRender() {
     __dailyStreamRenderTimer = null;
     __dailyStreamRenderRaf = requestAnimationFrame(() => {
       __dailyStreamRenderRaf = null;
+      dailyWritePendingPreview();
       renderYuqingDailyIntoDom({ skipViewTransition: true });
     });
   }, 90);
@@ -244,6 +363,7 @@ function mergeDailyStreamEvent(evt) {
     rep.trendRead = evt.trendRead;
   }
   dailyMarkScanProgress(evt.module, "done");
+  dailyWritePendingPreview();
 }
 
 function dailyStreamModuleLabel(module, streamKey = "") {
@@ -359,6 +479,7 @@ function mergeDailyStreamChunk(evt) {
     updatedAt: Date.now(),
   };
   dailyMarkScanProgress(module, "active");
+  dailyWritePendingPreview();
 }
 
 function dailyStreamEntriesForModule(module) {
@@ -1006,6 +1127,14 @@ function dailyArchiveFilteredHistory() {
   const raw = dailyEventState.history.length ? dailyEventState.history : [];
   const mode = dailyEventState.archiveFilter || "all";
   if (mode === "all") return raw;
+  const filter = DAILY_ARCHIVE_FILTERS.find((x) => x.key === mode);
+  if (filter && filter.days) {
+    const cutoff = Date.now() - filter.days * 86400000;
+    return raw.filter((item) => {
+      const ts = Date.parse(item.generatedAt || item.reportDate || "");
+      return Number.isFinite(ts) && ts >= cutoff;
+    });
+  }
   return raw.filter((item) => {
     const t = String(item.triggerType || "").toLowerCase();
     if (mode === "manual") return t === "manual";
@@ -1075,7 +1204,7 @@ function renderDailyArchiveCostSummary() {
   return `
     <div class="daily-archive-cost-summary">
       <div>
-        <span>7日搜索费</span>
+        <span>${DAILY_ARCHIVE_HISTORY_DAYS}日搜索费</span>
         <strong>${dailyFormatCostCny(searchTotal)}</strong>
       </div>
       <div>
@@ -1096,7 +1225,7 @@ function renderDailyArchiveCostSummary() {
 function renderDailyArchiveList() {
   const items = dailyArchiveFilteredHistory();
   if (!items.length) {
-    return `<p class="daily-archive-empty muted-text">该分类下暂无记录，可切换到「全部」或改天再试。</p>`;
+    return `<p class="daily-archive-empty muted-text">该时间范围下暂无记录，可切换到「全部」或改天再试。</p>`;
   }
   let lastDate = "";
   const curId = dailyCurrentReportId();
@@ -1128,7 +1257,7 @@ function renderDailyArchiveFilters() {
   const cur = dailyEventState.archiveFilter || "all";
   const mk = (key, label) =>
     `<button type="button" class="daily-archive-filter ${cur === key ? "active" : ""}" data-archive-filter="${dailyEscapeHtml(key)}" role="tab" aria-selected="${cur === key ? "true" : "false"}">${dailyEscapeHtml(label)}</button>`;
-  return `<div class="daily-archive-filters" role="tablist">${mk("all", "全部")}${mk("scheduled", "定点班次")}${mk("manual", "实时扫描")}${mk("costed", "有搜索费")}${mk("free", "无/未记录")}</div>`;
+  return `<div class="daily-archive-filters" role="tablist">${DAILY_ARCHIVE_FILTERS.map((item) => mk(item.key, item.label)).join("")}</div>`;
 }
 
 function renderDailyArchiveChrome() {
@@ -1519,7 +1648,7 @@ function renderYuqingDailyDrawersIntoDom() {
 async function loadDailyHistory() {
   if (typeof DataEngine === "undefined" || typeof DataEngine.fetchYuqingReportHistory !== "function") return;
   try {
-    const data = await DataEngine.fetchYuqingReportHistory(DAILY_EVENT_KIND, 7, { signal: __yuqingDailyLoadAbort?.signal });
+    const data = await DataEngine.fetchYuqingReportHistory(DAILY_EVENT_KIND, DAILY_ARCHIVE_HISTORY_DAYS, { signal: __yuqingDailyLoadAbort?.signal });
     if (data && Array.isArray(data.items)) dailyEventState.history = data.items;
   } catch (_) {}
 }
@@ -1570,23 +1699,40 @@ async function loadDailyReport(reportId = "", options = {}) {
     renderYuqingDailyIntoDom();
     return;
   }
-  dailyEventState.streamPreviewRow = null;
-  dailyResetStreamBuffers();
+  const preservePending = !reportId && options && options.preservePending === true && dailyEventState.streamPreviewRow;
+  const pendingBefore = preservePending ? dailyEventState.streamPreviewRow : null;
+  if (!preservePending) {
+    dailyEventState.streamPreviewRow = null;
+    dailyResetStreamBuffers();
+  }
   if (__yuqingDailyLoadAbort) __yuqingDailyLoadAbort.abort();
   __yuqingDailyLoadAbort = new AbortController();
   const loadSignal = __yuqingDailyLoadAbort.signal;
   dailyEventState.source = "loading";
-  dailyEventState.status = "正在读取云端 D1 报告...";
+  dailyEventState.status = preservePending ? "正在核对 D1 是否已有完整事件日报..." : "正在读取云端 D1 报告...";
   renderYuqingDailyIntoDom();
   try {
     const data = reportId
       ? await DataEngine.fetchYuqingReportItem(reportId, { signal: loadSignal })
       : await DataEngine.fetchYuqingReportLatest(DAILY_EVENT_KIND, { signal: loadSignal });
     const report = data && data.report;
-    if (report) {
+    if (report && dailyCloudReportShouldReplacePending(report, pendingBefore)) {
       dailyEventState.report = report;
+      dailyEventState.streamPreviewRow = null;
       dailyEventState.source = "cloud";
       dailyEventState.status = "云端 D1 报告已加载";
+      if (dailyReportIsReady(report)) dailyClearPendingPreview();
+    } else if (pendingBefore) {
+      dailyEventState.streamPreviewRow = pendingBefore;
+      dailyEventState.report = pendingBefore;
+      dailyEventState.source = "cloud";
+      dailyEventState.status = report
+        ? "D1 最新记录仍是同一轮未完成扫描，保留刷新前的本地预览。"
+        : "D1 暂无新事件日报，保留刷新前的本地预览。";
+      dailyWritePendingPreview();
+      dailyForceRenderReport(pendingBefore);
+      renderYuqingDailyIntoDom({ skipViewTransition: true });
+      dailyRenderSoon();
     } else {
       dailyEventState.report = null;
       dailyEventState.source = "error";
@@ -1594,9 +1740,20 @@ async function loadDailyReport(reportId = "", options = {}) {
     }
   } catch (e) {
     if (loadSignal.aborted) return;
-    dailyEventState.report = null;
-    dailyEventState.source = "error";
-    dailyEventState.status = e && e.message ? e.message : String(e);
+    if (pendingBefore) {
+      dailyEventState.streamPreviewRow = pendingBefore;
+      dailyEventState.report = pendingBefore;
+      dailyEventState.source = "cloud";
+      dailyEventState.status = "D1 核对失败，已保留刷新前的本地预览。";
+      dailyWritePendingPreview();
+      dailyForceRenderReport(pendingBefore);
+      renderYuqingDailyIntoDom({ skipViewTransition: true });
+      dailyRenderSoon();
+    } else {
+      dailyEventState.report = null;
+      dailyEventState.source = "error";
+      dailyEventState.status = e && e.message ? e.message : String(e);
+    }
   }
   await loadDailyHistory();
   renderYuqingDailyIntoDom();
@@ -1632,6 +1789,7 @@ async function generateDailyReport() {
     ? "正在连接流式通道：切换到其他页面不会中断，本页回来后会继续显示进度。"
     : "正在触发单次全流程日报：切换到其他页面不会中断，完成后会自动回填本页。";
   renderYuqingDailyIntoDom({ skipViewTransition: true });
+  dailyWritePendingPreview();
   __dailyScanTick = setInterval(() => {
     if (!dailyEventState.loading) return;
     const sec = Math.floor((Date.now() - tScanStart) / 1000);
@@ -1663,12 +1821,16 @@ async function generateDailyReport() {
     let data = null;
     if (canStream) {
       data = await DataEngine.streamYuqingDailyEventReport(payload, {
-        timeoutMs: 480_000,
+        timeoutMs: 900_000,
         signal: scanSignal,
         onEvent: async (evt) => {
           if (evt.type === "start") {
+            if (evt.report && typeof evt.report === "object") {
+              dailyEventState.streamPreviewRow = evt.report;
+            }
             dailyEventState.scanStage = "流式通道已建立";
             dailyEventState.status = "流式通道已建立，等待各模块…";
+            dailyWritePendingPreview();
             renderYuqingDailyIntoDom({ skipViewTransition: true });
             return;
           }
@@ -1677,6 +1839,7 @@ async function generateDailyReport() {
             dailyEventState.scanStage = "模块正在输出";
             dailyEventState.source = "cloud";
             dailyEventState.status = `正在输出：${dailyStreamModuleLabel(evt.module, evt.streamKey)}`;
+            dailyWritePendingPreview();
             dailyScheduleStreamRender();
             return;
           }
@@ -1685,6 +1848,7 @@ async function generateDailyReport() {
             dailyEventState.scanStage = "模块结果已更新";
             dailyEventState.source = "cloud";
             dailyEventState.status = `已更新：${evt.module || "模块"}`;
+            dailyWritePendingPreview();
             renderYuqingDailyIntoDom({ skipViewTransition: true });
           }
         },
@@ -1694,6 +1858,7 @@ async function generateDailyReport() {
     }
     dailyEventState.streamPreviewRow = null;
     if (data && data.report) {
+      dailyClearPendingPreview();
       Object.keys(dailyEventState.scanProgress || {}).forEach((key) => {
         if (dailyEventState.scanProgress[key] !== "skip") dailyEventState.scanProgress[key] = "done";
       });
@@ -1709,21 +1874,29 @@ async function generateDailyReport() {
         } catch (_) {}
       }
       await loadDailyHistory();
-      dailyEventState.archiveFilter = "manual";
+      dailyEventState.archiveFilter = "recent7";
     }
   } catch (e) {
     const msg = e && e.message ? e.message : String(e);
-    dailyEventState.streamPreviewRow = null;
     const maybeTimeout = /超时|AbortError|aborted|network/i.test(msg);
+    if (!maybeTimeout) {
+      dailyEventState.streamPreviewRow = null;
+      dailyClearPendingPreview();
+    }
     if (maybeTimeout) {
       dailyEventState.scanStage = "正在回读 D1";
       dailyEventState.status = "请求中断或超时，正在尝试从 D1 读取最新一条事件日报…";
       dailyEventState.source = "loading";
       renderYuqingDailyIntoDom({ skipViewTransition: true });
       try {
-        await loadDailyReport("", { force: true });
+        await loadDailyReport("", { force: true, preservePending: true });
         const row = dailyEventState.report;
-        if (row && row.id && row.id !== reportIdBefore && row.report) {
+        const pendingRow = dailyEventState.streamPreviewRow;
+        if (pendingRow && !dailyReportIsReady(pendingRow)) {
+          dailyEventState.source = "cloud";
+          dailyEventState.status =
+            "浏览器等待已结束，D1 暂未返回完整新日报：已保留本轮实时扫描预览。完整报告生成后会以同一条记录覆盖。";
+        } else if (row && row.id && row.id !== reportIdBefore && row.report) {
           dailyEventState.source = "cloud";
           dailyEventState.status =
             "浏览器等待已结束，但云端可能已生成新报告：已从 D1 拉回最新一条。若内容不完整或仍是旧版，请稍后再点「实时扫描」。";
@@ -1973,11 +2146,20 @@ function initYuqingEvents() {
     });
   }
 
+  const hashId = dailyHashReportId();
+  const restoredPending = !dailyEventState.loading && !hashId ? dailyRestorePendingPreview() : false;
+  if (restoredPending) {
+    dailyForceRenderReport(dailyEventState.streamPreviewRow);
+    renderYuqingDailyIntoDom({ skipViewTransition: true });
+    renderYuqingDailyDrawersIntoDom();
+    dailyRenderSoon();
+  }
+
   if (dailyEventState.loading) {
     renderYuqingDailyIntoDom({ skipViewTransition: true });
     renderYuqingDailyDrawersIntoDom();
   } else {
-    loadDailyReport(dailyHashReportId());
+    loadDailyReport(hashId, { preservePending: restoredPending || (!hashId && !!dailyEventState.streamPreviewRow) });
   }
 }
 

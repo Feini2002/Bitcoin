@@ -61,7 +61,7 @@ import {
 } from "./shijian/index.js";
 import { accessCorsHeaders, accessServiceHeaders, requireCloudflareAccess } from "../access-auth.js";
 
-const WORKER_BUILD = "yuqing-worker/1.4.3-trend-search";
+const WORKER_BUILD = "yuqing-worker/1.5.2-system-llm-routes";
 
 /** 开发期省 token：`true` 时跳过本 Worker 「Cron→createYuqingReport」链路（事件日报 / 舆情二次研判均含 LLM）；手动 `POST …/reports/generate` 等仍可用；事实池 `POST …/ingest` 不含 LLM 不受影响。BTC K 线在 `binance-klines-worker`，与此开关无关。定型后改为 `false` 一行即恢复定点。 */
 const YUQING_SKIP_SCHEDULED_LLM_REPORTS = true;
@@ -76,7 +76,7 @@ const FETCH_TIMEOUT_SOURCES_MS = 12_000;
 const FETCH_TIMEOUT_LLM_MS = 240_000;
 
 /** 舆情链路 Gemini 默认模型；可通过 Worker 环境变量 YUQING_LLM_MODEL_FLASH / _PRO / _TRENDS / _FAST_PROSE 单独覆盖 */
-const YUQING_GEMINI_MODEL_DEFAULT = "gemini-3.1-flash-lite-preview";
+const YUQING_GEMINI_MODEL_DEFAULT = "gemini-3.1-flash-lite";
 const REPORT_RETENTION_DAYS = 7;
 const DAILY_EVENT_KIND = "daily_event";
 const SENTIMENT_ANALYSIS_KIND = "sentiment_analysis";
@@ -84,6 +84,216 @@ const DAILY_EVENT_SLOTS_BJT = new Set(["00:00", "08:00", "12:00", "20:00"]);
 const SENTIMENT_ANALYSIS_SLOTS_BJT = new Set(["09:00", "14:00", "22:00"]);
 const DEFAULT_MARKET_API_BASE = "https://btc.feiniwork.com";
 const YUQING_MODEL_SETTING_KEY = "model_channels";
+const YUQING_EXECUTION_SETTING_KEY = "execution_channels";
+const EXECUTION_CHANNEL_GEMINI = "gemini_worker";
+const EXECUTION_CHANNEL_CODEX = "codex_cli";
+const CODEX_TASK_LEASE_MS = 15 * 60 * 1000;
+const CODEX_TASK_STREAM_TIMEOUT_MS = 9 * 60 * 1000;
+const YUQING_EXECUTION_CHANNELS = [
+  {
+    id: EXECUTION_CHANNEL_GEMINI,
+    label: "Gemini Worker",
+    hint: "保持线上 Worker 调用 Gemini、写入 D1 的正式链路。",
+  },
+  {
+    id: EXECUTION_CHANNEL_CODEX,
+    label: "Codex CLI 隧道",
+    hint: "开发期通过云端任务队列交给本机 Codex CLI，再由 Worker 写回同一张 D1 报告表。",
+  },
+];
+const YUQING_EXECUTION_TARGETS = [
+  {
+    id: DAILY_EVENT_KIND,
+    group: "舆情与事件",
+    page: "事件一览",
+    module: "实时扫描",
+    kind: DAILY_EVENT_KIND,
+    status: "active",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "点击事件一览实时扫描时使用的执行通道。",
+  },
+  {
+    id: SENTIMENT_ANALYSIS_KIND,
+    group: "舆情与事件",
+    page: "舆情分析",
+    module: "二次分析",
+    kind: SENTIMENT_ANALYSIS_KIND,
+    status: "active",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "点击舆情分析实时生成时使用的执行通道。",
+  },
+  {
+    id: "overview.advice",
+    group: "核心",
+    page: "概览 Dashboard",
+    module: "首席综合建议",
+    kind: "dashboard_agent",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来聚合市场数据、事件日报和员工结论后给出总建议。",
+  },
+  {
+    id: "premarket.brief",
+    group: "核心",
+    page: "盘前简报",
+    module: "盘前简报",
+    kind: "briefing",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来由五位 Agent 与日历数据生成盘前 checklist。",
+  },
+  {
+    id: "boardroom.meeting",
+    group: "智囊团",
+    page: "会议室",
+    module: "会议召集与追问",
+    kind: "agent_meeting",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来协调多 Agent 发言、交叉质询和会议纪要。",
+  },
+  {
+    id: "agent.chief",
+    group: "员工 Agent",
+    page: "智囊团",
+    module: "首席策略官",
+    kind: "agent",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来读取下属结论、事件报告和资产状态形成最终指引。",
+  },
+  {
+    id: "agent.env",
+    group: "员工 Agent",
+    page: "智囊团",
+    module: "环境评估员",
+    kind: "agent",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来读取 K 线、波动率和宏观环境后形成环境判断。",
+  },
+  {
+    id: "agent.flow",
+    group: "员工 Agent",
+    page: "智囊团",
+    module: "盘口流动性官",
+    kind: "agent",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来读取足迹图、成交分布、强平雷达和流动性池。",
+  },
+  {
+    id: "agent.deriv",
+    group: "员工 Agent",
+    page: "智囊团",
+    module: "衍生品情报官",
+    kind: "agent",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来读取资金费率、OI、期权、基差和多空结构。",
+  },
+  {
+    id: "agent.risk",
+    group: "员工 Agent",
+    page: "智囊团",
+    module: "风控官",
+    kind: "agent",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来读取仓位、风险预算、清算价和异常模式。",
+  },
+  {
+    id: "agent.archive",
+    group: "智囊团",
+    page: "发言历史库",
+    module: "发言检索与准确性复盘",
+    kind: "agent_archive",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来检索员工历史发言、按结果归因和导出复盘材料。",
+  },
+  {
+    id: "strategy.templates",
+    group: "交易执行",
+    page: "策略模板库",
+    module: "策略模板助手",
+    kind: "strategy_assistant",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来按当前市场状态推荐或生成策略模板。",
+  },
+  {
+    id: "order.draft",
+    group: "交易执行",
+    page: "订单草稿台",
+    module: "订单草稿风控预检",
+    kind: "order_risk_review",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来由风控官检查方向、价格、仓位和止损参数。",
+  },
+  {
+    id: "positions.risk",
+    group: "交易执行",
+    page: "当前持仓",
+    module: "持仓风险解读",
+    kind: "position_risk_read",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来结合持仓、保证金、清算价和风险预算给出解读。",
+  },
+  {
+    id: "review.journal",
+    group: "复盘系统",
+    page: "交易日志",
+    module: "交易日志点评",
+    kind: "journal_review",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来对单笔交易情绪、策略执行和结果做文字点评。",
+  },
+  {
+    id: "review.daily",
+    group: "复盘系统",
+    page: "每日复盘",
+    module: "每日复盘",
+    kind: "daily_review",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来汇总员工点评、执行偏差和明日 checklist。",
+  },
+  {
+    id: "review.performance",
+    group: "复盘系统",
+    page: "绩效统计",
+    module: "绩效归因",
+    kind: "performance_attribution",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来解释胜率、盈亏比、回撤和策略分布变化。",
+  },
+  {
+    id: "review.patterns",
+    group: "复盘系统",
+    page: "错误模式",
+    module: "错误模式归因",
+    kind: "mistake_pattern_review",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来把高频交易错误归类并生成纠偏建议。",
+  },
+  {
+    id: "playbook.assistant",
+    group: "系统",
+    page: "知识库 Playbook",
+    module: "AI 检索与纪律推荐",
+    kind: "playbook_assistant",
+    status: "reserved",
+    defaultChannel: EXECUTION_CHANNEL_GEMINI,
+    note: "预留：未来按场景检索纪律、策略卡片和学习笔记。",
+  },
+];
+const YUQING_EXECUTION_CHANNEL_IDS = new Set(YUQING_EXECUTION_CHANNELS.map((x) => x.id));
 const YUQING_MODEL_CATALOG = [
   {
     id: "gemini-3.1-pro-preview",
@@ -92,8 +302,8 @@ const YUQING_MODEL_CATALOG = [
     hint: "复杂归纳、二次研判、首席策略类任务",
   },
   {
-    id: "gemini-3.1-flash-lite-preview",
-    label: "Gemini 3.1 Flash Lite Preview",
+    id: "gemini-3.1-flash-lite",
+    label: "Gemini 3.1 Flash Lite",
     tier: "lite",
     hint: "低成本、短文本、状态与温度类任务",
   },
@@ -164,7 +374,7 @@ const YUQING_MODEL_TARGETS = [
     kind: DAILY_EVENT_KIND,
     slot: "dashboard",
     status: "active",
-    defaultModel: "gemini-3.1-flash-lite-preview",
+    defaultModel: "gemini-3.1-flash-lite",
     envSlot: "flash",
     note: "市场温度 JSON 与低延迟状态摘要。",
   },
@@ -224,7 +434,7 @@ const YUQING_MODEL_TARGETS = [
     kind: DAILY_EVENT_KIND,
     slot: "trends",
     status: "active",
-    defaultModel: "gemini-3.1-flash-lite-preview",
+    defaultModel: "gemini-3.1-flash-lite",
     envSlot: "trends",
     note: "基于本轮模块输出的二次叠加，不默认联网。",
   },
@@ -236,7 +446,7 @@ const YUQING_MODEL_TARGETS = [
     kind: SENTIMENT_ANALYSIS_KIND,
     slot: "dashboard",
     status: "active",
-    defaultModel: "gemini-3.1-flash-lite-preview",
+    defaultModel: "gemini-3.1-flash-lite",
     envSlot: "flash",
     note: "二次分析页的市场温度与状态底座。",
   },
@@ -335,6 +545,150 @@ const YUQING_MODEL_TARGETS = [
     defaultModel: "gemini-3-flash-preview",
     envSlot: "prose",
     note: "预留：未来读取仓位、风险预算与异常模式。",
+  },
+  {
+    id: "overview.advice",
+    group: "核心",
+    page: "概览 Dashboard",
+    module: "首席综合建议",
+    kind: "dashboard_agent",
+    slot: "advice",
+    status: "reserved",
+    defaultModel: "gemini-3.1-pro-preview",
+    envSlot: "prose",
+    note: "预留：未来聚合全局市场、舆情与员工结论。",
+  },
+  {
+    id: "premarket.brief",
+    group: "核心",
+    page: "盘前简报",
+    module: "盘前简报",
+    kind: "briefing",
+    slot: "brief",
+    status: "reserved",
+    defaultModel: "gemini-3.1-pro-preview",
+    envSlot: "prose",
+    note: "预留：未来生成开盘前 checklist 与交易倾向。",
+  },
+  {
+    id: "boardroom.meeting",
+    group: "智囊团",
+    page: "会议室",
+    module: "会议召集与追问",
+    kind: "agent_meeting",
+    slot: "meeting",
+    status: "reserved",
+    defaultModel: "gemini-3.1-pro-preview",
+    envSlot: "prose",
+    note: "预留：未来协调多 Agent 发言与会议纪要。",
+  },
+  {
+    id: "agent.archive",
+    group: "智囊团",
+    page: "发言历史库",
+    module: "发言检索与准确性复盘",
+    kind: "agent_archive",
+    slot: "archive",
+    status: "reserved",
+    defaultModel: "gemini-3-flash-preview",
+    envSlot: "prose",
+    note: "预留：未来检索历史发言并做归因复盘。",
+  },
+  {
+    id: "strategy.templates",
+    group: "交易执行",
+    page: "策略模板库",
+    module: "策略模板助手",
+    kind: "strategy_assistant",
+    slot: "templates",
+    status: "reserved",
+    defaultModel: "gemini-3.1-pro-preview",
+    envSlot: "prose",
+    note: "预留：未来按市场状态推荐或生成策略模板。",
+  },
+  {
+    id: "order.draft",
+    group: "交易执行",
+    page: "订单草稿台",
+    module: "订单草稿风控预检",
+    kind: "order_risk_review",
+    slot: "draft",
+    status: "reserved",
+    defaultModel: "gemini-3-flash-preview",
+    envSlot: "prose",
+    note: "预留：未来检查订单方向、仓位与止损参数。",
+  },
+  {
+    id: "positions.risk",
+    group: "交易执行",
+    page: "当前持仓",
+    module: "持仓风险解读",
+    kind: "position_risk_read",
+    slot: "positions",
+    status: "reserved",
+    defaultModel: "gemini-3-flash-preview",
+    envSlot: "prose",
+    note: "预留：未来解释保证金、清算价和风险占用。",
+  },
+  {
+    id: "review.journal",
+    group: "复盘系统",
+    page: "交易日志",
+    module: "交易日志点评",
+    kind: "journal_review",
+    slot: "journal",
+    status: "reserved",
+    defaultModel: "gemini-3-flash-preview",
+    envSlot: "prose",
+    note: "预留：未来点评单笔交易和情绪偏差。",
+  },
+  {
+    id: "review.daily",
+    group: "复盘系统",
+    page: "每日复盘",
+    module: "每日复盘",
+    kind: "daily_review",
+    slot: "daily",
+    status: "reserved",
+    defaultModel: "gemini-3.1-pro-preview",
+    envSlot: "prose",
+    note: "预留：未来汇总执行偏差、员工点评和明日清单。",
+  },
+  {
+    id: "review.performance",
+    group: "复盘系统",
+    page: "绩效统计",
+    module: "绩效归因",
+    kind: "performance_attribution",
+    slot: "performance",
+    status: "reserved",
+    defaultModel: "gemini-3-flash-preview",
+    envSlot: "prose",
+    note: "预留：未来解释胜率、盈亏比和回撤变化。",
+  },
+  {
+    id: "review.patterns",
+    group: "复盘系统",
+    page: "错误模式",
+    module: "错误模式归因",
+    kind: "mistake_pattern_review",
+    slot: "patterns",
+    status: "reserved",
+    defaultModel: "gemini-3.1-pro-preview",
+    envSlot: "prose",
+    note: "预留：未来归类高频错误并生成纠偏建议。",
+  },
+  {
+    id: "playbook.assistant",
+    group: "系统",
+    page: "知识库 Playbook",
+    module: "AI 检索与纪律推荐",
+    kind: "playbook_assistant",
+    slot: "assistant",
+    status: "reserved",
+    defaultModel: "gemini-3-flash-preview",
+    envSlot: "prose",
+    note: "预留：未来按场景检索纪律与策略卡片。",
   },
 ];
 const YUQING_MODEL_TARGET_MAP = Object.fromEntries(YUQING_MODEL_TARGETS.map((t) => [t.id, t]));
@@ -606,6 +960,103 @@ function yuqingModelSettingsResponse(env, envelope) {
   };
 }
 
+function normalizeYuqingExecutionAssignments(raw) {
+  const src =
+    raw && typeof raw === "object" && raw.assignments && typeof raw.assignments === "object"
+      ? raw.assignments
+      : raw && typeof raw === "object" && raw.routes && typeof raw.routes === "object"
+        ? raw.routes
+      : raw && typeof raw === "object" && raw.channels && typeof raw.channels === "object"
+        ? raw.channels
+        : raw && typeof raw === "object"
+          ? raw
+          : {};
+  const out = {};
+  for (const target of YUQING_EXECUTION_TARGETS) {
+    const channel = String(src[target.id] || "").trim();
+    if (YUQING_EXECUTION_CHANNEL_IDS.has(channel)) out[target.id] = channel;
+  }
+  return out;
+}
+
+function normalizeYuqingExecutionSettings(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  return {
+    version: 1,
+    assignments: normalizeYuqingExecutionAssignments(src),
+    updatedAt: cleanModelId(src.updatedAt || src.updated_at),
+  };
+}
+
+function effectiveYuqingExecutionAssignments(settings) {
+  const src = settings && settings.assignments ? settings.assignments : {};
+  const out = {};
+  for (const target of YUQING_EXECUTION_TARGETS) {
+    out[target.id] = YUQING_EXECUTION_CHANNEL_IDS.has(src[target.id]) ? src[target.id] : target.defaultChannel;
+  }
+  return out;
+}
+
+async function readYuqingExecutionSettingsEnvelope(env) {
+  const emptySettings = normalizeYuqingExecutionSettings(null);
+  if (!d1Bound(env)) {
+    return {
+      d1Ready: false,
+      source: "fallback",
+      settings: emptySettings,
+      effectiveAssignments: effectiveYuqingExecutionAssignments(emptySettings),
+      error: null,
+    };
+  }
+  try {
+    const raw = await getYuqingSettings(env.YUQING_DB, YUQING_EXECUTION_SETTING_KEY);
+    const settings = normalizeYuqingExecutionSettings(raw);
+    return {
+      d1Ready: true,
+      source: raw ? "d1" : "fallback",
+      settings,
+      effectiveAssignments: effectiveYuqingExecutionAssignments(settings),
+      error: null,
+    };
+  } catch (e) {
+    return {
+      d1Ready: true,
+      source: "fallback",
+      settings: emptySettings,
+      effectiveAssignments: effectiveYuqingExecutionAssignments(emptySettings),
+      error: String(e && e.message ? e.message : e),
+    };
+  }
+}
+
+function yuqingExecutionSettingsResponse(envelope) {
+  const box = envelope || {
+    d1Ready: false,
+    source: "fallback",
+    settings: normalizeYuqingExecutionSettings(null),
+    effectiveAssignments: {},
+    error: null,
+  };
+  return {
+    ok: true,
+    workerBuild: WORKER_BUILD,
+    d1Ready: box.d1Ready,
+    source: box.source,
+    channels: YUQING_EXECUTION_CHANNELS,
+    targets: YUQING_EXECUTION_TARGETS,
+    settings: box.settings,
+    effective: box.effectiveAssignments || effectiveYuqingExecutionAssignments(box.settings),
+    warning: box.error || null,
+  };
+}
+
+function executionChannelForKind(envelope, kind) {
+  const id = normalizeReportKind(kind);
+  const effective = envelope && envelope.effectiveAssignments ? envelope.effectiveAssignments : {};
+  const channel = String(effective[id] || "").trim();
+  return YUQING_EXECUTION_CHANNEL_IDS.has(channel) ? channel : EXECUTION_CHANNEL_GEMINI;
+}
+
 function reportId(kind, generatedAt) {
   const stamp = String(generatedAt || new Date().toISOString()).replace(/[^0-9TZ]/g, "").slice(0, 16);
   let suffix = "";
@@ -716,6 +1167,489 @@ function reportListSummary(row) {
     quality: row.report && row.report.quality ? row.report.quality : row.grounding && row.grounding.quality,
     costEstimate: row.costEstimate || (row.grounding && row.grounding.costEstimate) || null,
   };
+}
+
+function compactText(value, max = 900) {
+  const s = String(value == null ? "" : value).replace(/\s+/g, " ").trim();
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
+function compactFactForCodex(row) {
+  if (!row || typeof row !== "object") return null;
+  return {
+    id: row.id || "",
+    title: compactText(row.title || row.headline || row.summary || "", 220),
+    source: row.source || "",
+    category: row.category || "",
+    occurredAt: row.occurred_at || row.occurredAt || row.captured_at || row.capturedAt || "",
+    summary: compactText(row.summary || row.content || row.text || "", 700),
+    url: row.url || "",
+  };
+}
+
+function compactReportForCodex(row) {
+  if (!row || typeof row !== "object") return null;
+  const report = row.report && typeof row.report === "object" ? row.report : {};
+  return {
+    id: row.id || "",
+    kind: row.kind || "",
+    generatedAt: row.generatedAt || "",
+    reportDate: row.reportDate || "",
+    slot: row.slot || "",
+    title: compactText(report.title || report.headline || "", 160),
+    quality: report.quality || row.quality || {},
+    report,
+    grounding: row.grounding || {},
+    marketSnapshot: row.marketSnapshot || {},
+  };
+}
+
+function codexBridgeToken(env) {
+  return String((env && (env.CODEX_BRIDGE_TOKEN || env.YUQING_CODEX_BRIDGE_TOKEN)) || "").trim();
+}
+
+function requestBearerToken(request) {
+  const auth = String(request.headers.get("Authorization") || "").trim();
+  if (/^Bearer\s+/i.test(auth)) return auth.replace(/^Bearer\s+/i, "").trim();
+  return String(request.headers.get("X-Yuqing-Codex-Bridge-Token") || "").trim();
+}
+
+function timingSafeTokenEqual(a, b) {
+  const aa = String(a || "");
+  const bb = String(b || "");
+  if (!aa || !bb || aa.length !== bb.length) return false;
+  let out = 0;
+  for (let i = 0; i < aa.length; i += 1) out |= aa.charCodeAt(i) ^ bb.charCodeAt(i);
+  return out === 0;
+}
+
+function validCodexBridgeRequest(request, env) {
+  const expected = codexBridgeToken(env);
+  if (!expected) return false;
+  return timingSafeTokenEqual(requestBearerToken(request), expected);
+}
+
+function codexBridgeReportCostEstimate(payload) {
+  const direct =
+    (payload && payload.costEstimate && typeof payload.costEstimate === "object" ? payload.costEstimate : null) ||
+    (payload && payload.grounding && payload.grounding.costEstimate && typeof payload.grounding.costEstimate === "object"
+      ? payload.grounding.costEstimate
+      : null);
+  if (direct) return direct;
+  return {
+    currency: "CNY",
+    searchQueries: 0,
+    searchCostCny: 0,
+    totalCostCny: 0,
+    note: "Codex CLI 隧道生成；本次不消耗 Worker Gemini API 额度。",
+  };
+}
+
+function normalizeCodexBridgeReport(task, payload) {
+  const body = payload && typeof payload === "object" ? payload : {};
+  const kind = normalizeReportKind(body.kind || task.kind);
+  const generatedAt = String(body.generatedAt || new Date().toISOString());
+  const report = body.report && typeof body.report === "object" ? body.report : {};
+  const grounding = body.grounding && typeof body.grounding === "object" ? body.grounding : {};
+  const marketSnapshot =
+    body.marketSnapshot && typeof body.marketSnapshot === "object"
+      ? body.marketSnapshot
+      : task.context && task.context.marketSnapshot && typeof task.context.marketSnapshot === "object"
+        ? task.context.marketSnapshot
+        : {};
+  const payloadSourceRefs = Array.isArray(body.sourceRefs) ? body.sourceRefs : [];
+  const taskSourceRefs = Array.isArray(task.sourceRefs) ? task.sourceRefs : [];
+  return {
+    id: String(task.reportId || body.id || reportId(kind, generatedAt)),
+    kind,
+    reportDate: String(body.reportDate || task.reportDate || bjtDateKey(generatedAt)),
+    slot: String(body.slot || task.slot || bjtSlotLabel(kind, generatedAt)),
+    triggerType: normalizeTriggerType(body.triggerType || task.triggerType),
+    generatedAt,
+    status: body.status === "error" ? "error" : "ready",
+    sourceRefs: [
+      { type: "generator", label: "Codex CLI 隧道", source: "codex_cli_bridge" },
+      ...taskSourceRefs,
+      ...payloadSourceRefs,
+    ].slice(0, 48),
+    grounding: {
+      ...grounding,
+      generator: "codex_cli_bridge",
+      executionChannel: EXECUTION_CHANNEL_CODEX,
+      taskId: task.id,
+      promptVersion: grounding.promptVersion || "codex-cli-bridge-v1",
+      costEstimate: codexBridgeReportCostEstimate(body),
+    },
+    marketSnapshot,
+    report: {
+      title: report.title || (kind === DAILY_EVENT_KIND ? "事件日报" : "BTC 核心跨资产情报日报"),
+      ...report,
+      quality: report.quality || grounding.quality || {},
+    },
+    sourceErrors: Array.isArray(body.sourceErrors) ? body.sourceErrors : [],
+  };
+}
+
+function decodeCodexTaskRow(row) {
+  if (!row) return null;
+  const payload = safeJsonParse(row.payload_json || row.payloadJson, {});
+  const result = safeJsonParse(row.result_json || row.resultJson, {});
+  const context = payload && payload.context && typeof payload.context === "object" ? payload.context : {};
+  return {
+    id: String(row.id || ""),
+    kind: normalizeReportKind(row.kind),
+    reportId: String(row.report_id || row.reportId || ""),
+    reportDate: String(row.report_date || row.reportDate || ""),
+    slot: String(row.slot || ""),
+    triggerType: String(row.trigger_type || row.triggerType || "manual"),
+    status: String(row.status || "queued"),
+    createdAt: String(row.created_at || row.createdAt || ""),
+    updatedAt: String(row.updated_at || row.updatedAt || ""),
+    claimedAt: String(row.claimed_at || row.claimedAt || ""),
+    completedAt: String(row.completed_at || row.completedAt || ""),
+    leaseOwner: String(row.lease_owner || row.leaseOwner || ""),
+    leaseUntil: String(row.lease_until || row.leaseUntil || ""),
+    error: String(row.error || ""),
+    payload,
+    result,
+    context,
+    requirements: Array.isArray(payload.requirements) ? payload.requirements : [],
+    sourceRefs: Array.isArray(payload.sourceRefs) ? payload.sourceRefs : [],
+  };
+}
+
+function codexTaskSummary(task) {
+  if (!task) return null;
+  return {
+    id: task.id,
+    kind: task.kind,
+    reportId: task.reportId,
+    reportDate: task.reportDate,
+    slot: task.slot,
+    triggerType: task.triggerType,
+    status: task.status,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    claimedAt: task.claimedAt,
+    completedAt: task.completedAt,
+    leaseUntil: task.leaseUntil,
+    error: task.error || "",
+    resultReportId: task.result && task.result.reportId ? task.result.reportId : "",
+  };
+}
+
+async function loadCodexTaskById(db, id) {
+  const row = await db.prepare(`SELECT * FROM yuqing_codex_tasks WHERE id = ? LIMIT 1`).bind(String(id || "")).first();
+  return decodeCodexTaskRow(row);
+}
+
+async function createCodexBridgeTask(env, kindIn, bodyIn = {}, opts = {}) {
+  if (!d1Bound(env)) throw new Error("D1 未绑定");
+  const kind = normalizeReportKind(kindIn);
+  const generatedAt = new Date(opts.generatedAt || Date.now()).toISOString();
+  const slot = opts.slot || bjtSlotLabel(kind, generatedAt);
+  const triggerType = normalizeTriggerType(opts.triggerType || "manual");
+  const taskId = `codex:${reportId(kind, generatedAt)}`;
+  const taskReportId = opts.reportId || reportId(kind, generatedAt);
+  const sourceErrors = [];
+  let factRows = [];
+  let aiFacts = [];
+  try {
+    const bundle = await loadFactsBundle(env, kind === DAILY_EVENT_KIND ? 90 : 100);
+    factRows = bundle.factRows || [];
+    aiFacts = bundle.aiFacts || [];
+  } catch (e) {
+    sourceErrors.push({ source: "facts_bundle", message: String(e && e.message ? e.message : e) });
+  }
+  let marketSnapshot = {};
+  let dailyReport = null;
+  let analysisSettings = null;
+  if (kind === DAILY_EVENT_KIND) {
+    try {
+      const agg = await aggregateSources(env);
+      marketSnapshot = { sources: agg.sources, realMarketData: agg.realMarketData };
+    } catch (e) {
+      sourceErrors.push({ source: "market_sources", message: String(e && e.message ? e.message : e) });
+    }
+  } else {
+    try {
+      dailyReport = compactReportForCodex(await loadLatestYuqingReport(env.YUQING_DB, DAILY_EVENT_KIND));
+    } catch (e) {
+      sourceErrors.push({ source: "daily_event", message: String(e && e.message ? e.message : e) });
+    }
+    try {
+      marketSnapshot = await fetchMarketContext(env);
+    } catch (e) {
+      sourceErrors.push({ source: "market_context", message: String(e && e.message ? e.message : e) });
+    }
+    try {
+      const settingsEnvelope = await readFenxiDashboardSettings(env, bodyIn && (bodyIn.analysisSettings || bodyIn.settings));
+      analysisSettings = settingsEnvelope.settings;
+      if (settingsEnvelope.error) sourceErrors.push({ source: "fenxi_settings", message: settingsEnvelope.error });
+    } catch (e) {
+      sourceErrors.push({ source: "fenxi_settings", message: String(e && e.message ? e.message : e) });
+    }
+  }
+  const facts = factRows.map(compactFactForCodex).filter(Boolean).slice(0, 80);
+  const sourceRefs =
+    kind === DAILY_EVENT_KIND
+      ? sourceRefsFromFacts(factRows, 16)
+      : [
+          dailyReport
+            ? { type: "daily_event", id: dailyReport.id, label: "上游事件日报", href: `#/news?reportId=${encodeURIComponent(dailyReport.id)}` }
+            : { type: "daily_event", label: "上游事件日报缺失", href: "#/news" },
+          ...sourceRefsFromFacts(factRows, 12),
+        ];
+  const promptFiles =
+    kind === DAILY_EVENT_KIND
+      ? [
+          "cloudflare/yuqing/shijian/index.js",
+          "cloudflare/yuqing/shijian/temperature.js",
+          "cloudflare/yuqing/shijian/top-stories.js",
+          "cloudflare/yuqing/shijian/dynamic-briefs.js",
+          "cloudflare/yuqing/shijian/ai-intel.js",
+          "cloudflare/yuqing/shijian/github-tools.js",
+          "cloudflare/yuqing/shijian/trend-clues.js",
+        ]
+      : [
+          "cloudflare/yuqing/fenxi/index.js",
+          "cloudflare/yuqing/fenxi/market-state.js",
+          "cloudflare/yuqing/fenxi/risk-radar.js",
+          "cloudflare/yuqing/fenxi/trend-read.js",
+        ];
+  const context = {
+    workerBuild: WORKER_BUILD,
+    executionChannel: EXECUTION_CHANNEL_CODEX,
+    generatedAt,
+    reportDate: bjtDateKey(generatedAt),
+    slot,
+    triggerType,
+    request: {
+      mode: bodyIn && bodyIn.mode ? bodyIn.mode : "deep",
+      forceSearch: !!(bodyIn && bodyIn.forceSearch),
+      trendsUseSearch: !!(bodyIn && bodyIn.trendsUseSearch),
+      dualHeadlineLanes: !!(bodyIn && bodyIn.dualHeadlineLanes),
+      modules: bodyIn && bodyIn.modules && typeof bodyIn.modules === "object" ? bodyIn.modules : {},
+    },
+    promptFiles,
+    marketApiBase: DEFAULT_MARKET_API_BASE,
+    facts,
+    aiFacts: aiFacts.map(compactFactForCodex).filter(Boolean).slice(0, 30),
+    marketSnapshot,
+    dailyReport,
+    analysisSettings,
+    sourceErrors,
+  };
+  const requirements = [
+    "只返回一个 JSON 对象，不要 Markdown，不要解释，不要直接写 D1。",
+    "不要执行部署、删除、git reset、schema 变更，也不要运行网页下发的任意 shell。",
+    "先读取 context.promptFiles 中的本仓库 prompt/schema，按现有 Worker report_json 结构生成。",
+    "顶层必须包含 kind、status、generatedAt、reportDate、slot、report、grounding、sourceRefs、marketSnapshot、costEstimate、sourceErrors。",
+    "grounding.generator 必须是 codex_cli_bridge，并标记 taskId 与 promptVersion。",
+    kind === DAILY_EVENT_KIND
+      ? "daily_event.report 必须覆盖 marketTemperature、macroTrend、topStories、dynamicBriefs、aiIntel、githubTools、trendRead、sources、quality。"
+      : "sentiment_analysis.report 必须覆盖 upstreamDaily、marketState、riskRadar、opportunityScanner、eventCalendar、aiIntel、trendRead、incrementalSearch、settingsSnapshot、quality。",
+  ];
+  const payload = {
+    context,
+    sourceRefs,
+    requirements,
+  };
+  await env.YUQING_DB.prepare(
+    `INSERT INTO yuqing_codex_tasks
+     (id, kind, report_id, report_date, slot, trigger_type, status, payload_json, result_json, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+  )
+    .bind(taskId, kind, taskReportId, bjtDateKey(generatedAt), slot, triggerType, safeJsonStringify(payload, {}))
+    .run();
+  return loadCodexTaskById(env.YUQING_DB, taskId);
+}
+
+async function claimNextCodexBridgeTask(env, owner = "") {
+  if (!d1Bound(env)) throw new Error("D1 未绑定");
+  const now = new Date().toISOString();
+  const row = await env.YUQING_DB.prepare(
+    `SELECT * FROM yuqing_codex_tasks
+     WHERE status = 'queued' OR (status = 'running' AND (lease_until IS NULL OR lease_until < ?))
+     ORDER BY created_at ASC LIMIT 1`,
+  )
+    .bind(now)
+    .first();
+  if (!row) return null;
+  const leaseUntil = new Date(Date.now() + CODEX_TASK_LEASE_MS).toISOString();
+  const leaseOwner = compactText(owner || "codex-cli-bridge", 160);
+  const res = await env.YUQING_DB.prepare(
+    `UPDATE yuqing_codex_tasks
+     SET status = 'running', lease_owner = ?, lease_until = ?, claimed_at = COALESCE(claimed_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP
+     WHERE id = ? AND (status = 'queued' OR (status = 'running' AND (lease_until IS NULL OR lease_until < ?)))`,
+  )
+    .bind(leaseOwner, leaseUntil, row.id, now)
+    .run();
+  if (!res || !res.meta || Number(res.meta.changes || 0) <= 0) return null;
+  return loadCodexTaskById(env.YUQING_DB, row.id);
+}
+
+async function completeCodexBridgeTask(env, bodyIn) {
+  if (!d1Bound(env)) throw new Error("D1 未绑定");
+  const taskId = String((bodyIn && (bodyIn.taskId || bodyIn.id)) || "").trim();
+  if (!taskId) throw new Error("缺少 taskId");
+  const task = await loadCodexTaskById(env.YUQING_DB, taskId);
+  if (!task) throw new Error("Codex 任务不存在");
+  if (bodyIn && bodyIn.status === "error") {
+    const err = compactText((bodyIn.sourceErrors && bodyIn.sourceErrors[0] && bodyIn.sourceErrors[0].message) || bodyIn.error || "Codex CLI 执行失败", 1800);
+    await env.YUQING_DB.prepare(
+      `UPDATE yuqing_codex_tasks
+       SET status = 'failed', error = ?, result_json = ?, completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+    )
+      .bind(err, safeJsonStringify(bodyIn, {}), taskId)
+      .run();
+    return { task: await loadCodexTaskById(env.YUQING_DB, taskId), report: null };
+  }
+  const report = normalizeCodexBridgeReport(task, bodyIn);
+  await insertYuqingReport(env.YUQING_DB, report);
+  await pruneYuqingReports(env.YUQING_DB, REPORT_RETENTION_DAYS).catch(() => {});
+  await pruneOldItems(env.YUQING_DB, REPORT_RETENTION_DAYS).catch(() => {});
+  const result = { reportId: report.id, status: report.status, generatedAt: report.generatedAt };
+  await env.YUQING_DB.prepare(
+    `UPDATE yuqing_codex_tasks
+     SET status = 'completed', result_json = ?, completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+  )
+    .bind(safeJsonStringify(result, {}), taskId)
+    .run();
+  return { task: await loadCodexTaskById(env.YUQING_DB, taskId), report };
+}
+
+function bridgeTaskForResponse(task) {
+  if (!task) return null;
+  return {
+    id: task.id,
+    kind: task.kind,
+    slot: task.slot,
+    reportDate: task.reportDate,
+    reportId: task.reportId,
+    triggerType: task.triggerType,
+    requestedAt: task.createdAt,
+    createdAt: task.createdAt,
+    context: task.context || {},
+    requirements: task.requirements || [],
+    sourceRefs: task.sourceRefs || [],
+  };
+}
+
+function emitDailyReportPartials(row, write) {
+  if (!row || !row.report || typeof write !== "function") return;
+  const report = row.report;
+  if (report.marketTemperature) write({ type: "partial", module: "temperature", marketTemperature: report.marketTemperature });
+  if (Array.isArray(report.topStories)) write({ type: "partial", module: "topStories", topStories: report.topStories });
+  if (Array.isArray(report.dynamicBriefs)) write({ type: "partial", module: "dynamicBriefs", dynamicBriefs: report.dynamicBriefs });
+  if (Array.isArray(report.aiIntel)) write({ type: "partial", module: "aiIntel", aiIntel: report.aiIntel });
+  if (Array.isArray(report.githubTools)) write({ type: "partial", module: "githubTools", githubTools: report.githubTools });
+  if (report.trendRead) write({ type: "partial", module: "trends", trendRead: report.trendRead });
+  write({
+    type: "partial",
+    module: "digest",
+    macroTrend: report.macroTrend || "",
+    topStories: Array.isArray(report.topStories) ? report.topStories : [],
+    dynamicBriefs: Array.isArray(report.dynamicBriefs) ? report.dynamicBriefs : [],
+  });
+}
+
+function sleepMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForCodexTask(env, taskId, onStatus) {
+  const deadline = Date.now() + CODEX_TASK_STREAM_TIMEOUT_MS;
+  let lastStatus = "";
+  while (Date.now() < deadline) {
+    const task = await loadCodexTaskById(env.YUQING_DB, taskId);
+    if (!task) throw new Error("Codex 任务不存在");
+    if (task.status !== lastStatus) {
+      lastStatus = task.status;
+      if (typeof onStatus === "function") onStatus(task);
+    }
+    if (task.status === "completed") return task;
+    if (task.status === "failed") throw new Error(task.error || "Codex CLI 任务失败");
+    await sleepMs(task.status === "queued" ? 1500 : 2000);
+  }
+  throw new Error("Codex CLI 隧道等待超时，请确认本地 bridge 正在运行");
+}
+
+function codexDailyStreamResponse(env, bodyIn) {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      let closed = false;
+      let progressPayload = null;
+      const safeWrite = (obj) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+        } catch (_) {}
+      };
+      try {
+        const generatedAt = new Date().toISOString();
+        progressPayload = buildDailyEventStreamingReport(generatedAt, {
+          triggerType: "manual",
+          forceSearch: !!(bodyIn && bodyIn.forceSearch),
+        });
+        progressPayload = {
+          ...progressPayload,
+          grounding: {
+            ...(progressPayload.grounding || {}),
+            generator: "codex_cli_bridge",
+            executionChannel: EXECUTION_CHANNEL_CODEX,
+          },
+        };
+        await insertYuqingReport(env.YUQING_DB, progressPayload);
+        const task = await createCodexBridgeTask(env, DAILY_EVENT_KIND, bodyIn, {
+          generatedAt,
+          reportId: progressPayload.id,
+          triggerType: "manual",
+        });
+        safeWrite({ type: "start", workerBuild: WORKER_BUILD, d1Ready: true, executionChannel: EXECUTION_CHANNEL_CODEX, task: codexTaskSummary(task), report: progressPayload });
+        safeWrite({ type: "chunk", module: "temperature", streamKey: "codexBridge", label: "Codex CLI 隧道", seq: 1, delta: "已创建本地 Codex CLI 任务，等待 bridge 领取。\n" });
+        const doneTask = await waitForCodexTask(env, task.id, (t) => {
+          const text = t.status === "queued" ? "任务仍在云端队列中，等待本机 bridge 领取。\n" : "本机 Codex CLI 正在执行，完成后将由 Worker 写回 D1。\n";
+          safeWrite({ type: "chunk", module: "temperature", streamKey: "codexBridge", label: "Codex CLI 隧道", seq: Date.now(), delta: text });
+        });
+        const reportIdOut = (doneTask.result && doneTask.result.reportId) || doneTask.reportId || progressPayload.id;
+        const report = await loadYuqingReportById(env.YUQING_DB, reportIdOut);
+        if (!report) throw new Error("Codex CLI 已完成但未找到 D1 报告");
+        emitDailyReportPartials(report, safeWrite);
+        safeWrite({ type: "done", ok: true, executionChannel: EXECUTION_CHANNEL_CODEX, task: codexTaskSummary(doneTask), report });
+      } catch (e) {
+        if (progressPayload) {
+          const errorPayload = {
+            ...progressPayload,
+            status: "error",
+            sourceErrors: [
+              ...(Array.isArray(progressPayload.sourceErrors) ? progressPayload.sourceErrors : []),
+              { source: "codex_cli_bridge", message: String(e && e.message ? e.message : e) },
+            ],
+          };
+          await insertYuqingReport(env.YUQING_DB, errorPayload).catch(() => {});
+        }
+        safeWrite({ type: "error", ok: false, executionChannel: EXECUTION_CHANNEL_CODEX, error: String(e && e.message ? e.message : e) });
+      } finally {
+        closed = true;
+        try {
+          controller.close();
+        } catch (_) {}
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: {
+      ...corsHeaders(),
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "X-Worker-Build": WORKER_BUILD,
+      "X-Yuqing-Worker": "1",
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
 function sourceRefsFromFacts(items, max = 10) {
@@ -2856,8 +3790,64 @@ function trendMdSubstantiveLines(md) {
     .filter((s) => s && !s.startsWith("#"));
 }
 
+function buildDailyEventStreamingReport(generatedAt, opts = {}) {
+  const triggerType = normalizeTriggerType(opts && opts.triggerType);
+  const slot = opts && opts.slot ? String(opts.slot) : bjtSlotLabel(DAILY_EVENT_KIND, generatedAt);
+  return {
+    id: reportId(DAILY_EVENT_KIND, generatedAt),
+    kind: DAILY_EVENT_KIND,
+    reportDate: bjtDateKey(generatedAt),
+    slot,
+    triggerType,
+    generatedAt,
+    status: "streaming",
+    sourceRefs: [],
+    grounding: {
+      startedAt: generatedAt,
+      quality: { factCount: 0, sourceCoverage: 0, usedSearch: !!(opts && opts.forceSearch) },
+    },
+    marketSnapshot: {},
+    report: {
+      title: "事件日报",
+      subtitle: "流式生成中…",
+      marketTemperature: {
+        score: 50,
+        label: "生成中",
+        summary: "实时扫描已经开始，等待信息温度模块返回。",
+        regime: "",
+        crossAsset: "",
+        anomaly: "",
+        suggestion: "",
+      },
+      macroTrend: "",
+      topStory: null,
+      topStories: [],
+      dynamicBriefs: [],
+      aiIntel: [],
+      githubTools: [],
+      trendRead: {
+        title: "总编辑收束",
+        summary: "",
+        verdict: "",
+        closingRead: [],
+        searchFindings: [],
+        watchline: [],
+        uncertainty: "",
+        strengthening: [],
+        cracking: [],
+        conclusion: "",
+        methodology: { usesGoogleSearch: true, inputOnly: false, mode: "上游模块 + 外部搜索校准" },
+      },
+      sources: [],
+      quality: { factCount: 0, sourceCoverage: 0, usedSearch: !!(opts && opts.forceSearch), caveat: "报告仍在生成中。" },
+    },
+    sourceErrors: [],
+  };
+}
+
 async function buildDailyEventReport(env, opts) {
-  const generatedAt = new Date(opts && opts.scheduledTime ? opts.scheduledTime : Date.now()).toISOString();
+  const generatedAtInput = opts && (opts.generatedAt || opts.scheduledTime);
+  const generatedAt = new Date(generatedAtInput || Date.now()).toISOString();
   const triggerType = normalizeTriggerType(opts && opts.triggerType);
   const slot = opts && opts.slot ? String(opts.slot) : bjtSlotLabel(DAILY_EVENT_KIND, generatedAt);
   const sourceErrors = [];
@@ -2957,7 +3947,7 @@ async function buildDailyEventReport(env, opts) {
     },
   };
   return {
-    id: reportId(DAILY_EVENT_KIND, generatedAt),
+    id: opts && opts.reportId ? String(opts.reportId) : reportId(DAILY_EVENT_KIND, generatedAt),
     kind: DAILY_EVENT_KIND,
     reportDate: bjtDateKey(generatedAt),
     slot,
@@ -3247,8 +4237,38 @@ export default {
 
     const url = new URL(request.url);
     const path = url.pathname;
-    const accessDenied = await requireCloudflareAccess(request, env, json);
+    const bridgePath = path === "/api/yuqing/codex/bridge-task";
+    const bridgeAuthed = bridgePath && validCodexBridgeRequest(request, env);
+    const accessDenied = bridgeAuthed ? null : await requireCloudflareAccess(request, env, json);
     if (accessDenied) return accessDenied;
+
+    if (bridgePath) {
+      if (!validCodexBridgeRequest(request, env)) {
+        return json({ ok: false, error: "Codex bridge token invalid" }, 401);
+      }
+      if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定", d1Ready: false }, 503);
+      try {
+        if (request.method === "GET") {
+          const owner = url.searchParams.get("owner") || request.headers.get("User-Agent") || "codex-cli-bridge";
+          const task = await claimNextCodexBridgeTask(env, owner);
+          return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, task: bridgeTaskForResponse(task) });
+        }
+        if (request.method === "POST") {
+          const bodyIn = await request.json().catch(() => ({}));
+          const result = await completeCodexBridgeTask(env, bodyIn);
+          return json({
+            ok: true,
+            workerBuild: WORKER_BUILD,
+            d1Ready: true,
+            task: codexTaskSummary(result.task),
+            report: result.report,
+          });
+        }
+        return json({ ok: false, error: "Method not allowed" }, 405);
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
 
     if (path === "/finnhub-bulk" || path === "/api/yuqing/finnhub-bulk") {
       const rl = await checkRateLimit(request, "finnhub", 40);
@@ -3266,6 +4286,7 @@ export default {
       if (rl) return rl;
       const p = resolveProvider(env);
       const modelEnvelope = await readYuqingModelSettingsEnvelope(env);
+      const executionEnvelope = await readYuqingExecutionSettingsEnvelope(env);
       return json({
         ok: true,
         workerBuild: WORKER_BUILD,
@@ -3295,6 +4316,13 @@ export default {
           catalog: YUQING_MODEL_CATALOG.map((m) => m.id),
           targets: YUQING_MODEL_TARGETS.length,
           warning: modelEnvelope.error || null,
+        },
+        executionChannels: {
+          channels: YUQING_EXECUTION_CHANNELS.map((m) => m.id),
+          targets: YUQING_EXECUTION_TARGETS.length,
+          effective: executionEnvelope.effectiveAssignments,
+          warning: executionEnvelope.error || null,
+          bridgeTokenReady: !!codexBridgeToken(env),
         },
         secrets: {
           finnhub: !!(env && env.FINNHUB_API_KEY),
@@ -3403,6 +4431,49 @@ export default {
           settings,
           effectiveAssignments,
           cacheKey: yuqingModelCacheKey(effectiveAssignments),
+          error: null,
+        }));
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
+    if (path === "/api/yuqing/settings/execution-channels" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "execution_settings_get", 100);
+      if (rl) return rl;
+      const envelope = await readYuqingExecutionSettingsEnvelope(env);
+      return json(yuqingExecutionSettingsResponse(envelope));
+    }
+
+    if (path === "/api/yuqing/settings/execution-channels" && request.method === "PUT") {
+      const rl = await checkRateLimit(request, "execution_settings_put", 20);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定", d1Ready: false }, 503);
+      let bodyIn;
+      try {
+        bodyIn = await request.json();
+      } catch (_) {
+        return json({ ok: false, error: "格式错误" }, 400);
+      }
+      try {
+        const rawAssignments =
+          bodyIn && bodyIn.assignments
+            ? { assignments: bodyIn.assignments }
+            : bodyIn && bodyIn.routes
+              ? { assignments: bodyIn.routes }
+            : bodyIn && bodyIn.channels
+              ? { assignments: bodyIn.channels }
+              : bodyIn;
+        const settings = {
+          ...normalizeYuqingExecutionSettings(rawAssignments),
+          updatedAt: new Date().toISOString(),
+        };
+        await putYuqingSettings(env.YUQING_DB, YUQING_EXECUTION_SETTING_KEY, settings);
+        return json(yuqingExecutionSettingsResponse({
+          d1Ready: true,
+          source: "d1",
+          settings,
+          effectiveAssignments: effectiveYuqingExecutionAssignments(settings),
           error: null,
         }));
       } catch (e) {
@@ -3521,6 +4592,30 @@ export default {
       }
     }
 
+    if (path === "/api/yuqing/codex/tasks" && request.method === "GET") {
+      const rl = await checkRateLimit(request, "codex_task_status", 120);
+      if (rl) return rl;
+      if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定", d1Ready: false }, 503);
+      try {
+        const id = String(url.searchParams.get("id") || "").trim();
+        if (!id) return json({ ok: false, error: "缺少 id" }, 400);
+        const task = await loadCodexTaskById(env.YUQING_DB, id);
+        if (!task) return json({ ok: false, error: "Codex 任务不存在" }, 404);
+        let report = null;
+        const resultReportId = task.result && task.result.reportId ? String(task.result.reportId) : "";
+        if (resultReportId) report = await loadYuqingReportById(env.YUQING_DB, resultReportId);
+        return json({
+          ok: true,
+          workerBuild: WORKER_BUILD,
+          d1Ready: true,
+          task: codexTaskSummary(task),
+          report,
+        });
+      } catch (e) {
+        return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+      }
+    }
+
     if (path === "/api/yuqing/reports/generate" && request.method === "POST") {
       const rl = await checkRateLimit(request, "reports_generate", 8);
       if (rl) return rl;
@@ -3532,6 +4627,20 @@ export default {
       }
       try {
         const kind = normalizeReportKind(bodyIn && bodyIn.kind);
+        const executionEnvelope = await readYuqingExecutionSettingsEnvelope(env);
+        if (executionChannelForKind(executionEnvelope, kind) === EXECUTION_CHANNEL_CODEX) {
+          if (!d1Bound(env)) return json({ ok: false, error: "D1 未绑定", d1Ready: false }, 503);
+          if (!codexBridgeToken(env)) return json({ ok: false, error: "Codex bridge token 未配置", d1Ready: true }, 503);
+          const task = await createCodexBridgeTask(env, kind, bodyIn, { triggerType: "manual" });
+          return json({
+            ok: true,
+            workerBuild: WORKER_BUILD,
+            d1Ready: true,
+            executionChannel: EXECUTION_CHANNEL_CODEX,
+            task: codexTaskSummary(task),
+            report: null,
+          });
+        }
         const out = await createYuqingReport(env, {
           kind,
           triggerType: "manual",
@@ -3566,11 +4675,17 @@ export default {
       if (kind !== DAILY_EVENT_KIND) {
         return json({ ok: false, error: "流式生成仅支持 daily_event" }, 400);
       }
+      const executionEnvelope = await readYuqingExecutionSettingsEnvelope(env);
+      if (executionChannelForKind(executionEnvelope, kind) === EXECUTION_CHANNEL_CODEX) {
+        if (!codexBridgeToken(env)) return json({ ok: false, error: "Codex bridge token 未配置", d1Ready: true }, 503);
+        return codexDailyStreamResponse(env, bodyIn);
+      }
 
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
           let closed = false;
+          let progressPayload = null;
           const safeWrite = (obj) => {
             if (closed) return;
             try {
@@ -3578,8 +4693,16 @@ export default {
             } catch (_) {}
           };
           try {
-            safeWrite({ type: "start", workerBuild: WORKER_BUILD, d1Ready: true });
+            const generatedAt = new Date().toISOString();
+            progressPayload = buildDailyEventStreamingReport(generatedAt, {
+              triggerType: "manual",
+              forceSearch: !!(bodyIn && bodyIn.forceSearch),
+            });
+            await insertYuqingReport(env.YUQING_DB, progressPayload);
+            safeWrite({ type: "start", workerBuild: WORKER_BUILD, d1Ready: true, report: progressPayload });
             const payload = await buildDailyEventReport(env, {
+              generatedAt,
+              reportId: progressPayload.id,
               triggerType: "manual",
               forceSearch: !!(bodyIn && bodyIn.forceSearch),
               mode: bodyIn && bodyIn.mode,
@@ -3595,6 +4718,17 @@ export default {
             await pruneOldItems(env.YUQING_DB, REPORT_RETENTION_DAYS).catch(() => {});
             safeWrite({ type: "done", ok: true, report: payload });
           } catch (e) {
+            if (progressPayload) {
+              const errorPayload = {
+                ...progressPayload,
+                status: "error",
+                sourceErrors: [
+                  ...(Array.isArray(progressPayload.sourceErrors) ? progressPayload.sourceErrors : []),
+                  { source: "generate_stream", message: String(e && e.message ? e.message : e) },
+                ],
+              };
+              await insertYuqingReport(env.YUQING_DB, errorPayload).catch(() => {});
+            }
             safeWrite({ type: "error", ok: false, error: String(e && e.message ? e.message : e) });
           } finally {
             closed = true;
@@ -3776,6 +4910,10 @@ export default {
           "DELETE /api/yuqing/reports/item?id=...",
           "GET /api/yuqing/settings/model-channels",
           "PUT /api/yuqing/settings/model-channels",
+          "GET /api/yuqing/settings/execution-channels",
+          "PUT /api/yuqing/settings/execution-channels",
+          "GET /api/yuqing/codex/tasks?id=...",
+          "GET/POST /api/yuqing/codex/bridge-task (+CODEX_BRIDGE_TOKEN)",
           "GET /api/yuqing/settings/event-dashboard",
           "PUT /api/yuqing/settings/event-dashboard",
           "GET /api/yuqing/settings/sentiment-analysis",

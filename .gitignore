@@ -3,3 +3,8 @@ node_modules/
 .wrangler/
 tmp-playwright/
 .codex/
+.codex-bridge/
+.codex-bridge.env
+cad_mcp.log
+tmp-*.log
+tmp-*.png

@@ -40,11 +40,14 @@
 
 - 若用户已在同一条消息里写清了模块名与范围，可简要复述确认后再执行，无需重复追问相同信息。
 
-## Cloudflare Worker / D1 处理（仅按需执行）
+## Cloudflare Worker / Pages 部署（默认执行）
 
-- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`）后，默认仅在本地完成校验，**除非用户明确要求部署**，否则不自动执行 `wrangler deploy`。
+- 修改仓库内容并完成本地验证后，默认执行受影响的 Cloudflare 部署；只有用户明确说「先不部署」「只本地改」「暂不上线」时才跳过。
+- 前端、静态资源、规则/文档、脚本或共享逻辑改动后执行 Pages 部署；Worker 改动后执行对应 Worker 部署；同时影响 Pages 与 Worker 时，先部署 Worker，再部署 Pages。
+- GitHub commit、push、PR 仍然只在用户明确指令要求后执行；不要因为已部署 Cloudflare 就自动推送 GitHub。
+- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`）后，默认在本地完成校验后执行 `wrangler deploy`，除非用户明确要求暂不部署。
 - 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容，**除非用户明确要求同步**，否则不自动执行远程 D1 迁移/写入命令。
-- 若用户明确要求部署或同步但操作因登录、权限、网络或 Cloudflare 状态失败，须在回复中明确说明原因。
+- 若默认部署或用户要求同步时，操作因登录、权限、网络或 Cloudflare 状态失败，须在回复中明确说明原因和未上线的影响面。
 
 ## Cloudflare Pages 自定义域名缓存
 

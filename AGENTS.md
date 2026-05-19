@@ -15,6 +15,17 @@
 - 如果用户明确表示「先为当前功能点列一个修改 plan / 规划」，该 plan 也必须包含所有已识别的关联点、受影响文件、验证命令和部署/D1 操作，确保后续实现整体逻辑严丝合缝、十分严谨。
 - 若某个关联点因风险、权限或范围原因暂时不能改，必须在 plan 或最终回复中明确标出原因、影响和后续处理方式。
 
+## System-Wide LLM Dual Execution Channels
+
+- 整个系统凡是需要调用 LLM 做分析、总结、策略、风控、研究、报告或 Agent 决策的功能，都必须按双线开发和维护；当前事件一览、舆情分析只是第一批接入对象，后续策略官、分析师、风险官、会议室、复盘系统等内置 LLM Agent 同样适用。
+- Worker/云端模型通道是正式自动化路线，Codex CLI 隧道是开发期/低成本人工触发路线；默认不得为了新增 Codex 路线而破坏、替换或废弃 Worker/云端模型路线。
+- 新增或修改任意 LLM 功能时，不得只改前端；必须同步检查对应的 Worker/API 入口、模型通道设置、Codex task context、bridge 必填块校验、D1 或远程存储读写、历史记录展示、前端状态/流式反馈、设置页执行通道和相关验证脚本。
+- 每个 LLM 页面或 Agent 都应有独立的 task kind、权限边界、输入信封、上下文来源、输出结构、D1/API 写入和前端读取链路；不要做成全站一个粗粒度通用 Codex 开关，除非用户明确要求。
+- 新增报告字段、分析模块或 Agent 输出时，Codex 路线也要显式接入：优先把对应 prompt、schema、结构文件或规则文件加入 Worker 下发的 `context.promptFiles`，并补充 bridge 的 required sections、schema 参考或等价输出校验。
+- Codex CLI 隧道必须保持受限边界：网页不得下发任意 shell；bridge 默认使用 `read-only` sandbox；不得允许自动部署、删除、`git reset`、D1 schema 变更或远程 D1 迁移，除非用户在当前任务里明确要求并经过正常审批。
+- 优化 Codex 路线耗时时，优先优化等待、轮询、prompt 预读、重复探索、上下文裁剪和输出校验；不得为了提速牺牲事实校验、资产传导、判断、观察清单、策略可执行性和报告可用性。
+- 当用户要求部署涉及这套双线逻辑的改动时，按影响面执行：Worker 改动先部署 Worker，前端/静态入口改动同步提升 `index.html` 中相关 `?v=` 版本并部署 Pages。
+
 ## Validation Loop
 
 - 本仓库没有独立打包产物时，`npm run build` 作为部署前总闸，等价运行全量验证。
@@ -29,17 +40,17 @@
 
 - 前端 UI 改动后在生产站点 `https://bitcoin.feiniwork.com/` 核验受影响 hash，例如 `/index.html#chart`、`/index.html#orderflow`、`/index.html#settings`。
 
-## Cloudflare Deployments (Manual/On-Demand Only)
+## Cloudflare Deployments (Default After Work)
 
-- **默认行为**：修改仓库内容后，默认**不**执行 Cloudflare 部署，也不执行 GitHub 推送。
-- **部署触发**：只有在用户指令中明确提到「部署」、「上线」或「deploy」时，才在收尾阶段运行 `npm run build`，并部署受影响的线上面：
+- **默认行为**：修改仓库内容并完成本地验证后，默认执行 Cloudflare 部署；只有用户明确说「先不部署」「只本地改」「暂不上线」时才跳过。
+- **部署范围**：收尾阶段先运行 `npm run build`，再按影响面部署受影响的线上面：
   - 前端、静态资源、规则/文档、脚本或共享逻辑改动后执行 `npm run deploy:pages`（内含 **`prune:pages`**：`production` / `preview` **各自默认保留最新 8 条**部署；可用环境变量 **`BIT_PAGES_KEEP`** 覆盖）。
   - Worker 改动后在 `cloudflare/` 下执行 `wrangler deploy`。
   - 同时影响 Pages 与 Worker 时，两者都要部署，先 Worker 后 Pages。
-- **GitHub 备份**：仅在用户明确指令要求下，于部署之后（若适用）将变更 **commit 并 push 到 `origin/main`**。
-- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`），默认仅在本地完成校验，**不**自动执行 `wrangler deploy`，除非被明确要求。
+- **GitHub 备份**：仍然仅在用户明确指令要求下，于部署之后（若适用）将变更 **commit 并 push 到 `origin/main`**；不要自动 commit、push 或开 PR。
+- 凡是修改已部署在 Cloudflare 上的 Worker（如 `cloudflare/binance-klines-worker.js`），默认在本地完成校验后执行 `wrangler deploy`，除非用户明确要求暂不部署。
 - 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容，默认**不**同步执行远程 D1 命令，除非被明确要求。
-- 若用户明确要求部署但操作因登录、权限、网络或 Cloudflare 状态失败，须明确说明原因。
+- 若默认部署因登录、权限、网络或 Cloudflare 状态失败，须明确说明原因和未上线的影响面。
 
 ## Pages Custom Domain Cache
 

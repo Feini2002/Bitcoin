@@ -13,6 +13,7 @@
     "verify:heatmap": "node scripts/verify-liquidation-radar.cjs && node scripts/verify-heatmap-pressure-matrix.cjs && npm run verify:market-snapshot",
     "verify:derivatives": "node scripts/verify-derivatives-worker.cjs && npm run verify:market-snapshot",
     "verify:yuqing": "node scripts/verify-yuqing-reports.cjs",
+    "yuqing:codex-bridge": "node scripts/codex-cli-bridge.cjs",
     "diagnose:derivatives": "node scripts/diagnose-derivatives-sync.cjs",
     "verify:api": "node scripts/smoke-api.cjs",
     "verify:all": "npm run lint && npm test && npm run verify:api && npm run verify:derivatives && npm run verify:yuqing && npm run verify:fib",

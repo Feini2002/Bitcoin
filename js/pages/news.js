@@ -1243,6 +1243,25 @@ async function loadAnalysisReport(reportId = "") {
   renderNewsIntoDom();
 }
 
+function updateAnalysisCodexTaskStatus(evt) {
+  const task = evt && evt.task && typeof evt.task === "object" ? evt.task : {};
+  const raw = String((evt && (evt.status || evt.phase)) || task.status || "").toLowerCase();
+  const label = task.id ? `（${String(task.id).slice(0, 10)}）` : "";
+  if (["queued", "pending", "created", "submitted"].includes(raw)) {
+    analysisState.status = `Codex CLI 任务已排队${label}，等待本地 bridge 接收...`;
+  } else if (["running", "processing", "executing", "started", "in_progress"].includes(raw)) {
+    analysisState.status = `Codex CLI 正在本地执行${label}，完成后会自动读取落库报告...`;
+  } else if (["writing", "persisting", "saving"].includes(raw)) {
+    analysisState.status = `Codex CLI 已生成内容${label}，正在写入 D1...`;
+  } else if (["completed", "complete", "succeeded", "success", "done"].includes(raw)) {
+    analysisState.status = `Codex CLI 任务完成${label}，D1 落库完成。`;
+  } else {
+    analysisState.status = `Codex CLI 任务等待中${label}...`;
+  }
+  analysisState.source = "loading";
+  renderNewsIntoDom();
+}
+
 async function generateAnalysisReport() {
   if (typeof DataEngine === "undefined" || typeof DataEngine.generateYuqingStructuredReport !== "function") return;
   analysisState.loading = true;
@@ -1264,12 +1283,12 @@ async function generateAnalysisReport() {
           trends: settings.analysisCoverage.distortionAudit || settings.analysisCoverage.narrativeValidation,
         },
       },
-      { timeoutMs: 190_000 }
+      { timeoutMs: 190_000, taskTimeoutMs: 600_000, onTaskStatus: updateAnalysisCodexTaskStatus }
     );
     if (data && data.report) {
       analysisState.report = data.report;
       analysisState.source = "cloud";
-      analysisState.status = "手动分析已写入 D1";
+      analysisState.status = data.task && data.task.id ? "Codex CLI 分析已落库完成" : "手动分析已写入 D1";
       try {
         history.replaceState(null, "", `#/news-analysis?reportId=${encodeURIComponent(data.report.id)}`);
       } catch (_) {}

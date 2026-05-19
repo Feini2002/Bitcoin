@@ -2,3 +2,6 @@
 .cursor/
 .wrangler/
 node_modules/
+cad_mcp.log
+tmp-*.log
+tmp-*.png
