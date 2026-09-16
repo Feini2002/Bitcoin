@@ -1,0 +1,57 @@
+[
+  {
+    "path": "01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
+    "old": "R1市场简报只需要source_policy、artifact、run、bundle、evidence、metric、report、preview、model_step、budget和幂等/审计相关表；事件、观点、预测和预警随相应阶段启用。",
+    "new": "R1首先需要来源用途、输入快照/引用、结果及幂等身份这些逻辑责任；可以由现有报告表与小型JSON清单承载，并不要求分别新建同名表。仅在启用模型时才需要调用/预算记录；只有持续恢复需求成立时才增加租约等执行状态。事件、观点、预测和预警随能力启用。"
+  },
+  {
+    "path": "01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
+    "old": "对规范化JSON采用确定性键排序、UTF-8、明确的字符串编码和数值表示；数组顺序只有在业务声明为集合时才能排序。canonicalization版本纳入方法清单。原始文件哈希针对原始字节，规范化哈希针对转换后的内容，二者分别保存。",
+    "new": "当前Bundle声明canonicalization_version=btc-ascii-key-json-v1：键仅允许非空可打印ASCII，字符串原样保留Unicode，整数限JS安全范围，金融小数使用字符串，不允许浮点JSON数，递归按ASCII键序、UTF-8、无多余空白，数组保持顺序。它是本方案受限profile，不冒称完整RFC8785/JCS；需要任意Unicode键或浮点数时另选并验证完整实现、提升版本。Artifact.digest和byte_length对应storage_locator实际字节，EvidenceRef.digest对应所定位对象的规范化内容。两种摘要不能混用；本包canonical样例另存为真实字节文件。"
+  },
+  {
+    "path": "01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
+    "old": "创建时验证profile、capabilities、源权限、历史窗口与budget配置。若只允许确定性模板，明确execution path，不把它当模型失败后的偶然兜底。",
+    "new": "创建时验证profile、capabilities、源权限、历史窗口及generation_mode。RunRequest明确template/model和独立knowledge_cutoff_at；template允许budget_profile_id=null，model必须提供已确认配置。capture_kind=historical时知识截止不可空；live留空由服务端捕获并返回实际值。执行方式request_bound/durable独立于是否使用模型，不允许把template当成网络执行器。"
+  },
+  {
+    "path": "01_accepted_plan/volumes/12_migration_operations_and_rollback.md",
+    "old": "相同幂等请求不重复计费。",
+    "new": "相同幂等请求不重复启动本系统同一计费步骤；供应商超时后结果或费用未知时保留outcome_unknown并先对账，不承诺外部服务严格只计费一次。"
+  },
+  {
+    "path": "06_collection_design/03_lifecycle_and_contract.md",
+    "old": "候选来源：discovered→examined→pilot_eligible→active；任意状态可paused/rejected，需原因。授权unknown不自动使全部系统失败，只限制该用途。",
+    "new": "候选来源：reference_candidate_only→examined→pilot_eligible，或paused/rejected。SourceCandidate始终enabled=false；获得实际端点、用途、网络与费用限制后另建SourceRegistration，才可能configured→active。候选资格不是激活权限，unknown只限制相应用途。"
+  },
+  {
+    "path": "06_collection_design/03_lifecycle_and_contract.md",
+    "old": "历史system-observed查询要求实际first_seen/fetched<=cutoff；public-available重建需可信发布时间和版本；retrospective-latest可以用最终版本但必须明示。发布时间未知时可以作为当前材料，不能进入精确历史可用性结论。",
+    "new": "统一时间模式为system_observed / publicly_available / retrospective_latest。system_observed要求本次ResourceVersion的version_observed_at不晚于截止，而不是仅检查URL首次出现时间。publicly_available需要当时正文版本与可信发布时间依据；旧发布时间不能证明当前已更正正文当时存在。retrospective_latest明确使用事后版本。日期级时间保留YYYY-MM-DD，不伪造午夜。"
+  },
+  {
+    "path": "06_collection_design/03_lifecycle_and_contract.md",
+    "old": "正文hash与提取版本绑定；源改正文但发布时间未变时仍产生新版本。",
+    "new": "source_content_digest针对允许保存的来源内容字节，extraction_digest针对固定提取输出；提取器改变不冒充来源发布了新版本。source_revision_id与version_observed_at记录观察时序；源改正文但发布时间未变时仍新增观测版本。A→B→A回退可复用A内容对象，但必须保留第二次回到A的观察/头指针事件。"
+  },
+  {
+    "path": "06_collection_design/03_lifecycle_and_contract.md",
+    "old": "查询缓存含用户/用途、policy版本、cutoff、索引/方法版本和筛选。",
+    "new": "查询缓存含用户/用途、policy版本、cutoff、索引/方法版本、retraction_view和筛选。"
+  },
+  {
+    "path": "06_collection_design/01_collection_handbook.md",
+    "old": "不返回未来/撤销材料，不把相关性当真伪",
+    "new": "当前判断排除不适用或撤回材料；获准私有历史审计可读取当时版本并另附今天已知更正，不把相关性当真伪"
+  },
+  {
+    "path": "06_collection_design/01_collection_handbook.md",
+    "old": "权利收回则限制对应用途，并清理需删除的原文、嵌入、缓存和导出。",
+    "new": "权利收回则限制对应用途，并清理受控范围内需删除的原文、嵌入、缓存和服务器导出；已被第三方下载的副本无法保证远程召回，应记录分发与更正边界。"
+  },
+  {
+    "path": "06_collection_design/04_alignment_with_accepted_contracts.md",
+    "old": "本包新增的是研究资料与可采用设计，不更改原版文件。实施时参考原卷03、07、09、10、13并绑定真实代码。",
+    "new": "本次终审已经同步修订活跃卷03/05/07/10/11/12/13及收集契约；旧原字节只在90_archive中。执行以根入口和当前scope清单为准，详细方法仍查对应卷，并绑定真实代码。"
+  }
+]

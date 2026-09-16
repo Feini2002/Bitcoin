@@ -1,0 +1,200 @@
+{
+  "manifest_scope": "all package files except this manifest itself",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 5823,
+      "sha256": "2bacc0af60ecddee9c6e7e99155496103a2e44748f1f7ba422460eb626e7dc73"
+    },
+    {
+      "path": "complete_plan.md",
+      "bytes": 478917,
+      "sha256": "285d3ce86ecb99fe2b75f61a43b33ea5de7554b0a86f490f822ebafeeb3b1e3f"
+    },
+    {
+      "path": "contracts/README.md",
+      "bytes": 2627,
+      "sha256": "1c3d4365930e4ae8271ba9c821be4db0b12128a3277dfc917e48fc02adcd50af"
+    },
+    {
+      "path": "contracts/openapi.design.json",
+      "bytes": 110565,
+      "sha256": "3355a8c224d4b85deac02b8c9d0fb802a2ecbd48aa57bb00e054c13ad3e8d44b"
+    },
+    {
+      "path": "contracts/research.schema.json",
+      "bytes": 84783,
+      "sha256": "e195e6080415c7cfe85eb2ede30c88a02d4ef9e76eab61c4859f0c73c0a4a0bd"
+    },
+    {
+      "path": "contracts/research_schema.proposed.sql",
+      "bytes": 13188,
+      "sha256": "018767ba85eff335fd750364af3e9b825499c151c2dbb6870a02efc7c9b05ce7"
+    },
+    {
+      "path": "contracts/settings.design.json",
+      "bytes": 1436,
+      "sha256": "035fda3803a7655d2c7c268ae2c8783548c5c139b61bb1237be0c10c61641cde"
+    },
+    {
+      "path": "fixtures/README.md",
+      "bytes": 1117,
+      "sha256": "e75bb3155b224c26e1eb536e3f5e7f9d478ba01ccbc1367e1895373764b6ade4"
+    },
+    {
+      "path": "fixtures/acceptance_cases.synthetic.json",
+      "bytes": 33758,
+      "sha256": "7f967aa835b095e449e04fb1fbecbe161b5fedba344957fa22a842bd5871ecfc"
+    },
+    {
+      "path": "fixtures/sample_artifact.json",
+      "bytes": 516,
+      "sha256": "4f14d8fa3a49a9854d30c0715a9f8ae6f8d340ed9648266a5d674cd394deab9c"
+    },
+    {
+      "path": "fixtures/sample_bundle.json",
+      "bytes": 2035,
+      "sha256": "57ddced1386baf7991d40e180bb14f876daf7ac9ab9f2af5f1e2e6f2885986f0"
+    },
+    {
+      "path": "fixtures/sample_metrics.json",
+      "bytes": 2466,
+      "sha256": "a0584aa434960a75bdda4c416f0c84682cd3c05f96aa59f044035c0d02b6fabd"
+    },
+    {
+      "path": "fixtures/sample_raw.json",
+      "bytes": 117,
+      "sha256": "be07be735f2a0f14fec4c9eaf47dd9226e5b2720e54a1f4ec1db642cffb968e6"
+    },
+    {
+      "path": "fixtures/sample_report.json",
+      "bytes": 1865,
+      "sha256": "11c3199abf803641fca3836e514a3f55ab4efe6d4c603a5c9d4a0d41da4bd457"
+    },
+    {
+      "path": "fixtures/sample_run.json",
+      "bytes": 907,
+      "sha256": "a9b73aaee5d5548818032f80134aa832afb9c83c545f571a2cb9017b076c4a43"
+    },
+    {
+      "path": "fixtures/sample_view.json",
+      "bytes": 687,
+      "sha256": "8d20eee1baef1bc886ffff284c12359f253f8ad6fda40f2db501516f566327b7"
+    },
+    {
+      "path": "inputs/previous_research_review.md",
+      "bytes": 77770,
+      "sha256": "e8f45bf280ec17cc5120b3328806acfb3ba9890c5841a163ed325ae11f097014"
+    },
+    {
+      "path": "inputs/repository_facts.md",
+      "bytes": 30888,
+      "sha256": "a7e2fe7c23b407b83c4be47a596a40ea1aa1d1817db41ba43662ead0ffabcc33"
+    },
+    {
+      "path": "meta/document-qc.json",
+      "bytes": 3026,
+      "sha256": "d4a2e1656a44cfcea6776f1b2e991e5c917ee5885beb79afed09bdddc3284b19"
+    },
+    {
+      "path": "meta/repository-facts.json",
+      "bytes": 3722,
+      "sha256": "45788e9eeb5f93644f5afa390e9411b3319a92fd9787b624f639014e9873953a"
+    },
+    {
+      "path": "meta/sources.json",
+      "bytes": 24079,
+      "sha256": "3af4e766caa55bbbecb6aeb1085513bb3b9964c51ce49a3117a7f4eca47966e9"
+    },
+    {
+      "path": "meta/task-topological-order.json",
+      "bytes": 723,
+      "sha256": "e2655efb54dacdf54332a6034a97b2d85949cdbe1618cbcdfd922612dc24d1c4"
+    },
+    {
+      "path": "meta/tasks.json",
+      "bytes": 85812,
+      "sha256": "a08c18fc180c2b1e67c3657ff137abf15b3a7988d6c61e4bfbc7114a4f89ce57"
+    },
+    {
+      "path": "volumes/00_master_plan.md",
+      "bytes": 14586,
+      "sha256": "6c1af9e971243423891d3912811079dd6b4732509a22c2f12f019fc6969617c0"
+    },
+    {
+      "path": "volumes/01_repository_baseline.md",
+      "bytes": 18135,
+      "sha256": "b3c39c3b41c752de80d95d0819935993f2cf97287b223a03ba08ad1041eb3420"
+    },
+    {
+      "path": "volumes/02_external_research_and_decisions.md",
+      "bytes": 32737,
+      "sha256": "c981776b05b04e94edbbf89428ab0448ef84caab853382263e9d815a3584b9eb"
+    },
+    {
+      "path": "volumes/03_product_information_and_noise.md",
+      "bytes": 23847,
+      "sha256": "422a320d0ba49fbb0be09ff00774afadf319c903695f69bb1bdc9003c1637c8e"
+    },
+    {
+      "path": "volumes/04_market_data_contracts.md",
+      "bytes": 24208,
+      "sha256": "4022724986424958a2c6069b5ad16701efd823311df65ce19c6e7d1ca3598b52"
+    },
+    {
+      "path": "volumes/05_analysis_methods_and_scenarios.md",
+      "bytes": 22735,
+      "sha256": "4c311df54d11c6ee26ca54fc01d81cbb3a1972599f2968c8f2abb4578d29c146"
+    },
+    {
+      "path": "volumes/06_catalysts_macro_etf_options.md",
+      "bytes": 24299,
+      "sha256": "fdb1f58320be21a32942063990d3ab4767bf7cc114358f0af9de00ff2fb9010d"
+    },
+    {
+      "path": "volumes/07_llm_prompts_workflows.md",
+      "bytes": 31335,
+      "sha256": "0e722cc7fab1239ee77dfc127fc5905340e0f7fba43bf718434dc7d3b2a8261d"
+    },
+    {
+      "path": "volumes/08_workspace_views_and_alerts.md",
+      "bytes": 20209,
+      "sha256": "7ed935d4d7d2c135ad21dda71a518bedc221fa3b9d939c57f3705762f8ee39c8"
+    },
+    {
+      "path": "volumes/09_architecture_runtime_and_storage.md",
+      "bytes": 21261,
+      "sha256": "78f9f798c946897213a70ef787a37ec9bcfab8581ca2e49b996b1c85ed3d5d78"
+    },
+    {
+      "path": "volumes/10_api_schema_and_state_contracts.md",
+      "bytes": 25924,
+      "sha256": "a2aedd7383daa581d102e7942211d29bb64846c425f9afecf671ac6aef7b6f50"
+    },
+    {
+      "path": "volumes/11_evaluation_and_acceptance.md",
+      "bytes": 19052,
+      "sha256": "184c5fe765627e68198e60b01b4b7ff4871d216f43e98a4de75e8dd807183596"
+    },
+    {
+      "path": "volumes/12_migration_operations_and_rollback.md",
+      "bytes": 19845,
+      "sha256": "afc160ce93b9a038c5e230106cb506ceeb2332f9f9d0414389b0376feaf14014"
+    },
+    {
+      "path": "volumes/13_implementation_work_packages.md",
+      "bytes": 99505,
+      "sha256": "28fb1e2e3b43eb03a2312c4d9ea13dea4af9374ef6936f6055a74bc80702b4ea"
+    },
+    {
+      "path": "volumes/14_end_to_end_examples_and_handoff.md",
+      "bytes": 20623,
+      "sha256": "dc1bb9075296384e4f5cfbdab3da4683dccec6791ffb96ebc73996f0019b7bbe"
+    },
+    {
+      "path": "volumes/15_sources_glossary_and_open_questions.md",
+      "bytes": 27747,
+      "sha256": "445b39a028f24c29ba544f7945a64aedbff8ff495c73b93676e845f3339afcd7"
+    }
+  ]
+}

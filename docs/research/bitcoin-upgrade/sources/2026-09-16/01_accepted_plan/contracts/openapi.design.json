@@ -1,0 +1,3680 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "拟议BTC研究API",
+    "version": "2.1-design-final-review",
+    "description": "设计参考，不是已部署接口；无servers/账号。实际路由绑定由WP-001确认。 当前设计加入template/model、knowledge_cutoff及初始/覆盖不足结果。不是已部署接口。"
+  },
+  "paths": {
+    "/api/research/v2/capabilities": {
+      "get": {
+        "operationId": "get_capabilities",
+        "summary": "返回能力启用状态与缺失原因",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/api/research/v2/runs": {
+      "post": {
+        "operationId": "post_runs",
+        "summary": "创建研究任务或返回同一幂等结果",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Run"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "202": {
+            "description": "仅durable执行器已启用时，返回已持久登记的run；不是结果已完成。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Run"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/RunRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/runs/{run_id}": {
+      "get": {
+        "operationId": "get_runs_run_id",
+        "summary": "读取任务及质量/失败原因",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Run"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/runs/{run_id}/cancel": {
+      "post": {
+        "operationId": "post_runs_run_id_cancel",
+        "summary": "请求取消尚未完成任务；不能保证供应商未计费",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Run"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/runs/{run_id}/stream": {
+      "get": {
+        "operationId": "get_runs_run_id_stream",
+        "summary": "SSE进度和未验证预览；published前不视为最终报告",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "id: 单调step_seq；event: progress|preview|validation|published|error；data: JSON。重连不保证持久执行，见execution_mode。"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/bundles/{bundle_id}": {
+      "get": {
+        "operationId": "get_bundles_bundle_id",
+        "summary": "读取不可变证据清单",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Bundle"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "bundle_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/evidence/{evidence_id}": {
+      "get": {
+        "operationId": "get_evidence_evidence_id",
+        "summary": "读取获准证据或受限占位",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/EvidenceRef"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "bundle_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/metrics": {
+      "get": {
+        "operationId": "get_metrics",
+        "summary": "固定bundle下读取已注册指标",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/Metric"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "bundle_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "method_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "instrument_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/changes": {
+      "get": {
+        "operationId": "get_changes",
+        "summary": "读取确定性变化/分歧，不触发模型",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/events": {
+      "get": {
+        "operationId": "get_events",
+        "summary": "按可见截止/相关性列出事件",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/Event"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "known_at_lte",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/events/{event_id}": {
+      "get": {
+        "operationId": "get_events_event_id",
+        "summary": "读取指定事件版本；默认head须明确",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Event"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/claims/{claim_id}": {
+      "get": {
+        "operationId": "get_claims_claim_id",
+        "summary": "读取主张/反证及版本",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Claim"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/calendar": {
+      "get": {
+        "operationId": "get_calendar",
+        "summary": "仅官方确认时间或明确未知的催化剂",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/Event"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "start_at",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end_at",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "known_at_lte",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/reports": {
+      "get": {
+        "operationId": "get_reports",
+        "summary": "分页列出当前owner可读报告",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/Report"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/reports/{report_id}": {
+      "get": {
+        "operationId": "get_reports_report_id",
+        "summary": "最终报告或legacy兼容响应",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "$ref": "./research.schema.json#/$defs/Report"
+                        },
+                        {
+                          "type": "object",
+                          "description": "legacy只读适配，必须携带restore_level=report_only/evidence_snapshot/restricted/missing"
+                        }
+                      ]
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/reports/{report_id}/export": {
+      "post": {
+        "operationId": "post_reports_report_id_export",
+        "summary": "按权利生成可导出的Markdown/JSON包",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "markdown",
+                      "json"
+                    ]
+                  },
+                  "include_evidence": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "format",
+                  "include_evidence"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/views": {
+      "post": {
+        "operationId": "post_views",
+        "summary": "创建固定研究现场",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/ResearchView"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/ResearchViewCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "get_views",
+        "summary": "列出当前owner保存的研究现场",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/ResearchView"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/views/{view_id}": {
+      "get": {
+        "operationId": "get_views_view_id",
+        "summary": "读取现场及真实可恢复等级",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/ResearchView"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      },
+      "put": {
+        "operationId": "put_views_view_id",
+        "summary": "带版本条件更新研究现场",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/ResearchView"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/ResearchView"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/viewpoints": {
+      "post": {
+        "operationId": "post_viewpoints",
+        "summary": "记录研究观点而非账户交易",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Viewpoint"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/ViewpointCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "get_viewpoints",
+        "summary": "列出当前owner的观点与复查状态",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/Viewpoint"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/viewpoints/{viewpoint_id}": {
+      "get": {
+        "operationId": "get_viewpoints_viewpoint_id",
+        "summary": "读取观点和版本历史定位",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Viewpoint"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "viewpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      },
+      "put": {
+        "operationId": "put_viewpoints_viewpoint_id",
+        "summary": "新修订，不覆盖已冻结观点证据",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Viewpoint"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "viewpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/Viewpoint"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/forecasts": {
+      "post": {
+        "operationId": "post_forecasts",
+        "summary": "登记预声明问题和结算规则",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Forecast"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/ForecastCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "get_forecasts",
+        "summary": "列出可评估预测与结算状态",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/Forecast"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/forecasts/{forecast_id}": {
+      "get": {
+        "operationId": "get_forecasts_forecast_id",
+        "summary": "概率、状态和结算依据",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Forecast"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "forecast_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/alerts/rules": {
+      "post": {
+        "operationId": "post_alerts_rules",
+        "summary": "注册安全有限DSL预警规则",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/AlertRule"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/AlertRuleCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "get_alerts_rules",
+        "summary": "列出规则版本与启用状态",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/AlertRule"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/alerts/episodes": {
+      "get": {
+        "operationId": "get_alerts_episodes",
+        "summary": "站内预警状态与数据质量",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/AlertEpisode"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/sources/policies": {
+      "get": {
+        "operationId": "get_sources_policies",
+        "summary": "读取可披露的来源许可状态",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/SourcePolicy"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/api/research/v2/studies": {
+      "post": {
+        "operationId": "post_studies",
+        "summary": "登记或调度批量研究；后端未启用时503",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "study_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                  },
+                  "question": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dataset_bundle_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    }
+                  },
+                  "method_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                  },
+                  "parameters": {
+                    "type": "object"
+                  },
+                  "evaluation_plan_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                  }
+                },
+                "required": [
+                  "study_id",
+                  "question",
+                  "dataset_bundle_ids",
+                  "method_id",
+                  "parameters",
+                  "evaluation_plan_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/studies/{study_id}": {
+      "get": {
+        "operationId": "get_studies_study_id",
+        "summary": "研究状态、配置、结果与局限",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "study_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/research/v2/health/research": {
+      "get": {
+        "operationId": "get_health_research",
+        "summary": "按阶段报告新鲜度和失败；隐藏秘密",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/api/research/v2/reviews": {
+      "get": {
+        "operationId": "get_reviews",
+        "summary": "列出可读复盘，按观点/时间过滤",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./research.schema.json#/$defs/Review"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_reviews",
+        "summary": "按固定观点和结果bundle生成模板或预算允许的复盘",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Review"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/ReviewRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/alerts/rules/{rule_id}": {
+      "get": {
+        "operationId": "get_alerts_rules_rule_id",
+        "summary": "读取规则当前revision",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/AlertRule"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      },
+      "put": {
+        "operationId": "put_alerts_rules_rule_id",
+        "summary": "保存新规则revision或禁用，不回写历史episode",
+        "description": "拟新增接口；需先与现有路由和认证绑定。写操作要求已认证、CSRF/来源检查和幂等键；不是生产执行授权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/AlertRule"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./research.schema.json#/$defs/AlertRule"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/v2/reviews/{review_id}": {
+      "get": {
+        "operationId": "get_reviews_review_id",
+        "summary": "读取复盘及当时观点/结果证据",
+        "description": "拟新增接口；需先与现有路由和认证绑定。只读仍须按owner/source policy鉴权。",
+        "security": [
+          {
+            "ownerSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功；数据质量可为partial，不能将HTTP200当完整性",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "./research.schema.json#/$defs/Review"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "503": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "412": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "422": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ownerSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "REPLACE_WITH_EXISTING_SESSION_COOKIE",
+        "description": "占位：必须接入既有认证；单用户也不得把写接口裸露公网。"
+      }
+    },
+    "responses": {
+      "DomainError": {
+        "description": "结构化域错误；HTTP状态映射见卷10",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./research.schema.json#/$defs/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

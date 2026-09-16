@@ -1,0 +1,17 @@
+{
+  "new_authored_markdown_documents_excluding_indexes": 120,
+  "new_authored_han_characters_including_headings_tables_citation_labels": 75826,
+  "accepted_plan_volume_han_characters": 104335,
+  "combined_unique_volume_han_characters": 180161,
+  "research_reports": 25,
+  "reuse_cards": 67,
+  "cases": 14,
+  "source_records": 150,
+  "read_scope_records": 143,
+  "failed_or_incomplete_records": 7,
+  "candidate_runtime_sources_disabled": 27,
+  "reusable_bilingual_query_templates": 24,
+  "new_synthetic_collection_cases": 24,
+  "accepted_plan_files": 40,
+  "count_policy": "不计合订本重复、旧输入报告、索引、元数据与JSON；正文计标题/表格/引用文字。汉字数不是字节、token或中文分词数。"
+}

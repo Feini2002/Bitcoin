@@ -1,0 +1,111 @@
+{
+  "CollectionAttempt": {
+    "attempt_id": "example_attempt_1",
+    "source_id": "example_official",
+    "state": "persisted",
+    "started_at": "2026-09-16T00:01:00Z",
+    "ended_at": "2026-09-16T00:01:02Z",
+    "response_status": 200,
+    "resource_versions": [
+      "example_rv_1"
+    ],
+    "error_code": null,
+    "cursor_before": null,
+    "cursor_after": "example_cursor",
+    "object_type": "CollectionAttempt",
+    "record_origin": "synthetic"
+  },
+  "ResourceVersion": {
+    "resource_id": "example_resource_1",
+    "version_id": "example_rv_1",
+    "source_id": "example_official",
+    "source_published_at": null,
+    "published_precision": "unknown",
+    "first_seen_at": "2026-09-16T00:01:00Z",
+    "fetched_at": "2026-09-16T00:01:01Z",
+    "content_kind": "excerpt",
+    "extractor_version": "example_parser_v1",
+    "rights": {
+      "store_raw": "allowed",
+      "send_to_model": "denied",
+      "display_public": "unknown"
+    },
+    "object_type": "ResourceVersion",
+    "record_origin": "synthetic",
+    "version_observed_at": "2026-09-16T00:01:01Z",
+    "source_updated_at": null,
+    "source_revision_id": null,
+    "content_artifact_id": "example_art_excerpt",
+    "source_content_digest": null,
+    "extraction_digest": "f339d5a3ad1f08b5ffb8f6eebb141da88f48d1e0ac28466ce94fbc72a5138324",
+    "policy_id": "example_policy",
+    "policy_version": "v1",
+    "source_status": "active",
+    "availability": "available",
+    "version_observation_key": "example_attempt_1:body-v1"
+  },
+  "ClaimCandidate": {
+    "claim_id": "example_claim_1",
+    "resource_version_id": "example_rv_1",
+    "text": "合成材料：发布方计划稍后提供更新，没有给出确切时间。",
+    "polarity": "affirmed",
+    "modality": "planned",
+    "event_time": null,
+    "status": "extracted",
+    "locator": "example_excerpt_sentence_1",
+    "object_type": "ClaimCandidate",
+    "record_origin": "synthetic"
+  },
+  "CoverageReport": {
+    "coverage_id": "example_coverage_1",
+    "window_start": "2026-09-15T00:00:00Z",
+    "window_end": "2026-09-16T00:00:00Z",
+    "required_sources": [
+      "example_official",
+      "example_other"
+    ],
+    "failed_sources": [
+      "example_other"
+    ],
+    "coverage_class": "partial",
+    "quiet_result_allowed": false,
+    "object_type": "CoverageReport",
+    "record_origin": "synthetic",
+    "usable_sources": [
+      "example_official"
+    ],
+    "panel_id": "example_panel",
+    "panel_version": "v1",
+    "coverage_basis": "declared_panel",
+    "evaluated_at": "2026-09-16T00:00:00Z",
+    "comparison_available": true
+  },
+  "RetrievalRequest": {
+    "query": "合成问题：此计划有没有明确发布时间？",
+    "as_of": "2026-09-16T00:00:00Z",
+    "mode": "system_observed",
+    "purpose": "send_to_model",
+    "source_scope": [
+      "example_official"
+    ],
+    "object_type": "RetrievalRequest",
+    "record_origin": "synthetic",
+    "retraction_view": "current_valid_only"
+  },
+  "SourceRegistration": {
+    "object_type": "SourceRegistration",
+    "record_origin": "synthetic",
+    "source_id": "example_official",
+    "candidate_id": "example_candidate",
+    "runtime_endpoint": "https://example.invalid/feed",
+    "owner_id": "owner_synthetic",
+    "source_policy_id": "example_policy",
+    "source_policy_version": "v1",
+    "enabled": false,
+    "state": "configured",
+    "endpoint_verified_at": null,
+    "approved_operations": [],
+    "network_profile_id": "example_network",
+    "limits_profile_id": "example_limits"
+  }
+}

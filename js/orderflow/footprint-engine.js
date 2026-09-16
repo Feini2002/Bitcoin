@@ -1581,7 +1581,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         return;
       }
       const stream = `${this.symbol.toLowerCase()}@aggTrade`;
-      const url = `wss://fstream.binance.com/ws/${stream}`;
+      const url = `wss://fstream.binance.com/market/ws/${stream}`;
       try {
         this.ws = new WebSocket(url);
       } catch (e) {

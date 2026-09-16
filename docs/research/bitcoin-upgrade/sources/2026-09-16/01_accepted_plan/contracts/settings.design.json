@@ -1,0 +1,47 @@
+{
+  "status": "DESIGN_EXAMPLE_NOT_APPROVED",
+  "schema_version": "research.settings.v2",
+  "default_profile": "market_brief",
+  "capabilities": {
+    "market_brief": true,
+    "events": false,
+    "macro_vintages": false,
+    "etf_flows": false,
+    "options": false,
+    "forecasting": false,
+    "external_notifications": false,
+    "durable_executor": false
+  },
+  "deployment_mode": "reuse_existing_workers",
+  "research_timezone_display": "Asia/Shanghai",
+  "canonical_time": "UTC",
+  "budgets": {
+    "currency": "USD",
+    "daily_limit": null,
+    "per_run_limit": null,
+    "allow_external_model_calls_without_configured_budget": false,
+    "price_catalog_version": null
+  },
+  "retention": {
+    "report_days": null,
+    "evidence_days": null,
+    "raw_days": null,
+    "review_required_before_new_cleanup": true
+  },
+  "privacy": {
+    "public_sharing": false,
+    "grounding_reuse_in_fact_pool": false,
+    "allow_unknown_rights_to_model": false
+  },
+  "trial_limits": {
+    "market_brief_max_model_calls": 3,
+    "deep_research_max_model_calls": 5,
+    "event_extract_batch_max_articles": 12,
+    "max_report_repair_attempts": 1
+  },
+  "notes": [
+    "试验调用上限是方案默认值，不是已测性能或用户批准预算。",
+    "daily_limit为空时可运行确定性模板，不调用计费模型。",
+    "各能力启用须先满足来源授权、配置和验收；不是运行时逐条人工审批。"
+  ]
+}

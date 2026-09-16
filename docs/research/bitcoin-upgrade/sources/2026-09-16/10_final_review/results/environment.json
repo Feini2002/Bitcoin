@@ -1,0 +1,7 @@
+{
+  "python_used_for_document_checks": "3.13.5",
+  "jsonschema_used": "4.26.0",
+  "markdown_it_used": "4.2.0",
+  "purpose": "记录实际文档自检环境，不是业务仓库升级要求。",
+  "installed_during_task": false
+}

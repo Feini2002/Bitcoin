@@ -7,6 +7,7 @@
 #   npx wrangler deploy
 
 name = "btc"
+keep_vars = true # Preserve existing runtime variables during code-only channel releases.
 main = "binance-klines-worker.js"
 compatibility_date = "2024-12-01"
 workers_dev = true
@@ -46,6 +47,7 @@ crons = ["* * * * *"]
 #   npx wrangler secret put GEMINI_API_KEY
 # LLM：`BTC_LLM_PROVIDER=none|gemini|auto`（默认 auto，有密钥则视为可用；亦可在控制台设置）
 [vars]
+FINANCE_D1_ENABLED = "true"
 BTC_LLM_PROVIDER = "auto"
 BINANCE_FAPI_ORIGIN = ""
 ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com,http://localhost:5173,http://127.0.0.1:5173"

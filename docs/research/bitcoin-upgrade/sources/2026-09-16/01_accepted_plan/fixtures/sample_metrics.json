@@ -1,0 +1,92 @@
+[
+  {
+    "evidence_id": "e_return",
+    "method_id": "M-001",
+    "method_version": "v1",
+    "instrument_id": "ins_synthetic_btc",
+    "window": {
+      "start_at": "2026-01-15T00:00:00Z",
+      "end_at": "2026-01-15T01:00:00Z",
+      "closure": "left_closed_right_open"
+    },
+    "value": "0.015625",
+    "unit": "decimal_return",
+    "parameters": {
+      "synthetic": true
+    },
+    "input_refs": [
+      "raw_synthetic_001"
+    ],
+    "input_digest": "7733f4c61a6ca7d961d9b5c490affe0652318d38bcaba6a5d306ddb0163776ad",
+    "source_ids": [
+      "source_synthetic"
+    ],
+    "computed_at": "2026-01-15T01:00:10Z",
+    "quality": {
+      "availability": "available",
+      "freshness": "fresh",
+      "continuity": "not_applicable",
+      "source_consistency": "single_source",
+      "time_precision": "second",
+      "reasons": []
+    },
+    "rights": {
+      "policy_id": "policy_synthetic",
+      "policy_version": "v1",
+      "store_raw": "allowed",
+      "store_derived": "allowed",
+      "display_private": "allowed",
+      "display_public": "denied",
+      "send_to_model": "allowed",
+      "export": "allowed",
+      "expires_at": null,
+      "purpose": "synthetic_offline_test_only_not_real_permission"
+    },
+    "implementation_version": "synthetic_reference_v1"
+  },
+  {
+    "evidence_id": "e_oi",
+    "method_id": "M-008",
+    "method_version": "v1",
+    "instrument_id": "ins_synthetic_btc",
+    "window": {
+      "start_at": "2026-01-15T00:00:00Z",
+      "end_at": "2026-01-15T01:00:00Z",
+      "closure": "left_closed_right_open"
+    },
+    "value": "-0.03",
+    "unit": "native_quantity_change_ratio",
+    "parameters": {
+      "synthetic": true
+    },
+    "input_refs": [
+      "raw_synthetic_001"
+    ],
+    "input_digest": "7733f4c61a6ca7d961d9b5c490affe0652318d38bcaba6a5d306ddb0163776ad",
+    "source_ids": [
+      "source_synthetic"
+    ],
+    "computed_at": "2026-01-15T01:00:10Z",
+    "quality": {
+      "availability": "available",
+      "freshness": "fresh",
+      "continuity": "not_applicable",
+      "source_consistency": "single_source",
+      "time_precision": "second",
+      "reasons": []
+    },
+    "rights": {
+      "policy_id": "policy_synthetic",
+      "policy_version": "v1",
+      "store_raw": "allowed",
+      "store_derived": "allowed",
+      "display_private": "allowed",
+      "display_public": "denied",
+      "send_to_model": "allowed",
+      "export": "allowed",
+      "expires_at": null,
+      "purpose": "synthetic_offline_test_only_not_real_permission"
+    },
+    "implementation_version": "synthetic_reference_v1"
+  }
+]

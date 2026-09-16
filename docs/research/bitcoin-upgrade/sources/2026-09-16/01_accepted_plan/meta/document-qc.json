@@ -1,0 +1,6 @@
+{
+  "status": "superseded_by_final_review",
+  "current_result": "../../10_final_review/results/document_checks.json",
+  "prior_result": "../../90_archive/prior_01_accepted_plan__meta__document-qc.json",
+  "scope": "documentation_not_repository"
+}

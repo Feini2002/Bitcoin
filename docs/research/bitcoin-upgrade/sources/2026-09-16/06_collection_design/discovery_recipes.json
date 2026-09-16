@@ -1,0 +1,242 @@
+[
+  {
+    "recipe_id": "Q01",
+    "topic": "官方事件",
+    "english_query": "official release RSS central bank bitcoin policy calendar",
+    "chinese_query": "官方 公告 比特币 政策 发布时间 RSS",
+    "verification_goal": "找到原始发布，不用转载日期当事件时间",
+    "primary_start": "https://www.federalreserve.gov/feeds/feeds.htm",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q02",
+    "topic": "统计日历",
+    "english_query": "BLS release calendar timezone ICS revision",
+    "chinese_query": "美国 经济数据 官方 发布 日历 时区 修订",
+    "verification_goal": "验证未来排期和时区",
+    "primary_start": "https://www.bls.gov/schedule/2026/09_sched.htm",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q03",
+    "topic": "ETF定义",
+    "english_query": "bitcoin ETF shares outstanding NAV issuer daily holdings flow methodology",
+    "chinese_query": "比特币 ETF 净流入 份额 NAV 发行人 计算 口径",
+    "verification_goal": "区分披露字段与估计流量",
+    "primary_start": "https://www.ishares.com/us/products/333011/ishares-bitcoin-trust-etf",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q04",
+    "topic": "历史修订",
+    "english_query": "ALFRED vintage real time period revised historical data",
+    "chinese_query": "宏观 数据 初值 修订 vintage 前视偏差",
+    "verification_goal": "寻找当时可见版本",
+    "primary_start": "https://fred.stlouisfed.org/docs/api/fred/realtime_period.html",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q05",
+    "topic": "新闻独立",
+    "english_query": "news syndication original source correction retraction event clustering",
+    "chinese_query": "新闻 转载 原始来源 更正 辟谣 事件 聚类",
+    "verification_goal": "不按域名计独立证据",
+    "primary_start": "https://www.iptc.org/std/ninjs/userguide/",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q06",
+    "topic": "正文提取",
+    "english_query": "HTML main content extraction readability trafilatura metadata dates",
+    "chinese_query": "网页 正文 提取 日期 误识别 表格 脚注",
+    "verification_goal": "比较字段保留，不只看干净文本",
+    "primary_start": "https://raw.githubusercontent.com/mozilla/readability/main/README.md",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q07",
+    "topic": "文档解析",
+    "english_query": "document parsing financial table footnotes Docling GROBID",
+    "chinese_query": "PDF 财务 表格 脚注 单位 解析 开源",
+    "verification_goal": "找结构保留与人工对照方法",
+    "primary_start": "https://github.com/docling-project/docling",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q08",
+    "topic": "持续采集",
+    "english_query": "RSS feed API ETag incremental failed polling Miniflux",
+    "chinese_query": "RSS 订阅 API 增量 失败重试 Miniflux",
+    "verification_goal": "查更新与错误元数据",
+    "primary_start": "https://miniflux.app/docs/api.html",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q09",
+    "topic": "动态页面",
+    "english_query": "web change monitoring selector changedetection browser resource limits",
+    "chinese_query": "网页 变化 监控 选择器 浏览器 资源限制",
+    "verification_goal": "只对合法目标监测实质变化",
+    "primary_start": "https://github.com/dgtlmoon/changedetection.io",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q10",
+    "topic": "近重复",
+    "english_query": "MinHash LSH news near duplicate false positives corrections",
+    "chinese_query": "新闻 近重复 MinHash LSH 误合并 更正",
+    "verification_goal": "检验候选召回和误合并",
+    "primary_start": "https://ekzhu.com/datasketch/lsh.html",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q11",
+    "topic": "跨语种检索",
+    "english_query": "hybrid lexical dense retrieval rerank multilingual finance",
+    "chinese_query": "金融 中英文 混合 检索 重排 关键词",
+    "verification_goal": "准确数字与语义召回分别评价",
+    "primary_start": "https://sbert.net/examples/sentence_transformer/applications/retrieve_rerank/README.html",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q12",
+    "topic": "市场语义",
+    "english_query": "exchange trade maker side liquidation bankruptcy price documentation",
+    "chinese_query": "交易所 主动 买卖 maker 强平 破产价 口径",
+    "verification_goal": "回到原协议字段",
+    "primary_start": "https://raw.githubusercontent.com/bybit-exchange/docs/master/docs/v5/websocket/public/all-liquidation.mdx",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q13",
+    "topic": "历史L2",
+    "english_query": "historical L2 order book gaps replay local timestamp dataset",
+    "chinese_query": "历史 订单簿 L2 回放 缺口 接收时间",
+    "verification_goal": "先确认数据可得性再选框架",
+    "primary_start": "https://docs.tardis.dev/historical-data-details/deribit",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q14",
+    "topic": "期权模型",
+    "english_query": "bitcoin options implied volatility quote currency delta convention",
+    "chinese_query": "比特币 期权 IV 币本位 delta 报价 约定",
+    "verification_goal": "避免错误模型输入",
+    "primary_start": "https://docs.deribit.com/api-reference/market-data/public-get_order_book",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q15",
+    "topic": "链上标签",
+    "english_query": "point in time exchange labels entity adjusted revisions",
+    "chinese_query": "链上 交易所 标签 实体 调整 历史 修订",
+    "verification_goal": "识别估计与原始观测",
+    "primary_start": "https://docs.glassnode.com/data/point-in-time-metrics",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q16",
+    "topic": "研究验证",
+    "english_query": "financial event study overlapping windows block bootstrap",
+    "chinese_query": "金融 事件研究 重叠窗口 区块 bootstrap",
+    "verification_goal": "明确样本单位和依赖",
+    "primary_start": "https://bashtage.github.io/arch/bootstrap/timeseries-bootstraps.html",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q17",
+    "topic": "预测评价",
+    "english_query": "forecasting benchmark temporal leakage resolved outcomes calibration",
+    "chinese_query": "预测 评价 时间泄漏 校准 结算 规则",
+    "verification_goal": "不能用已知结果测试模型记忆",
+    "primary_start": "https://arxiv.org/html/2409.19839v4",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q18",
+    "topic": "多代理反证",
+    "english_query": "multi agent research ablation cost coordination shared evidence",
+    "chinese_query": "多代理 研究 消融 成本 同源证据 错误相关",
+    "verification_goal": "寻找不支持多代理的条件",
+    "primary_start": "https://www.anthropic.com/engineering/multi-agent-research-system",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q19",
+    "topic": "恢复副作用",
+    "english_query": "durable workflow activities idempotency duplicate model calls",
+    "chinese_query": "持久 工作流 幂等 重试 模型 重复计费",
+    "verification_goal": "检查失败时间线而非正常路径",
+    "primary_start": "https://docs.temporal.io/activities",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q20",
+    "topic": "知识引用",
+    "english_query": "W3C annotation text quote selector document version citation",
+    "chinese_query": "证据 引用 段落 定位 文档 版本",
+    "verification_goal": "引用支持范围与定位分开",
+    "primary_start": "https://www.w3.org/TR/annotation-model/",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q21",
+    "topic": "工作区",
+    "english_query": "FDC3 context intent research workspace linked charts",
+    "chinese_query": "金融 工作区 联动 图表 context intent",
+    "verification_goal": "研究状态而非截图风格",
+    "primary_start": "https://github.com/finos/FDC3",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q22",
+    "topic": "许可变化",
+    "english_query": "project license AGPL attribution SDK hosted terms",
+    "chinese_query": "项目 许可证 AGPL 署名 SDK 自托管 服务 条款",
+    "verification_goal": "锁实际文件，不借旧记忆",
+    "primary_start": "https://raw.githubusercontent.com/unclecode/crawl4ai/main/LICENSE",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q23",
+    "topic": "新闻采购",
+    "english_query": "event news API clustering corrections historical redistribution",
+    "chinese_query": "新闻 事件 API 历史 更正 再分发 商业",
+    "verification_goal": "询证权利与退出，而非采纳宣传数字",
+    "primary_start": "https://github.com/EventRegistry/event-registry-python",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  },
+  {
+    "recipe_id": "Q24",
+    "topic": "维护反证",
+    "english_query": "repository no longer maintained archived support migration",
+    "chinese_query": "仓库 停止维护 归档 迁移 支持",
+    "verification_goal": "维护者声明优先于最后提交时间",
+    "primary_start": "https://github.com/citp/BlockSci",
+    "status": "reusable_recipe_not_claim_of_exact_query_execution",
+    "runtime_autoexecute": false
+  }
+]

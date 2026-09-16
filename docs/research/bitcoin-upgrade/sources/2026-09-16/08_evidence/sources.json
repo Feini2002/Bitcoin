@@ -1,0 +1,2552 @@
+[
+  {
+    "source_id": "EXT001",
+    "key": "rsshub",
+    "title": "RSSHub 官方仓库",
+    "url": "https://github.com/DIYgod/RSSHub",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "多源RSS生成器，路由与采集适配组织。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT002",
+    "key": "rsshub_license",
+    "title": "RSSHub 当前许可证",
+    "url": "https://raw.githubusercontent.com/DIYgod/RSSHub/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "当前默认分支为AGPL-3.0文本。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "targeted_rechecked",
+      "queried_at": "2026-09-16",
+      "scope": "当前主分支AGPL声明；不证明各路由或数据用途许可。"
+    }
+  },
+  {
+    "source_id": "EXT003",
+    "key": "trendradar",
+    "title": "TrendRadar 官方仓库",
+    "url": "https://github.com/sansan0/TrendRadar",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "聚合、筛选、推送和RSS产品形态；部分输入依赖上游聚合API。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT004",
+    "key": "trendradar_license",
+    "title": "TrendRadar 许可证",
+    "url": "https://raw.githubusercontent.com/sansan0/TrendRadar/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "GPL-3.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "targeted_rechecked",
+      "queried_at": "2026-09-16",
+      "scope": "当前GPL许可原文；不证明运行维护和上游数据权利。"
+    }
+  },
+  {
+    "source_id": "EXT005",
+    "key": "miniflux",
+    "title": "Miniflux 官方仓库",
+    "url": "https://github.com/miniflux/v2",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "Go阅读/聚合服务与API入口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT006",
+    "key": "miniflux_api",
+    "title": "Miniflux API参考",
+    "url": "https://miniflux.app/docs/api.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "订阅、条目、ETag、最后修改、检查时间与错误计数等接口字段。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT007",
+    "key": "miniflux_license",
+    "title": "Miniflux 许可证",
+    "url": "https://raw.githubusercontent.com/miniflux/v2/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT008",
+    "key": "freshrss",
+    "title": "FreshRSS 官方仓库",
+    "url": "https://github.com/FreshRSS/FreshRSS",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "自托管订阅阅读与扩展项目。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT009",
+    "key": "freshrss_api",
+    "title": "FreshRSS Google Reader兼容API",
+    "url": "https://freshrss.github.io/FreshRSS/en/developers/06_GoogleReader_API.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "阅读器API兼容与认证接口边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT010",
+    "key": "freshrss_license",
+    "title": "FreshRSS 许可证",
+    "url": "https://raw.githubusercontent.com/FreshRSS/FreshRSS/edge/LICENSE.txt",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "AGPL-3.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT011",
+    "key": "changedetection",
+    "title": "changedetection.io 官方仓库",
+    "url": "https://github.com/dgtlmoon/changedetection.io",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "监控页面变更的产品与实现入口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT012",
+    "key": "changedetection_license",
+    "title": "changedetection.io 许可证",
+    "url": "https://raw.githubusercontent.com/dgtlmoon/changedetection.io/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT013",
+    "key": "readability",
+    "title": "Mozilla Readability 原始说明",
+    "url": "https://raw.githubusercontent.com/mozilla/readability/main/README.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "正文提取；明确不承担HTML净化，说明DOM执行与安全边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT014",
+    "key": "trafilatura",
+    "title": "Trafilatura 官方仓库",
+    "url": "https://github.com/adbar/trafilatura",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "正文、元数据提取入口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT015",
+    "key": "trafilatura_usage",
+    "title": "Trafilatura Python用法",
+    "url": "https://trafilatura.readthedocs.io/en/latest/usage-python.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "提取接口和输出用法。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT016",
+    "key": "trafilatura_license",
+    "title": "Trafilatura 许可证",
+    "url": "https://raw.githubusercontent.com/adbar/trafilatura/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT017",
+    "key": "scrapy",
+    "title": "Scrapy 官方仓库",
+    "url": "https://github.com/scrapy/scrapy",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "爬取框架而非数据内容授权。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT018",
+    "key": "scrapy_jobs",
+    "title": "Scrapy 持久任务",
+    "url": "https://docs.scrapy.org/en/latest/topics/jobs.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "JOBDIR持久队列、暂停与恢复的限制。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT019",
+    "key": "scrapy_license",
+    "title": "Scrapy 许可证",
+    "url": "https://raw.githubusercontent.com/scrapy/scrapy/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "BSD-3-Clause。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT020",
+    "key": "crawl4ai",
+    "title": "Crawl4AI 官方仓库",
+    "url": "https://github.com/unclecode/crawl4ai",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "浏览器/内容处理流程和变更说明；未运行吞吐与提取测试。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT021",
+    "key": "crawl4ai_license",
+    "title": "Crawl4AI 许可证及署名条款",
+    "url": "https://raw.githubusercontent.com/unclecode/crawl4ai/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache基础文本之外列有Attribution Requirement，选型应完整审阅。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT022",
+    "key": "firecrawl",
+    "title": "Firecrawl 官方仓库",
+    "url": "https://github.com/firecrawl/firecrawl",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "主项目、SDK和云服务具有不同交付边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT023",
+    "key": "firecrawl_selfhost",
+    "title": "Firecrawl 自托管文档",
+    "url": "https://docs.firecrawl.dev/contributing/self-host",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "自托管与云端能力/部署要求并非自动等同。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT024",
+    "key": "firecrawl_license",
+    "title": "Firecrawl 主项目许可证",
+    "url": "https://raw.githubusercontent.com/firecrawl/firecrawl/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "主项目AGPL-3.0；不能外推每个SDK相同。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT025",
+    "key": "searxng",
+    "title": "SearXNG 官方仓库",
+    "url": "https://github.com/searxng/searxng",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "多引擎元搜索，不是独立内容来源。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT026",
+    "key": "searxng_api",
+    "title": "SearXNG Search API",
+    "url": "https://docs.searxng.org/dev/search_api.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "查询和输出接口；实例配置影响可用格式。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT027",
+    "key": "zenfeed",
+    "title": "zenfeed 官方仓库",
+    "url": "https://github.com/glidea/zenfeed",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "RSS、标签处理、查询与简报的可组合产品形态。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT028",
+    "key": "zenfeed_config",
+    "title": "zenfeed 中文配置",
+    "url": "https://raw.githubusercontent.com/glidea/zenfeed/main/docs/config-zh.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "内容重写、标签和调度配置定位。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT029",
+    "key": "zenfeed_license",
+    "title": "zenfeed 许可证",
+    "url": "https://raw.githubusercontent.com/glidea/zenfeed/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "AGPL-3.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT030",
+    "key": "mediacloud",
+    "title": "Media Cloud API v4客户端说明",
+    "url": "https://raw.githubusercontent.com/mediacloud/api-client/main/README.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "搜索API、来源集合/feeds目录及API key边界；不混用旧版客户端。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT031",
+    "key": "eventregistry",
+    "title": "Event Registry Python客户端",
+    "url": "https://github.com/EventRegistry/event-registry-python",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "文章与事件查询的官方SDK入口；服务权限独立。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT032",
+    "key": "feedly_dedup",
+    "title": "Feedly 去重文档目录",
+    "url": "https://docs.feedly.com/category/708-deduplication",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "具有去重专题文档；目录本身不证明具体阈值或效果。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT033",
+    "key": "datasketch",
+    "title": "datasketch 官方仓库",
+    "url": "https://github.com/ekzhu/datasketch",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "概率数据结构和版本兼容说明。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT034",
+    "key": "datasketch_lsh",
+    "title": "datasketch MinHash LSH",
+    "url": "https://ekzhu.com/datasketch/lsh.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "近似相似候选检索，不是语义事件判定器。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT035",
+    "key": "datasketch_license",
+    "title": "datasketch 许可证",
+    "url": "https://raw.githubusercontent.com/ekzhu/datasketch/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT036",
+    "key": "sentence_transformers",
+    "title": "Sentence Transformers 当前仓库",
+    "url": "https://github.com/huggingface/sentence-transformers",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "编码器与训练/推理组件；原UKPLab路径已跳转。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT037",
+    "key": "retrieve_rerank",
+    "title": "Sentence Transformers 检索与重排",
+    "url": "https://sbert.net/examples/sentence_transformer/applications/retrieve_rerank/README.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "双编码召回与交叉编码重排的分工。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT038",
+    "key": "sentence_license",
+    "title": "Sentence Transformers 代码许可证",
+    "url": "https://raw.githubusercontent.com/huggingface/sentence-transformers/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0；模型权重另查。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT039",
+    "key": "fts5",
+    "title": "SQLite FTS5 官方文档",
+    "url": "https://www.sqlite.org/fts5.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "全文索引、排名与外部内容表同步约束；不保证所有托管SQLite同样开放。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT040",
+    "key": "ninjs",
+    "title": "IPTC ninjs 仓库",
+    "url": "https://github.com/iptc/newsinjson",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "新闻、事件、规划对象及不同schema版本。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT041",
+    "key": "ninjs_guide",
+    "title": "IPTC ninjs 用户指南",
+    "url": "https://www.iptc.org/std/ninjs/userguide/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "结构化新闻对象、版本与关联设计。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT042",
+    "key": "ninjs_license",
+    "title": "IPTC ninjs 许可证",
+    "url": "https://raw.githubusercontent.com/iptc/newsinjson/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT；不授予新闻内容使用权。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT043",
+    "key": "w3c_annotation",
+    "title": "W3C Web Annotation Data Model",
+    "url": "https://www.w3.org/TR/annotation-model/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "body/target与选择器用于定位被注释的内容。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT044",
+    "key": "zotero_api",
+    "title": "Zotero Web API v3",
+    "url": "https://www.zotero.org/support/dev/web_api/v3/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "参考资料对象与版本/同步接口入口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT045",
+    "key": "zotero",
+    "title": "Zotero 官方仓库",
+    "url": "https://github.com/zotero/zotero",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "文献管理程序；不等于金融事件数据库。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT046",
+    "key": "tradingagents",
+    "title": "TradingAgents 官方仓库",
+    "url": "https://github.com/TauricResearch/TradingAgents",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "多角色金融分析、决策记录与恢复；效果不能外推BTC。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT047",
+    "key": "tradingagents_changes",
+    "title": "TradingAgents CHANGELOG",
+    "url": "https://raw.githubusercontent.com/TauricResearch/TradingAgents/main/CHANGELOG.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "可见历史输入/记忆等实质修正，不证明所有路径已无泄漏。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT048",
+    "key": "finrobot",
+    "title": "FinRobot 当前README",
+    "url": "https://raw.githubusercontent.com/AI4Finance-Foundation/FinRobot/master/README.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "V0/V1与V2线上源码未开放、V3开发的边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT049",
+    "key": "finrobot_license",
+    "title": "FinRobot 许可证",
+    "url": "https://raw.githubusercontent.com/AI4Finance-Foundation/FinRobot/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0，仅针对实际覆盖的代码。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT050",
+    "key": "fingpt",
+    "title": "FinGPT 官方仓库",
+    "url": "https://github.com/AI4Finance-Foundation/FinGPT",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "金融语言模型研究与数据/训练资产入口；具体权重和语料另审。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT051",
+    "key": "qlib",
+    "title": "Qlib 官方仓库",
+    "url": "https://github.com/microsoft/qlib",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "数据、模型与量化研究工作流，非所有数据免费可得。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT052",
+    "key": "qlib_workflow",
+    "title": "Qlib Workflow文档",
+    "url": "https://qlib.readthedocs.io/en/latest/component/workflow.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "实验管理、记录器与工作流组织。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT053",
+    "key": "openbb",
+    "title": "OpenBB 官方仓库",
+    "url": "https://github.com/OpenBB-finance/OpenBB",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "provider与平台交付边界；服务与来源另审。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT054",
+    "key": "nautilus",
+    "title": "NautilusTrader 官方仓库",
+    "url": "https://github.com/nautechsystems/nautilus_trader",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "事件驱动研究/执行框架，交易职责需要主动裁剪。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT055",
+    "key": "hftbacktest",
+    "title": "HftBacktest 官方仓库",
+    "url": "https://github.com/nkaz001/hftbacktest",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "订单簿回放及执行仿真研究入口；未证明本地数据能支持其假设。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT056",
+    "key": "ccxt",
+    "title": "CCXT 官方仓库",
+    "url": "https://github.com/ccxt/ccxt",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "交易所API统一适配；具体方法支持与历史范围须按venue核验。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT057",
+    "key": "cryptofeed",
+    "title": "Cryptofeed 官方仓库",
+    "url": "https://github.com/bmoscon/cryptofeed",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "实时市场数据采集与适配器架构；锁版本与条款另审。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT058",
+    "key": "yfinance",
+    "title": "yfinance 官方仓库",
+    "url": "https://github.com/ranaroussi/yfinance",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "非Yahoo官方封装，提示个人研究与数据权利边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT059",
+    "key": "blocksci",
+    "title": "BlockSci 官方仓库",
+    "url": "https://github.com/citp/BlockSci",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "README明示自2020年11月不再主动开发或支持。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT060",
+    "key": "bitcoin_core",
+    "title": "Bitcoin Core 官方仓库",
+    "url": "https://github.com/bitcoin/bitcoin",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "节点代码/测试；不会提供交易所实体标签真值。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT061",
+    "key": "mempool",
+    "title": "mempool 官方仓库",
+    "url": "https://github.com/mempool/mempool",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "链上浏览与费率/矿工语境工具；API与代码权利分开。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT062",
+    "key": "glassnode_pit",
+    "title": "Glassnode Point-in-Time 指标",
+    "url": "https://docs.glassnode.com/data/point-in-time-metrics",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "实体聚类、修订与computed_at等时点语义。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT063",
+    "key": "coinmetrics",
+    "title": "Coin Metrics Community",
+    "url": "https://docs.coinmetrics.io/packages/coin-metrics-community-data",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "社区数据子集与CC BY-NC 4.0边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT064",
+    "key": "binance_archive",
+    "title": "Binance 公开归档README",
+    "url": "https://raw.githubusercontent.com/binance/binance-public-data/master/README.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "归档时间单位、校验和、替换/修订以及MIT声明。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT065",
+    "key": "deribit_collection",
+    "title": "Deribit 行情采集指南",
+    "url": "https://docs.deribit.com/articles/market-data-collection-best-practices",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "公共流的聚合/认证与采集建议。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT066",
+    "key": "tardis_terms",
+    "title": "Tardis 服务条款",
+    "url": "https://docs.tardis.dev/legal/terms-of-service",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "供应商数据、派生输出、外部提供方与AI使用范围区别。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "targeted_rechecked",
+      "queried_at": "2026-09-16",
+      "scope": "9.5/9.6供应商数据、独立取得数据与外部服务用途边界。"
+    }
+  },
+  {
+    "source_id": "EXT067",
+    "key": "fed_feeds",
+    "title": "Federal Reserve RSS目录",
+    "url": "https://www.federalreserve.gov/feeds/feeds.htm",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "新闻、货币政策、讲话、研究和统计更新订阅入口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT068",
+    "key": "bls_calendar",
+    "title": "BLS 官方发布日历",
+    "url": "https://www.bls.gov/schedule/2026/09_sched.htm",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "公开排期、Eastern Time说明及ICS订阅入口；未来排期可修订。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT069",
+    "key": "alfred",
+    "title": "FRED/ALFRED Real-Time Periods",
+    "url": "https://fred.stlouisfed.org/docs/api/fred/realtime_period.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "历史版本查询与默认今日版本、闭区间日期参数。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT070",
+    "key": "sec_api",
+    "title": "SEC EDGAR数据API",
+    "url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "公开提交历史与XBRL读取API；不能把它当ETF日净流入统一接口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT071",
+    "key": "ibit",
+    "title": "iShares IBIT发行人页面",
+    "url": "https://www.ishares.com/us/products/333011/ishares-bitcoin-trust-etf",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "发行人披露的带日期基金字段，不据此独立认定日净申购。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT072",
+    "key": "circle",
+    "title": "Circle 透明度披露",
+    "url": "https://www.circle.com/transparency",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "发行人储备、流通等披露入口；非本研究独立审计。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT073",
+    "key": "tether",
+    "title": "Tether 透明度披露",
+    "url": "https://tether.to/en/transparency/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "发行人流通与储备披露入口；权利和历史API未全核。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT074",
+    "key": "fdc3",
+    "title": "FINOS FDC3 当前仓库",
+    "url": "https://github.com/finos/FDC3",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "context/intents/app目录、参考代码；规范许可与软件Apache许可分别说明。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT075",
+    "key": "perspective",
+    "title": "Perspective 官方仓库",
+    "url": "https://github.com/perspective-dev/perspective",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "流式/表格可视化分析组件，不附带金融指标真值。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT076",
+    "key": "haystack",
+    "title": "Haystack 官方仓库",
+    "url": "https://github.com/deepset-ai/haystack",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "Python组件与pipeline；商业平台、遥测和开源边界分开。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT077",
+    "key": "haystack_pipeline",
+    "title": "Haystack Pipelines",
+    "url": "https://docs.haystack.deepset.ai/docs/pipelines",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "有向多重图、并行/循环与取消；同步线程不能被同样中止。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT078",
+    "key": "dspy",
+    "title": "DSPy 官方仓库",
+    "url": "https://github.com/stanfordnlp/dspy",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "语言模型程序与基于评估的优化框架。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT079",
+    "key": "dspy_license",
+    "title": "DSPy 许可证",
+    "url": "https://raw.githubusercontent.com/stanfordnlp/dspy/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT080",
+    "key": "langfuse",
+    "title": "Langfuse 官方仓库",
+    "url": "https://github.com/langfuse/langfuse",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "LLM追踪与评估；自托管不等于无运维。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT081",
+    "key": "langfuse_license",
+    "title": "Langfuse 许可证",
+    "url": "https://raw.githubusercontent.com/langfuse/langfuse/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT核心与企业目录例外需要分别对待。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT082",
+    "key": "promptfoo",
+    "title": "promptfoo 官方仓库",
+    "url": "https://github.com/promptfoo/promptfoo",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "模型/提示词测试、对照与安全评估；不等于财务事实验证已完成。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT083",
+    "key": "dlt",
+    "title": "dlt 官方仓库",
+    "url": "https://github.com/dlt-hub/dlt",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "Python数据加载、状态与目的端接口入口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT084",
+    "key": "dlt_cursor",
+    "title": "dlt 增量游标文档",
+    "url": "https://dlthub.com/docs/general-usage/incremental/cursor",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "游标状态、边界记录和增量加载；不自动发现任意历史修订。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT085",
+    "key": "anthropic_multi",
+    "title": "Anthropic 多代理研究工程",
+    "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "独立分解研究和协调/上下文代价的厂商工程案例；不是BTC效果证据。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT086",
+    "key": "arch_bootstrap",
+    "title": "arch 时间序列Bootstrap",
+    "url": "https://bashtage.github.io/arch/bootstrap/timeseries-bootstraps.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "区块重采样方法及端点偏差等边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT087",
+    "key": "calibration",
+    "title": "scikit-learn 概率校准",
+    "url": "https://scikit-learn.org/stable/modules/calibration.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "可靠性图、校准方法；单一Brier分数不只度量校准。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "targeted_rechecked",
+      "queried_at": "2026-09-16",
+      "scope": "Brier与校准、区分能力不得等同。"
+    }
+  },
+  {
+    "source_id": "EXT088",
+    "key": "dowhy",
+    "title": "DoWhy 因果效应工作流",
+    "url": "https://www.pywhy.org/dowhy/main/user_guide/causal_tasks/estimating_causal_effects/index.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "模型、识别、估计、反驳的分层方法。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT089",
+    "key": "ofi_paper",
+    "title": "Cont等：订单簿事件价格影响",
+    "url": "https://arxiv.org/html/1011.6402v3",
+    "queried_at": "2026-09-16",
+    "evidence_type": "paper_html",
+    "access_status": "read",
+    "supports": "论文的OFI定义与美股样本研究；不可直接宣称在BTC有效。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT090",
+    "key": "forecastbench",
+    "title": "ForecastBench 论文v4",
+    "url": "https://arxiv.org/html/2409.19839v4",
+    "queried_at": "2026-09-16",
+    "evidence_type": "paper_html",
+    "access_status": "read",
+    "supports": "以提交时未结算事件做动态预测评价的方法；历史实验成绩不代表当前模型排序。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT091",
+    "key": "forecast_pitfalls",
+    "title": "LLM预测评估的陷阱",
+    "url": "https://arxiv.org/html/2506.00723v1",
+    "queried_at": "2026-09-16",
+    "evidence_type": "paper_html",
+    "access_status": "read",
+    "supports": "人类预测渗入输入、时间和评价设计等混杂问题。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT092",
+    "key": "v2ex_zenfeed",
+    "title": "V2EX：zenfeed作者介绍与讨论",
+    "url": "https://www.v2ex.com/t/1126882",
+    "queried_at": "2026-09-16",
+    "evidence_type": "community_discovery",
+    "access_status": "read",
+    "supports": "2025年作者/用户讨论，发现标签管道和成本问题；当前能力回仓库核验。",
+    "does_not_establish": "帖子可读不意味着内容正确或具有代表性；不采用其中绕过访问限制、旧价格和旧配置建议。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT093",
+    "key": "v2ex_rss",
+    "title": "V2EX：2026自建RSS体验讨论",
+    "url": "https://www.v2ex.com/t/1192227",
+    "queried_at": "2026-09-16",
+    "evidence_type": "community_discovery",
+    "access_status": "read",
+    "supports": "个人对阅读客户端、筛选和部署的反馈；不作总体满意度或稳定性证据。",
+    "does_not_establish": "帖子可读不意味着内容正确或具有代表性；不采用其中绕过访问限制、旧价格和旧配置建议。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT094",
+    "key": "reddit_orderbook",
+    "title": "Reddit：盘口历史与深度讨论",
+    "url": "https://www.reddit.com/r/algotrading/comments/nz5lnl/binance_full_or_atleast_sufficiently_deep/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "community_discovery",
+    "access_status": "read",
+    "supports": "旧社区线索，当前协议必须回官方验证。",
+    "does_not_establish": "帖子可读不意味着内容正确或具有代表性；不采用其中绕过访问限制、旧价格和旧配置建议。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT095",
+    "key": "x_failed",
+    "title": "X帖子正文访问失败",
+    "url": "https://x.com/coinglass_com/status/1833073677015126058",
+    "queried_at": "2026-09-16",
+    "evidence_type": "access_limitation",
+    "access_status": "failed_or_incomplete",
+    "supports": "本轮访问失败，没有读取正文。",
+    "does_not_establish": "未验证其页面正文中的具体事实。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT096",
+    "key": "hn_failed",
+    "title": "HN具体RSS讨论正文失败",
+    "url": "https://news.ycombinator.com/item?id=34113581",
+    "queried_at": "2026-09-16",
+    "evidence_type": "access_limitation",
+    "access_status": "failed_or_incomplete",
+    "supports": "搜索有摘要，直接打开失败；不据此声称读过正文。",
+    "does_not_establish": "未验证其页面正文中的具体事实。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT097",
+    "key": "fdc3_oldpath",
+    "title": "FDC3猜测旧文档路径失败",
+    "url": "https://fdc3.finos.org/docs/context/overview",
+    "queried_at": "2026-09-16",
+    "evidence_type": "access_limitation",
+    "access_status": "failed_or_incomplete",
+    "supports": "此路径未成功；改读官方当前仓库，不推断项目停止。",
+    "does_not_establish": "未验证其页面正文中的具体事实。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT098",
+    "key": "bookmap_failed",
+    "title": "Bookmap知识库路径未取到正文",
+    "url": "https://bookmap.com/knowledgebase/docs/KB-GettingStarted-Basics",
+    "queried_at": "2026-09-16",
+    "evidence_type": "access_limitation",
+    "access_status": "failed_or_incomplete",
+    "supports": "未用于证明具体产品功能或收益。",
+    "does_not_establish": "未验证其页面正文中的具体事实。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT099",
+    "key": "dspy_redirect",
+    "title": "DSPy优化文档重定向页",
+    "url": "https://dspy.ai/learn/optimization/overview/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "access_limitation",
+    "access_status": "failed_or_incomplete",
+    "supports": "只返回重定向壳，不作为具体优化方法已核依据。",
+    "does_not_establish": "未验证其页面正文中的具体事实。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT100",
+    "key": "eventregistry_shell",
+    "title": "NewsAPI.ai文档壳",
+    "url": "https://newsapi.ai/documentation",
+    "queried_at": "2026-09-16",
+    "evidence_type": "access_limitation",
+    "access_status": "failed_or_incomplete",
+    "supports": "只得到一行；官方SDK另可读取，端点价格和SLA不据此确认。",
+    "does_not_establish": "未验证其页面正文中的具体事实。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT101",
+    "key": "feedly_content_dedup",
+    "title": "Feedly 内容去重规则",
+    "url": "https://docs.feedly.com/article/218-how-does-deduplication-work",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "跨源近重复、时间窗和第三方客户端限制；这些是产品规则，不是本系统推荐阈值。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT102",
+    "key": "feedly_clustering",
+    "title": "Feedly 主题事件聚类",
+    "url": "https://docs.feedly.com/article/552-what-is-clustering",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "同题但内容不同的文章分组保留，不等同删除重复。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT103",
+    "key": "feedly_representative",
+    "title": "Feedly 聚类代表文章选择",
+    "url": "https://docs.feedly.com/article/603-which-source-will-i-see-first-when-articles-are-clustered",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "不同界面的代表文章排序依据不同；代表不是原始事实来源。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT104",
+    "key": "duckdb",
+    "title": "DuckDB 当前仓库",
+    "url": "https://github.com/duckdb/duckdb",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "开发分支与稳定发行须区分；分析数据库代码入口。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT105",
+    "key": "duckdb_concurrency",
+    "title": "DuckDB 并发文档",
+    "url": "https://duckdb.org/docs/current/connect/concurrency.html",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "嵌入式、只读、多写者目录与远程模式分别说明，不通用化一个模式的限制。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT106",
+    "key": "polars",
+    "title": "Polars 当前仓库",
+    "url": "https://github.com/pola-rs/polars",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "列式查询与DataFrame计算组件，非在线任务服务。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT107",
+    "key": "polars_license",
+    "title": "Polars 许可证",
+    "url": "https://raw.githubusercontent.com/pola-rs/polars/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT文本。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT108",
+    "key": "dagster",
+    "title": "Dagster 当前仓库",
+    "url": "https://github.com/dagster-io/dagster",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "数据资产编排框架与平台交付边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT109",
+    "key": "dagster_partitions",
+    "title": "Dagster 分区与回补",
+    "url": "https://docs.dagster.io/guides/build/partitions-and-backfills",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "分区资产、回补组织，不能代替来源覆盖与幂等计算。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT110",
+    "key": "dagster_license",
+    "title": "Dagster 许可证",
+    "url": "https://raw.githubusercontent.com/dagster-io/dagster/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT111",
+    "key": "temporal",
+    "title": "Temporal 服务端仓库",
+    "url": "https://github.com/temporalio/temporal",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "持久工作流基础设施，不是金融分析引擎。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT112",
+    "key": "temporal_activities",
+    "title": "Temporal Activities",
+    "url": "https://docs.temporal.io/activities",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "活动重试、幂等和恢复语义；并非外部操作恰好一次。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT113",
+    "key": "temporal_license",
+    "title": "Temporal 服务端许可证",
+    "url": "https://raw.githubusercontent.com/temporalio/temporal/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT。SDK及云服务另核。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT114",
+    "key": "langgraph",
+    "title": "LangGraph 仓库",
+    "url": "https://github.com/langchain-ai/langgraph",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "有状态代理图；托管产品与开源库分开。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT115",
+    "key": "langgraph_persistence",
+    "title": "LangGraph 持久化",
+    "url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "检查点、线程状态与重放概念；外部副作用仍需管理。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT116",
+    "key": "langgraph_license",
+    "title": "LangGraph 许可证",
+    "url": "https://raw.githubusercontent.com/langchain-ai/langgraph/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT117",
+    "key": "llamaindex",
+    "title": "LlamaIndex 仓库",
+    "url": "https://github.com/run-llama/llama_index",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "数据连接、索引和检索框架；连接器行为与外部服务另验。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT118",
+    "key": "llamaindex_license",
+    "title": "LlamaIndex 许可证",
+    "url": "https://raw.githubusercontent.com/run-llama/llama_index/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT119",
+    "key": "d1_limits",
+    "title": "Cloudflare D1 限制",
+    "url": "https://developers.cloudflare.com/d1/platform/limits/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "容量与执行限制，不能直接推出本系统应迁移。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT120",
+    "key": "d1_reads",
+    "title": "Cloudflare D1 读副本",
+    "url": "https://developers.cloudflare.com/d1/best-practices/read-replication/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "读副本与Sessions，非应用级固定历史快照。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "targeted_rechecked",
+      "queried_at": "2026-09-16",
+      "scope": "Sessions/读副本不等于固定应用研究快照。"
+    }
+  },
+  {
+    "source_id": "EXT121",
+    "key": "do_ws",
+    "title": "Durable Objects WebSocket",
+    "url": "https://developers.cloudflare.com/durable-objects/best-practices/websockets/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "出站连接与休眠机制的具体限制。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT122",
+    "key": "cf_workflows",
+    "title": "Cloudflare Workflows 限制",
+    "url": "https://developers.cloudflare.com/workflows/reference/limits/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "工作流资源与保留等执行边界。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT123",
+    "key": "binance_spot",
+    "title": "Binance Spot WebSocket 原始规范",
+    "url": "https://raw.githubusercontent.com/binance/binance-spot-api-docs/master/web-socket-streams.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "成交方向、时间精度、聚合、快照恢复和连接生命周期。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT124",
+    "key": "bybit_liquidation",
+    "title": "Bybit allLiquidation 原始文档",
+    "url": "https://raw.githubusercontent.com/bybit-exchange/docs/master/docs/v5/websocket/public/all-liquidation.mdx",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "破产价格、持仓方向和推送聚合口径。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT125",
+    "key": "deribit_book",
+    "title": "Deribit get_order_book",
+    "url": "https://docs.deribit.com/api-reference/market-data/public-get_order_book",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "期权报价、IV、Greeks与产品间OI单位差异。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT126",
+    "key": "tardis_deribit",
+    "title": "Tardis Deribit历史覆盖",
+    "url": "https://docs.tardis.dev/historical-data-details/deribit",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "供应商按symbol/channel声明历史范围，非逐条完整率验证。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT127",
+    "key": "coinbase_terms",
+    "title": "Coinbase 市场数据条款",
+    "url": "https://www.coinbase.com/en-nl/legal/market_data",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "第三方分发和衍生作品用途约束；适用主体合同须确认。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT128",
+    "key": "gemini_terms",
+    "title": "Gemini API附加条款",
+    "url": "https://ai.google.dev/gemini-api/terms",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "Google Search Grounding与普通模型生成的用途、留存、索引限制不同，存在特定例外。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "targeted_rechecked",
+      "queried_at": "2026-09-16",
+      "scope": "Grounding与一般生成、例外及实际合同需要分别核对，未取得用户合同。"
+    }
+  },
+  {
+    "source_id": "EXT129",
+    "key": "river",
+    "title": "River 当前仓库",
+    "url": "https://github.com/online-ml/river",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "在线预测、更新和漂移检测；不自动产生金融优势。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT130",
+    "key": "ruptures",
+    "title": "ruptures 当前仓库",
+    "url": "https://github.com/deepcharles/ruptures",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "离线变点检测与BSD-2-Clause声明。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT131",
+    "key": "exchange_calendars",
+    "title": "exchange_calendars 当前仓库",
+    "url": "https://github.com/gerrymanoim/exchange_calendars",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "证券交易时段与休市日历，不是宏观统计发布时间表。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT132",
+    "key": "calendar_license",
+    "title": "exchange_calendars许可证",
+    "url": "https://raw.githubusercontent.com/gerrymanoim/exchange_calendars/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT133",
+    "key": "vollib",
+    "title": "vollib 当前仓库",
+    "url": "https://github.com/vollib/py_vollib",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "定价与IV/Greeks，命名空间迁移需锁版本。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT134",
+    "key": "lightweight",
+    "title": "Lightweight Charts 仓库",
+    "url": "https://github.com/tradingview/lightweight-charts",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "金融图表库与署名要求；不附带TradingView商业数据和全部图表功能。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT135",
+    "key": "klinechart",
+    "title": "KLineChart 仓库",
+    "url": "https://github.com/klinecharts/KLineChart",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "指标与绘图交互，中文生态；运行兼容未测。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT136",
+    "key": "alce",
+    "title": "ALCE引用生成评估论文",
+    "url": "https://aclanthology.org/2023.emnlp-main.398/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "论文元数据/摘要与引用评价方向；不声称本轮复现全部实验。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT137",
+    "key": "akshare",
+    "title": "AKShare 当前仓库",
+    "url": "https://github.com/akfamily/akshare",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "中文金融数据适配库，具体数据源权利不由代码提供。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT138",
+    "key": "akshare_license",
+    "title": "AKShare 许可证",
+    "url": "https://raw.githubusercontent.com/akfamily/akshare/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT139",
+    "key": "laevitas",
+    "title": "Laevitas API官方文档",
+    "url": "https://docs.laevitas.ch/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "所读Gateway v1文档要求Enterprise API key，不能当免费API或外推另一版本。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT140",
+    "key": "amberdata",
+    "title": "Amberdata 文档入口",
+    "url": "https://docs.amberdata.io/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "市场、链上、衍生品与CloudSync入口；本轮只核入口，具体定价和全部方法未知。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT141",
+    "key": "hft_license_failed",
+    "title": "HftBacktest 猜测许可路径失败",
+    "url": "https://raw.githubusercontent.com/hftbacktest/hftbacktest/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "access_limitation",
+    "access_status": "failed_or_incomplete",
+    "supports": "猜测组织路径404；本库未因失败断定真实项目无许可或已停更。",
+    "does_not_establish": "需从实际仓库路径定位许可文件。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT142",
+    "key": "docling",
+    "title": "Docling 当前仓库",
+    "url": "https://github.com/docling-project/docling",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "多格式转换、DoclingDocument与布局/表格处理，模型许可另查；未执行转换。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT143",
+    "key": "docling_license",
+    "title": "Docling 许可证",
+    "url": "https://raw.githubusercontent.com/docling-project/docling/main/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "MIT。模型包另有许可。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT144",
+    "key": "grobid",
+    "title": "GROBID 当前仓库",
+    "url": "https://github.com/grobidOrg/grobid",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "学术文献到结构化TEI的解析；旧组织路径变更不代表停更。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT145",
+    "key": "grobid_license",
+    "title": "GROBID 许可证",
+    "url": "https://raw.githubusercontent.com/grobidOrg/grobid/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT146",
+    "key": "unstructured",
+    "title": "Unstructured 开源库",
+    "url": "https://github.com/Unstructured-IO/unstructured",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "文档分区/元素化，与企业平台、托管API不同。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT147",
+    "key": "unstructured_license",
+    "title": "Unstructured 库许可证",
+    "url": "https://raw.githubusercontent.com/Unstructured-IO/unstructured/main/LICENSE.md",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT148",
+    "key": "qdrant",
+    "title": "Qdrant 当前仓库",
+    "url": "https://github.com/qdrant/qdrant",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "向量搜索服务；存储不能替代证据语义和权利过滤。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT149",
+    "key": "qdrant_hybrid",
+    "title": "Qdrant 混合查询",
+    "url": "https://qdrant.tech/documentation/search/hybrid-queries/",
+    "queried_at": "2026-09-16",
+    "evidence_type": "official_source_or_documentation",
+    "access_status": "read",
+    "supports": "多路召回和融合；相似性分值不能直接当置信概率。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  },
+  {
+    "source_id": "EXT150",
+    "key": "qdrant_license",
+    "title": "Qdrant 许可证",
+    "url": "https://raw.githubusercontent.com/qdrant/qdrant/master/LICENSE",
+    "queried_at": "2026-09-16",
+    "evidence_type": "license",
+    "access_status": "read",
+    "supports": "Apache-2.0。",
+    "does_not_establish": "没有安装或运行验证；不代表性能、完整率或具体业务授权已经确认。",
+    "current_review": {
+      "round": "final-review-1.1",
+      "status": "inherited_not_rechecked",
+      "queried_at": null,
+      "scope": "沿用前轮来源记录；本轮仅检查引用及所支持范围，不声称重新读过外部页面。"
+    }
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "artifact_id": "art_metrics_001",
+  "owner_id": "owner_synthetic",
+  "kind": "metric_set",
+  "digest": "9a1dcc5d102268327e65aefb049649d2fb06400ac139bc8f1262f9f99b647b89",
+  "media_type": "application/json",
+  "byte_length": 1976,
+  "storage_kind": "inline",
+  "storage_locator": "fixture://sample_metrics.canonical.json",
+  "schema_version": "research.metricset.v2",
+  "created_at": "2026-01-15T01:00:10Z",
+  "expires_at": null,
+  "policy_id": "policy_synthetic",
+  "policy_version": "v1",
+  "availability": "available"
+}

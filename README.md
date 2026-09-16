@@ -38,6 +38,8 @@ flowchart LR
 
 ## 文件导航
 
+- [按功能定位代码与研究资料](docs/research/bitcoin-upgrade/QUICK_ROUTER.md)：支持K线/指标等17条路由、文件摘要和CodeGraph定位，日常修改优先从这里开始。
+- [系统升级资料总纲](docs/research/bitcoin-upgrade/README.md)：本轮收口记录、免费通道与D1交付、币安连接限制及下一轮工作台改版起点；原始研究包仍作为参考。
 - [完整文档索引](docs/README.md)
 - [仓库布局与文件治理](docs/architecture/repository-layout.md)
 - [脚本用途与副作用](scripts/README.md)

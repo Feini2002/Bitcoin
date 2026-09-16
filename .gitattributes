@@ -1,0 +1,3 @@
+# Preserve the user-supplied research snapshots byte for byte in Git.
+docs/research/bitcoin-upgrade/sources/** -text
+docs/research/bitcoin-upgrade/archives/** -text

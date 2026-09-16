@@ -590,7 +590,7 @@
         return;
       }
       const source = this.sources.binance;
-      const url = "wss://fstream.binance.com/ws/!forceOrder@arr";
+      const url = "wss://fstream.binance.com/market/ws/!forceOrder@arr";
       this.setSourceStatus("binance", { status: "connecting", lastError: "" });
       try {
         source.ws = new WebSocket(url);
@@ -636,7 +636,7 @@
       if (typeof WebSocket === "undefined") return;
       const source = this.sources.binance;
       const sym = this.symbol.toLowerCase();
-      const url = `wss://fstream.binance.com/stream?streams=${sym}@aggTrade/${sym}@forceOrder`;
+      const url = `wss://fstream.binance.com/market/stream?streams=${sym}@aggTrade/${sym}@forceOrder`;
       try {
         source.probeWs = new WebSocket(url);
       } catch (e) {

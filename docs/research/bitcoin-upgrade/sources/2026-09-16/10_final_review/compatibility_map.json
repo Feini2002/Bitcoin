@@ -1,0 +1,24 @@
+{
+  "version": "final-review-1.1",
+  "current_time_modes": [
+    "system_observed",
+    "publicly_available",
+    "retrospective_latest"
+  ],
+  "input_aliases_requiring_logged_conversion": {
+    "public_available": "publicly_available",
+    "internal_display": "display_private",
+    "public_display": "display_public",
+    "model_input": "send_to_model",
+    "published_precision:day": "published_precision:date"
+  },
+  "never_infer": [
+    "version_observed_at from resource first_seen_at",
+    "active permission from candidate enabled",
+    "true observation from synthetic fixture",
+    "canonicalization profile for legacy digest"
+  ],
+  "collection_v1_example_only": "只作为旧合成样例读取；迁移为record_origin=synthetic，不能变成observed。",
+  "legacy_retraction_false": "映射current_valid_only；历史审阅必须是新的明确私有审计请求且重新检查当前权限。",
+  "research_v2_to_v2_1": "旧历史只读适配，原hash和正文保留；用现有数据新算只能生成迁移版本，不冒充旧时记录。"
+}

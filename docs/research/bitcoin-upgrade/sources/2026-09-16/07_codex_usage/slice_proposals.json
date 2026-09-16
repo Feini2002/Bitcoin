@@ -1,0 +1,13 @@
+{
+  "version": "final-review-1.1",
+  "task_catalog": "../10_final_review/scoped_tasks.json",
+  "profiles": [
+    "market_template",
+    "collection_pilot",
+    "integrated_template",
+    "model_brief",
+    "integrated_model"
+  ],
+  "all_default_enabled": false,
+  "note": "示例范围，需在实际仓库绑定；旧WP是完整能力详细规格。"
+}

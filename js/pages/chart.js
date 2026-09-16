@@ -179,8 +179,6 @@ let chartAggWs = null;
 let chartAggWsReconnectTimer = null;
 let chartHeadlinePollTimer = null;
 let chartHeadlineLastWsMsgAt = 0;
-/** false = fstream U本位 aggTrade；true = 现货 stream aggTrade（防火长城/线路不通时切换） */
-let chartHeadlineUseSpotWs = false;
 let chartHeadlineWsStallTimer = null;
 /** 当前 headline WS 会话内是否收到过 aggTrade（与 REST 兜底无关） */
 let chartHeadlineAggSinceOpen = false;
@@ -990,36 +988,6 @@ function chartKeyLevelPanelHtml() {
   `;
 }
 
-function chartAgentLinkHtml(agent) {
-  if (!agent) return "";
-  return `
-    <a class="owner-link chart-agent-link" href="#/${agentRoute(agent.id)}" title="查看 ${agent.name}">
-      <span class="owner-dot" style="background:${agent.color}">${agent.short}</span>
-      <span>${agent.name}</span>
-      <span class="owner-arrow"><i class="ph ph-arrow-right"></i></span>
-    </a>
-  `;
-}
-
-function chartDataStatusStripHtml() {
-  const owner = DATA_OWNER.chart || {};
-  const primary = owner.primary ? AGENT_MAP[owner.primary] : null;
-  const related = (owner.related || []).map((id) => AGENT_MAP[id]).filter(Boolean);
-  const ownerChips = [primary, ...related].filter(Boolean).map(chartAgentLinkHtml).join("");
-  return html`
-    <section class="chart-data-strip" aria-label="行情数据状态">
-      <div class="chart-data-main">
-        <span class="chart-feed-dot" aria-hidden="true"></span>
-        <div>
-          <strong>BTCUSDT 永续</strong>
-          <span>D1 历史 K 线 · WS 实时行情独立显示 · 服务时效见下方状态</span>
-        </div>
-      </div>
-      <div class="chart-data-owners">${ownerChips}</div>
-    </section>
-  `;
-}
-
 function formatChartHeadlinePrice(price) {
   if (!Number.isFinite(price)) return null;
   return price.toFixed(2);
@@ -1066,7 +1034,6 @@ async function chartPollHeadlinePriceRest() {
   const want = CHART_SYMBOL;
   const restUrls = [
     `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${encodeURIComponent(want)}`,
-    `https://api.binance.com/api/v3/ticker/price?symbol=${encodeURIComponent(want)}`,
   ];
   for (const u of restUrls) {
     try {
@@ -1092,7 +1059,7 @@ async function chartPollHeadlinePriceRest() {
         `${tickerProxyBase}/api/binance/ticker/price?symbol=${encodeURIComponent(want)}`,
         { cache: "no-store", mode: "cors", credentials: "include" },
       );
-      if (!r.ok) return;
+      if (!r.ok || r.headers.get("X-Data-Source") !== "binance-fapi-ticker-price") return;
       const j = await r.json();
       const p = parseFloat(j.price);
       if (Number.isFinite(p)) applyChartPrimaryHeadline(want, p);
@@ -1128,8 +1095,6 @@ function pageChart() {
 
   return html`
     <div class="chart-desk">
-      ${chartDataStatusStripHtml()}
-
       <div class="chart-toolbar">
         <div class="chart-tf-group" aria-label="周期切换">
           ${tfButtons}
@@ -1225,7 +1190,6 @@ function disposeChartPage() {
   closeChartAggTradeWs();
   stopChartHeadlineRestPoll();
   chartHeadlineLastWsMsgAt = 0;
-  chartHeadlineUseSpotWs = false;
   chartHeadlineAggSinceOpen = false;
   clearChartD1Polling();
   if (chartResizeObserver) {
@@ -1511,7 +1475,7 @@ function closeChartAggTradeWs() {
 }
 
 /**
- * 主图标题现价：Binance aggTrade WS（fstream U 本位 ↔ spot 自动切换）+ REST 轮询兜底（chartPollHeadlinePriceRest）。
+ * 主图标题现价：Binance U本位 aggTrade WS + REST 轮询兜底（chartPollHeadlinePriceRest）。
  * 与 kline_{interval} 并行，切换周期时无需重连本条流。
  */
 function startChartAggTradeWs(symbol) {
@@ -1520,9 +1484,7 @@ function startChartAggTradeWs(symbol) {
 
   const want = String(symbol || CHART_SYMBOL).toUpperCase();
   const streamSym = want.toLowerCase();
-  const url = chartHeadlineUseSpotWs
-    ? `wss://stream.binance.com:9443/ws/${streamSym}@aggTrade`
-    : `wss://fstream.binance.com/ws/${streamSym}@aggTrade`;
+  const url = `wss://fstream.binance.com/market/ws/${streamSym}@aggTrade`;
   let ws;
   try {
     ws = new WebSocket(url);
@@ -1540,8 +1502,7 @@ function startChartAggTradeWs(symbol) {
       chartHeadlineWsStallTimer = null;
       if (opened !== chartAggWs) return;
       if (chartHeadlineAggSinceOpen) return;
-      chartHeadlineUseSpotWs = !chartHeadlineUseSpotWs;
-      console.warn("[chart] headline aggTrade 长期无成交包，切换 WS 线路 spot=", chartHeadlineUseSpotWs);
+      console.warn("[chart] U本位 aggTrade 长期无成交包，重新连接");
       closeChartAggTradeWs();
       startChartAggTradeWs(CHART_SYMBOL);
     }, CHART_HEADLINE_WS_STALL_SWITCH_MS);
@@ -1585,7 +1546,7 @@ function startChartWs(symbol, interval) {
   if (typeof WebSocket === "undefined") return;
 
   const stream = `${symbol.toLowerCase()}@kline_${interval}`;
-  const url = `wss://fstream.binance.com/ws/${stream}`;
+  const url = `wss://fstream.binance.com/market/ws/${stream}`;
   let ws;
   try {
     ws = new WebSocket(url);

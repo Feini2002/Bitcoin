@@ -1,0 +1,71 @@
+{
+  "report_id": "report_synthetic_001",
+  "run_id": "run_synthetic_001",
+  "input_bundle_id": "bundle_synthetic_001",
+  "schema_version": "research.report.v2.1",
+  "title": "合成示例：价格上行而未平仓规模减少",
+  "state": "changes_available",
+  "facts": [
+    {
+      "claim_id": "c_fact_1",
+      "text": "所选市场价格上涨，同时原生OI规模下降。",
+      "epistemic_type": "fact",
+      "evidence_ids": [
+        "e_return",
+        "e_oi"
+      ],
+      "numeric_refs": [
+        "e_return",
+        "e_oi"
+      ],
+      "counterevidence_ids": [],
+      "status": "supported"
+    }
+  ],
+  "interpretations": [
+    {
+      "claim_id": "c_interpret_1",
+      "text": "这与仓位缩减同时发生，但现有证据不能确定是哪类参与者主导。",
+      "epistemic_type": "interpretation",
+      "evidence_ids": [
+        "e_return",
+        "e_oi"
+      ],
+      "numeric_refs": [
+        "e_return",
+        "e_oi"
+      ],
+      "counterevidence_ids": [],
+      "status": "qualified"
+    }
+  ],
+  "conditions": [
+    {
+      "claim_id": "c_condition_1",
+      "text": "后续检查同源主动成交与价格延续，不把该组合直接判断为逼空。",
+      "epistemic_type": "hypothesis",
+      "evidence_ids": [
+        "e_return",
+        "e_oi"
+      ],
+      "numeric_refs": [
+        "e_return",
+        "e_oi"
+      ],
+      "counterevidence_ids": [],
+      "status": "qualified"
+    }
+  ],
+  "counterevidence": [],
+  "limitations": [
+    "全部数据为合成样例，不代表当前市场。",
+    "期权与ETF数据未启用，不能作确认。"
+  ],
+  "validated_at": "2026-01-15T01:00:10Z",
+  "validator_version": "design_fixture_v1",
+  "artifact_id": "art_report_synthetic",
+  "supersedes_report_id": null,
+  "content_digest": "3e27e23ef6f079fc0fdcc8a7688c91aa858e8d3323685e5f33f2ff5beb55ab7d",
+  "coverage_id": null,
+  "comparison_bundle_id": null
+}

@@ -1,0 +1,6 @@
+{
+  "status": "superseded_by_final_review",
+  "current_result": "../10_final_review/results/document_checks.json",
+  "old_result_location": "../90_archive/prior_08_evidence__package_qc.json",
+  "not_a_business_test": true
+}

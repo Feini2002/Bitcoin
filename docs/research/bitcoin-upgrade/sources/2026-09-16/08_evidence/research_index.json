@@ -1,0 +1,299 @@
+[
+  {
+    "id": "RES01",
+    "title": "能力地图与复用决策",
+    "path": "03_research/RES01_能力地图与复用决策.md",
+    "source_ids": [
+      "EXT052",
+      "EXT041",
+      "EXT074",
+      "EXT059"
+    ]
+  },
+  {
+    "id": "RES02",
+    "title": "持续订阅与来源发现",
+    "path": "03_research/RES02_持续订阅与来源发现.md",
+    "source_ids": [
+      "EXT006",
+      "EXT009",
+      "EXT001",
+      "EXT067",
+      "EXT068"
+    ]
+  },
+  {
+    "id": "RES03",
+    "title": "网页提取与浏览器采集",
+    "path": "03_research/RES03_网页提取与浏览器采集.md",
+    "source_ids": [
+      "EXT013",
+      "EXT015",
+      "EXT018",
+      "EXT023",
+      "EXT021"
+    ]
+  },
+  {
+    "id": "RES04",
+    "title": "事件主张去重与更正",
+    "path": "03_research/RES04_事件主张去重与更正.md",
+    "source_ids": [
+      "EXT041",
+      "EXT034",
+      "EXT102",
+      "EXT103",
+      "EXT043"
+    ]
+  },
+  {
+    "id": "RES05",
+    "title": "多语言检索与研究上下文",
+    "path": "03_research/RES05_多语言检索与研究上下文.md",
+    "source_ids": [
+      "EXT039",
+      "EXT037",
+      "EXT026",
+      "EXT128"
+    ]
+  },
+  {
+    "id": "RES06",
+    "title": "实时行情采集与标准化",
+    "path": "03_research/RES06_实时行情采集与标准化.md",
+    "source_ids": [
+      "EXT056",
+      "EXT057",
+      "EXT123",
+      "EXT124",
+      "EXT126"
+    ]
+  },
+  {
+    "id": "RES07",
+    "title": "历史回补时点与数据修订",
+    "path": "03_research/RES07_历史回补时点与数据修订.md",
+    "source_ids": [
+      "EXT064",
+      "EXT069",
+      "EXT062",
+      "EXT084",
+      "EXT126"
+    ]
+  },
+  {
+    "id": "RES08",
+    "title": "订单流足迹与盘口研究",
+    "path": "03_research/RES08_订单流足迹与盘口研究.md",
+    "source_ids": [
+      "EXT089",
+      "EXT123",
+      "EXT055",
+      "EXT054"
+    ]
+  },
+  {
+    "id": "RES09",
+    "title": "资金费持仓基差与强平",
+    "path": "03_research/RES09_资金费持仓基差与强平.md",
+    "source_ids": [
+      "EXT125",
+      "EXT124",
+      "EXT056",
+      "EXT126",
+      "EXT139",
+      "EXT140"
+    ]
+  },
+  {
+    "id": "RES10",
+    "title": "期权研究与波动率结构",
+    "path": "03_research/RES10_期权研究与波动率结构.md",
+    "source_ids": [
+      "EXT125",
+      "EXT065",
+      "EXT133",
+      "EXT126",
+      "EXT139",
+      "EXT140"
+    ]
+  },
+  {
+    "id": "RES11",
+    "title": "链上矿工与实体资金流",
+    "path": "03_research/RES11_链上矿工与实体资金流.md",
+    "source_ids": [
+      "EXT060",
+      "EXT061",
+      "EXT062",
+      "EXT059",
+      "EXT063"
+    ]
+  },
+  {
+    "id": "RES12",
+    "title": "宏观ETF稳定币与跨资产",
+    "path": "03_research/RES12_宏观ETF稳定币与跨资产.md",
+    "source_ids": [
+      "EXT069",
+      "EXT070",
+      "EXT071",
+      "EXT072",
+      "EXT073",
+      "EXT068",
+      "EXT131"
+    ]
+  },
+  {
+    "id": "RES13",
+    "title": "因子事件研究与可复现验证",
+    "path": "03_research/RES13_因子事件研究与可复现验证.md",
+    "source_ids": [
+      "EXT052",
+      "EXT086",
+      "EXT088",
+      "EXT130",
+      "EXT129"
+    ]
+  },
+  {
+    "id": "RES14",
+    "title": "预测校准观点与决策记录",
+    "path": "03_research/RES14_预测校准观点与决策记录.md",
+    "source_ids": [
+      "EXT090",
+      "EXT091",
+      "EXT087"
+    ]
+  },
+  {
+    "id": "RES15",
+    "title": "完整金融平台的可迁移经验",
+    "path": "03_research/RES15_完整金融平台的可迁移经验.md",
+    "source_ids": [
+      "EXT053",
+      "EXT052",
+      "EXT047",
+      "EXT048",
+      "EXT050"
+    ]
+  },
+  {
+    "id": "RES16",
+    "title": "模型工具与多代理的适用边界",
+    "path": "03_research/RES16_模型工具与多代理的适用边界.md",
+    "source_ids": [
+      "EXT085",
+      "EXT046",
+      "EXT077",
+      "EXT117",
+      "EXT115",
+      "EXT078"
+    ]
+  },
+  {
+    "id": "RES17",
+    "title": "报告质量评价与可观测性",
+    "path": "03_research/RES17_报告质量评价与可观测性.md",
+    "source_ids": [
+      "EXT136",
+      "EXT082",
+      "EXT080",
+      "EXT078"
+    ]
+  },
+  {
+    "id": "RES18",
+    "title": "金融工作区与研究现场",
+    "path": "03_research/RES18_金融工作区与研究现场.md",
+    "source_ids": [
+      "EXT074",
+      "EXT075",
+      "EXT134",
+      "EXT135"
+    ]
+  },
+  {
+    "id": "RES19",
+    "title": "研究知识库与证据生命周期",
+    "path": "03_research/RES19_研究知识库与证据生命周期.md",
+    "source_ids": [
+      "EXT044",
+      "EXT041",
+      "EXT043",
+      "EXT059"
+    ]
+  },
+  {
+    "id": "RES20",
+    "title": "存储计算与部署路线",
+    "path": "03_research/RES20_存储计算与部署路线.md",
+    "source_ids": [
+      "EXT105",
+      "EXT106",
+      "EXT119",
+      "EXT120",
+      "EXT121",
+      "EXT122"
+    ]
+  },
+  {
+    "id": "RES21",
+    "title": "增量管道调度与失败恢复",
+    "path": "03_research/RES21_增量管道调度与失败恢复.md",
+    "source_ids": [
+      "EXT084",
+      "EXT109",
+      "EXT112",
+      "EXT077"
+    ]
+  },
+  {
+    "id": "RES22",
+    "title": "许可数据权利成本与供应商退出",
+    "path": "03_research/RES22_许可数据权利成本与供应商退出.md",
+    "source_ids": [
+      "EXT002",
+      "EXT021",
+      "EXT074",
+      "EXT127",
+      "EXT063",
+      "EXT066",
+      "EXT128"
+    ]
+  },
+  {
+    "id": "RES23",
+    "title": "完整能力组合与自建采购对照",
+    "path": "03_research/RES23_完整能力组合与自建采购对照.md",
+    "source_ids": [
+      "EXT006",
+      "EXT105",
+      "EXT126",
+      "EXT031",
+      "EXT077"
+    ]
+  },
+  {
+    "id": "RES24",
+    "title": "信息价值覆盖与降噪评价",
+    "path": "03_research/RES24_信息价值覆盖与降噪评价.md",
+    "source_ids": [
+      "EXT030",
+      "EXT102",
+      "EXT101",
+      "EXT082"
+    ]
+  },
+  {
+    "id": "RES25",
+    "title": "论文披露与复杂文档摄取",
+    "path": "03_research/RES25_论文披露与复杂文档摄取.md",
+    "source_ids": [
+      "EXT142",
+      "EXT144",
+      "EXT146",
+      "EXT143"
+    ]
+  }
+]

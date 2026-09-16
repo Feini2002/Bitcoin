@@ -23,7 +23,7 @@ function featureInfo(id) {
 }
 function renderFeatureNotice(id) {
   const info = featureInfo(id);
-  if (!info || FEATURE_STATE_BY_ROUTE[id] === "local") return "";
+  if (!info || id === "chart" || FEATURE_STATE_BY_ROUTE[id] === "local") return "";
   return '<aside class="feature-notice" data-testid="feature-notice"><strong>' + info.label + '</strong><span>' + info.note + '</span><a href="#/overview">功能清单</a></aside>';
 }
 function renderDemoPreview(content) {

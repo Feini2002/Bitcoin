@@ -1,0 +1,86 @@
+{
+  "status": "DOCUMENT_ARTIFACT_CHECKS_ONLY",
+  "date": "2026-09-16",
+  "checks": [
+    {
+      "check": "JSON parsing",
+      "pass": true,
+      "detail": "15 JSON files parsed; no project code executed"
+    },
+    {
+      "check": "JSON Schema meta-validation",
+      "pass": true,
+      "detail": "37 definitions, Draft 2020-12"
+    },
+    {
+      "check": "Synthetic fixture structure",
+      "pass": true,
+      "detail": "74 scenario envelopes and 7 typed sample objects valid; scenario behaviours not executed"
+    },
+    {
+      "check": "Example hash/reference integrity",
+      "pass": true,
+      "detail": "Canonical bundle/report/artifact digests and numeric evidence refs checked only on synthetic examples"
+    },
+    {
+      "check": "Example arithmetic",
+      "pass": true,
+      "detail": "Two synthetic return/change values recomputed with Decimal; not a repository-method test"
+    },
+    {
+      "check": "Proposed SQL reference syntax",
+      "pass": true,
+      "detail": "30 proposed tables created in a fresh in-memory SQLite solely to check syntax; not D1/production migration validation"
+    },
+    {
+      "check": "API reference structure",
+      "pass": true,
+      "detail": "39 distinct operations; path parameters and local schema refs checked; not a full OpenAPI/runtime test"
+    },
+    {
+      "check": "Task dependency graph",
+      "pass": true,
+      "detail": "60 unique tasks, no missing dependency or hard-dependency cycle; ordering is not an implementation result"
+    },
+    {
+      "check": "Document references",
+      "pass": true,
+      "detail": "16 completed volumes; local Markdown targets and WP IDs checked; external availability only as reported in source index"
+    },
+    {
+      "check": "Encoding",
+      "pass": true,
+      "detail": "UTF-8 readable; no replacement characters in authored package"
+    },
+    {
+      "check": "Input preservation",
+      "pass": true,
+      "detail": "Both copied input reports match their mounted originals byte-for-byte"
+    }
+  ],
+  "statistics": {
+    "completed_volumes": 16,
+    "authored_volume_characters": 212657,
+    "authored_volume_han_characters": 104335,
+    "implementation_tasks": 60,
+    "synthetic_cases": 74,
+    "schema_definitions": 37,
+    "api_operations": 39,
+    "proposed_tables": 30,
+    "sources_indexed": 79,
+    "count_scope": "16 volumes only; excludes original inputs, contracts, repeated combined edition and metadata"
+  },
+  "input_sha256": {
+    "previous_research_review.md": "e8f45bf280ec17cc5120b3328806acfb3ba9890c5841a163ed325ae11f097014",
+    "repository_facts.md": "a7e2fe7c23b407b83c4be47a596a40ea1aa1d1817db41ba43662ead0ffabcc33"
+  },
+  "not_verified": [
+    "actual repository source/implementation",
+    "candidate software execution",
+    "actual provider API or model requests",
+    "D1 remote migration, transaction behaviour and performance",
+    "live market completeness",
+    "licensing for specific accounts/uses",
+    "actual user research value or predictive outcomes"
+  ]
+}

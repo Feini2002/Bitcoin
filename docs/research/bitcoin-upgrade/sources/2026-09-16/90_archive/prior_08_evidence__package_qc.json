@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-09-16",
+  "accepted_files_byte_identical": 40,
+  "utf8_and_json_parse": "passed",
+  "new_collection_schema_and_examples": "passed_document_only",
+  "new_local_markdown_file_links_checked": 124,
+  "new_local_markdown_file_link_errors": [],
+  "unique_ids": "passed",
+  "reports_minimum_substantive_length_check": "passed",
+  "original_task_graph_analysis": "computed_without_modifying",
+  "runtime_candidate_tests": false,
+  "production_or_account_access": false,
+  "model_or_market_data_calls": false,
+  "content_truth_auto_verified": false,
+  "external_links_permanently_available": false,
+  "notes": [
+    "页面阅读范围见sources.json；不表示所有来源全文已读或授权已获批。",
+    "原方案历史自检与测试记录不冒充本轮重测。",
+    "本次只运行自己编写的文档生成、JSON/Schema/链接/hash检查，没有执行候选仓库代码。"
+  ]
+}

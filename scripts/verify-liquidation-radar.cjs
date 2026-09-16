@@ -24,6 +24,23 @@ function assert(name, cond, detail) {
 
   assert("exports liquidation hooks", !!hooks);
 
+  const originalWebSocket = globalThis.WebSocket;
+  const sockets = [];
+  globalThis.WebSocket = class { constructor(url) { this.url = url; sockets.push(this); } close() {} };
+  try {
+    const collector = Object.create(mod.LiquidationCollector.prototype);
+    collector.symbol = "BTCUSDT";
+    collector.sources = { binance: collector.emptySource("binance") };
+    collector.connectBinance();
+    collector.connectBinanceProbe();
+    assert("collector subscribes migrated market liquidation stream", sockets[0].url === "wss://fstream.binance.com/market/ws/!forceOrder@arr");
+    assert("collector probe subscribes migrated combined stream", sockets[1].url === "wss://fstream.binance.com/market/stream?streams=btcusdt@aggTrade/btcusdt@forceOrder");
+    sockets[1].onopen();
+    assert("probe open is not a market heartbeat", !collector.sources.binance.lastMarketMessageAt && !collector.sources.binance.heartbeatCount);
+    sockets[1].onmessage({ data: JSON.stringify({ stream: "btcusdt@aggTrade", data: { e: "aggTrade", s: "BTCUSDT" } }) });
+    assert("actual trade advances market heartbeat", collector.sources.binance.lastMarketMessageAt > 0 && collector.sources.binance.heartbeatCount === 1);
+  } finally { globalThis.WebSocket = originalWebSocket; }
+
   const t0 = Date.UTC(2026, 3, 30, 8, 0, 21);
   const bucketStart = hooks.liquidationBucketStart(t0);
   assert("liquidation bucket floors to 5m", bucketStart === Date.UTC(2026, 3, 30, 8, 0, 0), bucketStart);

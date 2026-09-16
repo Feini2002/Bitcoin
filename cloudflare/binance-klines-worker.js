@@ -1,4 +1,5 @@
 import { accessCorsHeaders, requireCloudflareAccess } from "./access-auth.js";
+import { handleFinance } from "./finance/gateway.mjs";
 
 /**
  * Cloudflare Worker：币安 U 本位永续 K 线的云端数据层
@@ -5463,7 +5464,7 @@ export class LiquidationCollector {
       this.sourceStatus("binance", { status: "unavailable", lastError: "WebSocket unavailable" });
       return;
     }
-    const url = "wss://fstream.binance.com/ws/!forceOrder@arr";
+    const url = "wss://fstream.binance.com/market/ws/!forceOrder@arr";
     this.sourceStatus("binance", { status: "connecting", lastError: "" });
     let ws;
     try {
@@ -5514,7 +5515,7 @@ export class LiquidationCollector {
   connectBinanceProbe() {
     if (typeof WebSocket === "undefined") return;
     const sym = this.symbol.toLowerCase();
-    const url = `wss://fstream.binance.com/stream?streams=${sym}@aggTrade/${sym}@forceOrder`;
+    const url = `wss://fstream.binance.com/market/stream?streams=${sym}@aggTrade/${sym}@forceOrder`;
     let ws;
     try {
       ws = new WebSocket(url);
@@ -5526,7 +5527,7 @@ export class LiquidationCollector {
     }
     ws.onopen = () => {
       if (ws !== this.binanceProbeWs) return;
-      this.touchHeartbeat("binance", "probe-open");
+      this.touchTransport("binance", "probe-open");
     };
     ws.onmessage = (ev) => {
       if (ws !== this.binanceProbeWs) return;
@@ -5811,6 +5812,8 @@ export default {
     const path = url.pathname.replace(/\/$/, "") || "/";
     const accessDenied = await requireCloudflareAccess(request, env, json);
     if (accessDenied) return accessDenied;
+
+    if (path === "/api/finance" || path.startsWith("/api/finance/")) return handleFinance(request, env, ctx);
 
     if (path === "/api/d1/klines") return handleReadKlines(request, env, url);
     if (path === "/api/d1/sync") return handleManualSync(request, env, url, ctx);

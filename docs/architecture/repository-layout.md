@@ -11,9 +11,11 @@
 | js/ | 页面、导航、数据请求及图表模块 | 当前 .js 文件 |
 | cloudflare/ | 行情、舆情 Worker、配置、数据库迁移 | 否 |
 | cloudflare/snapshot/ | 独立市场快照程序、Worker、配置与 schema | 否 |
+| cloudflare/finance/ | 免费金融通道目录、网关、按需 D1 最新响应存储与独立建表 SQL | 否 |
 | config/pages-assets.json | Pages 资产清单 | 否 |
 | scripts/ | 验证、构建、诊断、导入和发布工具 | 否 |
-| docs/ | 当前有效的架构、操作与治理记录 | 否 |
+| docs/ | 架构、操作、治理记录与分类文档入口 | 否 |
+| docs/research/bitcoin-upgrade/ | 升级研究总纲、主题路由、代码对应表、来源快照与原始ZIP | 否 |
 | .codex/ | Codex 项目技能与配置 | 否 |
 | docs/reference/project-skills/ | 保留的早期技能资料，不作为当前操作入口 | 否 |
 | docs/reference/archive/ | 历史代码文本与早期参考 | 否 |
@@ -59,6 +61,7 @@
 - AGENTS.md 与用户指令：执行边界。
 - Cursor 已停用；.cursor/ 与 .cursorrules 已删除，有效项目约束集中于 AGENTS.md。
 - docs/architecture/：实际模块与待建设范围。
+- docs/research/bitcoin-upgrade/：[升级研究资料入口](../research/bitcoin-upgrade/README.md)；设计、调查基线与历史资料分开，不代表已实施或已授权执行。
 - docs/operations/：操作说明，不重复创造授权流程。
 - docs/governance.md：上一轮业务治理证据。
 - docs/reference/：历史参考，不属于当前规则。
@@ -88,3 +91,16 @@
 - 目录切换有短暂间隙，不承诺为并发部署提供原子快照；同一工作区的构建与发布应串行。突然断电或进程被强杀不在自动恢复保证内，可重建 dist/pages。
 
 - 加固验收：npm run build 通过，12 项产物测试全部通过，输出仍为 33 个前端文件；日志 .artifacts/hardening-build.log。本轮未修改页面资源，未重复浏览器验收；未执行线上部署。
+
+## 2026-09-16 升级研究资料归档补记
+
+本次仅整理资料。上面的构建/UI记录属于此前文件治理工作，不是本次重新执行的结果。
+
+| 原位置 | 新位置 |
+| --- | --- |
+| 根目录 bitcoin_research_final_2026-09-16.zip | docs/research/bitcoin-upgrade/archives/ 原名保存 |
+| ZIP内 bitcoin_research_final_2026-09-16/ | docs/research/bitcoin-upgrade/sources/2026-09-16/，完整保留内部结构和219个文件 |
+| 根目录 bitcoin_research_evidence_review_2026-09-16.md | docs/research/bitcoin-upgrade/repository-baseline/ 原名保存 |
+| 根目录 bitcoin_research_repository_response_2026-09-16.md | docs/research/bitcoin-upgrade/repository-baseline/ 原名保存 |
+
+新增[总纲](../research/bitcoin-upgrade/README.md)、[阅读路由](../research/bitcoin-upgrade/READING_ROUTES.md)与[仓库对应表](../research/bitcoin-upgrade/REPOSITORY_MAP.md)。研究包中的SQL、Schema、示例和检查脚本保留在资料目录，未并入运行代码、迁移或默认测试。没有变更Pages资产清单，也未部署。

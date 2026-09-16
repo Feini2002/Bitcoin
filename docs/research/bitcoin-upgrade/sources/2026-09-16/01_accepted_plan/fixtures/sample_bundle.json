@@ -1,0 +1,73 @@
+{
+  "bundle_id": "bundle_synthetic_001",
+  "run_id": "run_synthetic_001",
+  "parent_bundle_id": null,
+  "schema_version": "research.bundle.v2.1",
+  "market_cutoff_at": "2026-01-15T01:00:00Z",
+  "knowledge_cutoff_at": "2026-01-15T01:00:10Z",
+  "capture_start_at": "2026-01-15T01:00:00Z",
+  "capture_end_at": "2026-01-15T01:00:10Z",
+  "as_known_mode": "system_observed",
+  "evidence_refs": [
+    {
+      "evidence_id": "e_return",
+      "artifact_id": "art_metrics_001",
+      "json_pointer": "/0",
+      "kind": "computed_metric",
+      "digest": "bf4d2dc0cc9a0e180b4d2b56529ef40bb2f0daaecd3e1dcce5c919cdf44b2d45",
+      "rights": {
+        "policy_id": "policy_synthetic",
+        "policy_version": "v1",
+        "store_raw": "allowed",
+        "store_derived": "allowed",
+        "display_private": "allowed",
+        "display_public": "denied",
+        "send_to_model": "allowed",
+        "export": "allowed",
+        "expires_at": null,
+        "purpose": "synthetic_offline_test_only_not_real_permission"
+      }
+    },
+    {
+      "evidence_id": "e_oi",
+      "artifact_id": "art_metrics_001",
+      "json_pointer": "/1",
+      "kind": "computed_metric",
+      "digest": "84ae6b18a4e037f294d84d67e9718aaf386130fa26ba4402888d0a18cbe9dec0",
+      "rights": {
+        "policy_id": "policy_synthetic",
+        "policy_version": "v1",
+        "store_raw": "allowed",
+        "store_derived": "allowed",
+        "display_private": "allowed",
+        "display_public": "denied",
+        "send_to_model": "allowed",
+        "export": "allowed",
+        "expires_at": null,
+        "purpose": "synthetic_offline_test_only_not_real_permission"
+      }
+    }
+  ],
+  "method_versions": {
+    "M-001": "v1",
+    "M-008": "v1"
+  },
+  "source_policy_versions": {
+    "policy_synthetic": "v1"
+  },
+  "required_capabilities": [
+    "price",
+    "open_interest"
+  ],
+  "missing_capabilities": [
+    "options",
+    "etf_flow"
+  ],
+  "sealed_at": "2026-01-15T01:00:10Z",
+  "digest": "d7647f06829d5a7df073046f7732f233d0ffcae95625fc7cefd861d5587e51f6",
+  "canonicalization_version": "btc-ascii-key-json-v1",
+  "implementation_versions": {
+    "M-001": "synthetic_reference_v1",
+    "M-008": "synthetic_reference_v1"
+  }
+}

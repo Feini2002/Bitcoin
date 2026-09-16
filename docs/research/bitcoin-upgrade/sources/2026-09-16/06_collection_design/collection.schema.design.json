@@ -1,0 +1,1027 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/research-library/collection-design-v2",
+  "title": "Collection contract v2-design; structure plus separate domain/policy validation",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SourceCandidate"
+    },
+    {
+      "$ref": "#/$defs/SourceRegistration"
+    },
+    {
+      "$ref": "#/$defs/CollectionAttempt"
+    },
+    {
+      "$ref": "#/$defs/ResourceVersion"
+    },
+    {
+      "$ref": "#/$defs/ClaimCandidate"
+    },
+    {
+      "$ref": "#/$defs/CoverageReport"
+    },
+    {
+      "$ref": "#/$defs/RetrievalRequest"
+    }
+  ],
+  "$defs": {
+    "UseDecisions": {
+      "type": "object",
+      "properties": {
+        "discovery": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        },
+        "fetch": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        },
+        "store_raw": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        },
+        "store_derived": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        },
+        "display_private": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        },
+        "display_public": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        },
+        "send_to_model": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        },
+        "export": {
+          "enum": [
+            "unknown",
+            "allowed",
+            "denied"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "SourceCandidate": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "const": "SourceCandidate"
+        },
+        "record_origin": {
+          "enum": [
+            "observed",
+            "synthetic",
+            "imported"
+          ]
+        },
+        "source_candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "discovery_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "entry_kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "research_purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limitations": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtime_endpoint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtime_endpoint_verified": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "const": false
+        },
+        "status": {
+          "enum": [
+            "reference_candidate_only",
+            "examined",
+            "pilot_eligible",
+            "paused",
+            "rejected"
+          ]
+        },
+        "allowed_uses": {
+          "$ref": "#/$defs/UseDecisions"
+        },
+        "polling_interval_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "monthly_budget": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "object_type",
+        "record_origin",
+        "source_candidate_id",
+        "name",
+        "category",
+        "reference_id",
+        "discovery_url",
+        "entry_kind",
+        "research_purpose",
+        "limitations",
+        "runtime_endpoint",
+        "runtime_endpoint_verified",
+        "enabled",
+        "status",
+        "allowed_uses",
+        "polling_interval_seconds",
+        "monthly_budget",
+        "owner",
+        "checked_at"
+      ],
+      "additionalProperties": false
+    },
+    "SourceRegistration": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "const": "SourceRegistration"
+        },
+        "record_origin": {
+          "enum": [
+            "observed",
+            "synthetic",
+            "imported"
+          ]
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtime_endpoint": {
+          "type": "string",
+          "format": "uri"
+        },
+        "owner_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_policy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "state": {
+          "enum": [
+            "configured",
+            "active",
+            "paused",
+            "retired"
+          ]
+        },
+        "endpoint_verified_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "approved_operations": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "fetch",
+              "store_raw",
+              "store_derived",
+              "display_private",
+              "display_public",
+              "send_to_model",
+              "export"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "network_profile_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits_profile_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_type",
+        "record_origin",
+        "source_id",
+        "candidate_id",
+        "runtime_endpoint",
+        "owner_id",
+        "source_policy_id",
+        "source_policy_version",
+        "enabled",
+        "state",
+        "endpoint_verified_at",
+        "approved_operations",
+        "network_profile_id",
+        "limits_profile_id"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            },
+            "required": [
+              "enabled"
+            ]
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "const": "active"
+              },
+              "endpoint_verified_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "approved_operations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true,
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "active"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CollectionAttempt": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "const": "CollectionAttempt"
+        },
+        "record_origin": {
+          "enum": [
+            "observed",
+            "synthetic",
+            "imported"
+          ]
+        },
+        "attempt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "enum": [
+            "queued",
+            "fetching",
+            "received",
+            "validated",
+            "persisted",
+            "indexed",
+            "unchanged",
+            "partial",
+            "failed",
+            "denied",
+            "cancelled"
+          ]
+        },
+        "started_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "ended_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "response_status": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 100,
+          "maximum": 599
+        },
+        "resource_versions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "error_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor_before": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor_after": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "object_type",
+        "record_origin",
+        "attempt_id",
+        "source_id",
+        "state",
+        "started_at",
+        "ended_at",
+        "response_status",
+        "resource_versions",
+        "error_code",
+        "cursor_before",
+        "cursor_after"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceVersion": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "const": "ResourceVersion"
+        },
+        "record_origin": {
+          "enum": [
+            "observed",
+            "synthetic",
+            "imported"
+          ]
+        },
+        "resource_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_published_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "published_precision": {
+          "enum": [
+            "second",
+            "minute",
+            "date",
+            "unknown"
+          ]
+        },
+        "first_seen_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "version_observed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "fetched_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "source_updated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_revision_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "content_kind": {
+          "enum": [
+            "structured",
+            "full_text",
+            "excerpt",
+            "metadata_only",
+            "partial"
+          ]
+        },
+        "content_artifact_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_content_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "extraction_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "extractor_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rights": {
+          "$ref": "#/$defs/UseDecisions"
+        },
+        "policy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_status": {
+          "enum": [
+            "active",
+            "corrected",
+            "retracted",
+            "unknown"
+          ]
+        },
+        "availability": {
+          "enum": [
+            "available",
+            "metadata_only",
+            "restricted",
+            "deleted",
+            "missing"
+          ]
+        },
+        "version_observation_key": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_type",
+        "record_origin",
+        "resource_id",
+        "version_id",
+        "source_id",
+        "source_published_at",
+        "published_precision",
+        "first_seen_at",
+        "version_observed_at",
+        "fetched_at",
+        "source_updated_at",
+        "source_revision_id",
+        "content_kind",
+        "content_artifact_id",
+        "source_content_digest",
+        "extraction_digest",
+        "extractor_version",
+        "rights",
+        "policy_id",
+        "policy_version",
+        "source_status",
+        "availability",
+        "version_observation_key"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "published_precision": {
+                "const": "unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_published_at": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "published_precision": {
+                "const": "date"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_published_at": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "published_precision": {
+                "enum": [
+                  "second",
+                  "minute"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_published_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "content_kind": {
+                "enum": [
+                  "full_text",
+                  "excerpt",
+                  "structured"
+                ]
+              },
+              "availability": {
+                "const": "available"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content_artifact_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "extraction_digest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ClaimCandidate": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "const": "ClaimCandidate"
+        },
+        "record_origin": {
+          "enum": [
+            "observed",
+            "synthetic",
+            "imported"
+          ]
+        },
+        "claim_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource_version_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "polarity": {
+          "enum": [
+            "affirmed",
+            "denied",
+            "uncertain"
+          ]
+        },
+        "modality": {
+          "enum": [
+            "observed",
+            "reported",
+            "planned",
+            "estimated",
+            "hypothetical",
+            "unknown"
+          ]
+        },
+        "event_time": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "status": {
+          "enum": [
+            "extracted",
+            "reviewed",
+            "unsupported",
+            "conflicted",
+            "retracted"
+          ]
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_type",
+        "record_origin",
+        "claim_id",
+        "resource_version_id",
+        "text",
+        "polarity",
+        "modality",
+        "event_time",
+        "status",
+        "locator"
+      ],
+      "additionalProperties": false
+    },
+    "CoverageReport": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "const": "CoverageReport"
+        },
+        "record_origin": {
+          "enum": [
+            "observed",
+            "synthetic",
+            "imported"
+          ]
+        },
+        "coverage_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "panel_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "panel_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverage_basis": {
+          "const": "declared_panel"
+        },
+        "window_start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "window_end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "evaluated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "required_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "usable_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "failed_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "coverage_class": {
+          "enum": [
+            "usable",
+            "partial",
+            "insufficient",
+            "unknown"
+          ]
+        },
+        "comparison_available": {
+          "type": "boolean"
+        },
+        "quiet_result_allowed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "object_type",
+        "record_origin",
+        "coverage_id",
+        "panel_id",
+        "panel_version",
+        "coverage_basis",
+        "window_start",
+        "window_end",
+        "evaluated_at",
+        "required_sources",
+        "usable_sources",
+        "failed_sources",
+        "coverage_class",
+        "comparison_available",
+        "quiet_result_allowed"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "quiet_result_allowed": {
+                "const": true
+              }
+            },
+            "required": [
+              "quiet_result_allowed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "coverage_class": {
+                "const": "usable"
+              },
+              "comparison_available": {
+                "const": true
+              },
+              "required_sources": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true,
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RetrievalRequest": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "const": "RetrievalRequest"
+        },
+        "record_origin": {
+          "enum": [
+            "observed",
+            "synthetic",
+            "imported"
+          ]
+        },
+        "query": {
+          "type": "string",
+          "minLength": 1
+        },
+        "as_of": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "mode": {
+          "enum": [
+            "system_observed",
+            "publicly_available",
+            "retrospective_latest"
+          ]
+        },
+        "purpose": {
+          "enum": [
+            "display_private",
+            "send_to_model",
+            "display_public",
+            "export"
+          ]
+        },
+        "source_scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "retraction_view": {
+          "enum": [
+            "current_valid_only",
+            "as_of_with_current_notice",
+            "audit_history"
+          ]
+        }
+      },
+      "required": [
+        "object_type",
+        "record_origin",
+        "query",
+        "as_of",
+        "mode",
+        "purpose",
+        "source_scope",
+        "retraction_view"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "enum": [
+                  "system_observed",
+                  "publicly_available"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "as_of": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "retraction_view": {
+                "enum": [
+                  "as_of_with_current_notice",
+                  "audit_history"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "purpose": {
+                "const": "display_private"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

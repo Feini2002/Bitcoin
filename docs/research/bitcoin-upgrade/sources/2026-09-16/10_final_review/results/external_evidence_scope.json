@@ -1,0 +1,20 @@
+{
+  "inherited_source_records": 150,
+  "inherited_previous_access_status_counts": {
+    "read": 143,
+    "failed_or_incomplete": 7
+  },
+  "current_round_flags": {
+    "inherited_not_rechecked": 144,
+    "targeted_rechecked": 6
+  },
+  "current_round_primary_recheck_records": 8,
+  "not_additive_counts": "本轮抽核包含旧条目交集，不与150相加声称新增独立来源。许可文件另有针对性读取，未量化全仓维护。",
+  "not_verified": [
+    "all sources current",
+    "all repositories source or tests",
+    "commercial contracts",
+    "source SLA",
+    "claimed real-world performance"
+  ]
+}

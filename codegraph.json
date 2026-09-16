@@ -1,0 +1,9 @@
+{
+  "exclude": [
+    "docs/",
+    ".artifacts/",
+    ".codex/",
+    ".env",
+    ".env.*"
+  ]
+}
