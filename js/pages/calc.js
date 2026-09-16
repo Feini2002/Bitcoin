@@ -29,7 +29,7 @@ function pageCalc() {
 
       <div>
         <div class="result-panel">
-          <div class="card-title">计算结果</div>
+          <div class="card-title">固定结果示例（不会随输入计算）</div>
           <div class="result-item"><span class="result-label">止损距离</span><span class="result-value">500 USDT (0.78%)</span></div>
           <div class="result-item"><span class="result-label">允许亏损</span><span class="result-value">500 USDT</span></div>
           <div class="result-item"><span class="result-label">建议仓位</span><span class="result-value big">1.00 BTC</span></div>

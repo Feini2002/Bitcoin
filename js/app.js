@@ -43,31 +43,30 @@ function resolveRoute() {
   return id;
 }
 
+// 只释放上一个页面；取消尚未执行的挂载，避免快速切页后启动旧订阅。
+const PAGE_DISPOSERS = {
+  chart: () => window.__bitDeskDisposeChart?.(),
+  orderflow: () => window.__bitDeskDisposeOrderflow?.(),
+  heatmap: () => window.__bitDeskDisposeHeatmap?.(),
+  derivatives: () => disposeDerivatives(),
+  news: () => window.__bitDeskDisposeYuqingEvents?.(),
+  "news-analysis": () => window.__bitDeskDisposeNews?.(),
+};
+let mountedPage = null;
+let pendingPageMount = null;
 function render() {
-  if (typeof window.__bitDeskDisposeChart === "function") {
-    window.__bitDeskDisposeChart();
-  }
-  if (typeof window.__bitDeskDisposeOrderflow === "function") {
-    window.__bitDeskDisposeOrderflow();
-  }
-  if (typeof window.__bitDeskDisposeHeatmap === "function") {
-    window.__bitDeskDisposeHeatmap();
-  }
-  if (typeof disposeDerivatives === "function") {
-    disposeDerivatives();
-  }
-  if (typeof window.__bitDeskDisposeNews === "function") {
-    window.__bitDeskDisposeNews();
-  }
-  if (typeof window.__bitDeskDisposeYuqingEvents === "function") {
-    window.__bitDeskDisposeYuqingEvents();
-  }
+  if (pendingPageMount !== null) cancelAnimationFrame(pendingPageMount);
+  pendingPageMount = null;
+  if (mountedPage && PAGE_DISPOSERS[mountedPage]) PAGE_DISPOSERS[mountedPage]();
+  mountedPage = null;
   const id = resolveRoute();
   const route = ROUTES[id];
   const outlet = $("#outlet");
 
   outlet.style.animation = "none";
-  outlet.innerHTML = route.render();
+  const content = route.render();
+  outlet.innerHTML = renderFeatureNotice(id) + (FEATURE_STATE_BY_ROUTE[id] === "demo" ? renderDemoPreview(content) : content);
+  disableDemoControls(outlet);
   void outlet.offsetWidth;
   outlet.style.animation = "";
 
@@ -75,35 +74,19 @@ function render() {
   highlightNav(id);
 
   if (typeof route.afterMount === "function") {
-    requestAnimationFrame(() => route.afterMount());
+    pendingPageMount = requestAnimationFrame(() => {
+      pendingPageMount = null;
+      mountedPage = id;
+      route.afterMount();
+    });
   }
   attachPageEvents();
 }
 
 function attachPageEvents() {
-  $$("#tfTabs .tf-tab").forEach(t => {
-    t.addEventListener("click", () => {
-      $$("#tfTabs .tf-tab").forEach(x => x.classList.remove("active"));
-      t.classList.add("active");
-      renderEnvCharts();
-    });
-  });
-  $$("#indChips .chip").forEach(c => {
-    c.addEventListener("click", () => c.classList.toggle("active"));
-  });
   $$(".history-item").forEach(h => {
     h.addEventListener("click", () => h.classList.toggle("open"));
   });
-  const ask = $("#askInput");
-  if (ask) {
-    ask.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        console.log("[追问环境评估员] ", ask.value);
-        ask.value = "";
-      }
-    });
-  }
   const themePicker = $("#themePicker");
   if (themePicker && !themePicker.dataset.bound) {
     themePicker.dataset.bound = "1";
@@ -141,8 +124,9 @@ function tickClock() {
 function init() {
   initTheme();
   buildSidebar();
+  initMobileNavigation();
   const rawHash = location.hash.replace(/^#\/?/, "").trim();
-  if (!rawHash || !ROUTES[rawHash]) {
+  if (!rawHash || !ROUTES[rawHash.split("?")[0]]) {
     history.replaceState(null, "", "#chart");
   }
   render();

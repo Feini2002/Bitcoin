@@ -232,7 +232,7 @@ assert("结构算法样本不足稳定返回", emptyStructure.rangeContext.state
 
 async function assertSnapshotParityVsBrowser() {
   const { pathToFileURL } = require("url");
-  const snapMod = await import(pathToFileURL(path.join(__dirname, "..", "快照程序分析", "chartStructureSnapshot.mjs")).href);
+  const snapMod = await import(pathToFileURL(path.join(__dirname, "..", "cloudflare", "snapshot", "chartStructureSnapshot.mjs")).href);
   const opts = { interval: "5m", atrPeriod: 14, limit: 6 };
   const boxBars = makeBoxBars({ length: 220, ms: ms5m, high: 110, low: 90, spikeHigh: 145 });
   const snapS = snapMod.computeSnapshotChartStructureLevels(boxBars, opts);

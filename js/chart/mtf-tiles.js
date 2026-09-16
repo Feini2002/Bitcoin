@@ -317,7 +317,7 @@
         return;
       }
       try {
-        const raw = await DataEngine.fetchKlinesFromD1(sym, interval, 2000, { sync: "0" });
+        const raw = await DataEngine.fetchKlinesFromD1(sym, interval, 6000, { sync: "0" });
         if (g !== t.loadGen) return;
         if (!Array.isArray(raw) || !raw.length) {
           errEl("无 K 线，请检查 Worker Cron / D1 状态，或在设置页手动同步");

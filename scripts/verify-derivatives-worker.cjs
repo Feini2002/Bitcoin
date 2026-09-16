@@ -19,6 +19,7 @@ function assert(name, cond, detail) {
   let src = fs.readFileSync(file, "utf8");
   src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
   src = src.replace(/export default\s*\{/, "const __workerDefault = {");
+  src += '\nsyncDerivativesOne = async (_env, _symbol, options) => options;';
   const mod = await import(`data:text/javascript;base64,${Buffer.from(src, "utf8").toString("base64")}`);
   const hooks = mod.__footprintTestHooks;
 
@@ -43,6 +44,15 @@ function assert(name, cond, detail) {
     "exact Binance ban stops alternate retries",
     hooks.shouldStopDerivativeOriginRetry(false, { kind: "blacklisted_ip", banUntilMs: Date.now() + 60000 }) === true
   );
+
+  assert("CloudFront 403 activates existing derivative fallback", hooks.shouldUseBybitDerivativeFallback(["http_403"], ["403 ERROR: The request could not be satisfied"]));
+  assert("Binance throttle activates existing derivative fallback", hooks.shouldUseBybitDerivativeFallback(["rate_limited"], ["403 Forbidden"]));
+  assert("legacy geographic failure still activates fallback", hooks.shouldUseBybitDerivativeFallback(["geo_restricted"], ["Service unavailable from a restricted location"]));
+  assert("unrelated parse error does not switch exchanges", !hooks.shouldUseBybitDerivativeFallback(["parse"], ["Invalid JSON"]));
+
+  const staleDb = { prepare: () => ({ bind: () => ({ all: async () => ({ results: [] }) }) }) };
+  const scheduledRepair = await hooks.syncDerivativesIfDue({ DB: staleDb }, "BTCUSDT", new Date("2026-09-15T16:15:00Z"));
+  assert("missing proprietary history does not starve scheduled funding and OI", scheduledRepair.groups === "core", JSON.stringify(scheduledRepair));
 
   const now = Date.UTC(2026, 4, 4, 16, 0, 0);
   const task = hooks.derivativeTaskHealthKey("long_short", "hist");

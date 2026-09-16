@@ -18,6 +18,9 @@ if (typeof window !== "undefined" && window.BIT_YUQING_API_BASE != null && Strin
 
 /** 当前应请求的 K 线 Worker 根 URL（与已部署 Worker 一致）。 */
 function getBitDataApiBase() {
+  if (typeof window !== "undefined" && window.BIT_DATA_API_BASE != null && String(window.BIT_DATA_API_BASE).trim()) {
+    return String(window.BIT_DATA_API_BASE).trim().replace(/\/$/, "");
+  }
   return BIT_KLINE_DEFAULT_CLOUD;
 }
 
@@ -50,23 +53,23 @@ const AGENTS = [
   { id: "chief", name: "首席策略官", short: "策", color: "var(--agent-chief)",
     role: "交叉验证四位专员结论，给出今日唯一指引",
     kpis: ["综合结论", "置信度", "今日主策略", "反对票数", "二层共识", "风险预算"],
-    status: "online" },
+    status: "demo" },
   { id: "env", name: "环境评估员", short: "环", color: "var(--agent-env)",
     role: "多周期K线 / ATR / 布林带 / DVOL / VIX · MOVE",
     kpis: ["ATR", "ATR%位", "BB宽度", "DVOL", "期限结构", "主周期"],
-    status: "online" },
+    status: "demo" },
   { id: "flow", name: "盘口流动性官", short: "盘", color: "var(--agent-flow)",
     role: "足迹图 / 成交量分布(POC·VAH·VAL) / Imbalance / SFP / 强平雷达",
     kpis: ["POC", "VAH", "VAL", "最近SFP", "Imbalance", "清算池"],
-    status: "online" },
+    status: "demo" },
   { id: "deriv", name: "衍生品情报官", short: "衍", color: "var(--agent-deriv)",
     role: "资金费率 / OI / 主动买卖量 / 基差 / Top Trader",
     kpis: ["BTC Funding", "OI变化", "主动买卖量", "基差年化", "Top Trader", "多空比"],
-    status: "online" },
+    status: "demo" },
   { id: "risk", name: "风控官", short: "控", color: "var(--agent-risk)",
     role: "账户余额 / 持仓 / 单笔风险 / 回撤 / 黑天鹅预警",
     kpis: ["账户余额", "当前风险", "本日PnL", "最大回撤", "可开仓", "风控评分"],
-    status: "online" },
+    status: "demo" },
 ];
 const AGENT_MAP = Object.fromEntries(AGENTS.map(a => [a.id, a]));
 

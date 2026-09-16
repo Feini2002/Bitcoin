@@ -57,10 +57,64 @@ function readSettingsYuqingScheduleDraft() {
   };
 }
 
-function settingsYuqingNextRunLabel(cfg) {
+const SETTINGS_YUQING_SCHEDULE_TARGETS = [
+  {
+    id: "daily_event",
+    label: "事件日报",
+    routeLabel: "事件一览",
+    cronTitle: "Worker 定点事件日报",
+    times: ["00:00", "08:00", "12:00", "20:00"],
+    note: "实际触发以已部署 Worker Cron 为准；下方开关只控制浏览器时间预估。",
+  },
+  {
+    id: "sentiment_analysis",
+    label: "舆情二次分析",
+    routeLabel: "舆情分析",
+    cronTitle: "Worker 定点二次分析",
+    times: ["09:00", "14:00", "22:00"],
+    note: "依赖事件日报与市场监测；实际触发以已部署 Worker Cron 为准。",
+  },
+];
+
+function settingsYuqingScheduleTarget(routeId) {
+  return SETTINGS_YUQING_SCHEDULE_TARGETS.find((target) => target.id === routeId) || null;
+}
+
+function settingsYuqingRouteDraft(cfg, routeId) {
+  const target = settingsYuqingScheduleTarget(routeId);
+  if (!target) return null;
+  const routes = cfg && cfg.routes && typeof cfg.routes === "object" ? cfg.routes : {};
+  const routeCfg = routes[routeId] && typeof routes[routeId] === "object" ? routes[routeId] : {};
+  const times = Array.isArray(routeCfg.times) && routeCfg.times.length
+    ? routeCfg.times
+    : routeId === "sentiment_analysis" && Array.isArray(cfg && cfg.analysisTimes)
+      ? cfg.analysisTimes
+      : routeId === "daily_event" && Array.isArray(cfg && cfg.times)
+        ? cfg.times
+        : target.times;
+  return {
+    ...target,
+    ...routeCfg,
+    enabled: Object.prototype.hasOwnProperty.call(routeCfg, "enabled") ? !!routeCfg.enabled : !!(cfg && cfg.enabled),
+    times: times.length ? times : target.times,
+    timezone: "Asia/Shanghai",
+  };
+}
+
+function settingsYuqingNextRunLabel(cfg, routeId = "daily_event") {
+  const routeCfg = settingsYuqingRouteDraft(cfg || readSettingsYuqingScheduleDraft(), routeId);
+  if (!routeCfg) return "未启用";
+  const payload = {
+    ...(cfg || {}),
+    routeId,
+    routes: {
+      ...((cfg && cfg.routes) || {}),
+      [routeId]: routeCfg,
+    },
+  };
   const iso =
     typeof DataEngine !== "undefined" && typeof DataEngine.nextYuqingScheduleRun === "function"
-      ? DataEngine.nextYuqingScheduleRun(cfg)
+      ? DataEngine.nextYuqingScheduleRun(payload)
       : null;
   if (!iso) return "未启用";
   const d = new Date(iso);
@@ -104,35 +158,8 @@ const SETTINGS_MODEL_TARGETS = [
   { id: "playbook.assistant", group: "系统", page: "知识库 Playbook", module: "AI 检索与纪律推荐", status: "reserved", defaultModel: "gemini-3-flash-preview", note: "预留：未来按场景检索纪律与策略卡片。" },
 ];
 
-const SETTINGS_EXECUTION_CHANNELS = [
-  { id: "gemini_worker", label: "Gemini Worker", tier: "云端", hint: "沿用当前 Worker 内 Gemini 编排，生成请求同步返回或直接写入 D1。" },
-  { id: "codex_cli", label: "Codex CLI 隧道", tier: "本地", hint: "Worker 派发任务到本地 Codex CLI bridge，前端等待任务落库。" },
-];
-
-const SETTINGS_EXECUTION_TARGETS = [
-  { id: "daily_event", group: "舆情与事件", page: "事件一览", module: "实时扫描", status: "active", defaultChannel: "gemini_worker", note: "事件日报生成入口；支持切换到本地 Codex CLI 隧道。" },
-  { id: "sentiment_analysis", group: "舆情与事件", page: "舆情分析", module: "二次分析", status: "active", defaultChannel: "gemini_worker", note: "二次舆情分析生成入口；Codex 任务会在前台轮询等待。" },
-  { id: "overview.advice", group: "核心", page: "概览 Dashboard", module: "首席综合建议", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来聚合市场数据、事件日报和员工结论后给出总建议。" },
-  { id: "premarket.brief", group: "核心", page: "盘前简报", module: "盘前简报", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来由五位 Agent 与日历数据生成盘前 checklist。" },
-  { id: "boardroom.meeting", group: "智囊团", page: "会议室", module: "会议召集与追问", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来协调多 Agent 发言、交叉质询和会议纪要。" },
-  { id: "agent.chief", group: "员工 Agent", page: "智囊团", module: "首席策略官", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来读取下属结论、事件报告和资产状态形成最终指引。" },
-  { id: "agent.env", group: "员工 Agent", page: "智囊团", module: "环境评估员", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来读取 K 线、波动率和宏观环境后形成环境判断。" },
-  { id: "agent.flow", group: "员工 Agent", page: "智囊团", module: "盘口流动性官", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来读取足迹图、成交分布、强平雷达和流动性池。" },
-  { id: "agent.deriv", group: "员工 Agent", page: "智囊团", module: "衍生品情报官", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来读取资金费率、OI、期权、基差和多空结构。" },
-  { id: "agent.risk", group: "员工 Agent", page: "智囊团", module: "风控官", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来读取仓位、风险预算、清算价和异常模式。" },
-  { id: "agent.archive", group: "智囊团", page: "发言历史库", module: "发言检索与准确性复盘", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来检索员工历史发言、按结果归因和导出复盘材料。" },
-  { id: "strategy.templates", group: "交易执行", page: "策略模板库", module: "策略模板助手", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来按当前市场状态推荐或生成策略模板。" },
-  { id: "order.draft", group: "交易执行", page: "订单草稿台", module: "订单草稿风控预检", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来由风控官检查方向、价格、仓位和止损参数。" },
-  { id: "positions.risk", group: "交易执行", page: "当前持仓", module: "持仓风险解读", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来结合持仓、保证金、清算价和风险预算给出解读。" },
-  { id: "review.journal", group: "复盘系统", page: "交易日志", module: "交易日志点评", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来对单笔交易情绪、策略执行和结果做文字点评。" },
-  { id: "review.daily", group: "复盘系统", page: "每日复盘", module: "每日复盘", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来汇总员工点评、执行偏差和明日 checklist。" },
-  { id: "review.performance", group: "复盘系统", page: "绩效统计", module: "绩效归因", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来解释胜率、盈亏比、回撤和策略分布变化。" },
-  { id: "review.patterns", group: "复盘系统", page: "错误模式", module: "错误模式归因", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来把高频交易错误归类并生成纠偏建议。" },
-  { id: "playbook.assistant", group: "系统", page: "知识库 Playbook", module: "AI 检索与纪律推荐", status: "reserved", defaultChannel: "gemini_worker", note: "预留：未来按场景检索纪律、策略卡片和学习笔记。" },
-];
-
 let __settingsModelConfig = null;
-let __settingsExecutionConfig = null;
+let __settingsModelGroupOpen = Object.create(null);
 
 function defaultSettingsModelConfig() {
   const effective = {};
@@ -158,19 +185,11 @@ function normalizeSettingsModelConfig(data) {
   const targets = Array.isArray(src.targets) && src.targets.length ? src.targets : fallback.targets;
   const settings = src.settings && typeof src.settings === "object" ? src.settings : fallback.settings;
   const assignments = settings.assignments && typeof settings.assignments === "object" ? settings.assignments : {};
-  const effectiveSrc = src.effective && typeof src.effective === "object" ? src.effective : {};
   const effective = {};
   targets.forEach((target) => {
-    effective[target.id] = String(effectiveSrc[target.id] || assignments[target.id] || target.defaultModel || fallback.effective[target.id] || "");
+    effective[target.id] = String((src.effective && src.effective[target.id]) || assignments[target.id] || target.defaultModel || fallback.effective[target.id] || "");
   });
-  return {
-    ...fallback,
-    ...src,
-    catalog,
-    targets,
-    settings: { ...settings, assignments },
-    effective,
-  };
+  return { ...fallback, ...src, catalog, targets, settings: { version: 1, assignments, updatedAt: settings.updatedAt || null }, effective };
 }
 
 function settingsModelSourceLabel(cfg) {
@@ -191,28 +210,8 @@ function settingsModelOptions(catalog, selected) {
   `).join("");
 }
 
-function settingsModelTargetRouteId(target) {
-  const id = String(target && target.id ? target.id : "");
-  if (id.startsWith("daily_event.")) return "daily_event";
-  if (id.startsWith("sentiment_analysis.")) return "sentiment_analysis";
-  return id;
-}
-
 function settingsTargetStatusLabel(target) {
   return target && target.status === "reserved" ? "预留" : "已接入";
-}
-
-function settingsChannelById(channels, id) {
-  return (channels || []).find((channel) => channel.id === id) || null;
-}
-
-function settingsChannelLabel(channels, id) {
-  const channel = settingsChannelById(channels, id);
-  return channel ? channel.label || channel.id : id || "未设置";
-}
-
-function settingsChannelTone(id) {
-  return id === "codex_cli" ? "local" : "cloud";
 }
 
 function settingsModelSelectedValue(cfg, target) {
@@ -225,6 +224,51 @@ function settingsGroupedTargets(targets) {
     if (!groups.includes(target.group)) groups.push(target.group);
   });
   return groups;
+}
+
+function settingsModelGroupKey(scope, group) {
+  return `${String(scope || "model")}::${String(group || "未分组")}`;
+}
+
+function settingsModelGroupIsOpen(scope, group, opts = {}) {
+  const key = settingsModelGroupKey(scope, group);
+  if (Object.prototype.hasOwnProperty.call(__settingsModelGroupOpen, key)) {
+    return !!__settingsModelGroupOpen[key];
+  }
+  if (Object.prototype.hasOwnProperty.call(opts, "defaultOpen")) {
+    return !!opts.defaultOpen;
+  }
+  return false;
+}
+
+function renderSettingsModelGroupShell(scope, group, countLabel, body, opts = {}) {
+  const className = opts.className ? ` ${opts.className}` : "";
+  const head = `
+    <div class="settings-model-group-head">
+      <strong>${escapeHtml(group)}</strong>
+      <span>${escapeHtml(countLabel)}</span>
+    </div>
+  `;
+  if (opts.collapsible === false) {
+    return `
+      <section class="settings-model-group${className}">
+        ${head}
+        ${body}
+      </section>
+    `;
+  }
+  const key = settingsModelGroupKey(scope, group);
+  const open = settingsModelGroupIsOpen(scope, group, opts);
+  return `
+    <details class="settings-model-group settings-model-group--collapsible${className}" data-settings-model-group="${escapeHtml(key)}" ${open ? "open" : ""}>
+      <summary class="settings-model-group-head">
+        <strong>${escapeHtml(group)}</strong>
+        <span>${escapeHtml(countLabel)}</span>
+        <i class="ph ph-caret-down" aria-hidden="true"></i>
+      </summary>
+      ${body}
+    </details>
+  `;
 }
 
 function renderSettingsModelRow(cfg, target) {
@@ -245,248 +289,88 @@ function renderSettingsModelRow(cfg, target) {
   `;
 }
 
-function renderSettingsHiddenModelInputs(cfg, targets) {
-  return (targets || []).map((target) => {
-    const selected = settingsModelSelectedValue(cfg, target);
-    return `<input type="hidden" data-model-target="${escapeHtml(target.id)}" data-default-model="${escapeHtml(target.defaultModel)}" value="${escapeHtml(selected)}" />`;
-  }).join("");
-}
-
 function renderSettingsModelGroups(cfg, targets, opts = {}) {
   const groups = settingsGroupedTargets(targets);
   if (!groups.length) return "";
+  const scope = opts.scope || (opts.compact ? "gemini-reserved" : "gemini-active");
+  const suffix = opts.countSuffix || "个模型点";
   return `
     <div class="settings-model-groups ${opts.compact ? "settings-model-groups--compact" : ""}">
       ${groups.map((group) => {
         const groupTargets = targets.filter((target) => target.group === group);
-        return `
-          <section class="settings-model-group">
-            <div class="settings-model-group-head">
-              <strong>${escapeHtml(group)}</strong>
-              <span>${groupTargets.length} 个模型点</span>
-            </div>
-            <div class="settings-model-rows">${groupTargets.map((target) => renderSettingsModelRow(cfg, target)).join("")}</div>
-          </section>
-        `;
+        const body = `<div class="settings-model-rows">${groupTargets.map((target) => renderSettingsModelRow(cfg, target)).join("")}</div>`;
+        return renderSettingsModelGroupShell(scope, group, `${groupTargets.length} ${suffix}`, body, {
+          collapsible: !opts.compact,
+          defaultOpen: !!opts.defaultOpen,
+        });
       }).join("")}
     </div>
   `;
 }
 
-function renderSettingsModelChannels(config, executionConfig) {
+function renderSettingsModelChannels(config) {
   const cfg = normalizeSettingsModelConfig(config);
-  const execCfg = normalizeSettingsExecutionConfig(executionConfig || __settingsExecutionConfig || defaultSettingsExecutionConfig());
-  const updatedAt = cfg.settings && cfg.settings.updatedAt ? formatD1Time(cfg.settings.updatedAt) : "尚未保存";
   const activeTargets = cfg.targets.filter((target) => target.status !== "reserved");
   const reservedTargets = cfg.targets.filter((target) => target.status === "reserved");
-  const geminiTargets = activeTargets.filter((target) => execCfg.effective[settingsModelTargetRouteId(target)] === "gemini_worker");
-  const pausedTargets = activeTargets.filter((target) => execCfg.effective[settingsModelTargetRouteId(target)] !== "gemini_worker");
-  const geminiRoutes = [...new Set(geminiTargets.map((target) => settingsModelTargetRouteId(target)))];
-  const pausedRoutes = [...new Set(pausedTargets.map((target) => settingsModelTargetRouteId(target)))];
+  const updatedAt = cfg.settings.updatedAt ? formatD1Time(cfg.settings.updatedAt) : "尚未保存";
   return `
     <div class="settings-llm-strip">
-      <div>
-        <span>配置来源</span>
-        <strong>${escapeHtml(settingsModelSourceLabel(cfg))}</strong>
-      </div>
-      <div>
-        <span>当前可调</span>
-        <strong>${geminiTargets.length}</strong>
-      </div>
-      <div>
-        <span>最后保存</span>
-        <strong>${escapeHtml(updatedAt)}</strong>
-      </div>
+      <div><span>配置来源</span><strong>${escapeHtml(settingsModelSourceLabel(cfg))}</strong></div>
+      <div><span>云端模型</span><strong>${activeTargets.length}</strong></div>
+      <div><span>最后保存</span><strong>${escapeHtml(updatedAt)}</strong></div>
     </div>
     ${cfg.warning ? `<div class="settings-llm-note warn">${escapeHtml(cfg.warning)}</div>` : ""}
-    ${renderSettingsHiddenModelInputs(cfg, pausedTargets)}
-    ${pausedRoutes.length ? `
-      <div class="settings-llm-note">
-        ${pausedRoutes.map((routeId) => `${escapeHtml(routeId === "daily_event" ? "事件一览" : routeId === "sentiment_analysis" ? "舆情分析" : routeId)} 已切到 ${escapeHtml(settingsChannelLabel(execCfg.channels, execCfg.effective[routeId]))}`).join("；")}，Gemini 模型值保留但不参与生成。
-      </div>
-    ` : ""}
-    ${geminiTargets.length ? renderSettingsModelGroups(cfg, geminiTargets) : `
-      <div class="settings-llm-empty">
-        <i class="ph ph-terminal-window" aria-hidden="true"></i>
-        <strong>当前已接入路线都不走 Gemini Worker</strong>
-        <span>模型细调已收起；切回 Gemini Worker 后再显示对应页面的模型档位。</span>
-      </div>
-    `}
+    ${renderSettingsModelGroups(cfg, activeTargets, { scope: "gemini-active", countSuffix: "个模型点" })}
     <details class="settings-llm-reserved">
-      <summary>
-        <span>预留模型默认值</span>
-        <em>${reservedTargets.length} 个未来接入点，默认收起</em>
-      </summary>
+      <summary><span>预留模型默认值</span><em>${reservedTargets.length} 个未来接入点，默认收起</em></summary>
       ${renderSettingsModelGroups(cfg, reservedTargets, { compact: true })}
     </details>
     <div class="settings-actions settings-model-actions">
       <button type="button" class="btn" data-model-action="refresh"><i class="ph ph-arrows-clockwise"></i><span>重新读取</span></button>
       <button type="button" class="btn" data-model-action="reset"><i class="ph ph-arrow-counter-clockwise"></i><span>恢复默认</span></button>
-      <button type="button" class="btn primary" data-model-action="save" ${geminiTargets.length ? "" : "disabled"}><i class="ph ph-floppy-disk"></i><span>保存 Gemini 模型</span></button>
+      <button type="button" class="btn primary" data-model-action="save"><i class="ph ph-floppy-disk"></i><span>保存模型设置</span></button>
       <span class="settings-actions-msg" id="settings-model-msg"></span>
     </div>
   `;
 }
 
-function defaultSettingsExecutionConfig() {
-  const effective = {};
-  SETTINGS_EXECUTION_TARGETS.forEach((target) => {
-    effective[target.id] = target.defaultChannel;
-  });
-  return {
-    ok: true,
-    d1Ready: false,
-    source: "fallback",
-    channels: SETTINGS_EXECUTION_CHANNELS,
-    targets: SETTINGS_EXECUTION_TARGETS,
-    settings: { version: 1, routes: {}, updatedAt: null },
-    effective,
-    warning: null,
-  };
-}
-
-function normalizeSettingsExecutionConfig(data) {
-  const fallback = defaultSettingsExecutionConfig();
-  const src = data && typeof data === "object" ? data : {};
-  const channels = Array.isArray(src.channels) && src.channels.length ? src.channels : fallback.channels;
-  const targets = Array.isArray(src.targets) && src.targets.length ? src.targets : fallback.targets;
-  const settings = src.settings && typeof src.settings === "object" ? src.settings : fallback.settings;
-  const routes = settings.routes && typeof settings.routes === "object"
-    ? settings.routes
-    : settings.assignments && typeof settings.assignments === "object"
-      ? settings.assignments
-      : {};
-  const effectiveSrc = src.effective && typeof src.effective === "object" ? src.effective : {};
-  const effective = {};
-  targets.forEach((target) => {
-    effective[target.id] = String(effectiveSrc[target.id] || routes[target.id] || target.defaultChannel || fallback.effective[target.id] || "gemini_worker");
-  });
-  return {
-    ...fallback,
-    ...src,
-    channels,
-    targets,
-    settings: { ...settings, routes },
-    effective,
-  };
-}
-
-function settingsExecutionSourceLabel(cfg) {
-  if (cfg.source === "draft") return "本页草稿";
-  if (cfg.source === "d1") return "D1 已保存";
-  if (cfg.warning) return "读取降级";
-  return cfg.d1Ready ? "默认/环境变量" : "本地默认";
-}
-
-function settingsExecutionOptions(channels, selected, disabled) {
-  const known = new Set((channels || []).map((m) => m.id));
-  const extra = selected && !known.has(selected)
-    ? `<option value="${escapeHtml(selected)}" selected>Worker 返回 · ${escapeHtml(selected)}</option>`
-    : "";
-  return extra + (channels || []).map((channel) => `
-    <option value="${escapeHtml(channel.id)}" ${channel.id === selected ? "selected" : ""} ${disabled ? "disabled" : ""}>
-      ${escapeHtml(channel.label || channel.id)}
-    </option>
-  `).join("");
-}
-
-function renderSettingsExecutionChannels(config) {
-  const cfg = normalizeSettingsExecutionConfig(config);
-  const updatedAt = cfg.settings && cfg.settings.updatedAt ? formatD1Time(cfg.settings.updatedAt) : "尚未保存";
-  const activeTargets = cfg.targets.filter((target) => target.status !== "reserved");
-  const reservedTargets = cfg.targets.filter((target) => target.status === "reserved");
-  const codexCount = activeTargets.filter((target) => cfg.effective[target.id] === "codex_cli").length;
-  const geminiCount = activeTargets.filter((target) => cfg.effective[target.id] === "gemini_worker").length;
-  const channelButtons = (target, selected, reserved) => `
-    <div class="settings-route-switch" role="radiogroup" aria-label="${escapeHtml(target.module)}执行通道">
-      ${(cfg.channels || []).map((channel) => {
-        const active = channel.id === selected;
-        return `
-          <button
-            type="button"
-            class="settings-route-choice ${active ? "is-active" : ""} settings-route-choice--${settingsChannelTone(channel.id)}"
-            data-execution-choice="${escapeHtml(channel.id)}"
-            data-route-id="${escapeHtml(target.id)}"
-            aria-pressed="${active ? "true" : "false"}"
-            ${reserved ? "disabled" : ""}
-          >
-            <span>${escapeHtml(channel.tier || "")}</span>
-            <strong>${escapeHtml(channel.label || channel.id)}</strong>
-          </button>
-        `;
-      }).join("")}
-    </div>
-  `;
-  const renderActiveRoute = (target) => {
-    const selected = cfg.effective[target.id] || target.defaultChannel;
-    return `
-      <div class="settings-route-row settings-route-row--${settingsChannelTone(selected)}" data-execution-row="${escapeHtml(target.id)}">
-        <input type="hidden" data-execution-target="${escapeHtml(target.id)}" data-default-channel="${escapeHtml(target.defaultChannel)}" value="${escapeHtml(selected)}" />
-        <div class="settings-route-main">
-          <span class="settings-route-kicker">${escapeHtml(target.group)} · ${escapeHtml(target.page || "")}</span>
-          <strong>${escapeHtml(target.module)}</strong>
-          <span>${escapeHtml(target.note || "")}</span>
-        </div>
-        ${channelButtons(target, selected, false)}
-      </div>
-    `;
-  };
-  const renderReservedRoute = (target) => {
-    const selected = cfg.effective[target.id] || target.defaultChannel;
-    return `
-      <div class="settings-route-reserved-row">
-        <input type="hidden" data-execution-target="${escapeHtml(target.id)}" data-default-channel="${escapeHtml(target.defaultChannel)}" value="${escapeHtml(selected)}" />
-        <span>${escapeHtml(target.group)} · ${escapeHtml(target.module)}</span>
-        <strong>${escapeHtml(settingsChannelLabel(cfg.channels, selected))}</strong>
-      </div>
-    `;
-  };
+function renderSettingsRouteCron(target, scheduleDraft) {
+  const routeCfg = settingsYuqingRouteDraft(scheduleDraft, target.id);
+  if (!routeCfg) return "";
   return `
-    <div class="settings-llm-strip">
-      <div>
-        <span>配置来源</span>
-        <strong>${escapeHtml(settingsExecutionSourceLabel(cfg))}</strong>
+    <div class="settings-route-cron settings-route-cron--worker">
+      <div class="settings-route-cron-main">
+        <span class="settings-route-kicker">Worker Cron · ${escapeHtml(routeCfg.routeLabel)}</span>
+        <strong>${escapeHtml(routeCfg.cronTitle)}</strong>
+        <span>${escapeHtml(routeCfg.note)}</span>
+        <div class="settings-route-cron-times" aria-label="${escapeHtml(routeCfg.label)}定点">
+          ${(routeCfg.times || []).map((time) => `<em>${escapeHtml(time)}</em>`).join("")}
+        </div>
       </div>
-      <div>
-        <span>已接入路线</span>
-        <strong>${activeTargets.length}</strong>
+      <div class="settings-route-cron-side">
+        <label class="settings-yuqing-toggle settings-route-cron-toggle">
+          <input data-yuqing-cron-target="${escapeHtml(target.id)}" type="checkbox" ${routeCfg.enabled ? "checked" : ""} />
+          <span>显示浏览器下一档预估</span>
+        </label>
+        <div class="settings-route-next">
+          <span>下一次预估</span>
+          <strong data-yuqing-next="${escapeHtml(target.id)}">${escapeHtml(settingsYuqingNextRunLabel(scheduleDraft, target.id))}</strong>
+          <em>Asia/Shanghai · 前台推算</em>
+        </div>
+        <span class="settings-actions-msg settings-route-cron-msg" data-yuqing-msg="${escapeHtml(target.id)}"></span>
       </div>
-      <div>
-        <span>Codex / Gemini</span>
-        <strong>${codexCount} / ${geminiCount}</strong>
-      </div>
-      <div>
-        <span>最后保存</span>
-        <strong>${escapeHtml(updatedAt)}</strong>
-      </div>
-    </div>
-    ${cfg.warning ? `<div class="settings-llm-note warn">${escapeHtml(cfg.warning)}</div>` : ""}
-    <div class="settings-route-list">
-      ${activeTargets.map(renderActiveRoute).join("")}
-    </div>
-    <details class="settings-llm-reserved">
-      <summary>
-        <span>预留执行路线</span>
-        <em>${reservedTargets.length} 个未来接入点，保存时继续写入默认路线</em>
-      </summary>
-      <div class="settings-route-reserved-list">
-        ${reservedTargets.map(renderReservedRoute).join("")}
-      </div>
-    </details>
-    <div class="settings-actions settings-model-actions">
-      <button type="button" class="btn" data-execution-action="refresh"><i class="ph ph-arrows-clockwise"></i><span>重新读取</span></button>
-      <button type="button" class="btn" data-execution-action="reset"><i class="ph ph-arrow-counter-clockwise"></i><span>恢复默认</span></button>
-      <button type="button" class="btn primary" data-execution-action="save"><i class="ph ph-floppy-disk"></i><span>保存执行路线</span></button>
-      <span class="settings-actions-msg" id="settings-execution-msg"></span>
     </div>
   `;
+}
+
+function renderSettingsSchedules() {
+  const draft = readSettingsYuqingScheduleDraft();
+  return SETTINGS_YUQING_SCHEDULE_TARGETS.map((target) => renderSettingsRouteCron(target, draft)).join("");
 }
 
 function pageSettings() {
   const current = getTheme();
   const themeLabel = current === "dark" ? "深色" : "浅色";
-  const yuqingSchedule = readSettingsYuqingScheduleDraft();
-  const yuqingNext = settingsYuqingNextRunLabel(yuqingSchedule);
   return html`
     <div class="settings-shell">
       <header class="page-header settings-page-head">
@@ -521,7 +405,7 @@ function pageSettings() {
         <ul class="settings-fact-list">
           <li><strong>读取</strong>行情页默认读取 <code>/api/d1/klines?sync=0</code>；若当前周期明显落后，工作台会触发一次当前周期同步，实时跳动由 Binance WS 补齐。</li>
           <li><strong>同步</strong>「立即同步 D1」调用 Worker 的 <code>/api/d1/sync</code> 全周期写库；工作台右上角按钮只同步当前周期。</li>
-          <li><strong>保留策略</strong>各周期至多约 2000 根 K 线；Footprint 以 5m 为基底至多 8640 根，高周期由 Worker 聚合。</li>
+          <li><strong>保留策略</strong>各周期至多约 6000 根 K 线；Footprint 以 5m 为基底至多 8640 根，高周期由 Worker 聚合。</li>
           <li><strong>排障</strong>如果出现异常，优先复制下方「异常摘要」发给 Codex；完整 JSON 只用于核对 Worker/D1 原始返回。</li>
         </ul>
         <div class="settings-actions">
@@ -543,71 +427,37 @@ function pageSettings() {
         </details>
       </section>
 
-      <section class="settings-panel" id="settings-yuqing-schedule-panel">
-        <div class="settings-panel-head">
-          <div class="settings-panel-icon settings-panel-icon--yuqing" aria-hidden="true"><i class="ph ph-newspaper-clipping"></i></div>
-          <div>
-            <h2 class="settings-panel-title">舆情与事件定点说明</h2>
-            <p class="settings-panel-desc">云端 Cron 时点由 Worker 配置固定；此处可开关浏览器「下一档预估」提示。</p>
-          </div>
-        </div>
-        <div class="settings-yuqing-card">
-          <div class="settings-yuqing-main">
-            <label class="settings-yuqing-toggle">
-              <input id="settings-yuqing-enabled" type="checkbox" ${yuqingSchedule.enabled ? "checked" : ""} />
-              <span>启用浏览器「下一次预估」提示（仅前端偏好；Worker Cron 时点不可在此修改）</span>
-            </label>
-            <div class="settings-yuqing-readonly" aria-readonly="true">
-              <p class="settings-yuqing-readonly-title">云端定点任务（北京时间 · Asia/Shanghai）</p>
-              <ul class="settings-yuqing-readonly-list">
-                <li><strong>事件日报</strong> 每日 00:00、08:00、12:00、20:00</li>
-                <li><strong>舆情二次分析</strong> 每日 09:00、14:00、22:00（依赖上游日报与市场监测）</li>
-              </ul>
-              <p class="muted-text settings-yuqing-readonly-note">实际触发以已部署 Worker 的 Cron 配置为准；此处仅作说明。</p>
-            </div>
-          </div>
-          <div class="settings-yuqing-side">
-            <div class="cloud-status-card">
-              <span>下一次预估（事件日报下一档）</span>
-              <strong id="settings-yuqing-next">${escapeHtml(yuqingNext)}</strong>
-              <em>Asia/Shanghai · 前台推算（非 Worker）</em>
-            </div>
-            <span class="settings-actions-msg" id="settings-yuqing-msg"></span>
-          </div>
-        </div>
-      </section>
-
       <section class="settings-panel settings-panel--llm" id="settings-llm-panel">
         <div class="settings-panel-head">
           <div class="settings-panel-icon settings-panel-icon--model" aria-hidden="true"><i class="ph ph-git-branch"></i></div>
           <div>
-            <h2 class="settings-panel-title">LLM 执行控制台</h2>
-            <p class="settings-panel-desc">先决定页面走 Gemini Worker 还是 Codex CLI；只有走 Gemini Worker 的路线才展开 Gemini 模型细调。</p>
+            <h2 class="settings-panel-title">云端分析设置</h2>
+            <p class="settings-panel-desc">事件一览和舆情分析由云端 Worker 生成；在这里选择各模块模型，并查看定点时间。</p>
           </div>
         </div>
         <div class="settings-llm-workspace">
-          <div class="settings-llm-column" id="settings-execution-panel">
+          <div class="settings-llm-column" id="settings-schedule-panel">
             <div class="settings-llm-column-head">
               <span>1</span>
               <div>
-                <strong>执行通道</strong>
-                <em>决定生成请求交给哪条路线</em>
+                <strong>定点时间</strong>
+                <em>实际触发以已部署 Worker Cron 为准</em>
               </div>
             </div>
-            <div id="settings-execution-content">
-              ${renderSettingsExecutionChannels(__settingsExecutionConfig || defaultSettingsExecutionConfig())}
+            <div id="settings-schedule-content">
+              ${renderSettingsSchedules()}
             </div>
           </div>
           <div class="settings-llm-column" id="settings-model-panel">
             <div class="settings-llm-column-head">
               <span>2</span>
               <div>
-                <strong>Gemini 模型</strong>
-                <em>只对 Gemini Worker 路线生效</em>
+                <strong>模块模型</strong>
+                <em>下一次云端生成时生效</em>
               </div>
             </div>
             <div id="settings-model-content">
-              ${renderSettingsModelChannels(__settingsModelConfig || defaultSettingsModelConfig(), __settingsExecutionConfig || defaultSettingsExecutionConfig())}
+              ${renderSettingsModelChannels(__settingsModelConfig || defaultSettingsModelConfig())}
             </div>
           </div>
         </div>
@@ -791,7 +641,7 @@ function buildD1DiagnosticText(data, interval) {
   ];
   rows.forEach((row) => {
     const count = Number(row.countRow?.cnt || 0);
-    const max = Number(data.maxPerInterval || 2000);
+    const max = Number(data.maxPerInterval || 6000);
     const lastRun = row.syncRow ? formatD1Time(row.syncRow.last_run) : "暂无";
     const lastCount = row.syncRow ? Number(row.syncRow.last_count || 0) : null;
     const rawError = row.syncRow?.last_error ? String(row.syncRow.last_error) : "";
@@ -902,7 +752,7 @@ function renderKlineStatusTable(data) {
       <tr>
         <td><strong>${escapeHtml(interval)}</strong></td>
         <td><span class="cloud-status-pill ${level}">${label}</span></td>
-        <td>${count ? `${count}${countRow?.estimated ? "（估算）" : ` / ${Number(data?.maxPerInterval || 2000)}`}` : "0"}</td>
+        <td>${count ? `${count}${countRow?.estimated ? "（估算）" : ` / ${Number(data?.maxPerInterval || 6000)}`}` : "0"}</td>
         <td>${escapeHtml(formatD1Time(countRow?.minT))} - ${escapeHtml(formatD1Time(latestT))}</td>
         <td>${escapeHtml(formatD1Age(latestT))}</td>
         <td>${syncRow ? escapeHtml(formatD1Time(syncRow.last_run)) : "暂无记录"}</td>
@@ -955,7 +805,7 @@ function renderCloudStatusSummary(data) {
     ${manualHtml}
     <div class="cloud-status-help">
       <strong>真实架构：</strong>
-      Pages 静态页请求 ${escapeHtml(apiBase || "已配置 Worker")}；图表页默认只读 D1，但打开后发现当前周期明显落后或点击右上角按钮时会同步当前周期；设置页的「立即同步 D1」用于全周期手动写库。Cron 仍是常规维护入口，每个周期最多保留最近 ${Number(data.maxPerInterval || 2000)} 根。
+      Pages 静态页请求 ${escapeHtml(apiBase || "已配置 Worker")}；图表页默认只读 D1，但打开后发现当前周期明显落后或点击右上角按钮时会同步当前周期；设置页的「立即同步 D1」用于全周期手动写库。Cron 仍是常规维护入口，每个周期最多保留最近 ${Number(data.maxPerInterval || 6000)} 根。
       ${data.lightweight ? " 当前为轻量状态：行数来自状态表推导，详细统计请点手动刷新状态。" : ""}
     </div>
     <div class="cloud-status-cards">
@@ -1011,43 +861,41 @@ async function copySettingsText(text) {
   }
 }
 
-function collectSettingsYuqingScheduleDraft() {
-  const enabled = !!document.getElementById("settings-yuqing-enabled")?.checked;
-  return { enabled };
+function refreshSettingsYuqingNext(cfg, onlyRouteId = "") {
+  const draft = cfg || readSettingsYuqingScheduleDraft();
+  document.querySelectorAll("[data-yuqing-next]").forEach((el) => {
+    const routeId = el.getAttribute("data-yuqing-next") || "";
+    if (onlyRouteId && routeId !== onlyRouteId) return;
+    el.textContent = settingsYuqingNextRunLabel(draft, routeId);
+  });
 }
 
-function refreshSettingsYuqingNext(cfg) {
-  const el = document.getElementById("settings-yuqing-next");
-  if (!el) return;
-  el.textContent = settingsYuqingNextRunLabel(cfg || collectSettingsYuqingScheduleDraft());
+function showSettingsYuqingMsg(routeId, text) {
+  document.querySelectorAll("[data-yuqing-msg]").forEach((el) => {
+    if ((el.getAttribute("data-yuqing-msg") || "") === routeId) el.textContent = text || "";
+  });
 }
 
 function initSettingsYuqingSchedule() {
-  const panel = document.getElementById("settings-yuqing-schedule-panel");
-  if (!panel || panel.dataset.bound) return;
-  panel.dataset.bound = "1";
-
-  const msg = document.getElementById("settings-yuqing-msg");
-  const showMsg = (text) => {
-    if (msg) msg.textContent = text || "";
-  };
-
-  const persistEnabled = () => {
-    const draft = collectSettingsYuqingScheduleDraft();
-    let saved = draft;
-    if (typeof DataEngine !== "undefined" && typeof DataEngine.writeYuqingScheduleDraft === "function") {
-      saved = DataEngine.writeYuqingScheduleDraft(draft);
-    }
-    refreshSettingsYuqingNext(saved);
-    showMsg(saved.enabled ? "已开启浏览器预估提示。" : "已关闭浏览器预估提示。");
-  };
-
-  const enabledEl = document.getElementById("settings-yuqing-enabled");
-  if (enabledEl && !enabledEl.dataset.boundYuqing) {
+  const inputs = Array.from(document.querySelectorAll("[data-yuqing-cron-target]"));
+  if (!inputs.length) return;
+  inputs.forEach((enabledEl) => {
+    if (enabledEl.dataset.boundYuqing) return;
     enabledEl.dataset.boundYuqing = "1";
-    enabledEl.addEventListener("change", persistEnabled);
-  }
-
+    enabledEl.addEventListener("change", () => {
+      const routeId = enabledEl.getAttribute("data-yuqing-cron-target") || "";
+      const routeCfg = settingsYuqingRouteDraft(readSettingsYuqingScheduleDraft(), routeId);
+      if (!routeCfg) return;
+      const draft = { routes: { [routeId]: { ...routeCfg, enabled: !!enabledEl.checked } } };
+      const label = routeCfg.routeLabel || routeCfg.label || "当前模块";
+      let saved = draft;
+      if (typeof DataEngine !== "undefined" && typeof DataEngine.writeYuqingScheduleDraft === "function") {
+        saved = DataEngine.writeYuqingScheduleDraft(draft);
+      }
+      refreshSettingsYuqingNext(saved, routeId);
+      showSettingsYuqingMsg(routeId, enabledEl.checked ? `${label} 已开启浏览器预估提示。` : `${label} 已关闭浏览器预估提示。`);
+    });
+  });
   refreshSettingsYuqingNext(readSettingsYuqingScheduleDraft());
 }
 
@@ -1056,11 +904,52 @@ function showSettingsModelMsg(text) {
   if (msg) msg.textContent = text || "";
 }
 
+function bindSettingsModelGroupState(root) {
+  if (!root) return;
+  root.querySelectorAll("details[data-settings-model-group]").forEach((item) => {
+    if (item.dataset.modelGroupBound) return;
+    item.dataset.modelGroupBound = "1";
+    const key = item.getAttribute("data-settings-model-group") || "";
+    if (key) __settingsModelGroupOpen[key] = !!item.open;
+    item.addEventListener("toggle", () => {
+      const currentKey = item.getAttribute("data-settings-model-group") || "";
+      if (currentKey) __settingsModelGroupOpen[currentKey] = !!item.open;
+    });
+  });
+}
+
+function rememberSettingsModelGroupState(root) {
+  if (!root) return;
+  root.querySelectorAll("details[data-settings-model-group]").forEach((item) => {
+    const key = item.getAttribute("data-settings-model-group") || "";
+    if (key) __settingsModelGroupOpen[key] = !!item.open;
+  });
+}
+
+function mergeSettingsModelDraftFromDom(config, root) {
+  const cfg = normalizeSettingsModelConfig(config || __settingsModelConfig || defaultSettingsModelConfig());
+  if (!root) return cfg;
+  const assignments = { ...((cfg.settings && cfg.settings.assignments) || {}) };
+  const effective = { ...((cfg.effective) || {}) };
+  root.querySelectorAll("[data-model-target]").forEach((el) => {
+    const key = el.getAttribute("data-model-target") || "";
+    const value = String(el.value || "").trim();
+    if (!key || !value) return;
+    assignments[key] = value;
+    effective[key] = value;
+  });
+
+  return { ...cfg, settings: { ...cfg.settings, assignments }, effective };
+}
+
 function renderSettingsModelConfigIntoDom(config) {
   const content = document.getElementById("settings-model-content");
   if (!content) return;
-  __settingsModelConfig = normalizeSettingsModelConfig(config);
-  content.innerHTML = renderSettingsModelChannels(__settingsModelConfig, __settingsExecutionConfig || defaultSettingsExecutionConfig());
+  const shouldPreserveDraft = !config || config === __settingsModelConfig;
+  rememberSettingsModelGroupState(content);
+  __settingsModelConfig = normalizeSettingsModelConfig(shouldPreserveDraft ? mergeSettingsModelDraftFromDom(config, content) : config);
+  content.innerHTML = renderSettingsModelChannels(__settingsModelConfig);
+  bindSettingsModelGroupState(content);
 }
 
 function collectSettingsModelAssignments() {
@@ -1109,6 +998,7 @@ function initSettingsModelChannels() {
   const panel = document.getElementById("settings-model-panel");
   if (!panel || panel.dataset.bound) return;
   panel.dataset.bound = "1";
+  bindSettingsModelGroupState(panel);
 
   panel.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-model-action]");
@@ -1136,7 +1026,9 @@ function initSettingsModelChannels() {
     setSettingsModelBusy(panel, true);
     showSettingsModelMsg("正在保存到 D1…");
     try {
-      const data = await DataEngine.updateYuqingModelSettings({ assignments: collectSettingsModelAssignments() }, { timeoutMs: 25_000 });
+      const data = await DataEngine.updateYuqingModelSettings({
+        assignments: collectSettingsModelAssignments(),
+      }, { timeoutMs: 25_000 });
       renderSettingsModelConfigIntoDom(data);
       showSettingsModelMsg("已保存，下一次生成请求会读取新模型。");
     } catch (err) {
@@ -1149,141 +1041,9 @@ function initSettingsModelChannels() {
   loadSettingsModelChannels();
 }
 
-function showSettingsExecutionMsg(text) {
-  const msg = document.getElementById("settings-execution-msg");
-  if (msg) msg.textContent = text || "";
-}
-
-function renderSettingsExecutionConfigIntoDom(config) {
-  const content = document.getElementById("settings-execution-content");
-  if (!content) return;
-  __settingsExecutionConfig = normalizeSettingsExecutionConfig(config);
-  content.innerHTML = renderSettingsExecutionChannels(__settingsExecutionConfig);
-  renderSettingsModelConfigIntoDom(__settingsModelConfig || defaultSettingsModelConfig());
-}
-
-function collectSettingsExecutionRoutes() {
-  const routes = {};
-  document.querySelectorAll("[data-execution-target]").forEach((el) => {
-    const key = el.getAttribute("data-execution-target") || "";
-    const value = String(el.value || "").trim();
-    if (key && value) routes[key] = value;
-  });
-  return routes;
-}
-
-function setSettingsExecutionBusy(panel, busy) {
-  if (!panel) return;
-  panel.querySelectorAll("[data-execution-action], [data-execution-target], [data-execution-choice]").forEach((el) => {
-    el.disabled = !!busy;
-  });
-}
-
-function resetSettingsExecutionSelects(panel) {
-  const cfg = normalizeSettingsExecutionConfig(__settingsExecutionConfig || defaultSettingsExecutionConfig());
-  const routes = {};
-  cfg.targets.forEach((target) => {
-    routes[target.id] = target.defaultChannel || "gemini_worker";
-  });
-  __settingsExecutionConfig = {
-    ...cfg,
-    source: "draft",
-    settings: { ...(cfg.settings || {}), routes },
-    effective: { ...routes },
-  };
-  renderSettingsExecutionConfigIntoDom(__settingsExecutionConfig);
-}
-
-function updateSettingsExecutionDraft(routeId, channelId) {
-  const cfg = normalizeSettingsExecutionConfig(__settingsExecutionConfig || defaultSettingsExecutionConfig());
-  const routes = { ...(cfg.settings && cfg.settings.routes ? cfg.settings.routes : {}) };
-  const effective = { ...(cfg.effective || {}) };
-  routes[routeId] = channelId;
-  effective[routeId] = channelId;
-  __settingsExecutionConfig = {
-    ...cfg,
-    source: "draft",
-    settings: { ...(cfg.settings || {}), routes },
-    effective,
-  };
-  renderSettingsExecutionConfigIntoDom(__settingsExecutionConfig);
-}
-
-async function loadSettingsExecutionChannels() {
-  if (typeof DataEngine === "undefined" || typeof DataEngine.fetchYuqingExecutionChannelSettings !== "function") {
-    renderSettingsExecutionConfigIntoDom(defaultSettingsExecutionConfig());
-    showSettingsExecutionMsg("数据引擎未加载，暂用内置默认。");
-    return;
-  }
-  showSettingsExecutionMsg("正在读取执行路由…");
-  try {
-    const data = await DataEngine.fetchYuqingExecutionChannelSettings({ timeoutMs: 25_000 });
-    renderSettingsExecutionConfigIntoDom(data);
-    showSettingsExecutionMsg(data && data.warning ? `已降级读取：${data.warning}` : "已读取 D1 执行路由。");
-  } catch (e) {
-    renderSettingsExecutionConfigIntoDom(defaultSettingsExecutionConfig());
-    showSettingsExecutionMsg("读取失败，暂用内置默认：" + (e && e.message ? e.message : e));
-  }
-}
-
-function initSettingsExecutionChannels() {
-  const panel = document.getElementById("settings-execution-panel");
-  if (!panel || panel.dataset.bound) return;
-  panel.dataset.bound = "1";
-
-  panel.addEventListener("click", async (e) => {
-    const choice = e.target.closest("[data-execution-choice]");
-    if (choice && !choice.disabled) {
-      const routeId = choice.getAttribute("data-route-id") || "";
-      const channelId = choice.getAttribute("data-execution-choice") || "";
-      if (routeId && channelId) {
-        updateSettingsExecutionDraft(routeId, channelId);
-        showSettingsExecutionMsg(`${settingsChannelLabel((__settingsExecutionConfig && __settingsExecutionConfig.channels) || SETTINGS_EXECUTION_CHANNELS, channelId)} 已作为本页草稿，保存后写入 D1。`);
-      }
-      return;
-    }
-    const btn = e.target.closest("[data-execution-action]");
-    if (!btn) return;
-    const action = btn.getAttribute("data-execution-action");
-    if (action === "reset") {
-      resetSettingsExecutionSelects(panel);
-      showSettingsExecutionMsg("已恢复为内置默认，点击保存后写入 D1。");
-      return;
-    }
-    if (action === "refresh") {
-      setSettingsExecutionBusy(panel, true);
-      try {
-        await loadSettingsExecutionChannels();
-      } finally {
-        setSettingsExecutionBusy(panel, false);
-      }
-      return;
-    }
-    if (action !== "save") return;
-    if (typeof DataEngine === "undefined" || typeof DataEngine.updateYuqingExecutionChannelSettings !== "function") {
-      showSettingsExecutionMsg("数据引擎未加载，无法保存。");
-      return;
-    }
-    setSettingsExecutionBusy(panel, true);
-    showSettingsExecutionMsg("正在保存到 D1…");
-    try {
-      const data = await DataEngine.updateYuqingExecutionChannelSettings({ routes: collectSettingsExecutionRoutes() }, { timeoutMs: 25_000 });
-      renderSettingsExecutionConfigIntoDom(data);
-      showSettingsExecutionMsg("已保存，已接入路由下次生成读取；预留路由也已写入默认值。");
-    } catch (err) {
-      showSettingsExecutionMsg("保存失败：" + (err && err.message ? err.message : err));
-    } finally {
-      setSettingsExecutionBusy(panel, false);
-    }
-  });
-
-  loadSettingsExecutionChannels();
-}
-
 function initSettingsPage() {
   initSettingsYuqingSchedule();
   initSettingsModelChannels();
-  initSettingsExecutionChannels();
 
   const syncBtn = document.getElementById("settings-cloud-sync");
   const statusBtn = document.getElementById("settings-cloud-status");

@@ -9,11 +9,7 @@ description: Project-specific workflow for the Bit Trading Desk / crypto data mo
 
 Treat this as a small, practical trading decision and data-monitoring system, not an institutional research platform. Prefer focused, maintainable changes that keep the existing module boundaries and user workflow intact.
 
-The user also uses Cursor on this project. Do not delete, rename, or rewrite `.cursorrules`; read it with UTF-8 when needed:
-
-```powershell
-Get-Content -Encoding UTF8 .cursorrules
-```
+This repository uses Codex only. Read AGENTS.md for project constraints; retired Cursor configuration is not required.
 
 ## Repository Map
 
@@ -26,9 +22,9 @@ Get-Content -Encoding UTF8 .cursorrules
 - `cloudflare/`: worker and D1 schema for remote/public data paths; **`cloudflare/yuqing/`** bundles the sentiment / daily-report Worker (`yuqing-worker.js`, `yuqing-facts.js`, `shijian/`, `fenxi/`).
 - `旧参考文件/`: reference material only; do not migrate or delete unless explicitly asked.
 
-## Cursor Rules To Preserve
+## Project Rules To Preserve
 
-Follow these project rules even when `.cursorrules` is not loaded:
+Follow these project rules together with AGENTS.md:
 
 - Do not casually remove demo, placeholder, reserved, or PLANNED UI/code structures.
 - When the user asks to implement one module, modify only that module's implementation surface.
@@ -40,7 +36,7 @@ Follow these project rules even when `.cursorrules` is not loaded:
 
 - Start by inspecting the relevant files with `rg` / `rg --files` and small targeted reads.
 - Keep changes scoped. Avoid broad cleanup, formatting churn, or architecture changes unless the task requires them.
-- Assume the worktree may contain Cursor/user edits. Preserve unrelated changes and adapt to nearby edits.
+- Assume the worktree may contain user or other task edits. Preserve unrelated changes and adapt to nearby edits.
 - Use PowerShell-safe paths because the workspace path contains spaces and Chinese characters.
 - Use `apply_patch` for manual file edits.
 - Reply to the user in Chinese unless they ask otherwise.

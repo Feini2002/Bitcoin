@@ -17,6 +17,12 @@ let __dailyScanPromise = null;
 let __dailyScanTick = null;
 let __dailyStreamRenderTimer = null;
 let __dailyStreamRenderRaf = null;
+let __dailyQuietRenderUntil = 0;
+let __dailyModuleMotionSeq = 0;
+let __dailyFirstStreamEventAt = 0;
+let __dailyLastStreamEventAt = 0;
+const __dailyModuleMotion = {};
+const __dailyModuleMotionRendered = {};
 
 const dailyEventState = {
   report: null,
@@ -260,12 +266,57 @@ function dailyClearScheduledStreamRender() {
   }
 }
 
+function dailySuppressViewMotion(ms = 900) {
+  __dailyQuietRenderUntil = Math.max(__dailyQuietRenderUntil, Date.now() + ms);
+}
+
+function dailyResetModuleMotion() {
+  Object.keys(__dailyModuleMotion).forEach((key) => delete __dailyModuleMotion[key]);
+  Object.keys(__dailyModuleMotionRendered).forEach((key) => delete __dailyModuleMotionRendered[key]);
+}
+
+function dailyMarkModuleMotion(module, phase) {
+  const key = String(module || "").trim();
+  if (!key) return;
+  __dailyModuleMotionSeq += 1;
+  __dailyModuleMotion[key] = { phase: phase || "filled", seq: __dailyModuleMotionSeq };
+}
+
+function dailyConsumeModuleMotionClass(module) {
+  const key = String(module || "").trim();
+  const motion = key ? __dailyModuleMotion[key] : null;
+  if (!motion || __dailyModuleMotionRendered[key] === motion.seq) return "";
+  __dailyModuleMotionRendered[key] = motion.seq;
+  return motion.phase === "streaming" ? " daily-module-stream-started" : " daily-module-just-filled";
+}
+
+function dailyModuleVisualState(module, row) {
+  if (!row || !row.report) return "empty";
+  if (dailyModuleHasStructuredData(module, row)) return "ready";
+  if (row.status === "streaming") {
+    return dailyStreamEntriesForModule(module).length ? "streaming" : "waiting";
+  }
+  return "empty";
+}
+
+function dailyModuleStateClass(module, row) {
+  const state = dailyModuleVisualState(module, row);
+  return ` daily-module-state-${state}${dailyConsumeModuleMotionClass(module)}`;
+}
+
+function dailyModuleStateAttrs(module, row) {
+  const key = dailyEscapeHtml(module);
+  const state = dailyEscapeHtml(dailyModuleVisualState(module, row));
+  return `data-daily-module="${key}" data-daily-module-state="${state}"`;
+}
+
 function dailyResetStreamBuffers() {
   dailyEventState.streamModules = {};
   dailyClearScheduledStreamRender();
+  dailyResetModuleMotion();
 }
 
-function dailyScheduleStreamRender() {
+function dailyScheduleStreamRender(delayMs = 160) {
   if (__dailyStreamRenderTimer || __dailyStreamRenderRaf) return;
   __dailyStreamRenderTimer = setTimeout(() => {
     __dailyStreamRenderTimer = null;
@@ -274,7 +325,7 @@ function dailyScheduleStreamRender() {
       dailyWritePendingPreview();
       renderYuqingDailyIntoDom({ skipViewTransition: true });
     });
-  }, 90);
+  }, delayMs);
 }
 
 function dailyEnsureStreamPreviewShell() {
@@ -332,38 +383,62 @@ function dailyEnsureStreamPreviewShell() {
 }
 
 function mergeDailyStreamEvent(evt) {
-  if (!evt || evt.type !== "partial") return;
+  if (!evt || evt.type !== "partial") return false;
   const row = dailyEnsureStreamPreviewShell();
   const rep = row.report;
+  const completed = [];
+  const markIfFilled = (module, wasStructured) => {
+    if (!wasStructured && dailyModuleHasStructuredData(module, row)) completed.push(module);
+  };
   if (evt.module === "temperature" && evt.marketTemperature && typeof evt.marketTemperature === "object") {
+    const was = dailyModuleHasStructuredData("temperature", row);
     Object.assign(rep.marketTemperature, evt.marketTemperature);
+    markIfFilled("temperature", was);
   }
   if (evt.module === "topStories" && Array.isArray(evt.topStories)) {
+    const was = dailyModuleHasStructuredData("topStories", row);
     rep.topStories = evt.topStories;
     rep.topStory = evt.topStories[0] || rep.topStory;
+    markIfFilled("topStories", was);
   }
   if (evt.module === "dynamicBriefs" && Array.isArray(evt.dynamicBriefs)) {
+    const was = dailyModuleHasStructuredData("dynamicBriefs", row);
     rep.dynamicBriefs = evt.dynamicBriefs;
+    markIfFilled("dynamicBriefs", was);
   }
   if (evt.module === "digest") {
     if (evt.macroTrend) rep.macroTrend = String(evt.macroTrend);
     if (Array.isArray(evt.topStories)) {
+      const was = dailyModuleHasStructuredData("topStories", row);
       rep.topStories = evt.topStories;
       rep.topStory = evt.topStories[0] || rep.topStory;
+      markIfFilled("topStories", was);
     }
-    if (Array.isArray(evt.dynamicBriefs)) rep.dynamicBriefs = evt.dynamicBriefs;
+    if (Array.isArray(evt.dynamicBriefs)) {
+      const was = dailyModuleHasStructuredData("dynamicBriefs", row);
+      rep.dynamicBriefs = evt.dynamicBriefs;
+      markIfFilled("dynamicBriefs", was);
+    }
   }
   if (evt.module === "aiIntel" && Array.isArray(evt.aiIntel)) {
+    const was = dailyModuleHasStructuredData("aiIntel", row);
     rep.aiIntel = evt.aiIntel;
+    markIfFilled("aiIntel", was);
   }
   if (evt.module === "githubTools" && Array.isArray(evt.githubTools)) {
+    const was = dailyModuleHasStructuredData("githubTools", row);
     rep.githubTools = evt.githubTools;
+    markIfFilled("githubTools", was);
   }
   if (evt.module === "trends" && evt.trendRead && typeof evt.trendRead === "object") {
+    const was = dailyModuleHasStructuredData("trends", row);
     rep.trendRead = evt.trendRead;
+    markIfFilled("trends", was);
   }
+  completed.forEach((module) => dailyMarkModuleMotion(module, "filled"));
   dailyMarkScanProgress(evt.module, "done");
   dailyWritePendingPreview();
+  return completed.length > 0;
 }
 
 function dailyStreamModuleLabel(module, streamKey = "") {
@@ -425,6 +500,15 @@ function dailyScanElapsedLabel() {
   return `${Math.floor(sec / 60)}m ${String(sec % 60).padStart(2, "0")}s`;
 }
 
+function dailyPendingScanLabels() {
+  const labels = dailyScanModuleLabels();
+  const progress = dailyEventState.scanProgress || {};
+  return Object.keys(labels)
+    .filter((key) => progress[key] === "pending" || progress[key] === "active")
+    .map((key) => labels[key])
+    .slice(0, 4);
+}
+
 function renderDailyScanStatusPanel() {
   if (!dailyEventState.loading) return "";
   const labels = dailyScanModuleLabels();
@@ -457,12 +541,14 @@ function renderDailyScanStatusPanel() {
 }
 
 function mergeDailyStreamChunk(evt) {
-  if (!evt || evt.type !== "chunk") return;
+  if (!evt || evt.type !== "chunk") return false;
   const module = String(evt.module || "misc").trim() || "misc";
   const streamKey = String(evt.streamKey || module).trim() || module;
   const delta = String(evt.delta || "");
-  if (!delta) return;
+  if (!delta) return false;
   dailyEnsureStreamPreviewShell();
+  const hadModuleEntries = dailyStreamEntriesForModule(module).length > 0;
+  const hadEntry = !!dailyEventState.streamModules[streamKey];
   const prev = dailyEventState.streamModules[streamKey] || {
     module,
     streamKey,
@@ -479,7 +565,9 @@ function mergeDailyStreamChunk(evt) {
     updatedAt: Date.now(),
   };
   dailyMarkScanProgress(module, "active");
+  if (!hadModuleEntries) dailyMarkModuleMotion(module, "streaming");
   dailyWritePendingPreview();
+  return !hadEntry || !hadModuleEntries;
 }
 
 function dailyStreamEntriesForModule(module) {
@@ -535,20 +623,28 @@ function dailyModuleHasStructuredData(module, row) {
 function renderDailyLiveStreamCards(module, row) {
   if (!row || row.status !== "streaming" || dailyModuleHasStructuredData(module, row)) return "";
   const entries = dailyStreamEntriesForModule(module);
-  if (!entries.length) return "";
-  return entries
-    .map((entry) => {
-      const text = dailyCleanLiveStreamText(entry.text);
-      if (!text) return "";
-      return `<article class="daily-knowledge-card daily-stream-card">
-        <div class="daily-stream-card-head">
-          <span>正在输出</span>
-          <strong>${dailyEscapeHtml(entry.label || dailyStreamModuleLabel(module, entry.streamKey))}</strong>
-        </div>
-        <p class="daily-stream-copy">${parseMarkdownInline(text)}</p>
-      </article>`;
-    })
-    .join("");
+  const active = entries.length > 0;
+  const labels = entries
+    .map((entry) => entry.label || dailyStreamModuleLabel(module, entry.streamKey))
+    .filter(Boolean)
+    .slice(0, 2);
+  const title = active ? "模块正在整理结果" : "等待模块开始输出";
+  const detail = active
+    ? `${labels.join(" / ") || dailyStreamModuleLabel(module)} 已在输出，完整结构化结果到齐后会整块落入本模块。`
+    : "模块已进入本轮扫描队列，先保持稳定占位，避免内容逐字输出造成布局抖动。";
+  return `<article class="daily-knowledge-card daily-stream-card daily-stream-card--stable ${active ? "is-active" : "is-waiting"}">
+    <div class="daily-stream-card-head">
+      <span>${active ? "生成中" : "排队中"}</span>
+      <strong>${dailyEscapeHtml(title)}</strong>
+    </div>
+    <div class="daily-stream-status-line">
+      <i class="daily-stream-status-dot" aria-hidden="true"></i>
+      <p>${dailyEscapeHtml(detail)}</p>
+    </div>
+    <div class="daily-stream-skeleton" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  </article>`;
 }
 
 function dailyCurrentReportId() {
@@ -684,7 +780,7 @@ function renderDailyTemperature(row) {
   const assetMovesHtml = renderDailyAssetMoves(temp);
   const liveHtml = renderDailyLiveStreamCards("temperature", row);
   return `
-    <section class="news-panel span-12 daily-module-panel daily-module-temperature daily-brief-temperature" style="view-transition-name: daily-temperature;" aria-label="当前信息温度">
+    <section class="news-panel span-12 daily-module-panel daily-module-temperature daily-brief-temperature${dailyModuleStateClass("temperature", row)}" ${dailyModuleStateAttrs("temperature", row)} style="view-transition-name: daily-temperature;" aria-label="当前信息温度">
       <div class="news-panel-head daily-module-head">
         <h3>当前信息温度</h3>
       </div>
@@ -1386,8 +1482,8 @@ function renderDailyReportHeader(r) {
     ${scanStatusHtml}`;
 }
 
-function dailyPanelClass(span, name, extra = "") {
-  return `news-panel span-${span} daily-module-panel daily-module-${name}${extra ? ` ${extra}` : ""}`;
+function dailyPanelClass(span, name, extra = "", moduleKey = name, row = dailyActiveReport()) {
+  return `news-panel span-${span} daily-module-panel daily-module-${name}${extra ? ` ${extra}` : ""}${moduleKey ? dailyModuleStateClass(moduleKey, row) : ""}`;
 }
 
 function renderDailyReportGrid(r) {
@@ -1412,7 +1508,7 @@ function renderDailyReportGrid(r) {
   
   if (showNews) {
     html += `
-      <section class="${dailyPanelClass(showTimeline ? 7 : 12, "news", showTimeline ? "daily-balanced-panel" : "daily-expanded-panel")}" style="view-transition-name: daily-news;">
+      <section class="${dailyPanelClass(showTimeline ? 7 : 12, "news", showTimeline ? "daily-balanced-panel" : "daily-expanded-panel", "topStories", r)}" ${dailyModuleStateAttrs("topStories", r)} style="view-transition-name: daily-news;">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">今日头条</span>
@@ -1426,7 +1522,7 @@ function renderDailyReportGrid(r) {
   
   if (showTimeline) {
     html += `
-      <section class="${dailyPanelClass(showNews ? 5 : 12, "timeline", showNews ? "daily-balanced-panel daily-timeline-panel" : "daily-expanded-panel daily-timeline-panel")}" style="view-transition-name: daily-timeline;">
+      <section class="${dailyPanelClass(showNews ? 5 : 12, "timeline", showNews ? "daily-balanced-panel daily-timeline-panel" : "daily-expanded-panel daily-timeline-panel", "dynamicBriefs", r)}" ${dailyModuleStateAttrs("dynamicBriefs", r)} style="view-transition-name: daily-timeline;">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">动态速览</span>
@@ -1440,7 +1536,7 @@ function renderDailyReportGrid(r) {
   
   if (v.ai) {
     html += `
-      <section class="${dailyPanelClass(12, "ai")}" style="view-transition-name: daily-ai;">
+      <section class="${dailyPanelClass(12, "ai", "", "aiIntel", r)}" ${dailyModuleStateAttrs("aiIntel", r)} style="view-transition-name: daily-ai;">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">AI 情报站</span>
@@ -1454,7 +1550,7 @@ function renderDailyReportGrid(r) {
 
   if (v.githubTools) {
     html += `
-      <section class="${dailyPanelClass(12, "github-tools")}" style="view-transition-name: daily-github-tools;">
+      <section class="${dailyPanelClass(12, "github-tools", "", "githubTools", r)}" ${dailyModuleStateAttrs("githubTools", r)} style="view-transition-name: daily-github-tools;">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">GitHub 工具雷达</span>
@@ -1468,7 +1564,7 @@ function renderDailyReportGrid(r) {
   
   if (v.trends) {
     html += `
-      <section class="${dailyPanelClass(12, "trends")}" style="view-transition-name: daily-trends;">
+      <section class="${dailyPanelClass(12, "trends", "", "trends", r)}" ${dailyModuleStateAttrs("trends", r)} style="view-transition-name: daily-trends;">
         <div class="news-panel-head daily-module-head">
           <div>
             <span class="news-section-kicker">趋势线索 · 外部校准收束</span>
@@ -1538,7 +1634,7 @@ function tryDailyGridScopedViewTransition(gridEl, gridInnerCallback) {
   return run("direct");
 }
 
-function renderYuqingDailyIntoDom(options) {
+function renderYuqingDailyIntoDom(options = {}) {
   const root = document.getElementById("daily-report-content");
   if (!root) return;
   
@@ -1557,7 +1653,8 @@ function renderYuqingDailyIntoDom(options) {
     !!String(header.innerHTML || "").trim() &&
     reportId === __lastDailyRenderedId &&
     isLoading === __lastDailyRenderedLoading;
-  const skipViewTransition = streamMode || (options && options.skipViewTransition === true);
+  const isFirstPaint = !String(header && header.innerHTML ? header.innerHTML : "").trim() && !String(grid && grid.innerHTML ? grid.innerHTML : "").trim();
+  const skipViewTransition = streamMode || options.skipViewTransition === true || isFirstPaint || Date.now() < __dailyQuietRenderUntil;
 
   const updateDom = () => {
     if (header && grid) {
@@ -1604,7 +1701,7 @@ function renderYuqingDailyIntoDom(options) {
     return;
   }
 
-  if (typeof document.startViewTransition === "function") {
+  if (typeof document.startViewTransition === "function" && !drawerOpen) {
     document.startViewTransition(updateDom);
   } else {
     updateDom();
@@ -1696,7 +1793,7 @@ async function loadDailyReport(reportId = "", options = {}) {
   if (typeof DataEngine === "undefined") {
     dailyEventState.source = "error";
     dailyEventState.status = "DataEngine 不可用";
-    renderYuqingDailyIntoDom();
+    renderYuqingDailyIntoDom({ skipViewTransition: options.skipViewTransition === true });
     return;
   }
   const preservePending = !reportId && options && options.preservePending === true && dailyEventState.streamPreviewRow;
@@ -1710,7 +1807,7 @@ async function loadDailyReport(reportId = "", options = {}) {
   const loadSignal = __yuqingDailyLoadAbort.signal;
   dailyEventState.source = "loading";
   dailyEventState.status = preservePending ? "正在核对 D1 是否已有完整事件日报..." : "正在读取云端 D1 报告...";
-  renderYuqingDailyIntoDom();
+  renderYuqingDailyIntoDom({ skipViewTransition: options.skipViewTransition === true });
   try {
     const data = reportId
       ? await DataEngine.fetchYuqingReportItem(reportId, { signal: loadSignal })
@@ -1756,7 +1853,7 @@ async function loadDailyReport(reportId = "", options = {}) {
     }
   }
   await loadDailyHistory();
-  renderYuqingDailyIntoDom();
+  renderYuqingDailyIntoDom({ skipViewTransition: options.skipViewTransition === true });
   renderYuqingDailyDrawersIntoDom();
 }
 
@@ -1782,6 +1879,8 @@ async function generateDailyReport() {
   dailyResetStreamBuffers();
   dailyResetScanProgress();
   dailyEnsureStreamPreviewShell();
+  __dailyFirstStreamEventAt = 0;
+  __dailyLastStreamEventAt = Date.now();
   dailyEventState.loading = true;
   dailyEventState.scanStartedAt = tScanStart;
   dailyEventState.scanStage = canStream ? "实时扫描已启动" : "云端扫描已启动";
@@ -1793,10 +1892,20 @@ async function generateDailyReport() {
   __dailyScanTick = setInterval(() => {
     if (!dailyEventState.loading) return;
     const sec = Math.floor((Date.now() - tScanStart) / 1000);
+    const silentSec = Math.floor((Date.now() - (__dailyLastStreamEventAt || tScanStart)) / 1000);
+    const pendingNames = dailyPendingScanLabels();
     dailyEventState.scanStage = canStream ? "实时扫描运行中" : "云端扫描运行中";
-    dailyEventState.status = canStream
-      ? `流式生成中（已等待 ${sec}s）… 趋势线索会等上游模块完成后再做外部搜索校准。`
-      : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为上游检索偏慢或网络中断。`;
+    if (canStream && !__dailyFirstStreamEventAt && sec >= 35) {
+      dailyEventState.scanStage = "等待 Worker 首包";
+      dailyEventState.status = `已等待 ${sec}s，仍未收到流式首包；如果继续无响应，会自动转入 D1 回读兜底。`;
+    } else if (canStream && __dailyFirstStreamEventAt && silentSec >= 45) {
+      dailyEventState.scanStage = "等待新进度";
+      dailyEventState.status = `已有 ${silentSec}s 没有新模块输出，仍在等待 ${pendingNames.join("、") || "剩余模块"}；超时后会自动回读 D1。`;
+    } else {
+      dailyEventState.status = canStream
+        ? `流式生成中（已等待 ${sec}s）… ${pendingNames.length ? `等待 ${pendingNames.join("、")}。` : "趋势线索会等上游模块完成后再做外部搜索校准。"}`
+        : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为上游检索偏慢或网络中断。`;
+    }
     renderYuqingDailyIntoDom({ skipViewTransition: true });
   }, 8000);
   const s = __yuqingSettings.scanCoverage;
@@ -1823,7 +1932,11 @@ async function generateDailyReport() {
       data = await DataEngine.streamYuqingDailyEventReport(payload, {
         timeoutMs: 900_000,
         signal: scanSignal,
+        firstEventTimeoutMs: 45_000,
+        idleTimeoutMs: 90_000,
         onEvent: async (evt) => {
+          __dailyLastStreamEventAt = Date.now();
+          if (!__dailyFirstStreamEventAt) __dailyFirstStreamEventAt = __dailyLastStreamEventAt;
           if (evt.type === "start") {
             if (evt.report && typeof evt.report === "object") {
               dailyEventState.streamPreviewRow = evt.report;
@@ -1835,12 +1948,12 @@ async function generateDailyReport() {
             return;
           }
           if (evt.type === "chunk") {
-            mergeDailyStreamChunk(evt);
+            const visualChanged = mergeDailyStreamChunk(evt);
             dailyEventState.scanStage = "模块正在输出";
             dailyEventState.source = "cloud";
             dailyEventState.status = `正在输出：${dailyStreamModuleLabel(evt.module, evt.streamKey)}`;
             dailyWritePendingPreview();
-            dailyScheduleStreamRender();
+            if (visualChanged) dailyScheduleStreamRender();
             return;
           }
           if (evt.type === "partial") {
@@ -1920,6 +2033,8 @@ async function generateDailyReport() {
     }
     dailyEventState.loading = false;
     dailyEventState.scanStartedAt = 0;
+    __dailyFirstStreamEventAt = 0;
+    __dailyLastStreamEventAt = 0;
     __yuqingDailyScanAbort = null;
     __dailyScanPromise = null;
     dailyClearScheduledStreamRender();
@@ -2130,7 +2245,8 @@ function pageYuqingEvents() {
 
 function initYuqingEvents() {
   disposeYuqingEvents();
-  renderYuqingDailyIntoDom();
+  dailySuppressViewMotion(1200);
+  renderYuqingDailyIntoDom({ skipViewTransition: true });
   renderYuqingDailyDrawersIntoDom();
 
   // 异步加载云端设置，不阻塞主报告拉取
@@ -2138,7 +2254,7 @@ function initYuqingEvents() {
     DataEngine.fetchYuqingEventDashboardSettings().then(data => {
       if (data && data.settings) {
         __yuqingSettings = normalizeDailyDashboardSettings(data.settings);
-        renderYuqingDailyIntoDom();
+        renderYuqingDailyIntoDom({ skipViewTransition: true });
         renderYuqingDailyDrawersIntoDom();
       }
     }).catch(() => {
@@ -2159,7 +2275,7 @@ function initYuqingEvents() {
     renderYuqingDailyIntoDom({ skipViewTransition: true });
     renderYuqingDailyDrawersIntoDom();
   } else {
-    loadDailyReport(hashId, { preservePending: restoredPending || (!hashId && !!dailyEventState.streamPreviewRow) });
+    loadDailyReport(hashId, { preservePending: restoredPending || (!hashId && !!dailyEventState.streamPreviewRow), skipViewTransition: true });
   }
 }
 

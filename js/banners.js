@@ -7,7 +7,7 @@ function renderDataLayerBanner(dataKey) {
   const primary = owner.primary ? AGENT_MAP[owner.primary] : null;
   const related = (owner.related || []).map(id => AGENT_MAP[id]).filter(Boolean);
   const ownerChips = [primary, ...related].filter(Boolean).map(a => `
-    <a class="owner-link" href="#/${agentRoute(a.id)}" title="查看 ${a.name} 的分析">
+    <a class="owner-link" href="#/${agentRoute(a.id)}" title="查看 ${a.name} 的演示原型">
       <span class="owner-dot" style="background:${a.color}">${a.short}</span>
       <span>${a.name}</span>
       <span class="owner-arrow"><i class="ph ph-arrow-right"></i></span>
@@ -22,7 +22,7 @@ function renderDataLayerBanner(dataKey) {
           <span class="tag">无 LLM</span>
         </div>
         <div class="layer-banner-sub">
-          本页提供可回放、可核对的客观数据。若需分析解读，请查看主理员工的观点：
+          本页展示市场数据与派生指标，时效以实际响应为准。关联员工页面目前为演示原型：
         </div>
       </div>
       <div class="layer-banner-owners">${ownerChips || '<span style="font-size:var(--fz-xs); color:var(--muted);">暂无对应员工</span>'}</div>
@@ -80,10 +80,10 @@ function renderOpinionLayerBanner(agentId) {
       <div class="layer-banner-body">
         <div class="layer-banner-title">
           分析层 · ${agent.name}的观点工作台
-          <span class="tag">LLM 分析</span>
+          <span class="tag">LLM 分析 · 演示未接入</span>
         </div>
         <div class="layer-banner-sub">
-          本页只呈现结论与推理；完整的可交互数据在下方"主理数据页"：
+          本页保留静态结论与图形示例，不代表实际模型输出。对应数据入口：
         </div>
       </div>
       <div class="layer-banner-owners">${jumpLinks || '<span style="font-size:var(--fz-xs); color:var(--muted);">综合四位专员</span>'}</div>

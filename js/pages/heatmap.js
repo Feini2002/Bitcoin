@@ -167,12 +167,12 @@ function pageHeatmap() {
       </div>
       <div class="heatmap-status-actions">
         <span class="chip ok" id="hm-live-chip">实时爆仓流</span>
-        <a class="owner-link heatmap-owner-link" href="#/agent-flow" title="查看 盘口流动性官 的分析">
+        <a class="owner-link heatmap-owner-link" href="#/agent-flow" title="查看 盘口流动性官 的演示原型">
           <span class="owner-dot" style="background:var(--agent-flow)">盘</span>
           <span>盘口流动性官</span>
           <span class="owner-arrow"><i class="ph ph-arrow-right"></i></span>
         </a>
-        <a class="owner-link heatmap-owner-link" href="#/agent-risk" title="查看 风控官 的分析">
+        <a class="owner-link heatmap-owner-link" href="#/agent-risk" title="查看 风控官 的演示原型">
           <span class="owner-dot" style="background:var(--agent-risk)">控</span>
           <span>风控官</span>
           <span class="owner-arrow"><i class="ph ph-arrow-right"></i></span>

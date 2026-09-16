@@ -1,5 +1,5 @@
 name = "market-snapshot"
-main = "market-snapshot-worker.js"
+main = "market-snapshot-worker.mjs"
 compatibility_date = "2024-12-01"
 workers_dev = true
 
@@ -18,4 +18,4 @@ database_name = "btc"
 database_id = "de758bb8-c7f5-41c7-a6ea-32c0ddf74d57"
 
 # Secret required for write routes:
-#   npx wrangler secret put SNAPSHOT_WRITE_TOKEN --config="快照程序分析/wrangler.snapshot.toml"
+#   npx wrangler secret put SNAPSHOT_WRITE_TOKEN --config="cloudflare/snapshot/wrangler.snapshot.toml"

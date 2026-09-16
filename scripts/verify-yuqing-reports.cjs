@@ -3,19 +3,17 @@ const path = require("path");
 const vm = require("vm");
 
 const ROOT = path.join(__dirname, "..");
+const packagePath = path.join(ROOT, "package.json");
 const workerPath = path.join(ROOT, "cloudflare", "yuqing", "yuqing-worker.js");
 const migrationPath = path.join(ROOT, "cloudflare", "migrations", "yuqing", "0002_reports.sql");
 const modelMigrationPath = path.join(ROOT, "cloudflare", "migrations", "yuqing", "0004_model_channels.sql");
-const codexBridgeMigrationPath = path.join(ROOT, "cloudflare", "migrations", "yuqing", "0005_codex_bridge_tasks.sql");
-const systemLlmRoutesMigrationPath = path.join(ROOT, "cloudflare", "migrations", "yuqing", "0006_system_llm_routes.sql");
 const wranglerPath = path.join(ROOT, "cloudflare", "wrangler.yuqing.toml");
+const wranglerIgnorePath = path.join(ROOT, ".wranglerignore");
 const dataEnginePath = path.join(ROOT, "js", "data-engine.js");
 const eventsPagePath = path.join(ROOT, "js", "pages", "events.js");
 const settingsPagePath = path.join(ROOT, "js", "pages", "settings.js");
 const newsPagePath = path.join(ROOT, "js", "pages", "news.js");
-const codexBridgePath = path.join(ROOT, "scripts", "codex-cli-bridge.cjs");
-const codexDailySchemaPath = path.join(ROOT, "scripts", "codex-schemas", "daily_event.schema.json");
-const codexSentimentSchemaPath = path.join(ROOT, "scripts", "codex-schemas", "sentiment_analysis.schema.json");
+const safePagesDeployPath = path.join(ROOT, "scripts", "deploy-pages-safe.cjs");
 const shijianIndexPath = path.join(ROOT, "cloudflare", "yuqing", "shijian", "index.js");
 const githubToolsPath = path.join(ROOT, "cloudflare", "yuqing", "shijian", "github-tools.js");
 const temperaturePath = path.join(ROOT, "cloudflare", "yuqing", "shijian", "temperature.js");
@@ -63,65 +61,22 @@ function loadWorkerContext() {
 const worker = fs.readFileSync(workerPath, "utf8");
 const migration = fs.readFileSync(migrationPath, "utf8");
 const modelMigration = fs.readFileSync(modelMigrationPath, "utf8");
-const codexBridgeMigration = fs.readFileSync(codexBridgeMigrationPath, "utf8");
-const systemLlmRoutesMigration = fs.readFileSync(systemLlmRoutesMigrationPath, "utf8");
 const wrangler = fs.readFileSync(wranglerPath, "utf8");
+const wranglerIgnore = fs.readFileSync(wranglerIgnorePath, "utf8");
 const dataEngine = fs.readFileSync(dataEnginePath, "utf8");
 const eventsPage = fs.readFileSync(eventsPagePath, "utf8");
 const settingsPage = fs.readFileSync(settingsPagePath, "utf8");
 const newsPage = fs.readFileSync(newsPagePath, "utf8");
-const codexBridge = fs.readFileSync(codexBridgePath, "utf8");
-const codexDailySchema = JSON.parse(fs.readFileSync(codexDailySchemaPath, "utf8"));
-const codexSentimentSchema = JSON.parse(fs.readFileSync(codexSentimentSchemaPath, "utf8"));
 const shijianIndex = fs.readFileSync(shijianIndexPath, "utf8");
 const githubTools = fs.readFileSync(githubToolsPath, "utf8");
 const temperature = fs.readFileSync(temperaturePath, "utf8");
 const trendClues = fs.readFileSync(trendCluesPath, "utf8");
 const ctx = loadWorkerContext();
+const packageJson = fs.readFileSync(packagePath, "utf8");
+const safePagesDeploy = fs.existsSync(safePagesDeployPath) ? fs.readFileSync(safePagesDeployPath, "utf8") : "";
 
 assertOk(/CREATE TABLE IF NOT EXISTS yuqing_reports/.test(migration), "migration creates yuqing_reports");
 assertOk(/model_channels/.test(modelMigration) && /yuqing_settings/.test(modelMigration), "model channel migration seeds yuqing_settings");
-assertOk(/CREATE TABLE IF NOT EXISTS yuqing_codex_tasks/.test(codexBridgeMigration), "codex bridge migration creates task queue");
-assertOk(/execution_channels/.test(codexBridgeMigration) && /gemini_worker/.test(codexBridgeMigration) && /codex_cli/.test(worker), "codex bridge migration seeds execution channels");
-assertOk(
-  /0006_system_llm_routes/.test(systemLlmRoutesMigration) &&
-    /json_patch/.test(systemLlmRoutesMigration) &&
-    /json_extract\(value_json, '\$\.routes'\)/.test(systemLlmRoutesMigration),
-  "system LLM route migration backfills defaults while preserving existing choices",
-);
-const expectedExecutionRouteIds = [
-  "daily_event",
-  "sentiment_analysis",
-  "overview.advice",
-  "premarket.brief",
-  "boardroom.meeting",
-  "agent.chief",
-  "agent.env",
-  "agent.flow",
-  "agent.deriv",
-  "agent.risk",
-  "agent.archive",
-  "strategy.templates",
-  "order.draft",
-  "positions.risk",
-  "review.journal",
-  "review.daily",
-  "review.performance",
-  "review.patterns",
-  "playbook.assistant",
-];
-for (const routeId of expectedExecutionRouteIds) {
-  assertOk(worker.includes(routeId), `worker reserves execution route ${routeId}`);
-  assertOk(settingsPage.includes(`id: "${routeId}"`), `settings page reserves execution route ${routeId}`);
-  assertOk(codexBridgeMigration.includes(`"${routeId}":"gemini_worker"`), `migration seeds execution route ${routeId}`);
-  assertOk(systemLlmRoutesMigration.includes(`"${routeId}":"gemini_worker"`), `backfill migration seeds execution route ${routeId}`);
-}
-for (const routeId of expectedExecutionRouteIds.filter((id) => id !== "daily_event" && id !== "sentiment_analysis")) {
-  assertOk(modelMigration.includes(`"${routeId}":`), `model migration seeds model route ${routeId}`);
-  assertOk(systemLlmRoutesMigration.includes(`"${routeId}":`), `backfill migration seeds model route ${routeId}`);
-}
-assertOk(worker.includes("raw.routes") && worker.includes("bodyIn.routes"), "worker accepts routes alias when saving execution channels");
-assertOk(!settingsPage.includes("key && value && !el.disabled") && settingsPage.includes("if (key && value) routes[key] = value"), "settings page saves reserved execution defaults to D1");
 for (const field of [
   "kind",
   "report_date",
@@ -153,6 +108,12 @@ assertOk(worker.includes("pricingModelId") && worker.includes("gemini_api_pricin
 const modelSwitchEnvelope = { settings: { assignments: { "daily_event.trends": "gemini-3.1-pro-preview" } } };
 const modelSwitchResolved = ctx.resolveYuqingModel({}, modelSwitchEnvelope, "daily_event.trends", {});
 assertOk(modelSwitchResolved.modelId === "gemini-3.1-pro-preview" && modelSwitchResolved.source === "d1", "worker resolves D1 model channel before costing LLM calls");
+const legacySettings = ctx.normalizeYuqingModelSettings({
+  assignments: { "daily_event.trends": "gemini-3.1-pro-preview" },
+  codex: { modules: { "daily_event.trends": { model: "gpt-5.5", reasoningEffort: "xhigh" } } },
+});
+assertOk(legacySettings.assignments["daily_event.trends"] === "gemini-3.1-pro-preview" && !Object.hasOwn(legacySettings, "codex"), "legacy model settings retain cloud assignments and discard retired runtime settings");
+assertOk(ctx.resolveYuqingModel({}, { settings: legacySettings }, "daily_event.trends", {}).modelId === "gemini-3.1-pro-preview", "legacy saved configuration continues to resolve cloud model");
 
 assertOk(/crons\s*=\s*\["0 0,1,4,6,12,14,16 \* \* \*"\]/.test(wrangler), "wrangler cron covers BJT report slots");
 
@@ -217,14 +178,9 @@ for (const route of [
   "/api/yuqing/reports/generate",
   "/api/yuqing/reports/generate-stream",
   "/api/yuqing/settings/model-channels",
-  "/api/yuqing/settings/execution-channels",
-  "/api/yuqing/codex/tasks",
-  "/api/yuqing/codex/bridge-task",
 ]) {
   assertOk(worker.includes(route), `worker exposes ${route}`);
 }
-assertOk(worker.includes("validCodexBridgeRequest") && worker.includes("CODEX_BRIDGE_TOKEN"), "worker requires bridge token before Codex task claim");
-assertOk(worker.includes("createCodexBridgeTask") && worker.includes("completeCodexBridgeTask") && worker.includes("codexDailyStreamResponse"), "worker creates, completes, and streams Codex bridge tasks");
 assertOk(worker.includes("readYuqingModelSettingsEnvelope") && worker.includes("resolveYuqingModel"), "worker resolves model channels before LLM calls");
 assertOk(worker.includes("gemini-3.1-pro-preview") && worker.includes("gemini-3.1-flash-lite") && worker.includes("gemini-3-flash-preview"), "worker embeds approved Gemini model catalog");
 assertOk(worker.includes("DELETE FROM yuqing_reports WHERE generated_at < ?"), "worker prunes reports by retention");
@@ -253,6 +209,8 @@ assertOk(eventsPage.includes("历史报告与费用") && eventsPage.includes("re
 assertOk(eventsPage.includes("DAILY_ARCHIVE_FILTERS") && eventsPage.includes("近30天") && eventsPage.includes("近七天"), "events page filters reports by archive range");
 assertOk(eventsPage.includes("DAILY_PENDING_PREVIEW_KEY") && eventsPage.includes("dailyRestorePendingPreview") && eventsPage.includes("preservePending"), "events page restores in-progress daily preview after refresh");
 assertOk(eventsPage.includes("dailyCloudReportShouldReplacePending") && eventsPage.includes("D1 最新记录仍是同一轮未完成扫描"), "events page prevents stale D1 latest from replacing pending scan");
+assertOk(newsPage.includes("历史报告与费用") && newsPage.includes("renderAnalysisArchiveCostSummary"), "news analysis page aligns archive button and cost summary with events page");
+assertOk(newsPage.includes("toggle-switch") && newsPage.includes("daily-setting-copy"), "news analysis settings drawer uses daily settings switch rows");
 
 for (const method of [
   "fetchYuqingReportLatest",
@@ -264,35 +222,15 @@ for (const method of [
   "fetchYuqingReportStatus",
   "fetchYuqingModelSettings",
   "updateYuqingModelSettings",
-  "fetchYuqingExecutionChannelSettings",
-  "updateYuqingExecutionChannelSettings",
-  "pollYuqingCodexTask",
 ]) {
   assertOk(dataEngine.includes(method), `DataEngine has ${method}`);
 }
 
-assertOk(settingsPage.includes("Codex CLI 隧道") && settingsPage.includes("settings-execution"), "settings page renders execution channel controls");
-assertOk(newsPage.includes("onTaskStatus") && newsPage.includes("Codex CLI 任务已排队"), "news analysis page shows Codex task waiting status");
-assertOk(codexBridge.includes("--sandbox") && codexBridge.includes("read-only") && !codexBridge.includes("dangerously-bypass-approvals"), "codex bridge runs codex exec with read-only sandbox and no dangerous bypass");
-assertOk(codexBridge.includes("CODEX_BRIDGE_TOKEN") && codexBridge.includes("YUQING_BRIDGE_TOKEN") && codexBridge.includes(".codex-bridge.env"), "codex bridge reads local bridge token configuration");
-assertOk(codexBridge.includes("daily_event") && codexBridge.includes("sentiment_analysis") && codexBridge.includes("TASK_ENDPOINT"), "codex bridge only accepts yuqing report task kinds");
-assertOk(codexBridge.includes("readPromptFileBundle") && codexBridge.includes("context.promptFiles"), "codex bridge preloads Worker prompt files before exec");
-assertOk(codexBridge.includes("schemaPathForTask") && codexBridge.includes("validateCodexPayloadShape") && codexBridge.includes("REQUIRED_REPORT_SECTIONS"), "codex bridge checks per-kind report shape after exec");
-assertOk(!codexBridge.includes("--output-schema"), "codex bridge avoids strict CLI output-schema that would flatten flexible report bodies");
-assertOk(codexBridge.includes("DEFAULT_POLL_INTERVAL_MS = 2000"), "codex bridge default polling is tightened without changing report generation");
-assertOk(worker.includes("task.status === \"queued\" ? 1500 : 2000"), "worker waits on Codex tasks with tighter polling");
-assertOk(dataEngine.includes("Number(opts.pollIntervalMs) || 2_000"), "DataEngine polls Codex tasks every 2s by default");
-assertOk(
-  codexDailySchema.properties.kind.enum.includes("daily_event") &&
-    codexDailySchema.properties.report.required.includes("topStories") &&
-    codexDailySchema.properties.report.required.includes("trendRead"),
-  "daily_event schema keeps required report sections",
-);
-assertOk(
-  codexSentimentSchema.properties.kind.enum.includes("sentiment_analysis") &&
-    codexSentimentSchema.properties.report.required.includes("upstreamDaily") &&
-    codexSentimentSchema.properties.report.required.includes("riskRadar"),
-  "sentiment_analysis schema keeps required report sections",
-);
+assertOk(wranglerIgnore.includes(".codex-bridge.env") && safePagesDeploy.includes("buildPages"), "retired local credentials stay excluded from deployment");
+assertOk(!["codex_cli", "codex/bridge-task", "codex/tasks", "execution_channels"].some(x => worker.includes(x)), "worker has no retired execution path");
+assertOk(!/pollYuqingCodexTask|execution-channels/.test(dataEngine), "data engine has no retired task polling or settings requests");
+assertOk(!/data-codex-module|data-execution-choice/.test(settingsPage), "settings contains only cloud model and schedule controls");
+assertOk(settingsPage.includes("renderSettingsSchedules") && settingsPage.includes("预留模型默认值"), "settings retains schedule hints and reserved model targets");
+assertOk(!fs.existsSync(path.join(ROOT, "start-codex-bridge.bat")) && !fs.existsSync(path.join(ROOT, "scripts/codex-cli-bridge.cjs")), "retired launcher and executor are removed");
 
 console.log("\nYuqing report verification passed");

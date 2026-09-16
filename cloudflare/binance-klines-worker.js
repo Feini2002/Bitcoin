@@ -5,7 +5,7 @@ import { accessCorsHeaders, requireCloudflareAccess } from "./access-auth.js";
  *
  * 三件事：
  *   1) Cron（每 5 分钟）按需增量拉取 5m/15m/1h/4h/1d/3d/1w 的 K 线，入库 D1；
- *      每个 (symbol, interval) 只保留最新 2000 根。
+ *      每个 (symbol, interval) 只保留最新 6000 根。
  *   2) 提供读接口：GET /api/d1/klines?symbol=&interval=&limit=   → 从 D1 读并返回 JSON
  *   3) 提供设置页/运维手动同步接口：POST/GET /api/d1/sync?symbol=&interval=(all|5m,15m,...)
  *      图表页只读 /api/d1/klines?sync=0；以及向后兼容的 fapi 代理：
@@ -51,7 +51,7 @@ const FOOTPRINT_FETCH_LIMIT = 1000;
 const FOOTPRINT_MAX_FETCH_PAGES = 14;
 const FOOTPRINT_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
 const FOOTPRINT_READ_CACHE_SECONDS = 20;
-const MAX_KLINES_PER_INTERVAL = 2000;
+const MAX_KLINES_PER_INTERVAL = 6000;
 const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
 const FETCH_TIMEOUT_MS = 8000;
@@ -59,7 +59,7 @@ const FETCH_TIMEOUT_MS = 8000;
 const FETCH_TIMEOUT_LLM_MS = 118_000;
 const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
-const WORKER_BUILD = "btc-worker/3.7.9-gemini-llm-sync";
+const WORKER_BUILD = "btc-worker/3.7.11-klines6000";
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
 const KLINE_READ_CACHE_SECONDS = 8;
 const DERIVATIVE_READ_CACHE_SECONDS = 30;
@@ -580,7 +580,7 @@ async function fetchKlinesFromBybit(_env, { symbol, interval, limit, startTime, 
   }
 }
 
-async function fetchKlinesFromOkx(_env, { symbol, interval, limit, startTime }) {
+async function fetchKlinesFromOkx(_env, { symbol, interval, limit, startTime, endTime }) {
   const instId = mapSymbolToOkxSwap(symbol);
   if (!instId) {
     return { ok: false, chain: ["okx:unsupported-symbol"], error: `unsupported OKX symbol ${symbol}`, status: 0 };
@@ -590,7 +590,8 @@ async function fetchKlinesFromOkx(_env, { symbol, interval, limit, startTime }) 
   p.set("bar", mapIntervalToOkx(interval));
   p.set("limit", String(Math.min(300, Math.max(1, Number(limit) || 300))));
 
-  const target = "https://www.okx.com/api/v5/market/candles?" + p.toString();
+  if (endTime != null) p.set("after", String(Number(endTime) + 1));
+  const target = "https://www.okx.com/api/v5/market/" + (endTime != null ? "history-candles?" : "candles?") + p.toString();
   try {
     const r = await fetchWithTimeout(target, {
       headers: {
@@ -733,7 +734,7 @@ async function d1QueryLatestMeta(env, symbol, interval) {
   };
 }
 
-/** 批量 INSERT OR REPLACE 后按 2000 根上限 prune */
+/** 批量 INSERT OR REPLACE 后按 6000 根上限 prune */
 async function persistKlines(env, symbol, interval, rawKlines) {
   if (!Array.isArray(rawKlines) || rawKlines.length === 0) return { inserted: 0, pruned: 0 };
 
@@ -762,10 +763,9 @@ async function persistKlines(env, symbol, interval, rawKlines) {
   const latestT = rawKlines.reduce((max, row) => Math.max(max, Number(row && row[0]) || 0), 0);
   let pruned = 0;
   if (latestT > 0) {
-    const cutoff = latestT - intervalMs(interval) * MAX_KLINES_PER_INTERVAL;
     const res = await env.DB.prepare(
-      "DELETE FROM klines WHERE symbol = ?1 AND interval = ?2 AND t < ?3"
-    ).bind(symbol, interval, cutoff).run();
+      "DELETE FROM klines WHERE symbol = ?1 AND interval = ?2 AND t < (SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1 OFFSET ?3)"
+    ).bind(symbol, interval, MAX_KLINES_PER_INTERVAL - 1).run();
     pruned = res?.meta?.changes || 0;
   }
 
@@ -793,7 +793,41 @@ async function updateSyncStatus(env, symbol, interval, { ok, inserted, latestT, 
  * 单次同步（增量）
  * ============================================================= */
 
-async function syncKlinesOne(env, symbol, interval) {
+/** Read the newest history backwards; pin one venue for the whole backfill. */
+async function fetchKlineHistory(env, symbol, interval) {
+  const aggregateDays = interval === "3d";
+  const sourceInterval = aggregateDays ? "1d" : interval;
+  const target = aggregateDays ? MAX_KLINES_PER_INTERVAL * 3 + 2 : MAX_KLINES_PER_INTERVAL;
+  const rows = new Map();
+  let endTime = Date.now(), venue = null, lastResult = null, exhausted = false;
+  const deadline = Date.now() + 45000;
+  for (let page = 0; page < 64 && rows.size < target; page++) {
+    if (Date.now() >= deadline) return { ok: false, error: "history backfill deadline; existing D1 retained" };
+    const args = { symbol, interval: sourceInterval, limit: Math.min(1000, target - rows.size), endTime };
+    const got = venue === "bybit-failover" ? await fetchKlinesFromBybit(env, args)
+      : venue === "binance-fapi" ? await fetchKlinesFromBinance(env, args)
+      : venue === "okx-swap-failover" ? await fetchKlinesFromOkx(env, args)
+      : await fetchKlinesWithFailover(env, args);
+    if (!got.ok) {
+      if (venue && (got.chain || []).some(v => v === "bybit:empty" || v === "okx:empty")) { exhausted = true; break; }
+      return got;
+    }
+    venue = venue || got.source || "binance-fapi";
+    lastResult = got;
+    const pageRows = (got.klines || []).filter(row => Number(row[0]) <= endTime);
+    if (!pageRows.length) { exhausted = true; break; }
+    for (const row of pageRows) rows.set(Number(row[0]), row);
+    const earliest = Math.min(...pageRows.map(row => Number(row[0])));
+    if (earliest >= endTime) return { ok: false, error: "history cursor did not advance" };
+    endTime = earliest - 1;
+    console.log("[kline backfill] " + symbol + "/" + interval + " page=" + (page + 1) + " rows=" + rows.size);
+  }
+  const sorted = [...rows.values()].sort((a, b) => Number(a[0]) - Number(b[0]));
+  const klines = (aggregateDays ? bybitListToBinanceKlines(sorted, "3d") : sorted).slice(-MAX_KLINES_PER_INTERVAL);
+  return { ...lastResult, ok: true, klines, source: venue, historyExhausted: exhausted };
+}
+
+async function syncKlinesOne(env, symbol, interval, options = {}) {
   if (!env.DB) return { ok: false, symbol, interval, error: "D1 binding missing" };
   if (!SUPPORTED_INTERVALS.includes(interval)) return { ok: false, symbol, interval, error: "unsupported interval" };
 
@@ -806,18 +840,18 @@ async function syncKlinesOne(env, symbol, interval) {
     return { ok: false, symbol, interval, error: err };
   }
 
-  const bulkFill = !meta.hasRows;
+  const bulkFill = !meta.hasRows || options.backfill === true;
   const fetchArgs = bulkFill
     ? { symbol, interval, limit: MAX_KLINES_PER_INTERVAL }
-    : { symbol, interval, startTime: meta.maxT, limit: BINANCE_MAX_LIMIT_PER_REQUEST };
+    : { symbol, interval: interval === "3d" ? "1d" : interval, startTime: meta.maxT, limit: BINANCE_MAX_LIMIT_PER_REQUEST };
 
-  const got = await fetchKlinesWithFailover(env, fetchArgs);
+  const got = bulkFill ? await fetchKlineHistory(env, symbol, interval) : await fetchKlinesWithFailover(env, fetchArgs);
   if (!got.ok) {
     const detail = [
       got.error || "fetch failed",
       got.chain && got.chain.length ? `chain=${got.chain.join(" > ")}` : "",
     ].filter(Boolean).join(" | ");
-    if (!isKlineTailStaleForRead(meta.maxT, interval)) {
+    if (!bulkFill && !isKlineTailStaleForRead(meta.maxT, interval)) {
       await updateSyncStatus(env, symbol, interval, { ok: true, inserted: 0, latestT: meta.maxT });
       return {
         ok: true,
@@ -832,6 +866,8 @@ async function syncKlinesOne(env, symbol, interval) {
     await updateSyncStatus(env, symbol, interval, { ok: false, latestT: meta.maxT, error: detail });
     return { ok: false, symbol, interval, error: detail, chain: got.chain };
   }
+
+  if (!bulkFill && interval === "3d") got.klines = bybitListToBinanceKlines(got.klines, "3d");
 
   let persist;
   try {
@@ -854,6 +890,7 @@ async function syncKlinesOne(env, symbol, interval) {
     symbol,
     interval,
     bulkFill,
+    historyExhausted: got.historyExhausted || false,
     fetched: got.klines.length,
     inserted: persist.inserted,
     pruned: persist.pruned,
@@ -1172,7 +1209,7 @@ async function syncFootprintBackfill(env, symbol, opts = {}) {
   const meta = await footprintBarMeta(env, symbol);
   let cursorEnd = Number(opts.endTime || meta?.minT || Date.now());
   if (!Number.isFinite(cursorEnd) || cursorEnd <= 0) cursorEnd = Date.now();
-  cursorEnd = Math.min(cursorEnd, Date.now());
+  cursorEnd = bucketStart(Math.min(cursorEnd, Date.now()), FOOTPRINT_BASE_INTERVAL);
 
   let fetched = 0;
   let written = 0;
@@ -1185,27 +1222,28 @@ async function syncFootprintBackfill(env, symbol, opts = {}) {
     const startTime = endTime - FOOTPRINT_BACKFILL_WINDOW_MS + 1;
     if (endTime <= 0 || startTime <= 0) break;
 
-    const got = await fetchAggTradesFromBinance(env, {
-      symbol,
-      limit: FOOTPRINT_FETCH_LIMIT,
-      startTime,
-      endTime,
-    });
-    if (!got.ok) {
-      lastError = got.error || "aggTrades backfill failed";
-      return { ok: false, symbol, fetched, written, pruned, error: lastError, chain: got.chain };
+    const byId = new Map();
+    let fromId = null, complete = false;
+    for (let page = 0; page < Math.min(128, Math.max(FOOTPRINT_MAX_FETCH_PAGES, Number(opts.maxPages) || 0)); page++) {
+      const got = await fetchAggTradesFromBinance(env, { symbol, limit: FOOTPRINT_FETCH_LIMIT,
+        ...(fromId == null ? { startTime, endTime } : { fromId }) });
+      if (!got.ok) return { ok: false, symbol, fetched, written, pruned, error: got.error, chain: got.chain };
+      host = got.host || host;
+      const batch = got.trades || [];
+      for (const trade of batch) {
+        if (Number(trade.T) >= startTime && Number(trade.T) <= endTime) byId.set(Number(trade.a), trade);
+      }
+      const tail = batch[batch.length - 1];
+      if (!tail || batch.length < FOOTPRINT_FETCH_LIMIT || Number(tail.T) >= endTime) { complete = true; break; }
+      const next = Number(tail.a) + 1;
+      if (fromId != null && next <= fromId) break;
+      fromId = next;
     }
-    host = got.host || host;
-    const trades = (got.trades || [])
-      .filter((row) => {
-        const t = Number(row.T || row.E || 0);
-        return t >= startTime && t <= endTime;
-      })
-      .sort((a, b) => Number(a.a || 0) - Number(b.a || 0));
+    if (!complete) return { ok: false, symbol, fetched, written, pruned, error: "footprint window exceeds page budget; incomplete window not written" };
+    const trades = [...byId.values()].sort((x, y) => Number(x.a) - Number(y.a));
     if (!trades.length) continue;
-
-    const starts = [...new Set(trades.map((row) => bucketStart(Number(row.T || row.E), FOOTPRINT_BASE_INTERVAL)))];
-    const barMap = await loadExistingFootprintBars(env, symbol, starts);
+    // Full closed windows replace their bars; replay must not double volume.
+    const barMap = new Map();
     for (const trade of trades) ingestTradeIntoFootprintBars(barMap, trade);
     const persisted = await persistFootprintBars(env, symbol, barMap);
     fetched += trades.length;
@@ -2682,6 +2720,11 @@ function resolveDerivativeSyncFlagGroups(groups) {
   return { includeFast: true, includeHourly: true, includeMacro: true, hourlyHeavyOnlySet: null, backfillMode: false };
 }
 
+function shouldUseBybitDerivativeFallback(errorKinds, errorMessages) {
+  return [...errorKinds].some((kind) => ["geo_restricted", "blacklisted_ip", "http_403", "rate_limited"].includes(kind)) ||
+    [...errorMessages].some((message) => /restricted location|according to[^\n]{0,40}eligibility|451/u.test(message));
+}
+
 async function syncDerivativesOne(env, symbol, opts = {}) {
   const normalizedSymbol = String(symbol || DEFAULT_SYMBOL).toUpperCase();
   const pair = symbolToPair(normalizedSymbol);
@@ -2931,13 +2974,25 @@ async function syncDerivativesOne(env, symbol, opts = {}) {
 
   /** Bybit Funding/OI 兜底 */
   if (fg.includeFast && !opts.disableBybitLinearFallback && (!fastFundingSnapOk || !fastOiSnapOk)) {
-    const restrictive =
-      [...metricUpstreamKindByMetric.values()].some((x) => x === "geo_restricted" || x === "blacklisted_ip") ||
-      [...firstErrorByMetric.values()].some((msg) => /restricted location|according to[^\n]{0,40}eligibility|451/u.test(msg));
+    const restrictive = shouldUseBybitDerivativeFallback(metricUpstreamKindByMetric.values(), firstErrorByMetric.values());
     if (restrictive) {
       try {
         const wb = await fetchBybitLinearTickerSnapshot(normalizedSymbol);
         if (wb.ok) {
+          if (fg.includeHourly) {
+            for (const task of [
+              { metric: "oi_binance", path: "open-interest", query: "intervalTime=1h&limit=200", time: "timestamp", value: "openInterest" },
+              { metric: "funding_binance", path: "funding/history", query: "limit=100", time: "fundingRateTimestamp", value: "fundingRate" },
+            ]) {
+              try {
+                const response = await fetchWithTimeout("https://api.bybit.com/v5/market/" + task.path + "?category=linear&symbol=" + normalizedSymbol + "&" + task.query, { headers: { Accept: "application/json" } });
+                const data = await response.json();
+                if (!response.ok || Number(data.retCode) !== 0 || !Array.isArray(data.result?.list)) throw new Error("Bybit history unavailable");
+                for (const row of data.result.list) points.push(derivativePoint(normalizedSymbol, task.metric, Number(row[task.time]), Number(row[task.value]), "bybit-" + task.path.replace("/", "-"), {}));
+              } catch (error) { console.warn("[Bybit history] " + task.metric + ": " + error.message); }
+            }
+          }
+
           await finalizeDerivativeUpstreamHealth(env, "bybit_public_linear_fallback", {
             ok: true,
             errorKind: "",
@@ -2946,7 +3001,7 @@ async function syncDerivativesOne(env, symbol, opts = {}) {
           });
           if (!fastFundingSnapOk && Number.isFinite(wb.fundingRate)) {
             points.push(
-              derivativePoint(normalizedSymbol, "funding_binance", wb.nextFundingTime || now, wb.fundingRate, "bybit-linear-tickers-snapshot", {
+              derivativePoint(normalizedSymbol, "funding_binance", now, wb.fundingRate, "bybit-linear-tickers-snapshot", {
                 markPrice: Number.isFinite(wb.markPrice) ? wb.markPrice : null,
                 nextFundingTime: wb.nextFundingTime || null,
               })
@@ -3954,7 +4009,7 @@ async function syncDerivativesIfDue(env, symbol, time) {
     return syncDerivativesOne(env, symbol, {
       background: true,
       interaction: "cron",
-      groups: "core-proprietary",
+      groups: "core",
     });
   }
   return syncDerivativesOne(env, symbol, {
@@ -4665,7 +4720,7 @@ async function handleManualSync(request, env, url, ctx) {
         results.push({ symbol, interval: iv, ok: false, error: "unsupported" });
         continue;
       }
-      results.push(await syncKlinesOne(env, symbol, iv));
+      results.push(await syncKlinesOne(env, symbol, iv, { backfill: url.searchParams.get("backfill") === "1" }));
     }
     return results;
   };
@@ -5134,7 +5189,7 @@ async function handleStatus(_request, env, url) {
           upstream: "Binance FAPI with Bybit linear and OKX swap failover",
           binanceOriginMode: binanceUpstreamMode(env),
           alternateFailover: klineAlternateFailoverEnabled(env),
-          readEndpoint: "/api/d1/klines?symbol=BTCUSDT&interval=15m&limit=2000&sync=0",
+          readEndpoint: "/api/d1/klines?symbol=BTCUSDT&interval=15m&limit=6000&sync=0",
           manualSyncEndpoint: "/api/d1/sync?symbol=BTCUSDT&interval=all&wait=1",
           readAutoSyncMinMs: KLINE_READ_AUTO_SYNC_MIN_MS,
           cron: "Workers Cron writes due intervals; Pages chart reads D1 and only queues repair when stale",
@@ -5213,7 +5268,7 @@ async function handleStatus(_request, env, url) {
         upstream: "Binance FAPI with Bybit linear and OKX swap failover",
         binanceOriginMode: binanceUpstreamMode(env),
         alternateFailover: klineAlternateFailoverEnabled(env),
-        readEndpoint: "/api/d1/klines?symbol=BTCUSDT&interval=15m&limit=2000&sync=0",
+        readEndpoint: "/api/d1/klines?symbol=BTCUSDT&interval=15m&limit=6000&sync=0",
         manualSyncEndpoint: "/api/d1/sync?symbol=BTCUSDT&interval=all&wait=1",
         readAutoSyncMinMs: KLINE_READ_AUTO_SYNC_MIN_MS,
         cron: "Workers Cron writes due intervals; Pages chart reads with sync=0",
@@ -5696,6 +5751,12 @@ export class LiquidationCollector {
 }
 
 export const __footprintTestHooks = {
+  persistDerivativePoints,
+  syncDerivativesOne,
+  syncFootprintOne,
+  syncFootprintBackfill,
+  fetchKlineHistory,
+  persistKlines,
   FOOTPRINT_BASE_INTERVAL,
   FOOTPRINT_MAX_BARS,
   FOOTPRINT_API_MAX_LIMIT,
@@ -5723,6 +5784,8 @@ export const __footprintTestHooks = {
   BINANCE_DERIVATIVE_HOSTS,
   binanceDerivativeFapiOrigins,
   shouldStopDerivativeOriginRetry,
+  shouldUseBybitDerivativeFallback,
+  syncDerivativesIfDue,
   derivativeSourceCooldownState,
   derivativeStaleLimitWorker,
   derivativeTaskHealthKey,
@@ -5738,6 +5801,7 @@ export default {
    * @param {ExecutionContext} ctx
    */
   async fetch(request, env, ctx) {
+    const response = await (async () => {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: headersMerge() });
     if (request.method !== "GET" && request.method !== "HEAD" && request.method !== "POST") {
       return json({ error: "Method Not Allowed" }, 405);
@@ -5787,6 +5851,14 @@ export default {
       },
       404
     );
+    })();
+    // Apply request-specific CORS after every route, including errors and streaming reports.
+    const outgoing = new Response(response.body, response);
+    const vary = outgoing.headers.get("Vary");
+    for (const [key, value] of Object.entries(accessCorsHeaders(env, { origin: request.headers.get("Origin") }))) {
+      outgoing.headers.set(key, key === "Vary" && vary && vary !== "Origin" ? `${vary}, Origin` : value);
+    }
+    return outgoing;
   },
 
   /**

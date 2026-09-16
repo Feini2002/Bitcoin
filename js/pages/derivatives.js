@@ -18,6 +18,14 @@ let derivativesPayload = null;
 let derivativesLastSyncReport = null;
 let derivActivePanel = "oi";
 
+function derivNumber(value) {
+  return value == null || value === "" ? NaN : Number(value);
+}
+
+function derivSourceFamily(source) {
+  return String(source || "").split("-")[0];
+}
+
 function escapeDerivHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -34,21 +42,21 @@ function clipDerivText(value, limit = 96) {
 
 function fmtDerivValue(v, digits = 2) {
   if (v == null || v === "") return "--";
-  const n = Number(v);
+  const n = derivNumber(v);
   if (!Number.isFinite(n)) return "--";
   return n.toFixed(digits);
 }
 
 function fmtDerivPct(v, digits = 2) {
   if (v == null || v === "") return "--";
-  const n = Number(v);
+  const n = derivNumber(v);
   if (!Number.isFinite(n)) return "--";
   return `${n >= 0 ? "+" : ""}${n.toFixed(digits)}%`;
 }
 
 function fmtDerivRate(v, digits = 2) {
   if (v == null || v === "") return "--";
-  const n = Number(v);
+  const n = derivNumber(v);
   if (!Number.isFinite(n)) return "--";
   const scaled = Math.abs(n) <= 1 ? n * 100 : n;
   return `${scaled >= 0 ? "+" : ""}${scaled.toFixed(digits)}%`;
@@ -56,14 +64,14 @@ function fmtDerivRate(v, digits = 2) {
 
 function fmtDerivFunding(v) {
   if (v == null || v === "") return "--";
-  const n = Number(v);
+  const n = derivNumber(v);
   if (!Number.isFinite(n)) return "--";
   return `${(n * 100).toFixed(4)}%`;
 }
 
 function fmtDerivCompact(v, digits = 2) {
   if (v == null || v === "") return "--";
-  const n = Number(v);
+  const n = derivNumber(v);
   if (!Number.isFinite(n)) return "--";
   if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(digits)}B`;
   if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(digits)}M`;
@@ -72,7 +80,7 @@ function fmtDerivCompact(v, digits = 2) {
 }
 
 function fmtDerivTime(t) {
-  const n = Number(t);
+  const n = derivNumber(t);
   if (!Number.isFinite(n) || n <= 0) return "--";
   return new Date(n).toLocaleString("zh-CN", {
     timeZone: "Asia/Shanghai",
@@ -87,7 +95,7 @@ function fmtDerivTime(t) {
 function derivSeries(payload, key) {
   const rows = payload && payload.series && Array.isArray(payload.series[key]) ? payload.series[key] : [];
   return rows
-    .map((row) => ({ t: Number(row.t), value: Number(row.value), source: row.source || "", extra: row.extra || {} }))
+    .map((row) => ({ t: derivNumber(row.t), value: derivNumber(row.value), source: row.source || "", extra: row.extra || {} }))
     .filter((row) => Number.isFinite(row.t) && Number.isFinite(row.value))
     .sort((a, b) => a.t - b.t);
 }
@@ -109,23 +117,23 @@ function derivPreferSameSource(rows) {
   const sorted = [...(rows || [])].sort((a, b) => a.t - b.t);
   const last = derivLatest(sorted);
   if (!last || !last.source) return sorted;
-  const same = sorted.filter((r) => (r.source || "") === last.source);
-  return same.length >= 2 ? same : sorted;
+  const same = sorted.filter((r) => derivSourceFamily(r.source) === derivSourceFamily(last.source));
+  return same;
 }
 
 function derivChange(rows, ms) {
   const chain = derivPreferSameSource(rows);
   const last = derivLatest(chain);
   if (!last) return { latest: null, change: null, changePct: null, latestT: null, source: "", extra: {}, mixedSource: false };
-  const prev = derivBefore(chain, last.t - ms) || chain[0] || null;
+  const prev = derivBefore(chain, last.t - ms);
   const change = prev ? last.value - prev.value : null;
   const changePct = prev && prev.value ? (change / Math.abs(prev.value)) * 100 : null;
-  const mixedSource = !!(prev && prev.source !== last.source);
+  const mixedSource = !!(prev && derivSourceFamily(prev.source) !== derivSourceFamily(last.source));
   return { latest: last.value, change, changePct, latestT: last.t, source: last.source, extra: last.extra || {}, mixedSource };
 }
 
 function derivRatioState(value, high = DERIV_RATIO_BAND_HIGH, low = DERIV_RATIO_BAND_LOW) {
-  const n = Number(value);
+  const n = derivNumber(value);
   if (!Number.isFinite(n)) return "样本不足";
   if (n >= high) return "多头占优";
   if (n <= low) return "空头占优";
@@ -133,7 +141,7 @@ function derivRatioState(value, high = DERIV_RATIO_BAND_HIGH, low = DERIV_RATIO_
 }
 
 function derivBasisState(row) {
-  const n = Number(row && row.value);
+  const n = derivNumber(row && row.value);
   if (!Number.isFinite(n)) return "样本不足";
   const pct = Math.abs(n) <= 1 ? n * 100 : n;
   if (pct > DERIV_BASIS_ELEVATED_PCT) return "升水偏高";
@@ -143,8 +151,8 @@ function derivBasisState(row) {
 }
 
 function derivTopAlignment(account, position) {
-  const a = Number(account && account.value);
-  const p = Number(position && position.value);
+  const a = derivNumber(account && account.value);
+  const p = derivNumber(position && position.value);
   if (!Number.isFinite(a) || !Number.isFinite(p)) return "样本不足";
   if (a > DERIV_RATIO_BAND_HIGH && p > DERIV_RATIO_BAND_HIGH) return "大户账户与仓位同向偏多";
   if (a < DERIV_RATIO_BAND_LOW && p < DERIV_RATIO_BAND_LOW) return "大户账户与仓位同向偏空";
@@ -179,7 +187,7 @@ function derivAnalyze(payload) {
   const basisQuarterLatest = derivLatest(basisQuarter);
   const topAccountLatest = derivLatest(topAccount);
   const topPositionLatest = derivLatest(topPosition);
-  const priceChange = Number(payload && payload.priceChange24hPct);
+  const priceChange = derivNumber(payload && payload.priceChange24hPct);
   const pcm = payload && payload.priceChange24hMeta;
   const priceSampleOk =
     pcm && typeof pcm === "object" && pcm.sampleSufficient === false ? false : Number.isFinite(priceChange);
@@ -243,7 +251,7 @@ function derivAnalyze(payload) {
 
 function derivPath(rows, w = 520, h = 150, pad = 14) {
   if (!rows || rows.length < 2) return "";
-  const values = rows.map((row) => Number(row.value)).filter(Number.isFinite);
+  const values = rows.map((row) => derivNumber(row.value)).filter(Number.isFinite);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min || Math.max(Math.abs(max), 1);
@@ -255,7 +263,7 @@ function derivPath(rows, w = 520, h = 150, pad = 14) {
 }
 
 function derivChartSvg(rows, cls, label) {
-  const path = derivPath(rows);
+  const path = derivPath(derivPreferSameSource(rows));
   return `
     <svg class="deriv-chart" viewBox="0 0 520 150" preserveAspectRatio="none" aria-label="${label}">
       <path class="deriv-chart-grid" d="M14 38 H506 M14 75 H506 M14 112 H506"></path>
@@ -273,7 +281,7 @@ function derivDualChartSvg(aRows, bRows, aCls, bCls, label) {
       </svg>
     `;
   }
-  const values = rows.map((row) => Number(row.value)).filter(Number.isFinite);
+  const values = rows.map((row) => derivNumber(row.value)).filter(Number.isFinite);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min || Math.max(Math.abs(max), 1);
@@ -313,7 +321,7 @@ function derivAgentLinkHtml(agentId) {
   const agent = typeof AGENT_MAP !== "undefined" ? AGENT_MAP[agentId] : null;
   if (!agent) return "";
   return `
-    <a class="owner-link deriv-owner-link" href="#/${agentRoute(agent.id)}" title="查看 ${agent.name} 的分析">
+    <a class="owner-link deriv-owner-link" href="#/${agentRoute(agent.id)}" title="查看 ${agent.name} 的演示原型">
       <span class="owner-dot" style="background:${agent.color}">${agent.short}</span>
       <span>${agent.name}</span>
       <span class="owner-arrow"><i class="ph ph-arrow-right"></i></span>
@@ -494,10 +502,10 @@ function derivSourceHealthExtra(row) {
 
 function derivSourceCooldownActive(row, now = Date.now()) {
   if (!row) return false;
-  const cd = Number(row.cooldown_until_ms) || 0;
+  const cd = derivNumber(row.cooldown_until_ms) || 0;
   if (cd <= now) return false;
   const kind = String(row.last_error_kind || "");
-  const banUntilMs = Number(derivSourceHealthExtra(row).binanceBanUntilMs);
+  const banUntilMs = derivNumber(derivSourceHealthExtra(row).binanceBanUntilMs);
   return !(kind === "blacklisted_ip" && Number.isFinite(banUntilMs) && banUntilMs + 60_000 <= now);
 }
 
@@ -546,7 +554,7 @@ function summarizeDerivUpstreamBrief(rows, binMode, sourceOkCore = false) {
   for (const r of list.slice(0, 8)) {
     const nm = String(r.source || "").slice(0, 22);
     const k = String(r.last_error_kind || "").slice(0, 24);
-    const cd = Number(r.cooldown_until_ms) || 0;
+    const cd = derivNumber(r.cooldown_until_ms) || 0;
     if (nm && derivSourceCooldownActive(r))
       cooled.push(`${nm}:${k || "upstream"}@${fmtDerivIsoShort(new Date(cd).toISOString())}`);
     else if (nm && k) cooled.push(`${nm}:${k}`);
@@ -596,22 +604,22 @@ function buildDerivPanelDefinitions(payload, a, ctx) {
   const quarterExtra = a.basisQuarter && a.basisQuarter.extra ? a.basisQuarter.extra : {};
   const topAccountExtra = a.topAccount && a.topAccount.extra ? a.topAccount.extra : {};
   const topPositionExtra = a.topPosition && a.topPosition.extra ? a.topPosition.extra : {};
-  const fv = Number(a.fundingBinance.latest);
+  const fv = derivNumber(a.fundingBinance.latest);
   const takerRatio = a.taker && a.taker.value;
   const longShortRatio = a.longShort && a.longShort.value;
   const basisState = derivBasisState(a.basisQuarter);
   const fundingCrowded = Number.isFinite(fv) && Math.abs(fv) >= DERIV_FUNDING_CROWD_ABS;
-  const takerImbalanced = a.taker && Math.abs(Number(takerRatio) - 1) >= DERIV_TAKER_IMBALANCE_TOL;
+  const takerImbalanced = a.taker && Math.abs(derivNumber(takerRatio) - 1) >= DERIV_TAKER_IMBALANCE_TOL;
   const basisWarn = basisState.includes("偏高") || basisState.includes("贴水");
   const topWarn = a.topAlignment.includes("分歧") || a.topAlignment.includes("同向");
-  const longShortWarn = a.longShort && Math.abs(Number(longShortRatio) - 1) >= DERIV_LONG_SHORT_CHIP_WARN;
+  const longShortWarn = a.longShort && Math.abs(derivNumber(longShortRatio) - 1) >= DERIV_LONG_SHORT_CHIP_WARN;
   return [
     {
       key: "funding",
       label: "Funding",
       title: "资金费率",
       value: fmtDerivFunding(a.fundingBinance.latest),
-      state: fundingCrowded ? "拥挤" : "中性",
+      state: !Number.isFinite(fv) ? "样本不足" : fundingCrowded ? "拥挤" : "中性",
       chip: fundingCrowded ? "chip warn" : "chip ok",
       note: `${fundingCrowded ? "费率进入拥挤区" : "费率暂未拥挤"} · ${ctx.fundingSrcLabel}`,
       metrics: [
@@ -645,7 +653,7 @@ function buildDerivPanelDefinitions(payload, a, ctx) {
       value: fmtDerivValue(takerRatio, 3),
       state: derivRatioState(takerRatio),
       chip: takerImbalanced ? "chip warn" : "chip ok",
-      note: takerImbalanced ? "主动成交明显失衡" : "主动成交暂偏均衡",
+      note: !a.taker ? "主动成交样本不足" : takerImbalanced ? "主动成交明显失衡" : "主动成交暂偏均衡",
       metrics: [
         { label: "Buy", value: fmtDerivCompact(takerExtra.buyVol, 2) },
         { label: "Sell", value: fmtDerivCompact(takerExtra.sellVol, 2) },
@@ -681,7 +689,7 @@ function buildDerivPanelDefinitions(payload, a, ctx) {
       metrics: [
         { label: "账户", value: fmtDerivValue(a.topAccount && a.topAccount.value, 3) },
         { label: "持仓", value: fmtDerivValue(a.topPosition && a.topPosition.value, 3) },
-        { label: "差值", value: fmtDerivValue(Number(a.topPosition && a.topPosition.value) - Number(a.topAccount && a.topAccount.value), 3) },
+        { label: "差值", value: fmtDerivValue(derivNumber(a.topPosition && a.topPosition.value) - derivNumber(a.topAccount && a.topAccount.value), 3) },
       ],
       chart: derivChartSvg(derivSeries(payload, "top_position_long_short"), "deriv-path-top", "Top Trader 持仓比"),
       evidence: `账户多 ${fmtDerivRate(topAccountExtra.longAccount, 1)} / 空 ${fmtDerivRate(topAccountExtra.shortAccount, 1)}；持仓多 ${fmtDerivRate(topPositionExtra.longAccount ?? topPositionExtra.longPosition, 1)} / 空 ${fmtDerivRate(topPositionExtra.shortAccount ?? topPositionExtra.shortPosition, 1)}。`,
@@ -795,10 +803,10 @@ function renderDerivativesPayload(payload, syncReport = null) {
   }
   const kpis = $("#deriv-kpis");
   if (kpis) {
-    const fv = Number(a.fundingBinance.latest);
+    const fv = derivNumber(a.fundingBinance.latest);
     const fs = Number.isFinite(fv) && Math.abs(fv) >= DERIV_FUNDING_CROWD_ABS ? "拥挤 · 留意" : "中性";
     const tr = a.taker && a.taker.value;
-    const tNote = `${derivRatioState(tr)}${Number.isFinite(Number(tr)) && Math.abs(Number(tr) - 1) >= DERIV_TAKER_IMBALANCE_TOL ? " · 失衡" : ""}`;
+    const tNote = `${derivRatioState(tr)}${Number.isFinite(derivNumber(tr)) && Math.abs(derivNumber(tr) - 1) >= DERIV_TAKER_IMBALANCE_TOL ? " · 失衡" : ""}`;
     const confidence = derivDataConfidenceLabel(a);
     kpis.innerHTML = [
       ["Funding 拥挤", fmtDerivFunding(a.fundingBinance.latest), `${fs} · ${fundingSrcLabel}`],
@@ -928,7 +936,7 @@ function renderDerivativesPayload(payload, syncReport = null) {
         <summary>查看指标健康与同步详情</summary>
         <div class="deriv-fresh-block"><strong>卡住 / 偏旧（按指标）</strong>${stuckHtml}</div>
         <div class="deriv-fresh-block muted"><strong>宏观旁路（独立）</strong><span>${escapeDerivHtml(macroTxt)} · 不改变核心 sourceOk</span></div>
-        <div class="deriv-fresh-block"><strong>Stale(乐观)</strong><span>${Number.isFinite(Number(fresh.staleMs)) ? `${Math.round(Number(fresh.staleMs) / 60000)} 分钟` : "--"}</span></div>
+        <div class="deriv-fresh-block"><strong>Stale(乐观)</strong><span>${Number.isFinite(derivNumber(fresh.staleMs)) ? `${Math.round(derivNumber(fresh.staleMs) / 60000)} 分钟` : "--"}</span></div>
         <div class="deriv-fresh-block"><strong>同步详情</strong><span>${escapeDerivHtml(syncText)}</span></div>
       </details>
     `;
@@ -972,8 +980,8 @@ function summarizeDerivativesSourceStatus(payload) {
   const health = Array.isArray(payload.sourceHealth) ? payload.sourceHealth : [];
   const sourceBits = health.slice(0, 3).map((row) => {
     const src = row && row.source ? String(row.source) : "source";
-    const ok = Number(row && row.last_ok) === 1 ? "ok" : (row && row.last_error_kind ? String(row.last_error_kind) : "warn");
-    const cd = Number(row && row.cooldown_until_ms) || 0;
+    const ok = derivNumber(row && row.last_ok) === 1 ? "ok" : (row && row.last_error_kind ? String(row.last_error_kind) : "warn");
+    const cd = derivNumber(row && row.cooldown_until_ms) || 0;
     const cdText = cd > Date.now() ? ` 冷却至 ${fmtDerivIsoShort(new Date(cd).toISOString())}` : "";
     return `${src}:${ok}${cdText}`;
   });

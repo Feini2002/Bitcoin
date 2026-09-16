@@ -1,0 +1,16 @@
+{
+  "files": [
+    "index.html",
+    "Bit交易决策平台.html",
+    "styles.css",
+    "btc.svg"
+  ],
+  "directories": [
+    {
+      "path": "js",
+      "extensions": [
+        ".js"
+      ]
+    }
+  ]
+}

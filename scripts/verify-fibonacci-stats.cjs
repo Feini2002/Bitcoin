@@ -8,7 +8,8 @@ function runFibonacciVerification() {
   
   // Load math module
   const mathCode = fs.readFileSync(path.join(__dirname, "../js/chart/indicator-math.js"), "utf-8");
-  const mathModule = {};
+  let seed = 20260916;
+  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
   const mockGlobal = { IndicatorMath: null };
   const fn = new Function("globalThis", "window", "global", mathCode);
   fn(mockGlobal, undefined, mockGlobal);
@@ -24,7 +25,7 @@ function runFibonacciVerification() {
   console.log("正在生成合成测试 K 线数据...");
   const klines = [];
   let currentPrice = 50000;
-  let t = Date.now() - 365 * 24 * 3600 * 1000;
+  let t = Date.UTC(2025, 8, 16);
   const intervalMs = 24 * 3600 * 1000;
   
   for (let i = 0; i < 500; i++) {
@@ -37,15 +38,15 @@ function runFibonacciVerification() {
     else trend = 100; // uptrend breakout
     
     // add noise
-    const noise = (Math.random() - 0.5) * 500;
+    const noise = (random() - 0.5) * 500;
     const move = trend + noise;
     
     const o = currentPrice;
     const c = currentPrice + move;
-    const h = Math.max(o, c) + Math.random() * 200;
-    const l = Math.min(o, c) - Math.random() * 200;
+    const h = Math.max(o, c) + random() * 200;
+    const l = Math.min(o, c) - random() * 200;
     
-    klines.push({ t, o, h, l, c, v: Math.random() * 1000 });
+    klines.push({ t, o, h, l, c, v: random() * 1000 });
     
     currentPrice = c;
     t += intervalMs;
@@ -95,7 +96,7 @@ function runFibonacciVerification() {
     
     // Also create a random baseline level (random price within the range)
     const rangeHeight = analysis.rangeContext.upper - analysis.rangeContext.lower;
-    const baselinePrice = analysis.rangeContext.lower + Math.random() * rangeHeight;
+    const baselinePrice = analysis.rangeContext.lower + random() * rangeHeight;
     
     // Check next 10 bars for reaction
     let fibHit = false;
@@ -166,22 +167,20 @@ function runFibonacciVerification() {
   console.log("   验证结果统计");
   console.log("=========================================");
   console.log(`总评估点数: ${stats.totalEvaluated}`);
-  console.log(`Fibonacci 胜率: ${((stats.fibHitCount / Math.max(1, stats.totalEvaluated)) * 100).toFixed(2)}%`);
-  console.log(`随机基准胜率: ${((stats.baselineHitCount / Math.max(1, stats.totalEvaluated)) * 100).toFixed(2)}%`);
+  console.log(`Fibonacci 样本反应比例: ${((stats.fibHitCount / Math.max(1, stats.totalEvaluated)) * 100).toFixed(2)}%`);
+  console.log(`随机基准样本反应比例: ${((stats.baselineHitCount / Math.max(1, stats.totalEvaluated)) * 100).toFixed(2)}%`);
   console.log("-----------------------------------------");
-  console.log(`回撤任务胜率: ${((stats.retracement.hits / Math.max(1, stats.retracement.count)) * 100).toFixed(2)}% (${stats.retracement.count} 样本)`);
-  console.log(`扩展任务胜率: ${((stats.extension.hits / Math.max(1, stats.extension.count)) * 100).toFixed(2)}% (${stats.extension.count} 样本)`);
+  console.log(`回撤任务样本反应比例: ${((stats.retracement.hits / Math.max(1, stats.retracement.count)) * 100).toFixed(2)}% (${stats.retracement.count} 样本)`);
+  console.log(`扩展任务样本反应比例: ${((stats.extension.hits / Math.max(1, stats.extension.count)) * 100).toFixed(2)}% (${stats.extension.count} 样本)`);
   console.log("-----------------------------------------");
-  console.log(`低 ATR 胜率: ${((stats.lowAtr.hits / Math.max(1, stats.lowAtr.count)) * 100).toFixed(2)}% (${stats.lowAtr.count} 样本)`);
-  console.log(`高 ATR 胜率: ${((stats.highAtr.hits / Math.max(1, stats.highAtr.count)) * 100).toFixed(2)}% (${stats.highAtr.count} 样本)`);
+  console.log(`低 ATR 样本反应比例: ${((stats.lowAtr.hits / Math.max(1, stats.lowAtr.count)) * 100).toFixed(2)}% (${stats.lowAtr.count} 样本)`);
+  console.log(`高 ATR 样本反应比例: ${((stats.highAtr.hits / Math.max(1, stats.highAtr.count)) * 100).toFixed(2)}% (${stats.highAtr.count} 样本)`);
   console.log("=========================================\n");
   
-  const hasEdge = (stats.fibHitCount / Math.max(1, stats.totalEvaluated)) > (stats.baselineHitCount / Math.max(1, stats.totalEvaluated));
-  if (hasEdge) {
-    console.log("结论：Fibonacci 带宽具有统计学优势（优于随机基准）。");
-  } else {
-    console.log("结论：未跑赢随机基准，建议调整 k 值、置信度阈值或仅在特定状态启用。");
-  }
+  if (stats.totalEvaluated === 0) throw new Error("固定样本未产生有效评估点");
+  if (![stats.fibHitCount, stats.baselineHitCount].every(n => Number.isFinite(n) && n >= 0 && n <= stats.totalEvaluated)) throw new Error("样本统计越界");
+  console.log("PASS 固定合成样本计算完成；反应比例不是交易胜率，也不构成统计显著性或实盘收益证据。");
+
 }
 
 runFibonacciVerification();

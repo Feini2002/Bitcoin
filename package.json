@@ -2,30 +2,43 @@
   "name": "bit-trading-desk",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
-    "build": "npm run verify:all",
+    "build": "npm run verify:all && npm run build:pages",
     "lint": "node scripts/check-syntax.cjs",
-    "test": "node scripts/verify-indicator-math.cjs && npm run verify:market-snapshot && npm run verify:footprint",
+    "test": "node scripts/verify-indicator-math.cjs && npm run verify:market-snapshot && npm run verify:footprint && node scripts/verify-kline-history.cjs && node scripts/verify-market-recovery.cjs",
     "verify:chart-snapshot": "npm run verify:market-snapshot",
     "verify:market-snapshot": "node scripts/verify-market-snapshot-program.cjs && node scripts/verify-market-snapshot-worker.cjs",
     "diagnose": "node scripts/diagnose-klines.cjs",
     "verify:footprint": "node scripts/verify-footprint-aggregation.cjs && node scripts/verify-footprint-worker.cjs && node scripts/verify-liquidation-radar.cjs && node scripts/verify-heatmap-pressure-matrix.cjs",
     "verify:heatmap": "node scripts/verify-liquidation-radar.cjs && node scripts/verify-heatmap-pressure-matrix.cjs && npm run verify:market-snapshot",
     "verify:derivatives": "node scripts/verify-derivatives-worker.cjs && npm run verify:market-snapshot",
-    "verify:yuqing": "node scripts/verify-yuqing-reports.cjs",
-    "yuqing:codex-bridge": "node scripts/codex-cli-bridge.cjs",
+    "verify:yuqing": "node scripts/verify-yuqing-reports.cjs && node scripts/verify-yuqing-cloud-only.cjs",
     "diagnose:derivatives": "node scripts/diagnose-derivatives-sync.cjs",
     "verify:api": "node scripts/smoke-api.cjs",
-    "verify:all": "npm run lint && npm test && npm run verify:api && npm run verify:derivatives && npm run verify:yuqing && npm run verify:fib",
+    "verify:all": "npm run lint && npm test && npm run verify:shell && node scripts/verify-derivatives-worker.cjs && npm run verify:yuqing && npm run verify:fib && npm run verify:governance && npm run verify:pages",
     "verify:fib": "node scripts/verify-fibonacci-stats.cjs",
     "diff:summary": "node scripts/diff-summary.cjs",
-    "prune:pages": "node scripts/prune-pages-deployments.cjs",
-    "deploy:pages": "npx wrangler pages deploy . --project-name=bit-trading-desk --branch main --commit-dirty=true && node scripts/prune-pages-deployments.cjs",
-    "dev:local": "vite"
+    "prune:pages": "node --env-file-if-exists=.env scripts/prune-pages-deployments.cjs",
+    "deploy:pages": "node --env-file-if-exists=.env scripts/deploy-pages-safe.cjs && node --env-file-if-exists=.env scripts/prune-pages-deployments.cjs",
+    "dev:local": "vite",
+    "cf": "node --env-file-if-exists=.env node_modules/wrangler/bin/wrangler.js",
+    "dev:btc": "npm run cf -- dev --config cloudflare/wrangler.toml --env-file .env --local --ip 127.0.0.1 --port 8787",
+    "dev:yuqing": "npm run cf -- dev --config cloudflare/wrangler.yuqing.toml --env-file .env --local --ip 127.0.0.1 --port 8788",
+    "setup:browser": "playwright install chromium",
+    "verify:dev": "node scripts/verify-local-dev.cjs",
+    "verify:shell": "node scripts/smoke-api.cjs --shell-only",
+    "verify:governance": "node scripts/verify-governance.cjs",
+    "verify:ui": "node scripts/verify-governance-ui.cjs",
+    "build:pages": "node scripts/build-pages.cjs",
+    "verify:pages": "node scripts/verify-pages-artifact.cjs"
   },
   "devDependencies": {
     "playwright": "^1.59.1",
     "vite": "^6.3.5",
-    "vite-plugin-full-reload": "^1.2.0"
+    "vite-plugin-full-reload": "^1.2.0",
+    "wrangler": "4.85.0"
   }
 }

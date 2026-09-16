@@ -17,7 +17,7 @@ function pagePlaceholder(cfg) {
       <div class="placeholder-icon"><i class="ph ${icon}"></i></div>
       <div>
         <h2>该模块暂未上岗</h2>
-        <p>骨架已留好，后续接入数据源与业务逻辑即可直接上线。下面列出了该页规划中的内容：</p>
+        <p>以下为规划内容；需完成数据、业务逻辑与验证后才能使用。</p>
       </div>
     </div>
     <div class="future-list">
@@ -55,7 +55,7 @@ function pageAgentPlaceholder(agentId) {
       <div class="evidence-card">
         <div class="evidence-head">
           <span class="evidence-label">证据链 · 下属共识</span>
-          <span class="evidence-title">四位专员的今日结论（点击卡片深入其工作台）</span>
+          <span class="evidence-title">四位专员的示例结论（点击卡片深入其工作台）</span>
         </div>
         <div style="padding:var(--sp-4);">
           <div class="subordinate-grid">
@@ -94,7 +94,7 @@ function pageAgentPlaceholder(agentId) {
           <span class="evidence-label">证据快照</span>
           <span class="evidence-title">${a.name}正在引用的数据片段（完整版见右侧跳转）</span>
           <span class="spacer"></span>
-          <span class="chip ok" style="cursor:default;">◆ 数据来自市场监测</span>
+          <span class="chip ok" style="cursor:default;">示例数据 · 未连接市场监测</span>
         </div>
         <div class="evidence-body">
           <div class="evidence-thumb">
@@ -130,7 +130,7 @@ function pageAgentPlaceholder(agentId) {
         <h1 class="page-title">${a.name}</h1>
         <div class="page-sub">${a.role}</div>
       </div>
-      <span class="chip" style="background:rgba(16,185,129,0.12); color:var(--ok); border-color:rgba(16,185,129,0.3);">● 员工在线</span>
+      <span class="chip" style="background:rgba(16,185,129,0.12); color:var(--ok); border-color:rgba(16,185,129,0.3);">演示 · 尚未接入分析</span>
     </header>
 
     ${renderOpinionLayerBanner(agentId)}
@@ -146,7 +146,7 @@ function pageAgentPlaceholder(agentId) {
           </svg>
           <div class="ring-label">${view.confidence}%</div>
         </div>
-        <div class="conclusion-label">当前结论 · ${new Date().toLocaleString("zh-CN", {hour12:false, month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"})}</div>
+        <div class="conclusion-label">示例结论 · 无实际生成时间</div>
         <div class="conclusion-tag"><span class="tag-badge" style="background:${view.stanceColor}; box-shadow:0 0 10px ${view.stanceColor};"></span>${view.stance}</div>
         <div class="conclusion-reason">${view.oneliner}</div>
       </div>
@@ -166,7 +166,7 @@ function pageAgentPlaceholder(agentId) {
       <div class="bubble">
         <div class="bubble-head">
           <span class="name">${a.name}</span>
-          <span>· 刚刚</span>
+          <span>· 示例发言</span>
         </div>
         <div class="bubble-body">
           ${view.reasoning.map(r => `<p>${r}</p>`).join("")}

@@ -9,11 +9,18 @@
 name = "btc"
 main = "binance-klines-worker.js"
 compatibility_date = "2024-12-01"
+workers_dev = true
+preview_urls = true
 
-# Smart Placement: 让 Worker 执行位置贴近 fapi.binance.com（东京/新加坡），
-# 使出站 IP 落在亚太非受限区，避免币安 451 地域拦截。
+[[routes]]
+pattern = "btc.feiniwork.com"
+custom_domain = true
+zone_name = "feiniwork.com"
+
+# Placement Hint：将请求处理放在东京附近，减少上游地区限制与往返延迟。
+# 该提示不保证上游可用；Cron 和源站健康仍须独立核验。
 [placement]
-mode = "smart"
+region = "aws:ap-northeast-1"
 
 # D1 数据库绑定：Worker 里用 env.DB 访问已部署 D1。
 # database_id：在控制台创建或与 `wrangler d1 create` 输出对齐后填入。
@@ -30,8 +37,8 @@ class_name = "LiquidationCollector"
 tag = "v1"
 new_sqlite_classes = ["LiquidationCollector"]
 
-# 定时触发：每分钟一次；Worker 内部按时间判断 K 线周期，footprint/强平/衍生品各自用冷却与增量逻辑控频。
-# 免费版 Workers 的 Cron Triggers 也支持。
+# 已恢复：每分钟调度行情、足迹、强平与衍生品增量同步。
+
 [triggers]
 crons = ["* * * * *"]
 
@@ -40,7 +47,8 @@ crons = ["* * * * *"]
 # LLM：`BTC_LLM_PROVIDER=none|gemini|auto`（默认 auto，有密钥则视为可用；亦可在控制台设置）
 [vars]
 BTC_LLM_PROVIDER = "auto"
-ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com"
+BINANCE_FAPI_ORIGIN = ""
+ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com,http://localhost:5173,http://127.0.0.1:5173"
 # Cloudflare Access JWT defense-in-depth:
 # 1) Create an Access self-hosted app for btc.feiniwork.com/*.
 # 2) Copy the app AUD tag and set ACCESS_AUD in the Cloudflare dashboard.

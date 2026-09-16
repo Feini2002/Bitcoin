@@ -39,6 +39,10 @@ async function main() {
   assertShellFile("js/app.js", () => "present");
   assertShellFile("styles.css", () => "present");
 
+  if (process.argv.includes("--shell-only")) {
+    console.log("PASS static shell; remote probe not requested (run verify:api separately)");
+    return;
+  }
   const raw = process.env.BITDESK_SMOKE_ORIGIN;
   const origin = (raw != null && String(raw).trim() !== "" ? String(raw).trim() : DEFAULT_SMOKE_ORIGIN).replace(
     /\/$/,

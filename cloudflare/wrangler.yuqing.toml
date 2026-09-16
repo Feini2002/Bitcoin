@@ -4,7 +4,6 @@
 # Secrets:
 #   npx wrangler secret put FINNHUB_API_KEY --config wrangler.yuqing.toml
 #   npx wrangler secret put GEMINI_API_KEY --config wrangler.yuqing.toml   # 或 GOOGLE_API_KEY
-#   npx wrangler secret put CODEX_BRIDGE_TOKEN --config wrangler.yuqing.toml # Codex CLI bridge 领取/回传任务
 # Provider（也可在控制台改 vars）：
 #   YUQING_LLM_PROVIDER=none|gemini|auto   （默认 auto：已配置 Gemini 密钥则启用）
 #
@@ -14,10 +13,20 @@ name = "yuqing"
 main = "yuqing/yuqing-worker.js"
 compatibility_date = "2024-12-01"
 workers_dev = true
+preview_urls = true
+
+[[routes]]
+pattern = "yuqing.feiniwork.com"
+custom_domain = true
+zone_name = "feiniwork.com"
+
+[[routes]]
+pattern = "yuqing.feiniwork.com/*"
+zone_name = "feiniwork.com"
 
 [vars]
 YUQING_LLM_PROVIDER = "auto"
-ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com"
+ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com,http://localhost:5173,http://127.0.0.1:5173"
 # Cloudflare Access JWT defense-in-depth:
 # 1) Create an Access self-hosted app for yuqing.feiniwork.com/*.
 # 2) Copy the app AUD tag and set ACCESS_AUD in the Cloudflare dashboard.
@@ -43,7 +52,8 @@ binding = "YUQING_DB"
 database_name = "yuqing"
 database_id = "e89cfebb-2d98-4f10-ae94-4f5f4fe52a8f"
 
-# UTC cron 覆盖北京时间事件日报 00/08/12/20 与舆情分析 09/14/22。
+# 已恢复：北京时间事件日报 00/08/12/20，舆情分析 09/14/22。
+
 [triggers]
 crons = ["0 0,1,4,6,12,14,16 * * *"]
 
@@ -51,10 +61,9 @@ crons = ["0 0,1,4,6,12,14,16 * * *"]
 #   npx wrangler secret put CRON_SECRET --config wrangler.yuqing.toml        # POST /api/yuqing/ingest 时需 X-Yuqing-Cron-Secret
 #   npx wrangler secret put FINNHUB_API_KEY --config wrangler.yuqing.toml
 #   npx wrangler secret put GEMINI_API_KEY --config wrangler.yuqing.toml
-#   npx wrangler secret put CODEX_BRIDGE_TOKEN --config wrangler.yuqing.toml
 # Optional: YUQING_LLM_ALLOW_SEARCH=1 允许新闻/AI 在无事实池时用 Google Search 补洞（默认不传则按阈值自动）
 
 # 若已为 feiniwork.com 分区授权 wrangler，可取消注释绑定路由（任选其一）：
-[[routes]]
-pattern = "yuqing.feiniwork.com/*"
-zone_name = "feiniwork.com"
+# [[routes]]
+# pattern = "yuqing.feiniwork.com/*"
+# zone_name = "feiniwork.com"

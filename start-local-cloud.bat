@@ -1,37 +1,50 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal DisableDelayedExpansion
+chcp 65001 >nul
 cd /d "%~dp0"
-title Bit Trading Desk - local UI + Cloudflare Worker / D1
+if errorlevel 1 exit /b 1
+title Bit Trading Desk - Local Web
 
 echo.
-echo === Bit 交易决策平台 - 本地页面 + 云端 Worker + 云端 D1 ===
-echo   - 行情 API: https://btc.feiniwork.com  （js/config.js 默认）
-echo   - 舆情 API: https://yuqing.feiniwork.com
-echo   - 保存 index.html / styles.css / js 下文件后会自动刷新浏览器
-echo   - Worker 单独发版: cloudflare 目录 wrangler deploy（见 AGENTS.md）
+echo === Bit 交易决策平台 - 本地网页 ===
+echo   本地页面自动刷新；行情、报告和数据库仍连接云端 Worker。
+echo   本启动器不会部署，也不会恢复已暂停的云端服务。
+echo   默认地址 http://localhost:5173/index.html，实际端口以 Vite 输出为准。
 echo.
 
-where npm >nul 2>&1
-if errorlevel 1 (
-  echo [错误] 未找到 npm，请先安装 Node.js 并将 npm 加入 PATH。
-  pause
-  exit /b 1
-)
+where node.exe >nul 2>&1
+if errorlevel 1 goto missing_node
+where npm.cmd >nul 2>&1
+if errorlevel 1 goto missing_node
+if not exist "package.json" goto missing_project
+if not exist "vite.config.mjs" goto missing_project
+if not exist "node_modules\vite\package.json" goto install_dependencies
+if not exist "node_modules\vite-plugin-full-reload\package.json" goto install_dependencies
+goto start_web
 
-if not exist "node_modules\vite\package.json" (
-  echo 首次运行：正在安装 dev 依赖 ^(vite、vite-plugin-full-reload^)...
-  call npm install
-  if errorlevel 1 (
-    echo [错误] npm install 失败。
-    pause
-    exit /b 1
-  )
-)
+:install_dependencies
+echo 首次运行或依赖缺失，正在安装开发依赖...
+call npm.cmd ci --include=dev
+if errorlevel 1 goto install_failed
 
-echo 启动 Vite（默认 http://localhost:5173/ ）...
-echo 按 Ctrl+C 可停止服务。
-echo.
-call npm run dev:local
-set EXITCODE=!ERRORLEVEL!
-if !EXITCODE! neq 0 pause
-exit /b !EXITCODE!
+:start_web
+echo 启动网页并打开浏览器。按 Ctrl+C 或关闭窗口停止。
+call npm.cmd run dev:local
+set "EXITCODE=%ERRORLEVEL%"
+if not "%EXITCODE%"=="0" pause
+exit /b %EXITCODE%
+
+:missing_node
+echo [错误] 未找到 Node.js 或 npm.cmd，请安装 Node.js 并加入 PATH。
+pause
+exit /b 1
+
+:missing_project
+echo [错误] 缺少 package.json 或 vite.config.mjs，请把启动器放在项目根目录。
+pause
+exit /b 1
+
+:install_failed
+echo [错误] 依赖安装失败，请检查上方网络或 npm 错误后重试。
+pause
+exit /b 1

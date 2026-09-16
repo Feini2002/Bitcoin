@@ -75,7 +75,7 @@ function pageEnvAgent() {
             </svg>
             <div class="ring-label">72%</div>
           </div>
-          <div class="conclusion-label">当前结论</div>
+          <div class="conclusion-label">示例结论</div>
           <div class="conclusion-tag"><span class="tag-badge"></span>趋势扩张期</div>
           <div class="conclusion-reason">
             4H ATR 百分位已抬升至 78%，布林带口径从上周 2.1% 扩到 4.6%，DVOL 从 42 上行至 58。<br>
@@ -95,7 +95,7 @@ function pageEnvAgent() {
         <div class="bubble">
           <div class="bubble-head">
             <span class="name">${agent.name}</span>
-            <span>· 刚刚</span>
+            <span>· 示例发言</span>
           </div>
           <div class="bubble-body">
             <p>老板早。<strong>4H BTC 正从布林收敛末端过渡到扩张初期</strong>，口径从 2.1% 扩到 4.6%；DVOL 同步抬升，不是假扩张。</p>

@@ -3,6 +3,7 @@
    ======================================================= */
 
 const SENTIMENT_ANALYSIS_KIND = "sentiment_analysis";
+const ANALYSIS_ARCHIVE_HISTORY_DAYS = 7;
 let __yuqingAnalysisClock = null;
 let __yuqingAnalysisAbort = null;
 
@@ -104,6 +105,10 @@ function analysisSlotLabel(row) {
   if (slot === "14") return "午后复核";
   if (slot === "22") return "夜间复核";
   return slot || "分析";
+}
+
+function analysisTriggerLabel(row) {
+  return String(row && row.triggerType ? row.triggerType : "") === "manual" ? "手动分析" : "定点触发";
 }
 
 function activeAnalysisReport() {
@@ -806,6 +811,80 @@ function renderAnalysisAiPremium(row) {
     .join("");
 }
 
+function analysisArchiveCostEstimate(item) {
+  if (!item || typeof item !== "object") return null;
+  if (item.costEstimate && typeof item.costEstimate === "object") return item.costEstimate;
+  if (item.grounding && item.grounding.costEstimate && typeof item.grounding.costEstimate === "object") return item.grounding.costEstimate;
+  if (item.report && item.report.costEstimate && typeof item.report.costEstimate === "object") return item.report.costEstimate;
+  return null;
+}
+
+function analysisArchiveCostNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function analysisArchiveSearchCostCny(item) {
+  const est = analysisArchiveCostEstimate(item);
+  if (!est) return null;
+  return analysisArchiveCostNumber(est.searchCny ?? est.searchCostCny ?? est.searchCost?.cny ?? est.search?.costCny);
+}
+
+function analysisArchiveTotalCostCny(item) {
+  const est = analysisArchiveCostEstimate(item);
+  if (!est) return null;
+  return analysisArchiveCostNumber(est.totalCny ?? est.totalCostCny ?? est.costCny ?? est.total?.cny ?? est.total?.costCny);
+}
+
+function analysisFormatCostCny(value) {
+  const n = analysisArchiveCostNumber(value);
+  if (n == null) return "待记录";
+  if (n === 0) return "¥0.0000";
+  if (n < 0.01) return `¥${n.toFixed(4)}`;
+  return `¥${n.toFixed(2)}`;
+}
+
+function renderAnalysisArchiveCostLine(item) {
+  const est = analysisArchiveCostEstimate(item);
+  if (!est) return `<span class="news-archive-cost is-missing"><i class="ph ph-receipt"></i>费用待记录</span>`;
+  const searchCny = analysisArchiveSearchCostCny(item);
+  const totalCny = analysisArchiveTotalCostCny(item);
+  const billable = Number(est.billableSearchUnits || est.searchBillableUnits || 0);
+  const queries = Number(est.searchQueryCount || est.searchQueries || est.search?.queryCount || 0);
+  const unitText = billable > 0 || queries > 0 ? ` · ${Math.max(billable, queries)}次` : "";
+  return `<span class="news-archive-cost"><i class="ph ph-magnifying-glass"></i>搜索 ${analysisFormatCostCny(searchCny)}${unitText}</span><span class="news-archive-cost is-total"><i class="ph ph-currency-cny"></i>总计 ${analysisFormatCostCny(totalCny)}</span>`;
+}
+
+function renderAnalysisArchiveCostSummary() {
+  const rows = analysisState.history || [];
+  const sum = (items, pick) => items.reduce((acc, item) => acc + (analysisArchiveCostNumber(pick(item)) || 0), 0);
+  const searchTotal = sum(rows, analysisArchiveSearchCostCny);
+  const totalCost = sum(rows, analysisArchiveTotalCostCny);
+  const searchUnits = rows.reduce((acc, item) => {
+    const est = analysisArchiveCostEstimate(item);
+    return acc + (Number(est && (est.billableSearchUnits || est.searchBillableUnits || est.searchQueryCount || est.searchQueries || est.search?.queryCount)) || 0);
+  }, 0);
+  return `
+    <div class="daily-archive-cost-summary">
+      <div>
+        <span>${ANALYSIS_ARCHIVE_HISTORY_DAYS}日搜索费</span>
+        <strong>${analysisFormatCostCny(searchTotal)}</strong>
+      </div>
+      <div>
+        <span>当前列表</span>
+        <strong>${analysisFormatCostCny(searchTotal)}</strong>
+      </div>
+      <div>
+        <span>综合估算</span>
+        <strong>${analysisFormatCostCny(totalCost)}</strong>
+      </div>
+      <div>
+        <span>搜索计费次</span>
+        <strong>${analysisEscapeHtml(String(searchUnits))}</strong>
+      </div>
+    </div>`;
+}
+
 function renderReportArchive() {
   const items = analysisState.history.length ? analysisState.history : [];
   const curId = analysisCurrentReportId();
@@ -825,10 +904,13 @@ function renderReportArchive() {
         : "";
       return `${dateHead}<div class="news-archive-row">
         <button type="button" class="news-archive-item ${active ? "active" : ""}" data-report-id="${analysisEscapeHtml(item.id)}">
-        <span>${analysisEscapeHtml(analysisSlotLabel(item))}</span>
+        <span class="news-archive-slot">${analysisEscapeHtml(analysisSlotLabel(item))}</span>
         <strong>${analysisEscapeHtml(title)}</strong>
-        <em>${analysisEscapeHtml(analysisFormatTime(item.generatedAt))}</em>
-        <small>${analysisEscapeHtml(item.triggerType === "manual" ? "手动分析" : "定点触发")}</small>
+        <span class="news-archive-meta">
+          <em>${analysisEscapeHtml(analysisFormatTime(item.generatedAt))}</em>
+          <small>${analysisEscapeHtml(analysisTriggerLabel(item))}</small>
+        </span>
+        <span class="news-archive-cost-row">${renderAnalysisArchiveCostLine(item)}</span>
       </button>${deleteBtn}</div>`;
     })
     .join("");
@@ -836,23 +918,43 @@ function renderReportArchive() {
 
 function renderNewsArchiveChrome() {
   return `
-    <div class="news-archive-backdrop" id="news-archive-backdrop" hidden></div>
-    <aside class="news-archive-drawer" id="news-archive-drawer" aria-hidden="true">
+    <div class="news-archive-backdrop daily-drawer-backdrop" id="news-archive-backdrop" hidden></div>
+    <aside class="news-archive-drawer daily-drawer daily-archive-drawer" id="news-archive-drawer" aria-hidden="true">
       <div class="news-archive-head">
         <div>
-          <span class="news-section-kicker">最近 7 天</span>
-          <h3>舆情分析回档</h3>
+          <h3>历史报告与费用</h3>
         </div>
-        <button type="button" class="btn" id="news-close-archive" title="关闭报告库">
+        <button type="button" class="btn daily-drawer-close" id="news-close-archive" title="关闭报告库">
           <i class="ph ph-x"></i><span>关闭</span>
         </button>
       </div>
+      ${renderAnalysisArchiveCostSummary()}
       <div class="news-archive-list">${renderReportArchive()}</div>
     </aside>
   `;
 }
 
 function renderAnalysisSettingsChrome() {
+  return `
+    <div class="news-archive-backdrop daily-drawer-backdrop" id="analysis-settings-backdrop" hidden></div>
+    <aside class="news-archive-drawer daily-drawer daily-settings-drawer" id="analysis-settings-drawer" aria-hidden="true">
+      <div class="news-archive-head">
+        <div>
+          <h3>舆情分析设置</h3>
+        </div>
+        <button type="button" class="btn daily-drawer-close" id="analysis-close-settings" title="关闭设置">
+          <i class="ph ph-x"></i><span>关闭</span>
+        </button>
+      </div>
+      ${renderAnalysisSettingsBody()}
+    </aside>`;
+}
+
+function renderNewsDrawersChrome() {
+  return `${renderNewsArchiveChrome()}${renderAnalysisSettingsChrome()}`;
+}
+
+function renderAnalysisSettingsBody() {
   const settings = normalizeAnalysisSettings(__yuqingAnalysisSettings);
   const mkToggle = (item, checked, type) => {
     const hint = type === "visibility"
@@ -862,68 +964,55 @@ function renderAnalysisSettingsChrome() {
         : "纳入搜索覆盖";
     return `
       <label class="daily-setting-row ${checked ? "is-on" : "is-off"}">
-        <span>
+        <span class="daily-setting-copy">
           <strong>${analysisEscapeHtml(item.label)}${item.planned ? ' <em class="scaffold-planned-tag">PLANNED</em>' : ""}</strong>
           <small>${analysisEscapeHtml(hint)} · ${analysisEscapeHtml(item.hint || "")}</small>
         </span>
-        <input type="checkbox" class="daily-setting-cb analysis-setting-cb" data-type="${analysisEscapeHtml(type)}" data-key="${analysisEscapeHtml(item.key)}" ${checked ? "checked" : ""} />
+        <div class="toggle-switch">
+          <input type="checkbox" class="daily-setting-cb analysis-setting-cb" data-type="${analysisEscapeHtml(type)}" data-key="${analysisEscapeHtml(item.key)}" ${checked ? "checked" : ""} aria-label="${analysisEscapeHtml(item.label)}" />
+          <span class="slider"></span>
+        </div>
       </label>`;
   };
 
   return `
-    <div class="news-archive-backdrop daily-drawer-backdrop" id="analysis-settings-backdrop" hidden></div>
-    <aside class="news-archive-drawer daily-drawer daily-settings-drawer" id="analysis-settings-drawer" aria-hidden="true">
-      <div class="news-archive-head">
-        <div>
-          <span class="news-section-kicker">Phase 0.5</span>
-          <h3>舆情分析设置</h3>
+    <div class="daily-settings-body">
+      <section class="daily-settings-section">
+        <div class="daily-settings-section-head">
+          <h4>仪表盘可见度</h4>
+          <p>只影响当前页面显示，不改变云端生成内容。</p>
         </div>
-        <button type="button" class="btn daily-drawer-close" id="analysis-close-settings" title="关闭设置">
-          <i class="ph ph-x"></i><span>关闭</span>
+        <div class="daily-settings-group">
+          ${analysisModuleRegistry.map((item) => mkToggle(item, settings.visibility[item.key], "visibility")).join("")}
+        </div>
+      </section>
+
+      <section class="daily-settings-section">
+        <div class="daily-settings-section-head">
+          <h4>二次分析覆盖</h4>
+          <p>决定手动二次分析或定点任务时 Worker 会纳入哪些模块。</p>
+        </div>
+        <div class="daily-settings-group">
+          ${analysisModuleRegistry.map((item) => mkToggle(item, settings.analysisCoverage[item.key], "analysis")).join("")}
+        </div>
+      </section>
+
+      <section class="daily-settings-section">
+        <div class="daily-settings-section-head">
+          <h4>搜索覆盖范围</h4>
+          <p>只控制增量搜索与定向验证搜索；行情、衍生品和强平数据不走搜索开关。</p>
+        </div>
+        <div class="daily-settings-group">
+          ${analysisSearchScopes.map((item) => mkToggle(item, settings.searchCoverage[item.key], "search")).join("")}
+        </div>
+      </section>
+
+      <div class="daily-settings-actions">
+        <button type="button" class="btn primary" id="analysis-save-settings" ${__yuqingAnalysisSettingsSaving ? "disabled" : ""}>
+          ${__yuqingAnalysisSettingsSaving ? '<i class="ph ph-spinner-gap spin"></i><span>保存中</span>' : '<i class="ph ph-floppy-disk"></i><span>保存并应用</span>'}
         </button>
       </div>
-      <div class="daily-settings-body">
-        <section class="daily-settings-section">
-          <div class="daily-settings-section-head">
-            <h4>仪表盘可见度</h4>
-            <p>只影响当前页面显示，不改变云端生成内容。</p>
-          </div>
-          <div class="daily-settings-group">
-            ${analysisModuleRegistry.map((item) => mkToggle(item, settings.visibility[item.key], "visibility")).join("")}
-          </div>
-        </section>
-
-        <section class="daily-settings-section">
-          <div class="daily-settings-section-head">
-            <h4>二次分析覆盖</h4>
-            <p>决定手动二次分析或定点任务时 Worker 会纳入哪些模块。</p>
-          </div>
-          <div class="daily-settings-group">
-            ${analysisModuleRegistry.map((item) => mkToggle(item, settings.analysisCoverage[item.key], "analysis")).join("")}
-          </div>
-        </section>
-
-        <section class="daily-settings-section">
-          <div class="daily-settings-section-head">
-            <h4>搜索覆盖范围</h4>
-            <p>只控制增量搜索与定向验证搜索；行情、衍生品和强平数据不走搜索开关。</p>
-          </div>
-          <div class="daily-settings-group">
-            ${analysisSearchScopes.map((item) => mkToggle(item, settings.searchCoverage[item.key], "search")).join("")}
-          </div>
-        </section>
-
-        <div class="daily-settings-actions">
-          <button type="button" class="btn primary" id="analysis-save-settings" ${__yuqingAnalysisSettingsSaving ? "disabled" : ""}>
-            ${__yuqingAnalysisSettingsSaving ? '<i class="ph ph-spinner-gap spin"></i><span>保存中</span>' : '<i class="ph ph-floppy-disk"></i><span>保存并应用</span>'}
-          </button>
-        </div>
-      </div>
-    </aside>`;
-}
-
-function renderNewsDrawersChrome() {
-  return `${renderNewsArchiveChrome()}${renderAnalysisSettingsChrome()}`;
+    </div>`;
 }
 
 function renderYuqingReport(row) {
@@ -938,6 +1027,7 @@ function renderYuqingReport(row) {
   const upstreamLabel = upstream
     ? `<a href="${analysisEscapeHtml(upstream.href || "#/news")}">上游日报 ${analysisEscapeHtml(upstream.slot || "")}</a>`
     : `<a href="#/news">上游日报待选择</a>`;
+  const analysisButtonClass = analysisState.loading ? "btn primary is-scanning" : "btn primary";
 
   const commandShell = `
     <div class="news-command daily-event-command analysis-command">
@@ -959,14 +1049,14 @@ function renderYuqingReport(row) {
         </div>
       </div>
       <div class="news-command-actions">
-        <button type="button" class="btn" id="news-generate-preview" ${analysisState.loading ? "disabled" : ""} title="触发 sentiment_analysis 二次研判并写入 D1">
-          <i class="ph ph-arrows-clockwise"></i><span>${analysisState.loading ? "分析中" : "手动二次分析"}</span>
+        <button type="button" class="${analysisButtonClass}" id="news-generate-preview" ${analysisState.loading ? "disabled" : ""} title="触发 sentiment_analysis 二次研判并写入 D1">
+          <i class="ph ${analysisState.loading ? "ph-spinner-gap spin" : "ph-arrows-clockwise"}"></i><span>${analysisState.loading ? "分析中" : "手动二次分析"}</span>
+        </button>
+        <button type="button" class="btn primary" id="news-open-archive" title="打开最近 7 天历史报告与费用">
+          <i class="ph ph-clock-counter-clockwise"></i><span>历史报告与费用</span>
         </button>
         <button type="button" class="btn secondary" id="analysis-open-settings" title="配置舆情分析模块可见度、二次分析覆盖与搜索范围">
           <i class="ph ph-gear"></i><span>设置</span>
-        </button>
-        <button type="button" class="btn primary" id="news-open-archive" title="打开最近 7 天舆情分析回档">
-          <i class="ph ph-clock-counter-clockwise"></i><span>7日报告库</span>
         </button>
       </div>
     </div>`;
@@ -1071,7 +1161,24 @@ function renderYuqingReport(row) {
 function renderNewsDrawersIntoDom() {
   const root = document.getElementById("news-drawers-root");
   if (!root) return;
-  root.innerHTML = renderNewsDrawersChrome();
+
+  const archiveDrawer = document.getElementById("news-archive-drawer");
+  const settingsDrawer = document.getElementById("analysis-settings-drawer");
+  if (!archiveDrawer || !settingsDrawer) {
+    root.innerHTML = renderNewsDrawersChrome();
+  } else {
+    const archiveList = archiveDrawer.querySelector(".news-archive-list");
+    if (archiveList) archiveList.innerHTML = renderReportArchive();
+
+    const costSummary = archiveDrawer.querySelector(".daily-archive-cost-summary");
+    if (costSummary) costSummary.outerHTML = renderAnalysisArchiveCostSummary();
+
+    const settingsBody = settingsDrawer.querySelector(".daily-settings-body");
+    const saveButton = settingsDrawer.querySelector("#analysis-save-settings");
+    const shouldRefreshSettings = !settingsDrawer.classList.contains("open") || __yuqingAnalysisSettingsSaving || !!(saveButton && saveButton.disabled);
+    if (settingsBody && shouldRefreshSettings) settingsBody.outerHTML = renderAnalysisSettingsBody();
+  }
+
   bindNewsInnerEvents();
 }
 
@@ -1169,7 +1276,7 @@ async function saveAnalysisSettings() {
 async function loadAnalysisHistory() {
   if (typeof DataEngine === "undefined" || typeof DataEngine.fetchYuqingReportHistory !== "function") return;
   try {
-    const data = await DataEngine.fetchYuqingReportHistory(SENTIMENT_ANALYSIS_KIND, 7, { signal: __yuqingAnalysisAbort?.signal });
+    const data = await DataEngine.fetchYuqingReportHistory(SENTIMENT_ANALYSIS_KIND, ANALYSIS_ARCHIVE_HISTORY_DAYS, { signal: __yuqingAnalysisAbort?.signal });
     if (data && Array.isArray(data.items) && data.items.length) analysisState.history = data.items;
   } catch (_) {}
 }
@@ -1243,25 +1350,6 @@ async function loadAnalysisReport(reportId = "") {
   renderNewsIntoDom();
 }
 
-function updateAnalysisCodexTaskStatus(evt) {
-  const task = evt && evt.task && typeof evt.task === "object" ? evt.task : {};
-  const raw = String((evt && (evt.status || evt.phase)) || task.status || "").toLowerCase();
-  const label = task.id ? `（${String(task.id).slice(0, 10)}）` : "";
-  if (["queued", "pending", "created", "submitted"].includes(raw)) {
-    analysisState.status = `Codex CLI 任务已排队${label}，等待本地 bridge 接收...`;
-  } else if (["running", "processing", "executing", "started", "in_progress"].includes(raw)) {
-    analysisState.status = `Codex CLI 正在本地执行${label}，完成后会自动读取落库报告...`;
-  } else if (["writing", "persisting", "saving"].includes(raw)) {
-    analysisState.status = `Codex CLI 已生成内容${label}，正在写入 D1...`;
-  } else if (["completed", "complete", "succeeded", "success", "done"].includes(raw)) {
-    analysisState.status = `Codex CLI 任务完成${label}，D1 落库完成。`;
-  } else {
-    analysisState.status = `Codex CLI 任务等待中${label}...`;
-  }
-  analysisState.source = "loading";
-  renderNewsIntoDom();
-}
-
 async function generateAnalysisReport() {
   if (typeof DataEngine === "undefined" || typeof DataEngine.generateYuqingStructuredReport !== "function") return;
   analysisState.loading = true;
@@ -1283,12 +1371,12 @@ async function generateAnalysisReport() {
           trends: settings.analysisCoverage.distortionAudit || settings.analysisCoverage.narrativeValidation,
         },
       },
-      { timeoutMs: 190_000, taskTimeoutMs: 600_000, onTaskStatus: updateAnalysisCodexTaskStatus }
+      { timeoutMs: 190_000 }
     );
     if (data && data.report) {
       analysisState.report = data.report;
       analysisState.source = "cloud";
-      analysisState.status = data.task && data.task.id ? "Codex CLI 分析已落库完成" : "手动分析已写入 D1";
+      analysisState.status = "手动分析已写入 D1";
       try {
         history.replaceState(null, "", `#/news-analysis?reportId=${encodeURIComponent(data.report.id)}`);
       } catch (_) {}

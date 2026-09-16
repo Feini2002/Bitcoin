@@ -4,7 +4,7 @@
 
 ## Context First
 
-- 先读 `.cursorrules`、`package.json`、`index.html` 与相关 `js/` 页面入口，再改代码。
+- 先读 `AGENTS.md`、`package.json`、`index.html` 与相关 `js/` 页面入口，再改代码。
 - 保留未被明确要求实现的 `PLANNED`、占位 UI、预留注释和示意结构。
 - 路径包含空格和中文，PowerShell 命令优先使用 `-LiteralPath`，文件编辑优先用 `apply_patch`。
 
@@ -15,20 +15,16 @@
 - 如果用户明确表示「先为当前功能点列一个修改 plan / 规划」，该 plan 也必须包含所有已识别的关联点、受影响文件、验证命令和部署/D1 操作，确保后续实现整体逻辑严丝合缝、十分严谨。
 - 若某个关联点因风险、权限或范围原因暂时不能改，必须在 plan 或最终回复中明确标出原因、影响和后续处理方式。
 
-## System-Wide LLM Dual Execution Channels
+## LLM Execution
 
-- 整个系统凡是需要调用 LLM 做分析、总结、策略、风控、研究、报告或 Agent 决策的功能，都必须按双线开发和维护；当前事件一览、舆情分析只是第一批接入对象，后续策略官、分析师、风险官、会议室、复盘系统等内置 LLM Agent 同样适用。
-- Worker/云端模型通道是正式自动化路线，Codex CLI 隧道是开发期/低成本人工触发路线；默认不得为了新增 Codex 路线而破坏、替换或废弃 Worker/云端模型路线。
-- 新增或修改任意 LLM 功能时，不得只改前端；必须同步检查对应的 Worker/API 入口、模型通道设置、Codex task context、bridge 必填块校验、D1 或远程存储读写、历史记录展示、前端状态/流式反馈、设置页执行通道和相关验证脚本。
-- 每个 LLM 页面或 Agent 都应有独立的 task kind、权限边界、输入信封、上下文来源、输出结构、D1/API 写入和前端读取链路；不要做成全站一个粗粒度通用 Codex 开关，除非用户明确要求。
-- 新增报告字段、分析模块或 Agent 输出时，Codex 路线也要显式接入：优先把对应 prompt、schema、结构文件或规则文件加入 Worker 下发的 `context.promptFiles`，并补充 bridge 的 required sections、schema 参考或等价输出校验。
-- Codex CLI 隧道必须保持受限边界：网页不得下发任意 shell；bridge 默认使用 `read-only` sandbox；不得允许自动部署、删除、`git reset`、D1 schema 变更或远程 D1 迁移，除非用户在当前任务里明确要求并经过正常审批。
-- 优化 Codex 路线耗时时，优先优化等待、轮询、prompt 预读、重复探索、上下文裁剪和输出校验；不得为了提速牺牲事实校验、资产传导、判断、观察清单、策略可执行性和报告可用性。
-- 当用户要求部署涉及这套双线逻辑的改动时，按影响面执行：Worker 改动先部署 Worker，前端/静态入口改动同步提升 `index.html` 中相关 `?v=` 版本并部署 Pages。
+- 系统内置 LLM 分析、报告和 Agent 功能统一由 Worker/云端模型执行；不再维护网页派单给本机 Codex CLI 的任务队列、轮询、回传或执行通道设置。
+- Codex 对话用于用户主动发起的开发、研究和分析，不是网站运行依赖。需要把人工整理的报告保存到网站时，复用独立的报告导入脚本，并遵守远程 D1 写入授权边界。
+- 修改 LLM 功能时，同步检查 Worker/API、模型设置、上下文来源、报告结构、D1 读写、历史展示和前端流式反馈，保留现有已接入与预留模块的业务契约。
+- 历史报告和已存在的迁移记录保留；退役任务表与旧执行设置不再参与运行，不因代码清理自动删除远程数据。
 
 ## Validation Loop
 
-- 本仓库没有独立打包产物时，`npm run build` 作为部署前总闸，等价运行全量验证。
+- `npm run build` 运行全量本地验证并生成 `dist/pages/`，发布仅使用该目录。
 - 通用改动后运行 `npm run lint`。
 - 指标数学或行情图表改动后运行 `node scripts/verify-indicator-math.cjs`。
 - 足迹图、订单流或 Cloudflare footprint 改动后运行 `npm run verify:footprint`。
@@ -52,6 +48,17 @@
 - 凡是修改 D1 schema、迁移 SQL 或需要调整远程 D1 表结构/表内容，默认**不**同步执行远程 D1 命令，除非被明确要求。
 - 若默认部署因登录、权限、网络或 Cloudflare 状态失败，须明确说明原因和未上线的影响面。
 
+## Cloudflare Pause / Restore Runbook
+
+- 本系统在 2026-06-15 已进入暂停态：`btc` 与 `yuqing` 两个 Worker 的 Cron 已清空，`workers.dev` 与 preview 已关闭，`btc.feiniwork.com` / `yuqing.feiniwork.com` 已从 Worker 自定义域解绑，`yuqing.feiniwork.com/*` route 保留但 `script = null`。
+- D1 本身没有“暂停”开关；暂停或恢复系统时不要删除、重建或迁移 D1。当前应保留 `btc` D1（`DB`，`de758bb8-c7f5-41c7-a6ea-32c0ddf74d57`）和 `yuqing` D1（`YUQING_DB`，`e89cfebb-2d98-4f10-ae94-4f5f4fe52a8f`）。
+- 暂停态下，普通部署规则不应自动恢复 Worker 入口。只有用户明确说“恢复系统 / 重新启用 Worker / 恢复 D1 写入 / 恢复线上”时，才执行下面恢复流程。
+- 恢复前先读取当前 Cloudflare 状态：确认 `btc`、`yuqing` 的 Cron、`workers.dev`、Workers Domains、`feiniwork.com` zone routes，以及本地 `cloudflare/wrangler.toml`、`cloudflare/wrangler.yuqing.toml`。
+- 恢复本地配置：`cloudflare/wrangler.toml` 中重新启用 `btc` 的 Cron `* * * * *`，并将 `workers_dev` 改回启用或移除暂停态；`cloudflare/wrangler.yuqing.toml` 中重新启用 `workers_dev`、Cron `0 0,1,4,6,12,14,16 * * *`，并恢复 `yuqing.feiniwork.com/*` route。
+- 恢复远程 Worker 入口：把 `btc`、`yuqing` 的 Cron 写回原表达式，打开 `workers.dev` 与 preview，重新把 `btc.feiniwork.com` 绑定到 `btc` Worker、`yuqing.feiniwork.com` 绑定到 `yuqing` Worker，并把 `yuqing.feiniwork.com/*` route 的 `script` 恢复为 `yuqing`。
+- 恢复部署顺序：先在 `cloudflare/` 下部署 `btc` Worker，再用 `wrangler.yuqing.toml` 部署 `yuqing` Worker；若前端也有变更，再按 Pages 缓存规则提升 `index.html` 资源版本并部署 Pages。
+- 恢复验证：用 Cloudflare API 或控制台复查 Cron、subdomain、custom domain、route 已恢复；再运行 `npm run verify:api`、`npm run verify:yuqing`，必要时运行 `npm run diagnose` 和 `npm run build`。网络实时源成功只能说明当下连通，不能当作长期稳定结论。
+
 ## Pages Custom Domain Cache
 
 - 本项目自定义域名是 `https://bitcoin.feiniwork.com/`。前端、静态资源、页面入口、样式或关键 JS 改动后，部署 Pages 前必须同步更新 `index.html` 中受影响资源的 `?v=` 版本号，避免自定义域名、浏览器或边缘缓存继续加载旧 `styles.css` / JS。
@@ -60,6 +67,6 @@
 
 ## Reporting
 
-- 与 `.cursorrules`「与用户的回答风格」一致：**默认**说明类回复仅用分点中文；**禁止**三反引号围栏代码块（含源码摘录、伪代码、示例计算用代码），除非用户本轮明文要代码；不要用函数名/代码对照代替文字结论。
+- **默认**说明类回复仅用分点中文；**禁止**三反引号围栏代码块（含源码摘录、伪代码、示例计算用代码），除非用户本轮明文要代码；不要用函数名/代码对照代替文字结论。
 - 最终回复用中文，简短说明改动、验证命令和未能完成的检查。
 - 不要把网络实时数据成功当成稳定测试结论；行情源、Worker、Binance、Bybit 状态都可能随时间变化。

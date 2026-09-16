@@ -6,11 +6,11 @@
   <title>Bit 交易决策平台</title>
   <link rel="icon" type="image/svg+xml" href="btc.svg" />
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <link rel="stylesheet" href="styles.css?v=20260519-llm-console1" />
+  <link rel="stylesheet" href="styles.css?v=20260916-cloud-only1" />
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
+    <aside class="sidebar" id="primary-sidebar">
       <div class="brand">
         <div class="brand-logo">
           <img src="btc.svg" width="32" height="32" alt="" />
@@ -24,6 +24,7 @@
     </aside>
 
     <header class="topbar">
+      <button class="btn mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-controls="primary-sidebar" aria-expanded="false">导航</button>
       <div class="breadcrumb" id="breadcrumb"></div>
       <div class="topbar-right">
         <div class="daily-clock-pill topbar-clock-pill" aria-live="polite" title="北京时间">
@@ -39,33 +40,34 @@
   </div>
 
   <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="js/config.js?v=20260506-cf-clean1"></script>
+  <script src="js/config.js?v=20260916-govern1"></script>
   <script src="js/utils.js?v=20260506-yuqing-delete-modal"></script>
   <script src="js/theme.js"></script>
-  <script src="js/data-engine.js?v=20260519-codex-channel2"></script>
+  <script src="js/data-engine.js?v=20260916-klines6000"></script>
   <script src="js/orderflow/footprint-engine.js?v=20260512-d1-rows1"></script>
   <script src="js/orderflow/footprint-canvas.js"></script>
   <script src="js/heatmap/liquidation-engine.js"></script>
   <script src="js/heatmap/pressure-matrix.js"></script>
-  <script src="js/nav.js"></script>
-  <script src="js/banners.js?v=20260505-yuqing-dual-report1"></script>
+  <script src="js/features.js?v=20260916-govern1"></script>
+  <script src="js/nav.js?v=20260916-govern1"></script>
+  <script src="js/banners.js?v=20260916-govern1"></script>
   <script src="js/sparkline.js"></script>
   <script src="js/agent-views.js"></script>
-  <script src="js/placeholders.js?v=20260506-cf-clean1"></script>
-  <script src="js/pages/overview.js"></script>
+  <script src="js/placeholders.js?v=20260916-govern1"></script>
+  <script src="js/pages/overview.js?v=20260916-govern1"></script>
   <script src="js/chart/indicator-math.js?v=20260505-domain-refresh1"></script>
   <script src="js/chart/indicator-panes.js?v=20260505-domain-refresh1"></script>
-  <script src="js/chart/mtf-tiles.js?v=20260505-domain-refresh1"></script>
-  <script src="js/pages/chart.js?v=20260512-d1-rows1"></script>
-  <script src="js/pages/orderflow.js"></script>
-  <script src="js/pages/heatmap.js?v=20260512-d1-rows1"></script>
-  <script src="js/pages/derivatives.js"></script>
-  <script src="js/pages/env-agent.js"></script>
-  <script src="js/pages/boardroom.js"></script>
-  <script src="js/pages/news.js?v=20260519-codex-channel1"></script>
-  <script src="js/pages/events.js?v=20260519-codex-channel1"></script>
-  <script src="js/pages/calc.js"></script>
-  <script src="js/pages/settings.js?v=20260519-llm-console1"></script>
-  <script src="js/app.js?v=20260508-topbar-clock"></script>
+  <script src="js/chart/mtf-tiles.js?v=20260916-klines6000"></script>
+  <script src="js/pages/chart.js?v=20260916-klines6000"></script>
+  <script src="js/pages/orderflow.js?v=20260916-govern1"></script>
+  <script src="js/pages/heatmap.js?v=20260916-govern1"></script>
+  <script src="js/pages/derivatives.js?v=20260916-market-recovery2"></script>
+  <script src="js/pages/env-agent.js?v=20260916-govern1"></script>
+  <script src="js/pages/boardroom.js?v=20260916-govern1"></script>
+  <script src="js/pages/news.js?v=20260916-cloud-only1"></script>
+  <script src="js/pages/events.js?v=20260916-cloud-only1"></script>
+  <script src="js/pages/calc.js?v=20260916-govern1"></script>
+  <script src="js/pages/settings.js?v=20260916-klines6000"></script>
+  <script src="js/app.js?v=20260916-govern1"></script>
 </body>
 </html>

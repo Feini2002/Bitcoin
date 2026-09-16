@@ -1,6 +1,6 @@
 # 舆情与事件模块 · 脚手架与拆分计划
 
-本文是 `yuqing` Worker、双层日报子页面、D1 报表与前端舆情入口的现行说明。后续让 Cursor 或 Codex 继续做舆情分析拆分时，优先按本文执行。
+本文是 `yuqing` Worker、双层日报子页面、D1 报表与前端舆情入口的现行说明。后续让 Codex 继续做舆情分析拆分时，优先按本文执行。
 
 核心结论：事件一览已经基本按模块收束；舆情分析页已经搭好前端与 Worker 目录通道，但真实生成逻辑仍集中在主 Worker。舆情分析后续采用“骨架一次拆、逻辑分批迁”的方法。
 
@@ -10,7 +10,7 @@
 
 当前舆情分析后续开发只认两个文档：
 
-- 主计划入口：`舆情/脚手架搭建.md`。用于判断当前阶段、执行顺序、关联文件、验证命令、部署/D1 边界。
+- 主计划入口：`docs/architecture/yuqing-plan.md`。用于判断当前阶段、执行顺序、关联文件、验证命令、部署/D1 边界。
 - 详细模块契约：`cloudflare/yuqing/fenxi/DESIGN.md`。用于查看 8 个 `fenxi` 模块的字段、输入、输出、降级规则和前端映射细节。
 
 两者分工：
@@ -22,8 +22,8 @@
 不再作为当前舆情分析执行入口的资料：
 
 - `舆情/日报/ribao-cloudflare/` 与 `舆情/日报/worker/`：旧独立日报实验稿，只保留为视觉/叙事风格参考；不再当作 BitDesk 舆情页的数据契约或 Worker 计划。后续确认不再需要参考样式后，可以整体删除或移到归档目录。
-- `快照程序分析/5个快照模块转Cloudflare Worker说明.txt`：这是“市场监测统一快照 / 员工 Agent 输入”计划，不属于舆情分析页拆分；目前已有 `快照程序分析/marketSnapshotProgram.mjs` 等落地文件，仍是另一条未完成计划，保留在 `快照程序分析/`，不要合并进舆情计划。
-- `README.md`、`AGENTS.md`、`GITHUB-BACKUP-WORKFLOW.md`：属于项目说明、协作规则和备份流程，不是功能 plan，继续保留。
+- `docs/architecture/market-snapshot.md`：这是“市场监测统一快照 / 员工 Agent 输入”计划，不属于舆情分析页拆分；目前已有 `cloudflare/snapshot/marketSnapshotProgram.mjs` 等落地文件，仍是另一条未完成计划，保留在 `cloudflare/snapshot/`，不要合并进舆情计划。
+- `README.md`、`AGENTS.md`、`docs/operations/github-backup.md`：属于项目说明、协作规则和备份流程，不是功能 plan，继续保留。
 
 后续新增舆情相关 plan 时，不再新建散落文档；先更新本文，再按需补 `cloudflare/yuqing/fenxi/DESIGN.md` 的模块细节。
 

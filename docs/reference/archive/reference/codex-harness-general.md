@@ -1,3 +1,5 @@
+> 历史参考：本文不再作为当前执行流程。请从仓库 AGENTS.md 和 docs/README.md 进入有效说明。
+
 # Codex Harness 通用增强说明
 
 Codex 的 harness 目标不是让模型“变聪明”，而是让模型更稳定地拿上下文、用工具、执行、验证和复盘。

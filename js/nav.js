@@ -26,15 +26,21 @@ function buildSidebar() {
   const nav = $("#nav");
   nav.innerHTML = "";
   const saved = loadNavGroupState();
-  NAV.forEach((grp, gi) => {
+  const activeGroups = NAV.map(group => ({ ...group, items: group.items.filter(item => !["demo", "planned"].includes(FEATURE_STATE_BY_ROUTE[item.id])) })).filter(group => group.items.length);
+  const previewItems = FEATURES.filter(item => ["demo", "planned"].includes(item.state));
+  const groups = [...activeGroups, { group: "规划与演示", sub: "保留原型", items: previewItems }];
+  groups.forEach((grp, gi) => {
     const group = el("div", { class: "nav-group", "data-gi": gi, "data-group": grp.group });
-    if (saved[grp.group] === true) group.classList.add("collapsed");
+    const collapsed = saved[grp.group] == null ? grp.group === "规划与演示" : saved[grp.group];
+    if (collapsed) group.classList.add("collapsed");
     const head = el("button", { class: "nav-group-head",
       onclick: () => {
         group.classList.toggle("collapsed");
+        head.setAttribute("aria-expanded", String(!group.classList.contains("collapsed")));
         saveNavGroupCollapsed(grp.group, group.classList.contains("collapsed"));
       }
     });
+    head.setAttribute("aria-expanded", String(!collapsed));
     head.innerHTML = `
       <span class="grp-title">
         <span>${grp.group}</span>
@@ -46,6 +52,7 @@ function buildSidebar() {
 
     const list = el("div", { class: "nav-list" });
     grp.items.forEach(item => {
+      const badge = ["demo", "planned"].includes(FEATURE_STATE_BY_ROUTE[item.id]) ? featureInfo(item.id).label : "";
       const href = `#/${item.id}`;
       const a = el("a", { class: "nav-item" + (item.agentId ? " agent" : ""), href, "data-id": item.id });
       if (item.agentId) {
@@ -53,13 +60,13 @@ function buildSidebar() {
         a.innerHTML = `
           <span class="agent-dot" style="background:${agent.color}">${agent.short}</span>
           <span>${item.label}</span>
-          ${item.badge ? `<span class="badge">${item.badge}</span>` : ""}
+          ${badge ? `<span class="badge">${badge}</span>` : ""}
         `;
       } else {
         a.innerHTML = `
           <i class="ph ${item.icon || "ph-circle"} icon"></i>
           <span>${item.label}</span>
-          ${item.badge ? `<span class="badge">${item.badge}</span>` : ""}
+          ${badge ? `<span class="badge">${badge}</span>` : ""}
         `;
       }
       list.appendChild(a);
@@ -86,4 +93,23 @@ function highlightNav(id) {
 function findNavInfo(id) {
   for (const g of NAV) for (const it of g.items) if (it.id === id) return { group: g.group, item: it };
   return null;
+}
+
+function initMobileNavigation() {
+  const toggle = document.getElementById("mobile-nav-toggle");
+  const sidebar = document.getElementById("primary-sidebar");
+  const setOpen = open => {
+    sidebar.classList.toggle("mobile-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+  };
+  toggle.addEventListener("click", () => setOpen(toggle.getAttribute("aria-expanded") !== "true"));
+  sidebar.addEventListener("click", event => {
+    if (event.target.closest("a[href]")) setOpen(false);
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
 }

@@ -433,152 +433,6 @@ const DataEngine = {
     return this.parseWorkerJsonResponse(res, "保存模型通道设置");
   },
 
-  async fetchYuqingExecutionChannelSettings(opts = {}) {
-    const url = `${this.yuqingApiBase()}/api/yuqing/settings/execution-channels`;
-    const ctrl = new AbortController();
-    const unsub = this.attachAbort(opts.signal, ctrl);
-    const timeoutMs = Math.min(45_000, Math.max(5_000, Number(opts.timeoutMs) || 20_000));
-    const t = setTimeout(() => ctrl.abort(), timeoutMs);
-    let res;
-    try {
-      res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
-    } catch (e) {
-      const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
-      throw new Error(`获取执行通道设置失败（${url}）：${m}`);
-    } finally {
-      clearTimeout(t);
-      unsub();
-    }
-    return this.parseWorkerJsonResponse(res, "执行通道设置");
-  },
-
-  async updateYuqingExecutionChannelSettings(settings, opts = {}) {
-    const url = `${this.yuqingApiBase()}/api/yuqing/settings/execution-channels`;
-    const ctrl = new AbortController();
-    const unsub = this.attachAbort(opts.signal, ctrl);
-    const timeoutMs = Math.min(45_000, Math.max(5_000, Number(opts.timeoutMs) || 20_000));
-    const t = setTimeout(() => ctrl.abort(), timeoutMs);
-    let res;
-    try {
-      res = await this.workerFetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        cache: "no-store",
-        signal: ctrl.signal,
-        body: JSON.stringify(settings && typeof settings === "object" ? settings : {}),
-      });
-    } catch (e) {
-      const m = e && e.name === "AbortError" ? `请求超时(${Math.round(timeoutMs / 1000)}s)` : e && e.message ? e.message : String(e);
-      throw new Error(`保存执行通道设置失败（${url}）：${m}`);
-    } finally {
-      clearTimeout(t);
-      unsub();
-    }
-    return this.parseWorkerJsonResponse(res, "保存执行通道设置");
-  },
-
-  async readYuqingExecutionChannelSettings(opts = {}) {
-    return this.fetchYuqingExecutionChannelSettings(opts);
-  },
-
-  async saveYuqingExecutionChannelSettings(settings, opts = {}) {
-    return this.updateYuqingExecutionChannelSettings(settings, opts);
-  },
-
-  yuqingCodexTaskReport(data) {
-    const src = data && typeof data === "object" ? data : {};
-    const task = src.task && typeof src.task === "object" ? src.task : src;
-    const result = task.result && typeof task.result === "object" ? task.result : src.result;
-    return src.report || task.report || (result && result.report) || null;
-  },
-
-  yuqingCodexTaskStatus(data) {
-    const src = data && typeof data === "object" ? data : {};
-    const task = src.task && typeof src.task === "object" ? src.task : src;
-    return String(task.status || src.status || task.phase || src.phase || "").toLowerCase();
-  },
-
-  waitForYuqingTaskDelay(ms, signal) {
-    return new Promise((resolve, reject) => {
-      if (signal && signal.aborted) {
-        reject(new DOMException("Aborted", "AbortError"));
-        return;
-      }
-      const t = setTimeout(() => {
-        if (signal && typeof signal.removeEventListener === "function") signal.removeEventListener("abort", onAbort);
-        resolve();
-      }, ms);
-      const onAbort = () => {
-        clearTimeout(t);
-        reject(new DOMException("Aborted", "AbortError"));
-      };
-      if (signal && typeof signal.addEventListener === "function") signal.addEventListener("abort", onAbort, { once: true });
-    });
-  },
-
-  async pollYuqingCodexTask(taskId, opts = {}) {
-    const id = String(taskId || "").trim();
-    if (!id) throw new Error("Codex 任务缺少 id，无法轮询");
-    const timeoutMs = Math.min(900_000, Math.max(30_000, Number(opts.taskTimeoutMs) || Number(opts.timeoutMs) || 600_000));
-    const intervalMs = Math.min(12_000, Math.max(1_500, Number(opts.pollIntervalMs) || 2_000));
-    const onStatus = typeof opts.onTaskStatus === "function" ? opts.onTaskStatus : () => {};
-    const notify = (payload) => {
-      try {
-        onStatus(payload);
-      } catch (_) {}
-    };
-    const startedAt = Date.now();
-    let lastData = null;
-    let lastStatus = "";
-    notify({ phase: "queued", status: "queued", task: { id } });
-
-    while (Date.now() - startedAt < timeoutMs) {
-      const remaining = timeoutMs - (Date.now() - startedAt);
-      const ctrl = new AbortController();
-      const unsub = this.attachAbort(opts.signal, ctrl);
-      const t = setTimeout(() => ctrl.abort(), Math.min(30_000, Math.max(2_000, remaining)));
-      let res;
-      try {
-        const q = new URLSearchParams({ id });
-        const url = `${this.yuqingApiBase()}/api/yuqing/codex/tasks?${q.toString()}`;
-        res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
-      } catch (e) {
-        const m = e && e.name === "AbortError" ? "请求超时或页面已切换" : e && e.message ? e.message : String(e);
-        throw new Error(`Codex 任务轮询失败：${m}`);
-      } finally {
-        clearTimeout(t);
-        unsub();
-      }
-
-      const data = await this.parseWorkerJsonResponse(res, "Codex 任务状态");
-      lastData = data;
-      const task = data.task && typeof data.task === "object" ? data.task : data;
-      const status = this.yuqingCodexTaskStatus(data);
-      const report = this.yuqingCodexTaskReport(data);
-      if (status !== lastStatus) {
-        lastStatus = status;
-        notify({ phase: status || "running", status, task, data });
-      } else {
-        notify({ phase: status || "running", status, task, data });
-      }
-      if (report) {
-        notify({ phase: "completed", status: status || "completed", task, data });
-        return data.report ? data : { ...data, report };
-      }
-      if (["failed", "error", "cancelled", "canceled", "timeout", "expired"].includes(status)) {
-        const detail = task.error || task.message || data.error || data.message || "Codex CLI 任务失败";
-        throw new Error(String(detail));
-      }
-      if (["completed", "complete", "succeeded", "success", "done"].includes(status)) {
-        throw new Error("Codex CLI 任务已完成，但 Worker 未返回报告");
-      }
-
-      await this.waitForYuqingTaskDelay(Math.min(intervalMs, Math.max(250, timeoutMs - (Date.now() - startedAt))), opts.signal);
-    }
-    const finalStatus = this.yuqingCodexTaskStatus(lastData);
-    throw new Error(`Codex CLI 任务等待超时（${Math.round(timeoutMs / 1000)}s${finalStatus ? `，最后状态：${finalStatus}` : ""}）`);
-  },
-
   async generateYuqingStructuredReport(kind = "sentiment_analysis", payload = {}, opts = {}) {
     const url = `${this.yuqingApiBase()}/api/yuqing/reports/generate`;
     const timeoutMs = Math.min(600_000, Math.max(5_000, Number(opts.timeoutMs) || 185_000));
@@ -614,9 +468,6 @@ const DataEngine = {
     if (!res.ok) {
       const hint = data && (data.error || data.message);
       throw new Error(`舆情报告接口 ${res.status}${hint ? `: ${hint}` : ""}`);
-    }
-    if (data && data.task && data.task.id && !this.yuqingCodexTaskReport(data)) {
-      return this.pollYuqingCodexTask(data.task.id, opts);
     }
     return data;
   },
@@ -666,9 +517,29 @@ const DataEngine = {
     const dec = new TextDecoder();
     let buf = "";
     let lastDone = null;
+    let eventCount = 0;
+    const firstEventTimeoutMs = Math.min(120_000, Math.max(10_000, Number(opts.firstEventTimeoutMs) || 45_000));
+    const idleTimeoutMs = Math.min(180_000, Math.max(30_000, Number(opts.idleTimeoutMs) || 90_000));
+    const readNext = () => {
+      let timer = null;
+      const limit = eventCount ? idleTimeoutMs : firstEventTimeoutMs;
+      return Promise.race([
+        reader.read(),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => {
+            const label = eventCount
+              ? `流式接口 ${Math.round(limit / 1000)}s 没有新进度，正在转入 D1 回读兜底`
+              : `流式接口 ${Math.round(limit / 1000)}s 未返回首包，可能是执行层或 Worker 首包阻塞`;
+            reject(new Error(label));
+          }, limit);
+        }),
+      ]).finally(() => {
+        if (timer) clearTimeout(timer);
+      });
+    };
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readNext();
         if (done) break;
         buf += dec.decode(value, { stream: true });
         let nl;
@@ -682,6 +553,7 @@ const DataEngine = {
           } catch (_) {
             continue;
           }
+          eventCount += 1;
           await Promise.resolve(onEvent(evt));
           if (evt && evt.type === "done" && evt.report) lastDone = evt;
           if (evt && evt.type === "error" && evt.error) {
@@ -761,64 +633,45 @@ const DataEngine = {
   },
 
   /**
-   * �?Worker /api/d1/klines 读取云端存储�?K 线（已按升序、最�?2000 根）�?   * 返回 [{t,o,h,l,c,v}, ...]
+   * �?Worker /api/d1/klines 读取云端存储�?K 线（已按升序、最�?6000 根）�?   * 返回 [{t,o,h,l,c,v}, ...]
    */
-  async fetchKlinesFromD1(symbol, interval, limit = 2000, opts = {}) {
+  async fetchKlinesFromD1(symbol, interval, limit = 6000, opts = {}) {
     const q = new URLSearchParams({ symbol, interval, limit: String(limit) });
-    if (opts && opts.sync != null && String(opts.sync) !== "") q.set("sync", String(opts.sync));
-    const url = `${this.apiBase()}/api/d1/klines?${q.toString()}`;
+    if (opts.sync != null && String(opts.sync) !== "") q.set("sync", String(opts.sync));
+    const url = this.apiBase() + '/api/d1/klines?' + q;
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 30_000);
-    let res;
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const timer = setTimeout(() => ctrl.abort(), 30_000);
     try {
-      res = await this.workerFetch(url, { cache: opts.cache || "default", signal: ctrl.signal });
-    } catch (e) {
-      const m = (e && e.name === "AbortError") ? "请求超时(30s)" : (e && e.message ? e.message : String(e));
-      throw new Error(
-        `无法访问 ${url}。请确认已部�?Worker 可访问，或检查当前网络。原错误: ${m}`
-      );
+      const res = await this.workerFetch(url, { cache: opts.cache || "default", signal: ctrl.signal });
+      const data = await this.parseWorkerJsonResponse(res, "D1 K 线接口");
+      if (!Array.isArray(data.klines)) throw new Error("D1 K 线返回格式错误：缺少 klines 数组");
+      if (ctrl.signal.aborted) throw new DOMException("K 线请求已取消", "AbortError");
+      const rows = data.klines.map(row => ({
+        t: Number(row.t), o: parseFloat(row.o), h: parseFloat(row.h),
+        l: parseFloat(row.l), c: parseFloat(row.c), v: parseFloat(row.v),
+      }));
+      if (rows.some(row => !Object.values(row).every(Number.isFinite))) throw new Error("D1 K 线包含无效数值");
+      // 元数据交给本次请求的消费者，避免多周期面板覆盖主图状态。
+      if (typeof opts.onMetadata === "function") {
+        const latestT = Number(data.latestT || (rows.length ? rows[rows.length - 1].t : 0));
+        opts.onMetadata({
+          symbol, interval, count: rows.length, latestT,
+          lastSync: data.lastSync || null,
+          source: res.headers.get("X-Data-Source") === "cloudflare-d1" ? "d1" : "unknown",
+          backend: new URL(this.apiBase()).host,
+          receivedAt: Date.now(),
+        });
+      }
+      return rows;
+    } catch (error) {
+      if (opts.signal && opts.signal.aborted) throw new DOMException("K 线请求已取消", "AbortError");
+      if (ctrl.signal.aborted) throw new Error("D1 K 线请求超时（30 秒）");
+      throw error;
     } finally {
-      clearTimeout(t);
+      clearTimeout(timer);
+      unsub();
     }
-    if (!res.ok) {
-      let detail = "";
-      try { detail = (await res.text()).slice(0, 200); } catch (_) {}
-      throw new Error(`D1 K 线接�?${res.status}${detail ? ": " + detail : ""}`);
-    }
-    const data = await res.json().catch(() => null);
-    if (!data || !Array.isArray(data.klines)) {
-      throw new Error("D1 K 线返回格式错误：缺少 klines 数组");
-    }
-
-    if (typeof window !== "undefined") {
-      const dataSource = res.headers.get("X-Data-Source") || res.headers.get("x-data-source") || "";
-      const latestT = Number(data.latestT || 0);
-      const stale = latestT > 0 ? Date.now() - latestT : Infinity;
-      window.__LAST_KLINES_DATA_SOURCE = dataSource === "cloudflare-d1" ? "d1" : "unknown";
-      window.__LAST_KLINES_META = {
-        symbol: data.symbol,
-        interval: data.interval,
-        count: data.count,
-        latestT,
-        lastSync: data.lastSync || null,
-        staleMs: stale,
-      };
-      let klineBackend = "云端";
-      try {
-        const u = new URL(this.apiBase());
-        if (u.hostname) klineBackend = u.hostname;
-      } catch (_) {}
-      window.__LAST_KLINES_BACKEND = klineBackend;
-    }
-
-    return data.klines.map((d) => ({
-      t: Number(d.t),
-      o: parseFloat(d.o),
-      h: parseFloat(d.h),
-      l: parseFloat(d.l),
-      c: parseFloat(d.c),
-      v: parseFloat(d.v),
-    }));
   },
 
   /**
@@ -1122,15 +975,55 @@ const DataEngine = {
     return "bitdesk.yuqing.schedule.preview";
   },
 
+  yuqingScheduleRouteDefaults() {
+    return {
+      daily_event: {
+        enabled: false,
+        label: "事件日报",
+        times: ["00:00", "08:00", "12:00", "20:00"],
+        timezone: "Asia/Shanghai",
+      },
+      sentiment_analysis: {
+        enabled: false,
+        label: "舆情二次分析",
+        times: ["09:00", "14:00", "22:00"],
+        timezone: "Asia/Shanghai",
+      },
+    };
+  },
+
   defaultYuqingScheduleDraft() {
+    const routes = this.yuqingScheduleRouteDefaults();
     return {
       enabled: false,
-      times: ["00:00", "08:00", "12:00", "20:00"],
-      analysisTimes: ["09:00", "14:00", "22:00"],
+      times: [...routes.daily_event.times],
+      analysisTimes: [...routes.sentiment_analysis.times],
+      routes,
       timezone: "Asia/Shanghai",
       updatedAt: null,
       phase: "worker_d1_reports",
     };
+  },
+
+  normalizeYuqingScheduleRouteId(routeId) {
+    return String(routeId || "").trim() === "sentiment_analysis" ? "sentiment_analysis" : "daily_event";
+  },
+
+  normalizeYuqingScheduleRoutes(routes, legacyEnabled = false) {
+    const defaults = this.yuqingScheduleRouteDefaults();
+    const source = routes && typeof routes === "object" ? routes : {};
+    const out = {};
+    Object.keys(defaults).forEach((routeId) => {
+      const raw = source[routeId] && typeof source[routeId] === "object" ? source[routeId] : {};
+      const hasEnabled = Object.prototype.hasOwnProperty.call(raw, "enabled");
+      out[routeId] = {
+        ...defaults[routeId],
+        enabled: hasEnabled ? !!raw.enabled : !!legacyEnabled,
+        times: [...defaults[routeId].times],
+        timezone: "Asia/Shanghai",
+      };
+    });
+    return out;
   },
 
   normalizeYuqingScheduleTimes(times) {
@@ -1153,11 +1046,13 @@ const DataEngine = {
       if (!raw) return d;
       const parsed = JSON.parse(raw);
       const merged = parsed && typeof parsed === "object" ? parsed : {};
+      const routes = this.normalizeYuqingScheduleRoutes(merged.routes, !!merged.enabled);
       return {
         ...d,
-        enabled: !!merged.enabled,
-        times: [...d.times],
-        analysisTimes: [...d.analysisTimes],
+        enabled: Object.values(routes).some((route) => route.enabled),
+        times: [...routes.daily_event.times],
+        analysisTimes: [...routes.sentiment_analysis.times],
+        routes,
         timezone: "Asia/Shanghai",
         phase: "worker_d1_reports",
         updatedAt: merged.updatedAt != null ? merged.updatedAt : d.updatedAt,
@@ -1170,16 +1065,35 @@ const DataEngine = {
   writeYuqingScheduleDraft(payload) {
     const d = this.defaultYuqingScheduleDraft();
     const current = this.readYuqingScheduleDraft();
-    const wantEnabled =
-      payload && typeof payload === "object" && Object.prototype.hasOwnProperty.call(payload, "enabled")
-        ? !!payload.enabled
-        : !!current.enabled;
+    const src = payload && typeof payload === "object" ? payload : {};
+    const sourceRoutes = {};
+    const currentRoutes = current.routes && typeof current.routes === "object" ? current.routes : {};
+    const incomingRoutes = src.routes && typeof src.routes === "object" ? src.routes : {};
+    Object.keys(d.routes).forEach((routeId) => {
+      sourceRoutes[routeId] = {
+        ...(currentRoutes[routeId] || {}),
+        ...(incomingRoutes[routeId] || {}),
+      };
+    });
+    if (src.routeId && Object.prototype.hasOwnProperty.call(src, "enabled")) {
+      const routeId = this.normalizeYuqingScheduleRouteId(src.routeId);
+      sourceRoutes[routeId] = {
+        ...(sourceRoutes[routeId] || {}),
+        enabled: !!src.enabled,
+      };
+    }
+    const routes = this.normalizeYuqingScheduleRoutes(sourceRoutes, !!current.enabled);
+    if (Object.prototype.hasOwnProperty.call(src, "enabled") && !src.routes && !src.routeId) {
+      Object.keys(routes).forEach((routeId) => {
+        routes[routeId].enabled = !!src.enabled;
+      });
+    }
     const next = {
-      ...current,
       ...d,
-      enabled: wantEnabled,
-      times: [...d.times],
-      analysisTimes: [...d.analysisTimes],
+      enabled: Object.values(routes).some((route) => route.enabled),
+      times: [...routes.daily_event.times],
+      analysisTimes: [...routes.sentiment_analysis.times],
+      routes,
       timezone: "Asia/Shanghai",
       updatedAt: new Date().toISOString(),
       phase: "worker_d1_reports",
@@ -1191,12 +1105,17 @@ const DataEngine = {
   },
 
   nextYuqingScheduleRun(payload, now = new Date()) {
+    const src = payload && typeof payload === "object" ? payload : {};
     const cfg = {
       ...this.defaultYuqingScheduleDraft(),
-      ...(payload && typeof payload === "object" ? payload : {}),
+      ...src,
     };
-    const times = this.normalizeYuqingScheduleTimes(cfg.times);
-    if (!cfg.enabled || !times.length) return null;
+    const routeId = this.normalizeYuqingScheduleRouteId(cfg.routeId || cfg.kind);
+    const routes = this.normalizeYuqingScheduleRoutes(src.routes, !!cfg.enabled);
+    const route = routes[routeId] || routes.daily_event;
+    const fallbackTimes = routeId === "sentiment_analysis" ? cfg.analysisTimes : cfg.times;
+    const times = this.normalizeYuqingScheduleTimes(route.times || fallbackTimes);
+    if (!route.enabled || !times.length) return null;
     const base = new Date(now);
     const candidates = [];
     for (let dayOffset = 0; dayOffset <= 1; dayOffset += 1) {
@@ -1213,7 +1132,7 @@ const DataEngine = {
   },
 
   /** 历史兼容别名：实际只�?D1，不触发写库；新调用优先�?fetchKlinesFromD1�?*/
-  async syncKlines(symbol, interval, limit = 2000, opts = {}) {
+  async syncKlines(symbol, interval, limit = 6000, opts = {}) {
     return await this.fetchKlinesFromD1(symbol, interval, limit, opts);
   },
 

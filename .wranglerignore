@@ -1,7 +1,15 @@
 .codex/
 .cursor/
+.codex-bridge/
+.codex-bridge.env
+.env
+.env.*
+.dev.vars*
 .wrangler/
+.pages-dist-*/
 node_modules/
 cad_mcp.log
 tmp-*.log
 tmp-*.png
+
+dist/

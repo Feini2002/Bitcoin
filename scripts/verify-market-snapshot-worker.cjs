@@ -18,7 +18,7 @@ async function readJson(res) {
 
 async function main() {
   const root = path.join(__dirname, "..");
-  const worker = (await import(pathToFileURL(path.join(root, "快照程序分析", "market-snapshot-worker.js")).href)).default;
+  const worker = (await import(pathToFileURL(path.join(root, "cloudflare", "snapshot", "market-snapshot-worker.mjs")).href)).default;
   const now = Date.UTC(2026, 4, 4, 8, 0, 0);
   const env = {
     BTC_DB: new FakeSourceD1(createRows(now)),

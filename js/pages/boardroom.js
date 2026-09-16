@@ -33,7 +33,7 @@ function pageBoardroom() {
   return html`
     <header class="page-header">
       <div>
-        <h1 class="page-title">晨会 · 会议室</h1>
+        <h1 class="page-title">晨会 · 会议室演示</h1>
         <div class="page-sub">老板与 5 位员工的每日交班</div>
       </div>
       <button class="btn primary">召集新一次会议</button>

@@ -60,6 +60,7 @@ function iso(ms) {
 }
 
 function num(v, fallback = null) {
+  if (v == null || v === "") return fallback;
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 }
@@ -392,19 +393,21 @@ function summarizeLiquidations(rows, now) {
 }
 
 function seriesLatest(series, metric) {
-  return latestByTime(series && series[metric], "t");
+  return latestByTime((series && series[metric] || []).filter(row => num(row.value) != null), "t");
 }
 
 function changeOver(series, metric, windowMs, now) {
-  const rows = (series && series[metric] ? series[metric] : []).filter((row) => Number.isFinite(num(row.t)));
-  const latest = latestByTime(rows, "t");
+  const allRows = (series && series[metric] ? series[metric] : []).filter((row) => Number.isFinite(num(row.t)) && num(row.value) != null);
+  const latest = latestByTime(allRows, "t");
   if (!latest) return null;
+  const family = String(latest.source || "").split("-")[0];
+  const rows = allRows.filter(row => String(row.source || "").split("-")[0] === family).sort((a,b) => Number(a.t)-Number(b.t));
   const target = now - windowMs;
   let base = null;
   for (const row of rows) {
     if (Number(row.t) <= target) base = row;
   }
-  if (!base) base = rows[0];
+  if (!base) return null;
   return {
     fromT: base ? base.t : null,
     toT: latest.t,
@@ -437,11 +440,11 @@ function summarizeDerivatives(series, health, now) {
   return {
     matrix: [
       { metric: "funding", state: fundingState, value: round(fundingValue, 8), source: funding ? funding.source : "" },
-      { metric: "oi", state: oi24h && oi24h.changePct > 3 ? "expanding" : oi24h && oi24h.changePct < -3 ? "contracting" : "neutral", value: oi24h ? oi24h.changePct : null },
+      { metric: "oi", state: !oi24h ? "missing" : oi24h.changePct > 3 ? "expanding" : oi24h && oi24h.changePct < -3 ? "contracting" : "neutral", value: oi24h ? oi24h.changePct : null },
       { metric: "taker", state: takerState, value: round(takerValue, 4), source: taker ? taker.source : "" },
       { metric: "basis", state: basisValue == null ? "missing" : basisValue > 8 ? "elevated" : basisValue < -1 ? "discount" : "normal", value: round(basisValue, 4) },
       { metric: "top_trader", state: "reference", value: round(topPosition ? topPosition.value : null, 4), account: round(topAccount ? topAccount.value : null, 4) },
-      { metric: "long_short", state: longShort && Number(longShort.value) > 1.05 ? "long_bias" : longShort && Number(longShort.value) < 0.95 ? "short_bias" : "balanced", value: round(longShort ? longShort.value : null, 4) },
+      { metric: "long_short", state: !longShort ? "missing" : Number(longShort.value) > 1.05 ? "long_bias" : longShort && Number(longShort.value) < 0.95 ? "short_bias" : "balanced", value: round(longShort ? longShort.value : null, 4) },
     ],
     macro: {
       vix: vix ? round(vix.value, 2) : null,

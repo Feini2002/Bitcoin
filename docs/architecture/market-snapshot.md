@@ -2,16 +2,16 @@
 
 本文是“把前面市场监测数据层几个已完成模块，压缩成 LLM / 员工 Agent 可读输入”的现行说明。
 
-旧标题里的“5 个快照模块”来自早期规划。按当前系统状态，主线不是恢复旧的分散页面快照目录，而是维护 `快照程序分析/` 下已经落地的统一快照程序和独立快照 Worker。
+旧标题里的“5 个快照模块”来自早期规划。按当前系统状态，主线不是恢复旧的分散页面快照目录，而是维护 `cloudflare/snapshot/` 下已经落地的统一快照程序和独立快照 Worker。
 
 ## 1. 当前结论
 
 已经落地：
 
-- 统一快照主程序：`快照程序分析/marketSnapshotProgram.mjs`。
-- 快照 Worker：`快照程序分析/market-snapshot-worker.js`。
-- 独立 D1 schema：`快照程序分析/schema.sql`。
-- Wrangler 配置：`快照程序分析/wrangler.snapshot.toml`。
+- 统一快照主程序：`cloudflare/snapshot/marketSnapshotProgram.mjs`。
+- 快照 Worker：`cloudflare/snapshot/market-snapshot-worker.mjs`。
+- 独立 D1 schema：`cloudflare/snapshot/schema.sql`。
+- Wrangler 配置：`cloudflare/snapshot/wrangler.snapshot.toml`。
 - 本地验证脚本：`scripts/verify-market-snapshot-program.cjs`、`scripts/verify-market-snapshot-worker.cjs`。
 - package 脚本：`npm run verify:market-snapshot`，且已并入 `npm test` / `npm run verify:all`。
 
@@ -44,14 +44,14 @@
 
 ## 3. 目录职责
 
-当前 `快照程序分析/` 目录保留这些文件：
+当前 `cloudflare/snapshot/` 目录保留这些文件：
 
 - `marketSnapshotProgram.mjs`：核心确定性程序；生成四页快照、总快照、员工输入。
-- `market-snapshot-worker.js`：HTTP 路由、写库、读取最新快照、读取最新员工输入。
+- `market-snapshot-worker.mjs`：HTTP 路由、写库、读取最新快照、读取最新员工输入。
 - `chartStructureSnapshot.mjs`：行情结构算法支持，供 `marketSnapshotProgram.mjs` 使用。
 - `schema.sql`：独立 snapshot D1 表结构。
 - `wrangler.snapshot.toml`：独立 market-snapshot Worker 配置。
-- `5个快照模块转Cloudflare Worker说明.txt`：当前这份说明。
+- 当前说明位于 `docs/architecture/market-snapshot.md`，不属于 Worker 运行文件。
 
 不要恢复早期的四个分散子目录：
 
@@ -129,7 +129,7 @@
 
 ## 6. 快照 Worker 路由
 
-当前 `market-snapshot-worker.js` 已提供：
+当前 `market-snapshot-worker.mjs` 已提供：
 
 - `GET /api/ai/health`
 - `GET /api/ai/chart-snapshot`

@@ -8,7 +8,7 @@ const {
 
 async function main() {
   const root = path.join(__dirname, "..");
-  const mod = await import(pathToFileURL(path.join(root, "快照程序分析", "marketSnapshotProgram.mjs")).href);
+  const mod = await import(pathToFileURL(path.join(root, "cloudflare", "snapshot", "marketSnapshotProgram.mjs")).href);
   const now = Date.UTC(2026, 4, 4, 8, 0, 0);
   const env = { BTC_DB: new FakeSourceD1(createRows(now)) };
 

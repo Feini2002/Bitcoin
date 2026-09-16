@@ -5,10 +5,11 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { spawnSync } = require("node:child_process");
 
 const ROOT = path.join(__dirname, "..");
-const SKIP_DIRS = new Set(["node_modules", ".git", "旧参考文件", ".wrangler"]);
-const TARGET_EXT = new Set([".js", ".cjs"]);
+const SKIP_DIRS = new Set(["node_modules", ".git", "旧参考文件", ".wrangler", ".artifacts"]);
+const TARGET_EXT = new Set([".js", ".cjs", ".mjs"]);
 
 function walk(dir, out = []) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -23,18 +24,18 @@ function walk(dir, out = []) {
   return out;
 }
 
-const files = walk(ROOT).sort();
+const files = ["js", "scripts", "cloudflare"].flatMap(dir => walk(path.join(ROOT, dir))).concat(path.join(ROOT, "vite.config.mjs")).sort();
 let failed = 0;
 
 for (const file of files) {
   const rel = path.relative(ROOT, file);
   const relNorm = rel.replace(/\\/g, "/");
-  if (relNorm === "舆情/日报/worker/index.js") {
-    console.log(`SKIP syntax ${rel} (standalone ES module scaffold)`);
-    continue;
-  }
-  if (relNorm === "快照程序分析/market-snapshot-worker.js") {
-    console.log(`SKIP syntax ${rel} (standalone ES module worker; covered by verify:market-snapshot)`);
+  if (path.extname(file) === ".mjs") {
+    const result = spawnSync(process.execPath, ["--check", file], { encoding: "utf8", timeout: 10000, windowsHide: true });
+    if (result.status !== 0 || result.error) {
+      failed += 1;
+      console.error("FAIL syntax " + rel + ": " + (result.error ? result.error.message : result.stderr));
+    } else console.log("OK syntax " + rel);
     continue;
   }
   let src = fs.readFileSync(file, "utf8");

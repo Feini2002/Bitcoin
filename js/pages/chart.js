@@ -1,3 +1,15 @@
+// 主图请求元数据与多周期面板、WebSocket 分离。
+let chartD1Meta = null;
+let chartReadAbort = null;
+async function readChartD1Klines(symbol, interval, limit, opts = {}) {
+  const generation = chartLoadGen;
+  return DataEngine.fetchKlinesFromD1(symbol, interval, limit, {
+    ...opts, signal: chartReadAbort ? chartReadAbort.signal : undefined,
+    onMetadata: meta => {
+      if (generation === chartLoadGen && symbol === CHART_SYMBOL && interval === currentInterval) chartD1Meta = meta;
+    },
+  });
+}
 /* =======================================================
    行情工作台
    - 初始历史数据走 Worker /api/d1/klines（Cloudflare D1 缓存，币安源）
@@ -622,7 +634,7 @@ async function loadHigherChartStructure(baseAnalysis, requestId, atrPeriod) {
   }
   let pending = chartHigherStructureInFlight.get(cacheKey);
   if (!pending) {
-    pending = DataEngine.fetchKlinesFromD1(CHART_SYMBOL, higherInterval, 2000, { sync: "0" })
+    pending = readChartD1Klines(CHART_SYMBOL, higherInterval, 6000, { sync: "0" })
       .then((rows) => computeChartStructureFromRows(rows, higherInterval, atrPeriod))
       .then((analysis) => {
         chartHigherStructureCache.set(cacheKey, { ts: Date.now(), analysis });
@@ -1000,7 +1012,7 @@ function chartDataStatusStripHtml() {
         <span class="chart-feed-dot" aria-hidden="true"></span>
         <div>
           <strong>BTCUSDT 永续</strong>
-          <span>Cloud D1 K线 · Worker Cron 写库 · Binance WS 实时跳动 · 东八区</span>
+          <span>D1 历史 K 线 · WS 实时行情独立显示 · 服务时效见下方状态</span>
         </div>
       </div>
       <div class="chart-data-owners">${ownerChips}</div>
@@ -1173,6 +1185,8 @@ function pageChart() {
 }
 
 function disposeChartPage() {
+  if (chartReadAbort) chartReadAbort.abort();
+  chartD1Meta = null;
   if (lwChart && candleSeries) {
     try {
       persistViewportNow();
@@ -1385,16 +1399,16 @@ function chartWsStateShort() {
 function setChartStatusLine(symbol, interval, nBars) {
   const statusEl = document.getElementById("chart-status");
   if (!statusEl) return;
-  const meta = (typeof window !== "undefined" && window.__LAST_KLINES_META) || null;
-  const backend = (typeof window !== "undefined" && window.__LAST_KLINES_BACKEND) || "";
+  const meta = chartD1Meta;
+  const backend = (chartD1Meta && chartD1Meta.backend) || "";
   const intervalMs =
     typeof DataEngine !== "undefined" && typeof DataEngine.getIntervalMs === "function"
       ? DataEngine.getIntervalMs(interval)
       : 5 * 60 * 1000;
 
   let d1TimeHint = "未知";
-  if (meta && Number.isFinite(meta.staleMs)) {
-    const st = meta.staleMs;
+  if (meta && Number.isFinite(meta.latestT) && meta.latestT > 0) {
+    const st = Date.now() - meta.latestT;
     const human =
       st < 60_000
         ? `约 ${Math.round(st / 1000)} 秒`
@@ -1411,7 +1425,7 @@ function setChartStatusLine(symbol, interval, nBars) {
   }
 
   const wsShort = chartWsStateShort();
-  const src = (typeof window !== "undefined" && window.__LAST_KLINES_DATA_SOURCE) === "d1" ? "D1" : "接口";
+  const src = meta && meta.source === "d1" ? "D1" : "接口";
   const lastSync = meta && meta.lastSync;
   const lastSyncText = typeof lastSync === "string"
     ? lastSync
@@ -1620,24 +1634,10 @@ function startChartWs(symbol, interval) {
     const idx = chartOhlcv.findIndex((r) => r.t === t);
     if (idx >= 0) chartOhlcv[idx] = row;
     else if (!chartOhlcv.length || t > chartOhlcv[chartOhlcv.length - 1].t) chartOhlcv.push(row);
+    if (chartOhlcv.length > 6000) setChartDataFromRows(chartOhlcv);
     lastRenderedCount = chartOhlcv.length;
     scheduleIndicatorsRefresh();
-    if (typeof window !== "undefined") {
-      if (!window.__LAST_KLINES_META) {
-        window.__LAST_KLINES_META = {
-          symbol,
-          interval,
-          count: chartOhlcv.length,
-          latestT: t,
-          lastSync: null,
-          staleMs: Date.now() - t,
-        };
-      } else {
-        window.__LAST_KLINES_META.count = chartOhlcv.length;
-        window.__LAST_KLINES_META.latestT = t;
-        window.__LAST_KLINES_META.staleMs = Date.now() - t;
-      }
-    }
+    // WebSocket 更新只代表实时序列，不证明 D1 已同步。
     const now = Date.now();
     if (now - chartLastWsStatusAt > 1000) {
       chartLastWsStatusAt = now;
@@ -1735,7 +1735,7 @@ function mergeD1RowsWithLiveRows(d1Rows) {
 }
 
 function setChartDataFromRows(rows) {
-  chartOhlcv = rows;
+  chartOhlcv = rows.slice(-6000);
   const chartData = chartOhlcv.map(d => ({
     time: d.t / 1000,
     open: d.o,
@@ -1777,7 +1777,7 @@ function queueD1Poll(reason) {
   const myGen = chartD1PollGen;
   chartD1PollInFlight = true;
 
-  DataEngine.fetchKlinesFromD1(symbol, interval, CHART_D1_POLL_LIMIT, { sync: "0" })
+  readChartD1Klines(symbol, interval, CHART_D1_POLL_LIMIT, { sync: "0" })
     .then(async (raw) => {
       if (myGen !== chartD1PollGen || symbol !== CHART_SYMBOL || interval !== currentInterval) return;
       if (!Array.isArray(raw) || raw.length === 0) return;
@@ -1813,8 +1813,8 @@ function shouldAutoSyncChartD1(interval, rows) {
   if (typeof document !== "undefined" && document.hidden) return false;
   if (Date.now() - chartD1AutoSyncLastAt < CHART_D1_AUTO_SYNC_COOLDOWN_MS) return false;
   if (!Array.isArray(rows) || rows.length === 0) return true;
-  const meta = (typeof window !== "undefined" && window.__LAST_KLINES_META) || null;
-  const staleMs = Number(meta && meta.staleMs);
+  const meta = chartD1Meta;
+  const staleMs = meta && meta.latestT > 0 ? Date.now() - meta.latestT : NaN;
   const step = getIntervalStepMs(interval);
   if (!Number.isFinite(staleMs) || !Number.isFinite(step) || step <= 0) return false;
   const grace = Math.max(step * CHART_D1_AUTO_SYNC_STALE_BARS, step + 2 * 60 * 1000);
@@ -1840,7 +1840,7 @@ async function maybeAutoSyncChartD1AfterRead(symbol, interval, loadGen, rows) {
   try {
     await triggerChartD1Sync(symbol, interval, "auto");
     if (loadGen !== chartLoadGen || symbol !== CHART_SYMBOL || interval !== currentInterval) return;
-    const raw = await DataEngine.fetchKlinesFromD1(symbol, interval, 2000, { sync: "0" });
+    const raw = await readChartD1Klines(symbol, interval, 6000, { sync: "0" });
     if (loadGen !== chartLoadGen || symbol !== CHART_SYMBOL || interval !== currentInterval) return;
     if (!Array.isArray(raw) || raw.length === 0) {
       setChartStatusLine(symbol, interval, lastRenderedCount);
@@ -1858,6 +1858,8 @@ async function maybeAutoSyncChartD1AfterRead(symbol, interval, loadGen, rows) {
 
 async function loadChartData(symbol, interval, opts = {}) {
   const myGen = ++chartLoadGen;
+  if (chartReadAbort) chartReadAbort.abort();
+  chartReadAbort = new AbortController();
   const statusEl = document.getElementById("chart-status");
   if (statusEl) statusEl.textContent = `加载 ${symbol} ${interval} 数据…`;
   closeChartWs();
@@ -1873,14 +1875,11 @@ async function loadChartData(symbol, interval, opts = {}) {
   applyIndicatorsFromOhlcv([]);
   applyChartKeyLevelsFromOhlcv([]);
 
-  if (typeof window !== "undefined") {
-    window.__LAST_KLINES_META = null;
-    window.__LAST_KLINES_DATA_SOURCE = "";
-  }
+  chartD1Meta = null;
   startChartWs(symbol, interval);
 
   try {
-    const rawData = await DataEngine.fetchKlinesFromD1(symbol, interval, 2000, { sync: "auto" });
+    const rawData = await readChartD1Klines(symbol, interval, 6000, { sync: "auto" });
     if (myGen !== chartLoadGen) return;
 
     if (!Array.isArray(rawData) || rawData.length === 0) {
