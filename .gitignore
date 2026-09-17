@@ -31,6 +31,10 @@ tmp-*.png
 
 dist/
 
+# Local extract/work copies. Original zips live under docs/research.
+.tmp-*/
+/bitcoin_batch2_execution_ready_*.zip
+
 # Local, regenerable code index
 .codegraph/
 
