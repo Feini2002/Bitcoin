@@ -1,8 +1,15 @@
 # 比特币系统升级资料总纲
 
-更新日期：2026-09-16。**当前状态：研究资料已归档；免费金融通道、首次D1沉淀和币安WS地址修复已实施；工作台整体改版留待下一轮，币安CF连续采集仍未恢复。**
+更新日期：2026-09-17。**当前状态：第一批研究资料保持原位归档；第二批可执行主线已放入独立目录并开始本地实现。免费金融通道、首次D1沉淀和币安WS地址修复仍是已有事实；本次不部署、不调用真实市场/模型 API。**
 
-日常修改优先使用[功能定位入口](QUICK_ROUTER.md)或 `node scripts/research-context.cjs "当前问题"`，不必每次阅读本总纲。17条功能路由可直接定位资料章节、代码与相关验证；每个来源文件的摘要可单独查询。
+日常修改优先使用[功能定位入口](QUICK_ROUTER.md)或 `node scripts/research-context.cjs "当前问题"`，不必每次阅读本总纲。第二批连续开发只读 [第二批执行总任务](batch2-execution/EXECUTION_MASTER.md) 与 [执行日志](batch2-execution/EXECUTION_LOG.md)。
+
+## 第二批执行入口
+
+- [第二批执行总任务](batch2-execution/EXECUTION_MASTER.md)
+- [执行日志](batch2-execution/EXECUTION_LOG.md)
+- [原始压缩包](archives/bitcoin_batch2_execution_ready_2026-09-17.zip)
+- 第一批原件仍在 [sources/2026-09-16](sources/2026-09-16/README.md) 与 [archives/bitcoin_research_final_2026-09-16.zip](archives/bitcoin_research_final_2026-09-16.zip)，不重排、不覆盖。
 
 ## 本次工作收口与下一轮起点
 

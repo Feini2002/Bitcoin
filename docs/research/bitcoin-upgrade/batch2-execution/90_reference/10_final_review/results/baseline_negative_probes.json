@@ -1,0 +1,92 @@
+[
+  {
+    "probe": "collection root empty",
+    "expected_valid": false,
+    "actual_valid": true,
+    "meets_expectation": false,
+    "first_error": null,
+    "instance": {}
+  },
+  {
+    "probe": "collection root arbitrary object",
+    "expected_valid": false,
+    "actual_valid": true,
+    "meets_expectation": false,
+    "first_error": null,
+    "instance": {
+      "anything": "passes"
+    }
+  },
+  {
+    "probe": "collection root malformed attempt",
+    "expected_valid": false,
+    "actual_valid": true,
+    "meets_expectation": false,
+    "first_error": null,
+    "instance": {
+      "attempt_id": 123,
+      "state": "bogus"
+    }
+  },
+  {
+    "probe": "shared time enum publicly_available",
+    "expected_valid": true,
+    "actual_valid": false,
+    "meets_expectation": false,
+    "first_error": "'publicly_available' is not one of ['system_observed', 'public_available', 'retrospective_latest']",
+    "instance": {
+      "query": "合成问题：此计划有没有明确发布时间？",
+      "as_of": "2026-09-16T00:00:00Z",
+      "mode": "publicly_available",
+      "purpose": "model_input",
+      "source_scope": [
+        "example_official"
+      ],
+      "include_retracted": false,
+      "example_only": true
+    }
+  },
+  {
+    "probe": "historical audit retracted request",
+    "expected_valid": true,
+    "actual_valid": false,
+    "meets_expectation": false,
+    "first_error": "False was expected",
+    "instance": {
+      "query": "合成问题：此计划有没有明确发布时间？",
+      "as_of": "2026-09-16T00:00:00Z",
+      "mode": "system_observed",
+      "purpose": "internal_display",
+      "source_scope": [
+        "example_official"
+      ],
+      "include_retracted": true,
+      "example_only": true
+    }
+  },
+  {
+    "probe": "inconsistent quiet vs coverage should reject",
+    "expected_valid": false,
+    "actual_valid": true,
+    "meets_expectation": false,
+    "first_error": null,
+    "instance": {
+      "coverage_id": "example_coverage_1",
+      "window_start": "2026-09-15T00:00:00Z",
+      "window_end": "2026-09-16T00:00:00Z",
+      "required_sources": [
+        "example_official",
+        "example_other"
+      ],
+      "observed_sources": [
+        "example_official"
+      ],
+      "failed_sources": [
+        "example_other"
+      ],
+      "coverage_class": "insufficient",
+      "quiet_result_allowed": true,
+      "example_only": true
+    }
+  }
+]

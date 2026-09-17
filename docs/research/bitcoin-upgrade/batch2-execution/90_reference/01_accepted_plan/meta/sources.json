@@ -1,0 +1,713 @@
+[
+  {
+    "id": "S001",
+    "title": "Alternative.me FNG 方法、API和署名",
+    "url": "https://alternative.me/crypto/fear-and-greed-index/",
+    "checked_at": "2026-09-16",
+    "observation": "指数包含波动与成交量等成分；第三方指数不是独立市场概率。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S002",
+    "title": "Binance 现货 WebSocket 协议",
+    "url": "https://raw.githubusercontent.com/binance/binance-spot-api-docs/master/web-socket-streams.md",
+    "checked_at": "2026-09-16",
+    "observation": "maker方向、逐笔与聚合、盘口恢复、时间单位。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S003",
+    "title": "Binance public-data README",
+    "url": "https://raw.githubusercontent.com/binance/binance-public-data/master/README.md",
+    "checked_at": "2026-09-16",
+    "observation": "MIT声明、归档时间单位、校验和及历史文件可能替换。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S004",
+    "title": "Binance USDⓈ-M 市场流",
+    "url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/ws-streams/market",
+    "checked_at": "2026-09-16",
+    "observation": "聚合成交、RPI口径、可见清算采样与字段。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S005",
+    "title": "Binance USDⓈ-M REST 市场数据",
+    "url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data",
+    "checked_at": "2026-09-16",
+    "observation": "OI历史范围/期末时间等；不同方法分别核对。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S006",
+    "title": "Bybit allLiquidation 文档源码",
+    "url": "https://raw.githubusercontent.com/bybit-exchange/docs/master/docs/v5/websocket/public/all-liquidation.mdx",
+    "checked_at": "2026-09-16",
+    "observation": "S为持仓方向，p为破产价，v为执行规模；不是普通主动成交。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S007",
+    "title": "Deribit get_order_book",
+    "url": "https://docs.deribit.com/api-reference/market-data/public-get_order_book",
+    "checked_at": "2026-09-16",
+    "observation": "OI单位、IV和Greeks等字段；并非历史完整性保证。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S008",
+    "title": "Deribit summary by currency",
+    "url": "https://docs.deribit.com/api-reference/market-data/public-get_book_summary_by_currency",
+    "checked_at": "2026-09-16",
+    "observation": "币种范围合约截面入口。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S009",
+    "title": "Deribit 采集最佳实践",
+    "url": "https://docs.deribit.com/articles/market-data-collection-best-practices",
+    "checked_at": "2026-09-16",
+    "observation": "raw认证与聚合/连接方面的边界。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S010",
+    "title": "Deribit 限流",
+    "url": "https://docs.deribit.com/articles/rate-limits",
+    "checked_at": "2026-09-16",
+    "observation": "不同端点调用成本不能用单一频率概括。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S011",
+    "title": "Deribit volatility index",
+    "url": "https://docs.deribit.com/api-reference/market-data/public-get_volatility_index_data",
+    "checked_at": "2026-09-16",
+    "observation": "波动率指数历史端点；本次未请求数据或测覆盖。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S012",
+    "title": "CoinGecko market chart",
+    "url": "https://docs.coingecko.com/reference/coins-id-market-chart",
+    "checked_at": "2026-09-16",
+    "observation": "价格、市值、总成交量与历史粒度接口；不同计划边界需按使用版本复核。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S013",
+    "title": "DeFiLlama 方法与仓库地图",
+    "url": "https://docs.llama.fi/",
+    "checked_at": "2026-09-16",
+    "observation": "稳定币对应circulating supply/peg；不要把TVL规则误套所有指标。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S014",
+    "title": "DeFiLlama stablecoin页面",
+    "url": "https://defillama.com/stablecoins",
+    "checked_at": "2026-09-16",
+    "observation": "产品口径参考；未独立确认本系统用途授权和SLA。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S015",
+    "title": "FRED/ALFRED real-time periods",
+    "url": "https://fred.stlouisfed.org/docs/api/fred/realtime_period.html",
+    "checked_at": "2026-09-16",
+    "observation": "日期级历史版本与当前值的区别。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S016",
+    "title": "FRED API条款",
+    "url": "https://fred.stlouisfed.org/docs/api/terms_of_use.html",
+    "checked_at": "2026-09-16",
+    "observation": "第三方序列权利独立核验。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S017",
+    "title": "Federal Reserve FOMC日历",
+    "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+    "checked_at": "2026-09-16",
+    "observation": "官方会议及发布材料入口，不使用新闻发布时间冒充未来日程。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S018",
+    "title": "BLS CPI发布时间表",
+    "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+    "checked_at": "2026-09-16",
+    "observation": "官方日程与时区来源。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S019",
+    "title": "IBIT发行人披露",
+    "url": "https://www.ishares.com/us/products/333011/ishares-bitcoin-trust-etf",
+    "checked_at": "2026-09-16",
+    "observation": "带日期的份额/资产等字段；不等于全ETF净申购数据库。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S020",
+    "title": "Farside BTC ETF汇总",
+    "url": "https://farside.co.uk/btc/",
+    "checked_at": "2026-09-16",
+    "observation": "交叉核验来源；未取得本产品分发授权/完整历史SLA。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S021",
+    "title": "Glassnode PiT",
+    "url": "https://docs.glassnode.com/data/point-in-time-metrics",
+    "checked_at": "2026-09-16",
+    "observation": "实体指标历史可能变化，时点数据有覆盖限制。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S022",
+    "title": "Gemini structured output",
+    "url": "https://ai.google.dev/gemini-api/docs/structured-output",
+    "checked_at": "2026-09-16",
+    "observation": "支持JSON Schema子集，语法合规不证明事实正确。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S023",
+    "title": "Gemini Google Search Grounding",
+    "url": "https://ai.google.dev/gemini-api/docs/google-search",
+    "checked_at": "2026-09-16",
+    "observation": "自动搜索、注释与模型版本差异；搜索数量不能靠prompt保证。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S024",
+    "title": "Gemini API附加条款",
+    "url": "https://ai.google.dev/gemini-api/terms",
+    "checked_at": "2026-09-16",
+    "observation": "已读2026-03-23生效文本；普通生成与Grounding及付费/免费用途有区别，具体适用需确认。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S025",
+    "title": "Gemini定价",
+    "url": "https://ai.google.dev/gemini-api/docs/pricing",
+    "checked_at": "2026-09-16",
+    "observation": "模型、thinking、缓存及搜索计费维度不同；不提供本系统实际账单。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S026",
+    "title": "Anthropic多代理研究工程",
+    "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+    "checked_at": "2026-09-16",
+    "observation": "独立子问题并行研究与协调开销；不是本系统收益证据。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S027",
+    "title": "ALCE引用评估论文",
+    "url": "https://aclanthology.org/2023.emnlp-main.398/",
+    "checked_at": "2026-09-16",
+    "observation": "引用支持与覆盖方法，不直接采用其数据集作为金融基准。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S028",
+    "title": "scikit-learn校准文档",
+    "url": "https://scikit-learn.org/stable/modules/calibration.html",
+    "checked_at": "2026-09-16",
+    "observation": "可靠性图和适当评分；Brier同时受多项因素影响。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S029",
+    "title": "Metaculus题目编写",
+    "url": "https://www.metaculus.com/question-writing/",
+    "checked_at": "2026-09-16",
+    "observation": "明确问题、时间与可客观结算标准的方法。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S030",
+    "title": "Metaculus评分FAQ",
+    "url": "https://www.metaculus.com/help/scores-faq/",
+    "checked_at": "2026-09-16",
+    "observation": "评分规则与预测概率的可评估性，借鉴不复制平台复杂积分。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S031",
+    "title": "LLMTime论文",
+    "url": "https://arxiv.org/abs/2310.07820",
+    "checked_at": "2026-09-16",
+    "observation": "时间序列预测研究线索，论文效果不等于BTC上线效果。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S032",
+    "title": "LLM时间序列消融论文",
+    "url": "https://arxiv.org/abs/2406.16964",
+    "checked_at": "2026-09-16",
+    "observation": "针对若干方法的消融反证；不能外推所有LLM无效。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S033",
+    "title": "datasketch仓库",
+    "url": "https://github.com/ekzhu/datasketch",
+    "checked_at": "2026-09-16",
+    "observation": "近似集合相似性；主分支2.0算法变更需索引重建/兼容。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S034",
+    "title": "datasketch MinHashLSH文档",
+    "url": "https://ekzhu.com/datasketch/lsh.html",
+    "checked_at": "2026-09-16",
+    "observation": "候选检索会有误报漏报，不等于事件语义去重。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S035",
+    "title": "datasketch LICENSE",
+    "url": "https://raw.githubusercontent.com/ekzhu/datasketch/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "MIT。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S036",
+    "title": "Trafilatura仓库",
+    "url": "https://github.com/adbar/trafilatura",
+    "checked_at": "2026-09-16",
+    "observation": "正文与元数据提取，不提供媒体内容权利。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S037",
+    "title": "Trafilatura LICENSE",
+    "url": "https://raw.githubusercontent.com/adbar/trafilatura/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "Apache-2.0。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S038",
+    "title": "RSSHub仓库",
+    "url": "https://github.com/DIYgod/RSSHub",
+    "checked_at": "2026-09-16",
+    "observation": "多源RSS路由；逐路由可达性和条款独立。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S039",
+    "title": "RSSHub当前LICENSE",
+    "url": "https://raw.githubusercontent.com/DIYgod/RSSHub/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "当前主分支AGPL-3.0；不沿用旧MIT印象。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S040",
+    "title": "TrendRadar仓库",
+    "url": "https://github.com/sansan0/TrendRadar",
+    "checked_at": "2026-09-16",
+    "observation": "中文聚合/筛选/推送设计，热点不是BTC相关性标签。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S041",
+    "title": "TrendRadar当前LICENSE",
+    "url": "https://raw.githubusercontent.com/sansan0/TrendRadar/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "GPL-3.0；不是AGPL或MIT。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S042",
+    "title": "GDELT DOC API官方说明",
+    "url": "https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/",
+    "checked_at": "2026-09-16",
+    "observation": "新闻检索与时间线方法；旧说明不保证当前运行覆盖。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S043",
+    "title": "TradingAgents仓库",
+    "url": "https://github.com/TauricResearch/TradingAgents",
+    "checked_at": "2026-09-16",
+    "observation": "多角色、决策日志、恢复；自身披露时点/来源/模型非确定性限制。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S044",
+    "title": "TradingAgents LICENSE",
+    "url": "https://raw.githubusercontent.com/TauricResearch/TradingAgents/main/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "当前Apache-2.0。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S045",
+    "title": "FinGPT仓库",
+    "url": "https://github.com/AI4Finance-Foundation/FinGPT",
+    "checked_at": "2026-09-16",
+    "observation": "金融模型/数据研究项目；模型权重与数据授权不随代码自动开放。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S046",
+    "title": "FinGPT LICENSE",
+    "url": "https://raw.githubusercontent.com/AI4Finance-Foundation/FinGPT/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "MIT。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S047",
+    "title": "exchange_calendars仓库",
+    "url": "https://github.com/gerrymanoim/exchange_calendars",
+    "checked_at": "2026-09-16",
+    "observation": "证券交易日历；不是宏观新闻日历。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S048",
+    "title": "exchange_calendars LICENSE",
+    "url": "https://raw.githubusercontent.com/gerrymanoim/exchange_calendars/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "Apache-2.0。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S049",
+    "title": "River仓库",
+    "url": "https://github.com/online-ml/river",
+    "checked_at": "2026-09-16",
+    "observation": "在线学习/漂移检测，需已有可评价数据流。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S050",
+    "title": "River LICENSE",
+    "url": "https://raw.githubusercontent.com/online-ml/river/main/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "BSD-3-Clause。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S051",
+    "title": "arch时间序列bootstrap",
+    "url": "https://bashtage.github.io/arch/bootstrap/timeseries-bootstraps.html",
+    "checked_at": "2026-09-16",
+    "observation": "区块重采样；文档对moving-block端点欠采样有警告。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S052",
+    "title": "arch LICENSE",
+    "url": "https://raw.githubusercontent.com/bashtage/arch/main/LICENSE.md",
+    "checked_at": "2026-09-16",
+    "observation": "NCSA式许可，按原文而非随意标MIT。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S053",
+    "title": "promptfoo断言",
+    "url": "https://www.promptfoo.dev/docs/configuration/expected-outputs/",
+    "checked_at": "2026-09-16",
+    "observation": "确定性/模型断言；默认综合评分不替代关键错误硬拒绝。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S054",
+    "title": "promptfoo JS断言",
+    "url": "https://www.promptfoo.dev/docs/configuration/expected-outputs/javascript/",
+    "checked_at": "2026-09-16",
+    "observation": "可运行本地自定义验证；只使用可信测试配置。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S055",
+    "title": "promptfoo LICENSE",
+    "url": "https://raw.githubusercontent.com/promptfoo/promptfoo/main/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "MIT。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S056",
+    "title": "Lightweight Charts v4到v5迁移",
+    "url": "https://tradingview.github.io/lightweight-charts/docs/migrations/from-v4-to-v5",
+    "checked_at": "2026-09-16",
+    "observation": "API有变化，不将当前4.1.3自动替换成5系列。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S057",
+    "title": "Lightweight Charts LICENSE",
+    "url": "https://raw.githubusercontent.com/tradingview/lightweight-charts/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "Apache-2.0；NOTICE与署名另按锁定版本检查。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S058",
+    "title": "SQLite FTS5",
+    "url": "https://www.sqlite.org/fts5.html",
+    "checked_at": "2026-09-16",
+    "observation": "全文检索方法；不等于D1允许任意扩展或适合中文语义检索。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S059",
+    "title": "DuckDB LICENSE",
+    "url": "https://raw.githubusercontent.com/duckdb/duckdb/main/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "MIT。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S060",
+    "title": "DuckDB并发",
+    "url": "https://duckdb.org/docs/current/connect/concurrency.html",
+    "checked_at": "2026-09-16",
+    "observation": "区分嵌入式文件和其他并发架构；本方案采用受控批处理。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S061",
+    "title": "vollib LICENSE",
+    "url": "https://raw.githubusercontent.com/vollib/py_vollib/master/LICENSE",
+    "checked_at": "2026-09-16",
+    "observation": "MIT；具体运行兼容仍需选择版本。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S062",
+    "title": "D1限制",
+    "url": "https://developers.cloudflare.com/d1/platform/limits/",
+    "checked_at": "2026-09-16",
+    "observation": "容量/SQL运行边界；不直接证明必须迁库。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S063",
+    "title": "D1读副本",
+    "url": "https://developers.cloudflare.com/d1/best-practices/read-replication/",
+    "checked_at": "2026-09-16",
+    "observation": "Sessions/bookmark不是业务历史快照。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S064",
+    "title": "D1 database API",
+    "url": "https://developers.cloudflare.com/d1/worker-api/d1-database/",
+    "checked_at": "2026-09-16",
+    "observation": "batch事务范围限同数据库；不是跨Worker/R2事务。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S065",
+    "title": "Workers限制",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/",
+    "checked_at": "2026-09-16",
+    "observation": "CPU、触发/生命周期与配置区别。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S066",
+    "title": "DO WebSocket实践",
+    "url": "https://developers.cloudflare.com/durable-objects/best-practices/websockets/",
+    "checked_at": "2026-09-16",
+    "observation": "出站WS不能使用入站休眠机制。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S067",
+    "title": "Workflows限制",
+    "url": "https://developers.cloudflare.com/workflows/reference/limits/",
+    "checked_at": "2026-09-16",
+    "observation": "持久步骤也有资源与保留边界。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S068",
+    "title": "Queues交付",
+    "url": "https://developers.cloudflare.com/queues/reference/delivery-guarantees/",
+    "checked_at": "2026-09-16",
+    "observation": "至少一次，幂等仍由应用负责。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S069",
+    "title": "R2定价",
+    "url": "https://developers.cloudflare.com/r2/pricing/",
+    "checked_at": "2026-09-16",
+    "observation": "存储和操作单价，不含研究全成本。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S070",
+    "title": "R2一致性",
+    "url": "https://developers.cloudflare.com/r2/reference/consistency/",
+    "checked_at": "2026-09-16",
+    "observation": "强一致对象语义仍不产生跨D1事务；缓存另论。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S071",
+    "title": "CoinGlass清算热力图",
+    "url": "https://docs.coinglass.com/reference/liquidation-aggregate-heatmap",
+    "checked_at": "2026-09-16",
+    "observation": "市场数据与杠杆假设模型；不是真实全量清算持仓。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S072",
+    "title": "Reddit历史盘口讨论",
+    "url": "https://www.reddit.com/r/algotrading/comments/nz5lnl/binance_full_or_atleast_sufficiently_deep/",
+    "checked_at": "2026-09-16",
+    "observation": "只作发现问题的社区线索，不作当前协议依据。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S073",
+    "title": "HN工作流讨论",
+    "url": "https://news.ycombinator.com/item?id=41039204",
+    "checked_at": "2026-09-16",
+    "observation": "只作复杂度/维护话题线索，不作架构性能证据。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S074",
+    "title": "X帖子访问失败",
+    "url": "https://x.com/coinglass_com/status/1833073677015126058",
+    "checked_at": "2026-09-16",
+    "observation": "搜索命中，正文403，未用于证明帖文事实。",
+    "access": "blocked",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S075",
+    "title": "RSSHub中文部署文档访问失败",
+    "url": "https://docs.rsshub.app/zh/deploy/",
+    "checked_at": "2026-09-16",
+    "observation": "正文403；没有声称完整核验该页运行要求。",
+    "access": "blocked",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S076",
+    "title": "Deribit instrument规格",
+    "url": "https://docs.deribit.com/api-reference/market-data/public-get_instruments",
+    "checked_at": "2026-09-16",
+    "observation": "规格、到期、contract_size与min_trade_amount不同；示例不是当前真实规格。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S077",
+    "title": "Coin Metrics Community",
+    "url": "https://docs.coinmetrics.io/packages/coin-metrics-community-data",
+    "checked_at": "2026-09-16",
+    "observation": "CC BY-NC 4.0社区数据；商业范围另核验。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S078",
+    "title": "Circle披露",
+    "url": "https://www.circle.com/transparency",
+    "checked_at": "2026-09-16",
+    "observation": "发行人供应/储备披露；不是本方案独立审计。",
+    "access": "read",
+    "execution": "not_executed"
+  },
+  {
+    "id": "S079",
+    "title": "Tether披露",
+    "url": "https://tether.to/en/transparency/",
+    "checked_at": "2026-09-16",
+    "observation": "发行人流通/储备页面；保存与分发权另核验。",
+    "access": "read",
+    "execution": "not_executed"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "view_id": "view_synthetic_001",
+  "owner_id": "owner_synthetic",
+  "revision": 1,
+  "title": "合成市场观察",
+  "run_id": "run_synthetic_001",
+  "input_bundle_id": "bundle_synthetic_001",
+  "mode": "pinned",
+  "window": {
+    "start_at": "2026-01-15T00:00:00Z",
+    "end_at": "2026-01-15T01:00:00Z",
+    "closure": "left_closed_right_open"
+  },
+  "primary_instrument_id": "ins_synthetic_btc",
+  "comparison_instruments": [],
+  "active_panels": [
+    "price",
+    "leverage",
+    "evidence"
+  ],
+  "event_version_ids": [],
+  "selected_claim_ids": [
+    "c_fact_1"
+  ],
+  "annotation_revision": 0,
+  "restore_level": "evidence_snapshot",
+  "updated_at": "2026-01-15T01:00:10Z"
+}

@@ -179,6 +179,9 @@ let chartAggWs = null;
 let chartAggWsReconnectTimer = null;
 let chartHeadlinePollTimer = null;
 let chartHeadlineLastWsMsgAt = 0;
+let chartHeadlineLastMarketTime = 0;
+let chartHeadlineRestInFlight = false;
+let chartHeadlineRestGen = 0;
 let chartHeadlineWsStallTimer = null;
 /** 当前 headline WS 会话内是否收到过 aggTrade（与 REST 兜底无关） */
 let chartHeadlineAggSinceOpen = false;
@@ -191,6 +194,14 @@ let chartFocusRefreshHandler = null;
 let chartLastWsStatusAt = 0;
 /** 行情工作台固定为 BTC U 本位永续；产品范围不包含多标的切换 */
 const CHART_SYMBOL = "BTCUSDT";
+const CHART_PRODUCT = {
+  venue: "BINANCE",
+  market: "USDM",
+  symbol: "BTCUSDT",
+  contractType: "PERPETUAL",
+  id: "BINANCE:USDM:BTCUSDT:PERPETUAL",
+};
+const CHART_NATIVE_DATASETS = ["5m", "15m", "1h", "4h", "1d", "1w"];
 let currentInterval = readPersistedInterval();
 let chartLoadGen = 0;
 let chartViewportRangeHandler = null;
@@ -954,7 +965,7 @@ function chartIndicatorPanelHtml() {
           ${num("atrPeriod", s.atr.period, 2, 200)}
         </span>
         <span class="chart-ind-control chart-ind-control--single">
-          <label title="VWAP 按 UTC 自然日重置"><input type="checkbox" data-ind="vwap" ${s.vwap.on ? "checked" : ""} />VWAP</label>
+          <label title="有成交额时用 quote/base VWAP（M06）；否则显示 HLC3 近似（M07），二者不同名"><input type="checkbox" data-ind="vwap" ${s.vwap.on ? "checked" : ""} />VWAP</label>
         </span>
         <span class="chart-ind-control chart-ind-control--single">
           <label title="斐波那契回撤/扩展（基于启发式结构区间）"><input type="checkbox" id="chart-indicator-fib" data-ind="fib" ${s.fib ? "checked" : ""} />Fib</label>
@@ -1016,6 +1027,7 @@ function chartTouchHeadlineFromAgg(inner, wantUpper) {
   const p = parseFloat(inner.p);
   if (!Number.isFinite(p)) return false;
   chartHeadlineLastWsMsgAt = Date.now();
+  if (Number.isFinite(Number(inner.T))) chartHeadlineLastMarketTime = Number(inner.T);
   applyChartPrimaryHeadline(s, p);
   return true;
 }
@@ -1030,40 +1042,53 @@ function stopChartHeadlineRestPoll() {
 async function chartPollHeadlinePriceRest() {
   if (typeof document !== "undefined" && document.hidden) return;
   if (Date.now() - chartHeadlineLastWsMsgAt < CHART_HEADLINE_REST_PAUSE_AFTER_WS_MS) return;
-
+  if (chartHeadlineRestInFlight) return;
   const want = CHART_SYMBOL;
-  const restUrls = [
-    `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${encodeURIComponent(want)}`,
-  ];
-  for (const u of restUrls) {
-    try {
-      const r = await fetch(u, { cache: "no-store", mode: "cors" });
-      if (!r.ok) continue;
-      const j = await r.json();
-      const p = parseFloat(j.price);
-      if (Number.isFinite(p)) {
-        applyChartPrimaryHeadline(want, p);
-        return;
-      }
-    } catch (_) {}
-  }
-  const tickerProxyBase =
-    typeof getBitDataApiBase === "function"
-      ? String(getBitDataApiBase()).replace(/\/$/, "")
-      : typeof window !== "undefined" && window.BIT_DATA_API_BASE
-        ? String(window.BIT_DATA_API_BASE).replace(/\/$/, "")
-        : "";
-  if (tickerProxyBase) {
-    try {
-      const r = await fetch(
-        `${tickerProxyBase}/api/binance/ticker/price?symbol=${encodeURIComponent(want)}`,
-        { cache: "no-store", mode: "cors", credentials: "include" },
-      );
-      if (!r.ok || r.headers.get("X-Data-Source") !== "binance-fapi-ticker-price") return;
-      const j = await r.json();
-      const p = parseFloat(j.price);
-      if (Number.isFinite(p)) applyChartPrimaryHeadline(want, p);
-    } catch (_) {}
+  const gen = ++chartHeadlineRestGen;
+  const startedMarketTime = chartHeadlineLastMarketTime;
+  const startedWsAt = chartHeadlineLastWsMsgAt;
+  chartHeadlineRestInFlight = true;
+  const accept = (price, marketTime) => {
+    if (gen !== chartHeadlineRestGen) return false;
+    if (chartHeadlineLastWsMsgAt > startedWsAt) return false;
+    if (Number.isFinite(marketTime) && Number.isFinite(startedMarketTime) && marketTime < startedMarketTime) return false;
+    applyChartPrimaryHeadline(want, price);
+    if (Number.isFinite(marketTime)) chartHeadlineLastMarketTime = marketTime;
+    return true;
+  };
+  try {
+    const restUrls = [
+      `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${encodeURIComponent(want)}`,
+    ];
+    for (const u of restUrls) {
+      try {
+        const r = await fetch(u, { cache: "no-store", mode: "cors" });
+        if (!r.ok) continue;
+        const j = await r.json();
+        const p = parseFloat(j.price);
+        if (Number.isFinite(p) && accept(p, Number(j.time))) return;
+      } catch (_) {}
+    }
+    const tickerProxyBase =
+      typeof getBitDataApiBase === "function"
+        ? String(getBitDataApiBase()).replace(/\/$/, "")
+        : typeof window !== "undefined" && window.BIT_DATA_API_BASE
+          ? String(window.BIT_DATA_API_BASE).replace(/\/$/, "")
+          : "";
+    if (tickerProxyBase) {
+      try {
+        const r = await fetch(
+          `${tickerProxyBase}/api/binance/ticker/price?symbol=${encodeURIComponent(want)}`,
+          { cache: "no-store", mode: "cors", credentials: "include" },
+        );
+        if (!r.ok || r.headers.get("X-Data-Source") !== "binance-fapi-ticker-price") return;
+        const j = await r.json();
+        const p = parseFloat(j.price);
+        if (Number.isFinite(p)) accept(p, Number(j.time));
+      } catch (_) {}
+    }
+  } finally {
+    chartHeadlineRestInFlight = false;
   }
 }
 
@@ -1108,6 +1133,8 @@ function pageChart() {
           </button>
         </div>
       </div>
+
+      <p class="muted" id="chart-research-evidence"></p>
 
       <section class="chart-primary-panel">
         <div class="chart-primary-head">
@@ -1394,16 +1421,37 @@ function setChartStatusLine(symbol, interval, nBars) {
   const lastSyncText = typeof lastSync === "string"
     ? lastSync
     : (lastSync && lastSync.last_run) ? String(lastSync.last_run) : "";
+  const productLine = `${CHART_PRODUCT.id}`;
+  const requiredBars = interval === "5m" ? 864 : interval === "15m" ? 480 : null;
+  const coverage = requiredBars && typeof BitContracts !== "undefined" && BitContracts.coverageForWindow
+    ? BitContracts.coverageForWindow(nBars, requiredBars)
+    : null;
+  const threeD = CHART_NATIVE_DATASETS.indexOf(interval) < 0 ? `${interval} 无独立规范序列，确认信号未启用` : "";
+  const legacy = meta && !meta.venue ? "旧K线来源未标 venue，不得补标单所" : "";
   const parts = [
     `${symbol} · ${interval}`,
+    productLine,
     `${src} ${d1TimeHint}`,
     wsShort,
+    coverage && coverage.ok === false ? `覆盖 ${coverage.available}/${coverage.required}` : "",
+    threeD,
+    legacy,
     `D1 只读轮询 ${Math.round(CHART_D1_POLL_MS / 1000)}s`,
     backend ? `${backend} Worker` : "",
   ].filter(Boolean);
   const summaryLine = parts.join(" · ");
   statusEl.textContent = summaryLine;
   statusEl.title = summaryLine;
+  const evidenceEl = document.getElementById("chart-research-evidence");
+  if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
+    evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
+      instrumentId: CHART_PRODUCT.id,
+      interval: interval,
+      source: meta && meta.source === "d1" ? "legacy-d1-klines" : "binance-usdm-klines",
+      coverage: coverage && coverage.ok === false ? `覆盖 ${coverage.available}/${coverage.required}` : (nBars ? `${nBars} 根` : null),
+      recoveryGrade: legacy ? "restricted" : null,
+    });
+  }
 
   const base = typeof getBitDataApiBase === "function"
     ? getBitDataApiBase()
@@ -1584,6 +1632,9 @@ function startChartWs(symbol, interval) {
       console.warn("[chart] candleSeries.update 失败", e);
     }
     const vol = parseFloat(k.v);
+    const quote = parseFloat(k.q);
+    const takerBase = parseFloat(k.V);
+    const takerQuote = parseFloat(k.Q);
     const row = {
       t,
       o,
@@ -1591,6 +1642,12 @@ function startChartWs(symbol, interval) {
       l,
       c,
       v: Number.isFinite(vol) ? vol : 0,
+      q: Number.isFinite(quote) ? quote : null,
+      V: Number.isFinite(takerBase) ? takerBase : null,
+      Q: Number.isFinite(takerQuote) ? takerQuote : null,
+      x: k.x === true,
+      eventTime: Number(msg.E) || Number(k.T) || t,
+      finality: k.x === true ? "exchange_confirmed" : "forming",
     };
     const idx = chartOhlcv.findIndex((r) => r.t === t);
     if (idx >= 0) chartOhlcv[idx] = row;
@@ -1649,6 +1706,12 @@ function normalizeKlineRows(rows) {
       l: parseFloat(d.l),
       c: parseFloat(d.c),
       v: Number(d.v) || 0,
+      q: d.q == null && d.quoteVolume == null ? null : Number(d.q != null ? d.q : d.quoteVolume),
+      V: d.V == null && d.takerBuyBase == null ? null : Number(d.V != null ? d.V : d.takerBuyBase),
+      x: d.x === true,
+      venue: d.venue || null,
+      source: d.source || (d.venue ? d.venue : null),
+      finality: d.finality || (d.x === true ? "exchange_confirmed" : d.x === false ? "forming" : "unknown"),
     }))
     .filter((d) =>
       Number.isFinite(d.t) &&

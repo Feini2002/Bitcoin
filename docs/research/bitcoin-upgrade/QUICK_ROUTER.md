@@ -2,7 +2,7 @@
 
 [资料总纲](README.md) · [完整主题表](READING_ROUTES.md) · [仓库对应表](REPOSITORY_MAP.md)
 
-日常修改从这里或本地查询工具开始。总纲、合订本和整份机器目录不用每次加载。先选一个功能路由，读取相关代码与少量资料片段；出现真实依赖时再沿关联路由扩展。
+**第二批执行入口（2026-09-17）：** [EXECUTION_MASTER.md](batch2-execution/EXECUTION_MASTER.md)。第一批归档仍在 [sources/2026-09-16](sources/2026-09-16/README.md)，本轮不重排。
 
 ## 最短使用路径
 

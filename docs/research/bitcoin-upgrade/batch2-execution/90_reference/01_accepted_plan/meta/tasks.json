@@ -1,0 +1,1244 @@
+[
+  {
+    "id": "WP-001",
+    "title": "建立工作区绑定与业务变更边界",
+    "phase": "R0",
+    "depends_on": [],
+    "optional_dependencies": [],
+    "owner": "协调/仓库核验",
+    "affected": "既有：README.md、package.json、docs/governance.md、docs/architecture/repository-layout.md、config/pages-assets.json及实际Git工作区。拟新增：放入既有文档目录的研究域绑定表；路径由治理owner确认。",
+    "changes": "只读记录HEAD、未提交/未跟踪文件、相关配置和测试入口；对本方案引用的模块确认实际存在、职责与变更owner。分别登记行情Worker、yuqing Worker、独立snapshot的本地配置和“远程未知”状态。将拟新增目录映射到真实布局，禁止创建第二套治理总纲。",
+    "migration": "不改业务表，不清空工作区。基线快照仅含允许的代码/配置摘要，不复制密钥和生产数据库。旧事实报告保留为证据，不因后续改动覆盖。",
+    "acceptance": "逐项找到报告中的真实文件或记录已移动映射；确认news/events.js与news-analysis/news.js绑定；为每项待改文件登记当前内容摘要。输出已有/需改/未确认三类结果，不能只给一个架构图。",
+    "rollback": "发现并发修改时暂停该文件补丁，核对新基线；不git reset、不覆盖未知文件。真实结构与建议不符时调整路径绑定而非强行重排仓库。",
+    "operations_boundary": "只读核验与本地文档写入；远程状态查询、账号和部署不包含在默认授权内。",
+    "preimplementation_checks": "实际repo根、当前分支、配置绑定、认证方式、哪些治理任务仍在并发进行。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-002",
+    "title": "建立逐用途的来源与模型服务权利登记",
+    "phase": "R1",
+    "depends_on": [
+      "WP-001"
+    ],
+    "optional_dependencies": [],
+    "owner": "来源政策",
+    "affected": "既有：cloudflare/yuqing/yuqing-worker.js、yuqing-facts.js、行情Worker的来源配置、设置模块。拟新增：source-policy注册与版本读取模块，引用卷10 SourcePolicy。",
+    "changes": "将代码许可、原始/衍生存储、私有/公共展示、模型输入、导出、保留期限分列。核对真实Gemini调用模式、付费状态和Google Grounding用途；未知不填allowed。确定允许归档来源和仅即时展示来源，模型工具按政策过滤。",
+    "migration": "给现有来源附legacy_policy_unknown或已确认版本，不对历史材料批量扩大保留期。政策数据需要实际证据和核验日期，不能用LLM自动生成授权。",
+    "acceptance": "合成allowed/denied/unknown三种来源，验证相同内容在页面、模型和导出路径得到不同正确决策；policy撤销后缓存不继续泄露。保留允许的模板功能。",
+    "rollback": "权利无法确认时禁用相应用途而非整个市场页面；不通过更换爬虫绕过限制。保留原始策略审阅记录。",
+    "operations_boundary": "核验文档可只读完成；合同、付费账号、外部服务配置和实际数据外发需另行确认。",
+    "preimplementation_checks": "真实供应商合同、API项目计费状态、是否对他人提供网站、历史Grounding内容怎样留存。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-003",
+    "title": "移除固定分数与缺失值制造的虚假确定性",
+    "phase": "R0",
+    "depends_on": [
+      "WP-001",
+      "WP-006"
+    ],
+    "optional_dependencies": [],
+    "owner": "分析语义",
+    "affected": "既有：cloudflare/yuqing/shijian/temperature.js、fenxi/sentiment-logic.js、js/pages/events.js、js/pages/news.js及对应输出契约测试。",
+    "changes": "将FNG缺失回退50改为null+missing；真实50仍展示来源指数。62/58/46与72/54不再作为概率或校准置信度展示，转换为来源可用性/规则状态或直接退出。固定机会优先级改为有条件的研究检查项；清理未启用ETF/期权被写成已确认的文案。",
+    "migration": "新输出使用新schema/方法版本；旧报告保留原分数并标legacy heuristic，不重写历史。检查所有消费者，避免移除字段导致NaN或默认重新补50。",
+    "acceptance": "缺失FNG、真实50、过期50分别有固定样本；验证本函数的中性区间逻辑不再被解释为预测能力。页面、Markdown导出和模型输入都不出现无来源的百分比置信度；其他模块不被误判为始终中性。",
+    "rollback": "出现兼容回归可临时保留deprecated字段但必须标不适用；不能恢复误导概率文案。旧页面回退也要通过缺失处理测试。",
+    "operations_boundary": "本地代码和契约变更；不需要新服务或付费数据，生产发布另行安排。",
+    "preimplementation_checks": "分数字段是否被颜色、排序、图表或其他报告计算消费；真实FNG来源和缓存过期定义。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-004",
+    "title": "收敛BTC导航与独立可选资讯频道",
+    "phase": "R0",
+    "depends_on": [
+      "WP-001"
+    ],
+    "optional_dependencies": [],
+    "owner": "产品/前端",
+    "affected": "既有：js/config.js、js/features.js、js/nav.js、js/placeholders.js、shijian/index.js、js/pages/events.js。",
+    "changes": "按市场变化、重要事件、条件判断、观点复盘组织默认入口；AI情报与GitHub工具保留可选频道但默认不进入BTC日报/上下文。demo/planned继续诚实标注，不要求实现26路由。保留已有connected功能的入口和历史链接。",
+    "migration": "迁移导航偏好时保留用户已选择频道，首次新默认需明确说明；旧路由别名保持可解析。现有治理owner负责唯一features状态源，业务任务不复制第二张状态表。",
+    "acceptance": "默认BTC报告请求不包含无关AI/GitHub模块；用户显式打开可选频道仍可访问。移动导航/历史深链/设置不回归；菜单状态与真实能力一致。",
+    "rollback": "导航可恢复旧布局但继续隔离默认模型上下文；不删除历史路由或把demo按钮接到虚假数据。",
+    "operations_boundary": "本地产品/配置修改；不自动触发新的RSS、模型调用或外发通知。",
+    "preimplementation_checks": "用户现有导航存储方式、是否已有频道开关、治理正在改动哪些导航文件。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-005",
+    "title": "建立价格目录、调用清单与测量基线",
+    "phase": "R1",
+    "depends_on": [
+      "WP-001"
+    ],
+    "optional_dependencies": [],
+    "owner": "运行成本",
+    "affected": "既有：yuqing-worker.js模型配置/费用估算、设置模块、现有日志。拟新增：版本化price catalog及任务测量记录，不放API密钥。",
+    "changes": "枚举所有真实模型/搜索入口与计费维度，区分估算与最终用量；记录model ID、输入输出/缓存/思考token、搜索计费单位、价格日期。以当前可靠官方资料或实际合同核实，不沿用固定测试单价。费用未知时标unknown，预算数值保持用户未配置。",
+    "migration": "旧成本估算保留其价格版本或legacy_price_unknown，不按今天价格覆盖历史账单。新增指标不包含完整私有prompt。",
+    "acceptance": "用合成价格目录检验不同模型/搜索计费分支、未知价格和零调用模板；所有现有调用入口有登记。输出阶段耗时测量方案，但无运行数据不填性能改善。",
+    "rollback": "价格无法确认时禁用严格货币承诺，保留确定性模板；新估算有问题时展示unknown不回退到假精确数字。",
+    "operations_boundary": "默认只读与合成计算；真实账单、模型调用、预算批准均需后续明确。",
+    "preimplementation_checks": "实际model配置、计费项目、搜索工具版本、费用估算是否分散在多个入口。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-006",
+    "title": "建立金融语义黄金样本与契约测试底座",
+    "phase": "R0",
+    "depends_on": [
+      "WP-001"
+    ],
+    "optional_dependencies": [],
+    "owner": "质量/测试",
+    "affected": "既有：package.json、scripts/run-bounded.cjs、scripts/verify-*.cjs及已有足迹/强平/快照测试。拟新增：研究域fixture目录，按实际测试布局命名。",
+    "changes": "接入本包合成案例并补现有函数的输入输出样本；保留已通过的方向映射测试，新增priceType、时间、空值、来源回退与旧报告兼容。把源码字符串检查与行为断言分开。明确每个fixture的synthetic标签和expected依据。",
+    "migration": "不修改生产数据；历史日志161/96/15是旧PASS标记，只作为基线记录。测试新增不伪称已运行真实模型、浏览器或D1。",
+    "acceptance": "测试失败信息能定位字段/方法，而不是只有assert false。已知反例被拒绝，合法零值与缺失可区分；同输入重算在声明精度内一致。运行命令用既有有界启动器。",
+    "rollback": "如果测试引入环境问题，隔离新套件但保留样本；不删除失败断言使构建变绿。先确认实现错误还是新契约不合理。",
+    "operations_boundary": "允许的后续本地离线测试；安装新依赖、外网和生产副本提取不作为默认步骤。",
+    "preimplementation_checks": "实际测试组织、Node版本、哪些测试只查字符串、哪些已有真实数值样本。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-007",
+    "title": "抽取单一纯方法与契约边界",
+    "phase": "R1",
+    "depends_on": [
+      "WP-001",
+      "WP-006"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究域基础",
+    "affected": "既有：js/chart/、js/orderflow/、marketSnapshotProgram.mjs、chartStructureSnapshot.mjs、行情Worker及yuqing消费者。拟新增：shared/research或治理批准的等价目录。",
+    "changes": "只抽取当前研究路径需要的纯计算、schema与方法注册；明确server-only采集和browser-only渲染依赖。保留已有可靠实现并通过适配调用，不复制第三份指标。为方法添加参数、单位、输入要求与版本。",
+    "migration": "不改数据含义即尽量保持旧输出，语义修正提升方法版本；旧consumer通过兼容适配接入。目录变更由WP-001绑定，避免与snapshot目录治理冲突。",
+    "acceptance": "相同黄金样本通过浏览器计算适配和server方法产生一致指标；纯模块不导入DOM、secrets或网络客户端。主图现有指标与构建产物不回归。",
+    "rollback": "无法安全共享某段代码时保留旧实现并登记差异测试，不强行全文件重构。单个方法可独立回退，已修正语义不变。",
+    "operations_boundary": "本地代码/构建变更；不新建运行环境或采集服务。",
+    "preimplementation_checks": "实际模块格式、循环依赖、共享函数副作用、Vite/Pages打包边界。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-008",
+    "title": "给新行情写入增加来源和有效期合约规格",
+    "phase": "R1",
+    "depends_on": [
+      "WP-007",
+      "WP-002"
+    ],
+    "optional_dependencies": [],
+    "owner": "市场数据",
+    "affected": "既有：cloudflare/binance-klines-worker.js、cloudflare/schema.sql、js/data-engine.js、相关源适配。拟新增：instrument/spec与selection segment映射。",
+    "changes": "区分物理venue series与BTC显示主序列，记录来源、市场类型、symbol、单位、合约规格版本和回退段。新写入不得用Bybit值覆盖同名Binance历史后不留来源。规格无法取得时明确unknown并限制依赖方法。",
+    "migration": "依据真实schema选择附加列/侧表/新物理表；包内不虚构既有表结构。先新写生效，旧行留待WP-009，不进行猜测回填。",
+    "acceptance": "模拟主源正常、回退、恢复和不同报价币；API、页面、快照、导出都保留相同source段。跨未知来源窗口的方法拒绝或明确composite。",
+    "rollback": "停止新写入路径后可保留旧读适配，但新source元数据不删除。若无法唯一关联侧表，改明确新表而非产生错误主键连接。",
+    "operations_boundary": "可能涉及数据迁移与真实来源调用；先离线/隔离验证，生产写入和源权限后续确认。",
+    "preimplementation_checks": "当前主键、upsert路径、所有回退点、spec取得方式和现有元数据表。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-009",
+    "title": "诚实迁移旧K线与衍生品来源标记",
+    "phase": "R2",
+    "depends_on": [
+      "WP-008"
+    ],
+    "optional_dependencies": [],
+    "owner": "历史兼容",
+    "affected": "既有：行情schema、K线写入/读取、衍生品source元数据与历史导出。拟新增：迁移清单和legacy_unknown解释。",
+    "changes": "逐类判断旧来源可否从明确记录重建；有证据才回填venue，否则legacy_unknown。funding_binance/oi_binance旧槽按真实source元数据映射到语义key，不用槽名猜来源。输出未知比例与时间范围。",
+    "migration": "先dry-run清单与受影响行数；保留原值/旧键映射，迁移幂等且可分区重跑。已删除的来源日志不能用当前默认配置替代。",
+    "acceptance": "二次执行不重复或改变已确认记录；未知仍未知；旧查询结果数值不被误改；新单源研究不会悄悄纳入unknown段。",
+    "rollback": "根据迁移版本切回旧reader而非抹去新增元数据；发现错误回填时撤销该批映射并记录原因，禁止修改原始价格使其“对齐”。",
+    "operations_boundary": "历史数据写入需明确授权；无生产副本时只交dry-run规则和合成验证。",
+    "preimplementation_checks": "旧同步日志实际保留程度、行与source记录能否唯一连接、消费者对旧metric key的依赖。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-010",
+    "title": "完善强平价格/数量语义而非重写正确方向",
+    "phase": "R1",
+    "depends_on": [
+      "WP-007",
+      "WP-006",
+      "WP-002"
+    ],
+    "optional_dependencies": [],
+    "owner": "市场微观结构",
+    "affected": "既有：binance-klines-worker.js强平归一化/5m桶、js/heatmap/、快照与报告消费、verify相关测试。",
+    "changes": "新增price_type、quantity_type、notional_method、采样说明与raw字段定位；保留Binance SELL→long、Bybit Sell→short的正确映射。区分平均执行价/委托价/破产价；累积z只有正确事件身份时才差分，不将所有快照相加。",
+    "migration": "新版聚合带语义版本，旧amount标legacy_unknown；不重算无原始证据的历史。多来源混合总值提供分项与比较限制。",
+    "acceptance": "覆盖ap缺失、p回退、z/l/q变化、重复/乱序、Bybit p×v、无唯一event ID；验证方向不回归、金额不伪称同一口径、缺失不补精确值。",
+    "rollback": "任一来源语义未确认，隔离其合成总额，保留带来源原始观测；新版桶可停止写入，旧桶只读标旧口径。",
+    "operations_boundary": "代码/数据结构调整；线上流采集及现有数据回算需后续授权，不新加交易所账户。",
+    "preimplementation_checks": "目前raw字段是否仍可取得、事件标识是否稳定、所有notional消费者和累计数量处理。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-011",
+    "title": "强化既有足迹桶完整性和可解释计算",
+    "phase": "R1",
+    "depends_on": [
+      "WP-007",
+      "WP-006"
+    ],
+    "optional_dependencies": [],
+    "owner": "订单流方法",
+    "affected": "既有：js/orderflow/footprint-engine.js、js/pages/orderflow.js、行情Worker足迹存储与schema、现有回归。",
+    "changes": "明确aggTrade来源、价格桶锚点/宽度、数量单位、窗口、累计起点、已知缺口与last ID含义。统一图表/快照对POC/VA等方法约定；显示输入仅聚合桶时的复算范围。不把当前真实aggTrade足迹改成K线方向估计。",
+    "migration": "给新桶加参数/方法/来源版本；旧桶保留原值并标缺失元数据。原始逐笔不存在则不生成虚拟记录。",
+    "acceptance": "同范围换显示周期总量守恒；买卖方向与黄金样本一致；缺口不被跨桶合并隐藏；CVD起点变化明确；相同POC并列规则可重现。",
+    "rollback": "共享方法不兼容时保留旧渲染并显示method版本，暂停新派生结论；不用重新下载所有历史来掩盖输入差异。",
+    "operations_boundary": "本地数值与存储改动；回补远程数据需明确来源许可和限流预算。",
+    "preimplementation_checks": "实际aggTrade渠道是现货/永续哪种、现有桶参数、历史缺口信号、前端与Worker重复计算范围。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-012",
+    "title": "统一资金费、OI、比值和基差定义",
+    "phase": "R1",
+    "depends_on": [
+      "WP-008",
+      "WP-006"
+    ],
+    "optional_dependencies": [],
+    "owner": "衍生品方法",
+    "affected": "既有：binance-klines-worker.js指标清单/摘要、衍生品页面、marketSnapshotProgram.mjs与报告上下文。",
+    "changes": "将预测/已结算funding、结算间隔、OI存量单位、比值分母、basis基准/期限分列；按来源和spec换算，禁止ΔOI直接叫净资金流。相关指标归入family防止重复投票。回退源变化保留为显式元数据。",
+    "migration": "方法与输出schema版本升级；旧槽继续兼容读取，但新研究使用语义key+source。基础数据不足的计算返回null+reason而非固定分数。",
+    "acceptance": "不同funding间隔、反向/线性单位、零分母、过期报价、跨所回退、缺现货基准全部覆盖；页面/导出/LLM对同一数值含义一致。",
+    "rollback": "只停有争议的归一化/年化或合成项，保留可靠原字段展示；不把不同口径重新塞回一个总多空分。",
+    "operations_boundary": "计算与schema改动；增加历史或新源需另明确费用/授权。",
+    "preimplementation_checks": "各指标来源端点、当前时间戳代表期初/期末/结算、消费者默认单位。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-013",
+    "title": "把现有两类快照路径接入统一捕获边界",
+    "phase": "R1",
+    "depends_on": [
+      "WP-007",
+      "WP-008",
+      "WP-010",
+      "WP-011",
+      "WP-012"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究捕获",
+    "affected": "既有：cloudflare/snapshot/marketSnapshotProgram.mjs、chartStructureSnapshot.mjs、market-snapshot-worker.mjs、yuqing-worker.js市场上下文入口与行情摘要API。",
+    "changes": "复用四页确定性逻辑并选定一个capture owner；同时记录market cutoff、capture跨度和实际知识截止。禁止yuqing在已选run之外临时并行拉latest补成另一套快照。独立snapshot是否部署决定复用纯模块还是服务API，不再新建第三套。",
+    "migration": "先影子产出新capture而保持旧报告链；保存输入能力清单和缺失原因。旧snapshot字段作为legacy元数据，不认定为完整冻结。",
+    "acceptance": "模拟四源不同延迟/一源失败/用户换窗口；得到明确capture时间和部分质量，不宣称瞬时原子快照。同run各消费者使用同capture，未来latest不改变它。",
+    "rollback": "新capture不成立时回退旧报告并标legacy context，不把它升级为exact replay；停止新依赖而保留可靠页数据。",
+    "operations_boundary": "服务绑定/可能API调用需后续确认；不擅自部署独立snapshot或改远程Cron。",
+    "preimplementation_checks": "独立服务实际部署与数据库绑定、纯函数可复用边界、各数据读取是否支持截止窗口。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-014",
+    "title": "实现内容摘要与规范化身份",
+    "phase": "R1",
+    "depends_on": [
+      "WP-006",
+      "WP-007"
+    ],
+    "optional_dependencies": [],
+    "owner": "契约/存储",
+    "affected": "既有：marketSnapshotProgram.mjs sourceFingerprint与版本字段。拟新增：canonicalization/digest模块与fixture。",
+    "changes": "区分raw字节hash、标准化输入hash、bundle hash；包含实际输入内容、方法参数/版本、source policy和时间模式，不只拼最新时间/行数。明确数字字符串、数组顺序、Unicode和排除自身digest规则。",
+    "migration": "保留旧sourceFingerprint，不以新digest反写旧历史。新hash携带canonicalization版本，变更算法后不可直接复用旧缓存索引。",
+    "acceptance": "早期行修订但latest时间不变时hash变化；只改变对象键顺序hash不变；改变方法参数/来源/单位hash变化；同内容不同owner不能越权查询。",
+    "rollback": "算法有bug时提升版本并重算可得输入，旧产物保留legacy标记；不把新旧hash相同当内容一致保证。",
+    "operations_boundary": "仅本地算法和内容索引；不需要新服务，哈希不授权额外存储。",
+    "preimplementation_checks": "当前JSON序列化、价格小数处理、缓存指纹消费位置。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-015",
+    "title": "实现最小研究域存储与artifact清单",
+    "phase": "R1",
+    "depends_on": [
+      "WP-001",
+      "WP-002",
+      "WP-014"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究存储",
+    "affected": "既有：cloudflare/yuqing/存储代码、cloudflare/snapshot/schema.sql、migrations/yuqing/。拟新增：卷10研究表的R1子集与artifact适配；不直接运行参考SQL。",
+    "changes": "确认实际D1 owner后实现run/bundle/evidence/report/modelstep/budget/幂等必要表，元数据与小payload优先既有D1；大内容对象按需要增加受控存储。新表、owner鉴权和内容policy一起设计，不先创建完整29表。",
+    "migration": "新增迁移编号由真实历史确定；先空库/合法副本dry-run，保留旧表。对象先写、manifest后提交，记录未引用对象，避免跨存储伪事务。",
+    "acceptance": "约束、owner、digest、引用可读性与事务失败测试通过；新旧报告可并存；对象写成功DB失败不会生成published run；不因表存在就宣称远程迁移已应用。",
+    "rollback": "停v2写、保留旧reader和新表备查；不drop数据。孤儿对象按引用/权限策略清理，不删除被其他run引用内容。",
+    "operations_boundary": "建表/迁移/对象存储可能产生费用及生产写入，需实施授权；本阶段可以仅做隔离验证。",
+    "preimplementation_checks": "真实数据库大小/绑定/迁移编号、对象存储是否已有、认证owner来源。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-016",
+    "title": "封存输入bundle与有界run生命周期",
+    "phase": "R1",
+    "depends_on": [
+      "WP-013",
+      "WP-014",
+      "WP-015"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究执行",
+    "affected": "既有：yuqing任务/流式状态、snapshot run存取。拟新增：seal、lease epoch、idempotency与研究状态适配。",
+    "changes": "实现created/capturing/sealed/analyzing/validating及终态；sealed输入不可变，补证据生成child。root run统一预算/时间，迟到旧epoch不能提交。request_bound明确中断，durable必须实际执行器启用才允许。",
+    "migration": "旧任务ID通过兼容映射，不把历史输出快照冒充已封存原输入。新run记录config版本和必要capabilities，不因options未启用阻塞基础简报。",
+    "acceptance": "重复请求、同key不同body、capture失败、旧worker迟到、取消/断线、child bundle和历史时间模式均有样本；发布只引用已sealed输入。",
+    "rollback": "状态机异常停止新任务并保留诊断；可继续旧只读报告和模板。不得借waitUntil宣称关闭页面后必定完成。",
+    "operations_boundary": "新增任务行为/可能模型外部调用另有开关；持久执行器不随本任务自动部署。",
+    "preimplementation_checks": "现有请求生命周期、任务存储和超时机制、远程调度/lease可实现方式。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-017",
+    "title": "将现有Gemini适配改为固定bundle消费",
+    "phase": "R1",
+    "depends_on": [
+      "WP-016"
+    ],
+    "optional_dependencies": [],
+    "owner": "报告适配",
+    "affected": "既有：yuqing-worker.js Gemini REST/流式调用、事实池补充与market context构造。",
+    "changes": "保留provider适配、超时和用量解析，通过一个输入构造器引用sealed bundle。移除综合阶段任意latest补读；允许的补研究必须先生成新child。记录每次实际model输入digest和prompt/tool配置，不因有market_snapshot_json就认为全过程已固定。",
+    "migration": "旧入口可指向兼容adapter；历史source_refs/grounding不自动进入新archive。新旧model payload可影子对照，不实际调用模型也能校验字段。",
+    "acceptance": "新报告综合输入只来自指定bundle；参数/窗口/能力缺失在日志与输出一致；已有云端成功/失败模拟回归保留；本机CLI不被恢复。",
+    "rollback": "新payload不兼容时退回模板或旧明确标legacy链，禁止混用两个run上下文。保留当前可用provider无需换SDK。",
+    "operations_boundary": "代码可离线验证；真实模型调用/数据外发取决于policy与预算批准。",
+    "preimplementation_checks": "现有模型支持的结构化输出子集、stream解析、历史CLI兼容残留和各调用入口。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-018",
+    "title": "实现解释性市场状态向量",
+    "phase": "R1",
+    "depends_on": [
+      "WP-007",
+      "WP-013"
+    ],
+    "optional_dependencies": [],
+    "owner": "分析方法",
+    "affected": "既有：图表指标、行情摘要、marketSnapshotProgram.mjs、sentiment-logic.js。拟新增：M001—M021所需核心方法注册与state vector。",
+    "changes": "用价格/波动/成交/杠杆/可见清算各family独立状态替代单一总分；方法输出值、单位、参考窗口、样本量和质量。初期只启用现有可靠输入可支持的方法，参数为可审阅规则，不当概率。",
+    "migration": "新state schema与legacy分数并存只用于迁移展示；不使用旧62/58/46训练校准器。方法改变追加版本，旧报告保持原解释。",
+    "acceptance": "上涨低成交、OI升/降、funding缺失、短样本、高波动和混源样本产生合理限定；不以同family多个指标投票增加confidence。",
+    "rollback": "某方法无法稳定解释或输入不足则关闭该method，其他family仍可用；保留数值表而非用模型补综合分。",
+    "operations_boundary": "确定性计算，无默认新数据/模型费用；真实计算性能需后续测量。",
+    "preimplementation_checks": "各当前指标实现差异、可用lookback长度、预热规则、用户主要研究周期。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-019",
+    "title": "实现重要变化与证据分歧检测",
+    "phase": "R1",
+    "depends_on": [
+      "WP-018",
+      "WP-016"
+    ],
+    "optional_dependencies": [],
+    "owner": "分析方法",
+    "affected": "既有：snapshot存储和市场摘要消费。拟新增：变化比较器、reason codes、上次可比run选择。",
+    "changes": "只在同method/source/time convention下比较新旧状态；输出发生何变化、何证据相反、比较是否成立。无明显变化允许no_material_change。引入新数据/修订导致的变化与真正市场变化分开标记。",
+    "migration": "记录baseline_run_id和比较规则版本；旧run无法比对时不填假的before值。数据源切换产生source_change原因，不自动写成市场跳变。",
+    "acceptance": "平静/波动/冲突/源切换/历史修订/样本不足分别验证；不重复推同一无更新事件；每个变化能定位前后evidence。",
+    "rollback": "比较器阈值不合适时退回事实表并收集样本，停相应变化提醒；不更换数据来维持“每天都有变化”。",
+    "operations_boundary": "只读比较与小结果存储，无必需新服务；通知与模型另任务。",
+    "preimplementation_checks": "旧快照间可比性、当前频率、哪些变化真正会改变用户研究问题。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-020",
+    "title": "形成条件判断与反证卡",
+    "phase": "R1",
+    "depends_on": [
+      "WP-019"
+    ],
+    "optional_dependencies": [],
+    "owner": "产品/分析",
+    "affected": "既有：sentiment-logic.js机会/风险输出、js/pages/news.js。拟新增：condition case模型和规则。",
+    "changes": "将固定顺势确认/等待复核条目改为由证据触发的情景：已知事实、解释、成立条件、反证、下一检查及失效。允许证据不足或暂不判断；不接账户风险预算，不自动给交易指令。",
+    "migration": "旧机会条目保留legacy只读；新卡引用method/evidence/run，不使用76/52/66作为未经说明优先分。",
+    "acceptance": "每个condition都有可观察条件或明确人工问题；不存在ETF/期权输入时不出现对应确认文案；同一证据冲突保留两种解释而非平均掉。",
+    "rollback": "用户难理解或条件不可验证时缩为事实+待查问题，不用增加文本长度补足。",
+    "operations_boundary": "本地规则/展示；不新增模型或账户权限。",
+    "preimplementation_checks": "哪些现有输出字段被前端排序、是否存在隐式买卖/仓位消费者。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-021",
+    "title": "建立独立注册来源与可持续发现入口",
+    "phase": "R2",
+    "depends_on": [
+      "WP-002",
+      "WP-007"
+    ],
+    "optional_dependencies": [],
+    "owner": "内容来源",
+    "affected": "既有：yuqing-facts.js、shijian来源/搜索配置。拟新增：source registry、fetch adapter和来源健康元数据。",
+    "changes": "优先官方日历、公告、许可允许的RSS/API；为每源登记覆盖、语言、发布日期精度、抓取方式、根来源和政策。新闻发现不依赖Grounding结果自动提取链接建库。RSSHub/Trafilatura等仅在特定源确有收益时选择。",
+    "migration": "旧事实来源导入时保留unknown policy与原fetched时间；不推断最早公开时间。可选AI/GitHub来源与BTC核心集合分离。",
+    "acceptance": "源停更、限流、缺发布日期、重定向和过大响应均有可解释失败；未授权源不进入归档/模型；禁用一个源不使全部事件页失败。",
+    "rollback": "不可持续或条款不满足的源移出核心覆盖并记录缺口；不使用未经许可镜像冒充原始源。",
+    "operations_boundary": "新增外部读取、可选服务或依赖需确认；默认只使用允许的样本和手工注册。",
+    "preimplementation_checks": "当前源清单、实际访问地区、授权RSS/API、已有fallback是否重复抓同源。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-022",
+    "title": "实现文章标准化与可逆内容版本",
+    "phase": "R2",
+    "depends_on": [
+      "WP-021",
+      "WP-006"
+    ],
+    "optional_dependencies": [],
+    "owner": "内容摄取",
+    "affected": "既有：yuqing-facts.js、事实池存储。拟新增：canonical URL、content version与source timing适配。",
+    "changes": "清理跟踪参数但不删除影响正文的URL参数；区分article ID与version ID，保存标题/正文摘要hash和提取方法。保留published、first_seen、fetched及精度；无时间不填当前为事件发生。受限全文只存允许的定位。",
+    "migration": "旧文章可获得内容才算hash，不制造不存在的原文；旧fetched不改成published。变化正文生成新version并连接supersedes。",
+    "acceptance": "转载、URL参数、标题相同正文变更、新闻更正、缺正文、时区异常样本可稳定处理；相同版本重复抓取不产生无意义新事实。",
+    "rollback": "提取器变更失败时回退允许的标题/元数据，不吞整条来源；保留raw定位便于以后合法重解析。",
+    "operations_boundary": "正文抓取与存储受policy约束；Python提取服务不是默认依赖，安装需批准。",
+    "preimplementation_checks": "当前事实池字段、存储清理、URL处理和extractor行为。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-023",
+    "title": "实现事件归并与来源独立性",
+    "phase": "R2",
+    "depends_on": [
+      "WP-022"
+    ],
+    "optional_dependencies": [],
+    "owner": "事件研究",
+    "affected": "既有：事实池与日报模块。拟新增：article→event关联、origin groups、merge/split审计。",
+    "changes": "先精确URL/hash去重，再用实体/时间/事件类型和近重复候选判断；MinHash/embedding不是最终真值。根来源分组使多媒体转载同一公告只算一根证据。相似但不同日期事件不能误并；合并可撤销。",
+    "migration": "事件版本追加，旧article refs继续存在；建立alias和拆分记录，不批量删除被判断重复的原数据而让旧报告失去引用。",
+    "acceptance": "同公告十次转载只一张无新信息卡；更正/否认作为新版本；不同会议相似标题不合并；错误合并后能拆分且旧run仍复现当时集合。",
+    "rollback": "语义方法误报高则退回高精度规则并扩大人工审核队列，不用提高阈值掩盖重要更新遗漏。",
+    "operations_boundary": "确定性基线无新服务；选择datasketch/embedding会新增环境或模型费用，需对照后确认。",
+    "preimplementation_checks": "当前source refs能否追到共同原文、中文分词与多语实体映射、实际日文章量。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-024",
+    "title": "建立主张、冲突、更正与证据关系",
+    "phase": "R2",
+    "depends_on": [
+      "WP-023",
+      "WP-015"
+    ],
+    "optional_dependencies": [],
+    "owner": "事件/证据",
+    "affected": "既有：事实池与source refs。拟新增：claim_version、event_version/evidence关系，使用卷10模型。",
+    "changes": "将来源断言、直接观察、程序事实、解释和预测分开；保留asserted/denied/corrected及相互冲突链接。文章新版本不能覆盖旧claim；模型提取有不确定时保留unresolved，不能自动升级为confirmed。",
+    "migration": "旧事实如果只有摘要标source_assertion/legacy provenance，不反推原文已支持每个句子。所有历史报告继续指向原版本。",
+    "acceptance": "同源更正、两源相反数字、引用仅支持一半主张、无独立根源等样本被正确表达；历史known截止不会看到后来更正，当前页能显示更正提示。",
+    "rollback": "提取难度高时先人工/规则登记核心claim，不让模型自由生成事实池；停自动确认不影响原始来源列表。",
+    "operations_boundary": "数据库新增与可能提取模型调用；真实外发需policy/budget。",
+    "preimplementation_checks": "事实池当前是否混存新闻摘要和模型结论、claim粒度与证据定位可用性。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-025",
+    "title": "实现相关性、新颖性与低噪音队列",
+    "phase": "R2",
+    "depends_on": [
+      "WP-024"
+    ],
+    "optional_dependencies": [],
+    "owner": "产品/内容",
+    "affected": "既有：shijian各模块、events.js、news.js上下文选择。拟新增：routing/ranking reason和suppressed audit。",
+    "changes": "按direct BTC/有证据传导/watchlist/unrelated/unknown路由，priority使用解释性等级而非概率分；新事件/实质更新/仅确认/重复分开。核心简报只取会改变当前问题的内容，保留被抑制队列用于漏报抽检。",
+    "migration": "既有AI/GitHub内容留可选频道，不删除用户历史；旧热度分不迁为市场重要性分。保存筛选规则版本便于复盘。",
+    "acceptance": "无关热点不进BTC模型输入；重要更正不过滤；无新信息允许不生成新摘要。同时测重复率和关键遗漏，不能靠全部隐藏获得好指标。",
+    "rollback": "漏重要事件时回退到更保守的可审核队列，保持reason可见；不恢复全量无筛选上下文。",
+    "operations_boundary": "本地规则/可选模型，模型仅对规则不确定样本并受总预算。",
+    "preimplementation_checks": "用户真实关注范围、当前每日信息量、已有模块对固定条目数的假设。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-026",
+    "title": "建立官方催化剂日历",
+    "phase": "R2",
+    "depends_on": [
+      "WP-021",
+      "WP-015"
+    ],
+    "optional_dependencies": [],
+    "owner": "宏观/事件",
+    "affected": "既有：fenxi/sentiment-logic.js日历关键词提取及planned催化剂配置。拟新增：official schedule version适配。",
+    "changes": "将已确认发布时间与新闻提及分离；FOMC/CPI等优先官方日历，保留时区/DST、改期/取消与来源日期。标题时间、fetchedAt或now不得写入正式未来事件scheduled_at。未知日期显示待确认。",
+    "migration": "旧关键词日历保留为legacy mentions，不自动迁成官方排期。新日程修订追加版本，历史研究按known cutoff选择。",
+    "acceptance": "日期未知、时区切换、延期、提前发布、公告更正、新闻旧文重发各样本正确；时间线不把文章发布时点当未来催化剂。",
+    "rollback": "官方源不可用时显示上次排期和stale，停止时间精确提醒；不由模型推算具体日期填空。",
+    "operations_boundary": "官方公开读取仍核terms/频率；真实自动采集与通知另确认。",
+    "preimplementation_checks": "当前日历条目消费者、是否已有可复用日期解析、展示时区配置。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-027",
+    "title": "加入有限宏观vintage与跨资产时间对齐",
+    "phase": "R2",
+    "depends_on": [
+      "WP-021",
+      "WP-015"
+    ],
+    "optional_dependencies": [],
+    "owner": "宏观研究",
+    "affected": "既有：Yahoo旁路、跨资产窗口计算和相关测试。拟新增：FRED/ALFRED adapter、Observation版本与交易日历适配。",
+    "changes": "先选与BTC任务明确相关的少量序列，保存观察期、vintage、发布时间精度、实际收到时间；只读过去的as-of。跨资产沿用休市收盘价时标age，不当新观测。实际与市场预期分开，未采购consensus不能计算惊喜值。",
+    "migration": "旧Yahoo报价继续可读但不改标vintage；不能从最新值逆推出初值。有限历史覆盖在UI/研究配置说明。",
+    "acceptance": "最终值与当时版本产生差异可解释；后续修订不污染旧run；休市周末/假期、不同时区和日期级发布时间有样本；无授权序列不公开导出。",
+    "rollback": "版本覆盖不足只用于当前描述；交易日历库不满足特殊休市时显示未知，不用固定周一到周五冒充完整日历。",
+    "operations_boundary": "需新源/API key与可能授权；批统计环境可后选，不直接部署Python服务。",
+    "preimplementation_checks": "具体研究问题、目标序列ID、实际数据权利、现有跨资产行情是否复权及时间规则。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-028",
+    "title": "建设有限BTC ETF流量与披露核对",
+    "phase": "R3",
+    "depends_on": [
+      "WP-021",
+      "WP-015"
+    ],
+    "optional_dependencies": [],
+    "owner": "资金流研究",
+    "affected": "既有：目前仅已核验跨资产ETF报价，未确认BTC ETF流量链；不得按已有管道改bug。拟新增：fund registry、disclosure versions、flow snapshots。",
+    "changes": "明确基金集合/交易日/披露日期，发行人份额/资产与汇总流量分别保存。reported/estimated、pending/partial/complete分开；AUM变化不直接净申购。无明细不填零，来源冲突不平均掉。",
+    "migration": "新能力独立开启，不将QQQ/SPY/GLD历史迁为BTC ETF流。基金新增/退出有生效期，不用今天集合回填全部历史。",
+    "acceptance": "部分基金未到齐、真实零、汇总与发行人不同日期、基金集合变化、修订和节假日样本通过；页面/报告准确区分覆盖与估算。",
+    "rollback": "免费/授权来源不足时保持not_enabled或有限基金，不默默抓取商业接口；没有研究增量则退出默认首页。",
+    "operations_boundary": "新增数据授权/可能付费/自动读取需确认，默认无采购；与研究简报主线无硬依赖。",
+    "preimplementation_checks": "用户关注的基金范围、来源历史与再分发、可接受延迟和预算。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-029",
+    "title": "完善稳定币背景的供应与市值边界",
+    "phase": "R2",
+    "depends_on": [
+      "WP-012",
+      "WP-002"
+    ],
+    "optional_dependencies": [],
+    "owner": "跨源数据",
+    "affected": "既有：binance-klines-worker.js USDT/USDC、CoinGecko历史与DeFiLlama当前回退。",
+    "changes": "分别显示供应、市值、价格、赎回/发行可得字段和source，不把市值涨跌直接当新增美元流入。检查跨链映射重复和历史/当前源接合；稳定币背景作为独立证据，不给任意固定权重综合成多空分。",
+    "migration": "旧序列保持单位并标legacy来源/方法，不能用默认1美元倒算旧供应后说是观测。新字段增加version和actual coverage。",
+    "acceptance": "脱锚、供应不变价格改变、桥接重复、源回退、90天窗口缺失样本可解释；不从供应增长直接生成BTC买盘事实。",
+    "rollback": "字段不可比时分开两源展示，停止混接历史；保留低信息量背景但允许从默认简报删除。",
+    "operations_boundary": "现有源语义改动；额外披露抓取或付费仍需确认。",
+    "preimplementation_checks": "当前使用的是market cap还是circulating supply、回退接口字段、许可与实际保留。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-030",
+    "title": "提供统一研究只读模型与能力状态API",
+    "phase": "R1",
+    "depends_on": [
+      "WP-016",
+      "WP-018",
+      "WP-019"
+    ],
+    "optional_dependencies": [
+      "WP-025"
+    ],
+    "owner": "API/研究域",
+    "affected": "既有：yuqing/行情API与snapshot读取。拟新增：/api/research/v2 capabilities、bundles、evidence、metrics、changes接口。",
+    "changes": "只读接口固定run/bundle/method和owner，GET不调用模型。返回quality/reason/时间/版本；未启用事件、期权、ETF显示能力状态而不是假空数组成功。新事件结果在WP-025后作为扩展，不阻塞首份market brief。",
+    "migration": "旧API暂保留，消费者逐个切换。缓存key包含bundle/权限/方法；latest只作为显式指针，不覆盖历史资源。",
+    "acceptance": "相同bundle多次查询一致；错owner、未知ID、受限证据、缺历史正确返回；GET负载测试不产生模型账单；固定截止分页稳定。",
+    "rollback": "新API故障时消费者可退旧明确legacy路径，不在同一页面混用新旧窗口；保留错误原因帮助定位。",
+    "operations_boundary": "新增路由/认证配置和后续生产读流量；没有默认新平台费用。",
+    "preimplementation_checks": "实际路由挂载、认证/跨域、D1绑定、已有cache机制和状态码契约。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-031",
+    "title": "实现P01原始主张抽取与不确定性保留",
+    "phase": "R2",
+    "depends_on": [
+      "WP-024",
+      "WP-006",
+      "WP-036",
+      "WP-037"
+    ],
+    "optional_dependencies": [],
+    "owner": "LLM/内容",
+    "affected": "既有：事实池/日报内容处理和Gemini适配。拟新增：卷07 P01模板及提取校验器。",
+    "changes": "输入获准article版本和注册source ID，输出claim、事件实体、时间精度、原文定位与不确定。只提取材料支持内容，不补价格/未来日期；程序核ID、时间、数值位置和policy。规则能处理的简单公告先不用模型。",
+    "migration": "prompt_version、input_digest、model和output保存到model_step允许范围；旧模型摘要不自动升级为经过原文验证的事实。",
+    "acceptance": "四类正常/缺失/冲突/过期案例及恶意指令样本通过；没有原文数字不生成新数字；引用只指输入；提取失败保留源条目与错误，不把失败当空事件。",
+    "rollback": "模型效果差时转规则/人工核心claim，保留原文定位；不把temperature降低当真实性保证。",
+    "operations_boundary": "真实调用消耗预算并需来源允许外部推理；离线可以先测prompt结构和模拟结果。",
+    "preimplementation_checks": "实际模型schema支持、文章分批大小、来源原文保存权限与现有事实池写入流程。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-032",
+    "title": "实现P02按缺口触发的有界研究",
+    "phase": "R3",
+    "depends_on": [
+      "WP-021",
+      "WP-031",
+      "WP-036",
+      "WP-037"
+    ],
+    "optional_dependencies": [],
+    "owner": "LLM/研究工具",
+    "affected": "既有：trend-clues.js定向搜索与二次分析搜索配置。拟新增：gap planner与注册只读工具适配。",
+    "changes": "输入当前bundle、明确缺口和允许来源/预算；只针对会改变判断的问题检索，不默认每模块3—6次搜索。工具输出先过policy/事实抽取，再生成child bundle；搜索失败保留未知。禁止从Grounding组件另建索引。",
+    "migration": "原固定搜索要求改为工具预算与执行记录，prompt文本不当实际次数。新研究输入/结果关联parent run，不修改base bundle。",
+    "acceptance": "无缺口不搜索；多次同源重复不消耗无限预算；找到相反证据能纳入；截止点不允许时拒绝新资料；受限源不传综合模型。",
+    "rollback": "无增量或费用过高时关闭P02，仅输出缺口清单；普通market brief不受影响。",
+    "operations_boundary": "显式外部搜索/模型费用；启用范围和硬/软费用边界需确认，默认关闭扩展研究。",
+    "preimplementation_checks": "搜索实际工具、Google Grounding与其他来源调用区别、供应商计费单位、可用来源覆盖。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-033",
+    "title": "实现P03市场变化简报而非模块拼贴",
+    "phase": "R1",
+    "depends_on": [
+      "WP-017",
+      "WP-020",
+      "WP-036",
+      "WP-037"
+    ],
+    "optional_dependencies": [
+      "WP-025",
+      "WP-031",
+      "WP-032"
+    ],
+    "owner": "LLM/报告",
+    "affected": "既有：yuqing-worker.js、shijian/fenxi各模块聚合与Gemini REST适配。拟新增：P03综合输入构造/模板。",
+    "changes": "按问题与变化综合固定bundle，输出事实、解释、条件、反证、局限与numeric refs；无重大变化允许简短结果，不要求每个栏目必有文章。市场简报不硬依赖事件/P01；未启用内容显示能力范围，不从模型记忆补当日事实。",
+    "migration": "报告schema v2与旧JSON/Markdown适配并存；新prompt/model/config版本留存。删除固定机会与置信度生成路径，保留用户请求的合理时间尺度。",
+    "acceptance": "正常、只有价格、OI冲突、ETF未启用、旧新闻、数据过期五类bundle输出均有边界；数字全部可解析；相同证据与模板对照，模型没有解释增量可退模板。",
+    "rollback": "若结构/事实不通过，限次修复后模板/明确失败；不不断追加角色直到得到流畅答案。",
+    "operations_boundary": "付费模型实际调用需预算/policy；现有适配优先，无默认新SDK。",
+    "preimplementation_checks": "真实model能力、前端结构消费、哪些旧模块需要保留可选专题输出。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-034",
+    "title": "实现程序验证与P04条件化论证审核",
+    "phase": "R1",
+    "depends_on": [
+      "WP-033",
+      "WP-006"
+    ],
+    "optional_dependencies": [],
+    "owner": "报告质量",
+    "affected": "既有：报告JSON处理、source_refs/grounding保存与相关测试。拟新增：数值/证据验证器、P04模板、blocking判定。",
+    "changes": "程序核claim引用、数值/单位/窗口、数据可见性、能力范围和用途；模型审核仅处理过度解释、关键反证与推论支持。重大冲突/高风险主张才触发P04，不能拿模型投票替代数值验证。",
+    "migration": "validator_version和检查结果作为报告证据；旧报告未经过此检查就标not_evaluated，不补盖verified。",
+    "acceptance": "伪引用、金额单位错、错run、把OI下降断言为全部空头平仓、遗漏已知反证、语法正确但数字错误均被发现；关键错误不能被总体高分平均通过。",
+    "rollback": "P04不可用时只发布通过程序检查且保守模板的内容，或标需审阅；不得把审核超时当默认通过。",
+    "operations_boundary": "程序验证无外部费用；模型审核受root预算，不能为每句无限调用。",
+    "preimplementation_checks": "数值渲染与正文是否分离、现有验证覆盖、模型审核是否可重放与存储。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-035",
+    "title": "实现预览、最终报告与失败状态分离",
+    "phase": "R1",
+    "depends_on": [
+      "WP-034",
+      "WP-015",
+      "WP-036"
+    ],
+    "optional_dependencies": [],
+    "owner": "报告运行",
+    "affected": "既有：yuqing-worker.js流式预览/INSERT OR REPLACE、reports schema、events.js/news.js历史页。拟新增：final artifact与preview适配。",
+    "changes": "preview短期可更新，final通过验证后不可变；迟到帧按run/step_seq过滤。保留已有error/fallback但补中断、partial和provider_outcome_unknown。用户关页不默认许诺后台完成；模型执行与SSE显示解耦取决于真实execution mode。",
+    "migration": "新final report ID与旧ID映射；旧生成中ID更新保留兼容范围，不能全库替换。将原文、结构、输入bundle和validator版本一起关联。",
+    "acceptance": "模拟stream断开/重连/错序/修复失败/取消/迟到final；preview不会成为“已验证历史”；同幂等请求不产生两个付费任务；旧reportId可读。",
+    "rollback": "可关闭流式预览改轮询已保存状态，不丢最终结果；新产物保留只读，旧reader按legacy展示。",
+    "operations_boundary": "可能改任务/存储行为；真实流模型和生产迁移另授权。",
+    "preimplementation_checks": "现有stream生命周期、同ID更新范围、模型response与usage何时到达。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-036",
+    "title": "统一根任务预算预留与费用结算",
+    "phase": "R1",
+    "depends_on": [
+      "WP-005",
+      "WP-015"
+    ],
+    "optional_dependencies": [],
+    "owner": "成本/执行",
+    "affected": "既有：yuqing所有模型/搜索入口和费用估算。拟新增：budget_account/ledger与reservation适配。",
+    "changes": "所有子步骤共用root run限额，调用前原子预留，结束按用量结算；未知费用/网络超时保持provider_outcome_unknown，不立刻释放并重试。区分token/调用上限与真正可约束的货币上界。未配置预算允许模板，禁止隐式消费。",
+    "migration": "旧估算记录不冒充账单结算；逐入口接入避免旧旁路绕过。currency与price_version保留，预算周期定义明确。",
+    "acceptance": "并发两个请求不超预留上限；取消后可能已计费不错误退款；嵌套Agent不能新建预算；未知价格阻止严格模式；重复usage回报不重复扣款。",
+    "rollback": "账本不可靠时停止计费调用保留模板，冻结不确定预留待对账；不临时关闭预算校验维持页面成功率。",
+    "operations_boundary": "关系到后续实际费用，需用户明确预算；本任务默认只用合成价格/用量。",
+    "preimplementation_checks": "供应商费用上界、实际usage字段、所有模型请求路径、持久存储原子更新方式。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-037",
+    "title": "隔离Google Grounding与可归档研究证据",
+    "phase": "R1",
+    "depends_on": [
+      "WP-002",
+      "WP-005"
+    ],
+    "optional_dependencies": [],
+    "owner": "政策/模型",
+    "affected": "既有：Gemini搜索配置、grounding_json、facts pool、报告存储与二次分析。拟新增：purpose-aware调用和输出存储路由。",
+    "changes": "核适用API条款和实际合同；Grounding按允许的即时用户展示/特定历史用途独立处理，不默认沉淀到可二次分析事实库。长期证据从独立注册且获准来源取得，不通过Grounding自动抽链接抓取。保留普通生成与Grounding不同政策。",
+    "migration": "历史grounding逐类标用途/期限unknown或已核；不整批复制、扩大保留或重新喂模型。真正删除/调整保留需按确认政策与备份范围实施。",
+    "acceptance": "普通获准证据可入bundle；受限制Grounding结果不能进入归档/再分析/自动crawler；UI显示、缓存、export、model工具都检查同policy。",
+    "rollback": "无法确认时暂关相关Grounding复用，保留不依赖它的市场简报和独立来源研究；不声称现有代码必然违规。",
+    "operations_boundary": "涉及服务条款解释与外部使用权需后续确认，不改变账户；本轮设计不替代法律意见。",
+    "preimplementation_checks": "是否使用Gemini API还是其他合同服务、付费项目、展示方式、既有grounding保留及再利用行为。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-038",
+    "title": "交付任务导向研究首页",
+    "phase": "R1",
+    "depends_on": [
+      "WP-030",
+      "WP-003",
+      "WP-004"
+    ],
+    "optional_dependencies": [],
+    "owner": "前端/产品",
+    "affected": "既有：js/app.js、js/config.js、js/pages/、LWC4.1.3和现有导航。拟新增：研究首页或既有overview增强，实际路径由WP-001绑定。",
+    "changes": "首页展示窗口/新鲜度、重要变化、分歧/反证、下一可信催化剂和证据入口；无变化/数据不足各有可用状态。核心数字来自统一read model，不在浏览器重新算不同总分。未启用模块不堆空卡片。",
+    "migration": "保留旧功能页与routes；显示偏好迁移不改数据历史。旧卡片可放兼容区，避免同时出现两套互相矛盾confidence。",
+    "acceptance": "U01找变化/U02核结论任务可完成；相同run不同卡片时间一致；源失败不白屏；无changes不制造固定风险机会；界面实际用量不触发无意模型请求。",
+    "rollback": "切回旧布局或仅保留质量条/证据入口；不要回退成误导分数或取消错误提示。",
+    "operations_boundary": "前端/本地API集成，生产发布另安排；无新图表库必需。",
+    "preimplementation_checks": "实际首页布局、移动交互、当前状态管理与路由生命周期。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-039",
+    "title": "将图表选择固定成可恢复Research View",
+    "phase": "R2",
+    "depends_on": [
+      "WP-016",
+      "WP-038"
+    ],
+    "optional_dependencies": [],
+    "owner": "前端/研究现场",
+    "affected": "既有：js/pages/chart.js、orderflow.js、本地scrollPosition/barSpacing保存、已有请求取消。拟新增：ResearchView适配。",
+    "changes": "保存run/bundle、绝对窗口、instrument、方法版本、选中事件与注释revision；live/pinned明确切换。共享state revision阻断旧请求覆盖，复用已有取消机制。十字线按真实时间对齐，不按不同数组index。",
+    "migration": "旧本地视口仅迁显示偏好；无法绑定历史输入则不生成exact_inputs。新view独立版本，旧链接可继续打开当前页但说明恢复等级。",
+    "acceptance": "数据滚动清理后旧view不跳到新行情；切源/周期/快速导航、注释投影、断网/缓存旧响应可正确处理；dispose后无残留定时器/WS/chart实例。",
+    "rollback": "精确恢复未实现时标evidence_snapshot/report_only，保留旧图表交互，不伪造历史。无需先升级LWC5。",
+    "operations_boundary": "新增私有研究对象写入与前端状态；真实历史保留策略先确认。",
+    "preimplementation_checks": "当前图表接口封装、注释存储、资源释放和历史加载边界。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-040",
+    "title": "增加按证据定位的侧栏与来源解释",
+    "phase": "R1",
+    "depends_on": [
+      "WP-016",
+      "WP-038"
+    ],
+    "optional_dependencies": [
+      "WP-024"
+    ],
+    "owner": "前端/证据",
+    "affected": "既有：市场/报告页、source refs展示。拟新增：evidence drawer与权限/恢复状态组件。",
+    "changes": "支持从numeric ref/变化卡打开固定bundle中的指标、窗口、method、来源/发布时间、质量与可读片段。初版支持market evidence即可，claim/event扩展后接入。不把仅链接存在显示为已证实。",
+    "migration": "旧来源引用可展示legacy locator；没有内容支持无法加verified标签。受限原文不缓存到localStorage或导出。",
+    "acceptance": "点击同一事实在首页/报告/图表打开相同证据；missing/restricted/unknown合法显示；数字格式化不改计算值；键盘/移动操作可用。",
+    "rollback": "侧栏不可用时显示允许的来源文本与质量，不改变事实；不自动联网抓任意URL填补缺失。",
+    "operations_boundary": "只读展示仍需owner/policy；不要求新增外部抓取。",
+    "preimplementation_checks": "现有source ref格式、证据ID映射、Markdown渲染安全与可访问性。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-041",
+    "title": "统一报告历史、版本差异与受控导出",
+    "phase": "R2",
+    "depends_on": [
+      "WP-035",
+      "WP-040",
+      "WP-049"
+    ],
+    "optional_dependencies": [],
+    "owner": "前端/报告档案",
+    "affected": "既有：js/pages/events.js、js/pages/news.js的reportId历史、yuqing report API。拟新增：版本diff/export适配。",
+    "changes": "按同问题/窗口的报告比较事实变化、解释变化与输入修订，区分真实市场新变化和方法更新。导出Markdown/JSON携带bundle、来源、方法、恢复等级，按当前policy过滤。旧reportId有legacy lookup。",
+    "migration": "旧正文不重写；无法恢复的7天前内容标missing，不承诺30天API可找回。新最终report不可变，修订用supersedes。",
+    "acceptance": "两个报告差异能定位到指标/证据版本；受限内容不导出；reportId不存在不显示latest；预览不进正式历史；旧链接在新路由正常解析。",
+    "rollback": "diff问题可仅提供并排查看；导出不安全时暂停导出保留页面，不整库删报告。",
+    "operations_boundary": "新增归档/导出涉及存储和数据使用权，需明确保留与分发范围。",
+    "preimplementation_checks": "既有历史分页、存储清理和source_refs/grounding混用、旧reportId格式。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-042",
+    "title": "建立研究笔记与可修订观点",
+    "phase": "R2",
+    "depends_on": [
+      "WP-015",
+      "WP-040"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究记录",
+    "affected": "既有：planned journal/playbook等仅作参考，不认定已有笔记库。拟新增：viewpoint版本与用户研究界面。",
+    "changes": "记录问题、判断、依据、反证、确认/失效条件、复查时间和状态；允许“不判断”。从卡片带入evidence但用户确认内容；与交易执行/账户/盈亏日志分离。修订保留原观点而非覆盖。",
+    "migration": "已有用户手工笔记若存在需单独映射；不把旧机会卡自动当用户预测。创建私有owner对象，服务端身份优先。",
+    "acceptance": "旧观点及当时证据可读；并发编辑If-Match冲突可处理；删除受限原文后用户自写文本仍按允许范围保留；没有明确条件可作为开放问题而非预测。",
+    "rollback": "复杂编辑体验不成立时采用简单笔记+引用，不引入知识库全栈；保留数据可导出范围。",
+    "operations_boundary": "新增私有写入/保留与可能个人内容，默认不发模型、不公开。",
+    "preimplementation_checks": "实际笔记需求、用户隐私偏好、是否已有local notes、认证基础。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-043",
+    "title": "可选预声明预测与客观结算",
+    "phase": "R3",
+    "depends_on": [
+      "WP-042",
+      "WP-018",
+      "WP-053"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究验证",
+    "affected": "拟新增：forecast登记、结算规则、结果证据与校准页面；不改为交易执行。",
+    "changes": "明确二元问题、时间窗口、价格源/规则、数据中断/替代源、概率来源和calibration_scope。概率未校准标experimental，无概率保持null。未来结果按预声明规则结算，不能看结果后改题。",
+    "migration": "旧固定confidence不导入概率样本；旧观点只有满足事前记录条件才进入评估，否则列回顾性记录。结算修订留证据。",
+    "acceptance": "重复窗口/重叠预测、缺源、void/unresolvable、source修订、结算时边界价格样本通过；可靠性图显示样本量，不能用一次命中夸大模型能力。",
+    "rollback": "样本不足/定义难结算时只保留条件观点，不展示概率排行榜；关闭预测不影响笔记和简报。",
+    "operations_boundary": "可能需长期数据留存和后续研究计算；不调用交易或账户API。",
+    "preimplementation_checks": "用户是否真的需要概率问题、可接受期限、合法结果来源与足够前瞻样本。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-044",
+    "title": "实现站内低噪音预警状态机",
+    "phase": "R3",
+    "depends_on": [
+      "WP-019",
+      "WP-015"
+    ],
+    "optional_dependencies": [],
+    "owner": "预警",
+    "affected": "既有：强平/风险监测仅复用指标。拟新增：rule/episode/outbox与有限DSL，不用eval。",
+    "changes": "规则有method/unit/threshold、确认窗口、冷却/重启阈值；ARMED/PENDING/TRIGGERED/COOLDOWN/RECOVERED与data_state分开。CAS+episode去重保证重复调度不重复站内事件；stale不自动恢复正常。",
+    "migration": "旧风险卡不迁成持久报警历史；新规则有revision，修改阈值不反写旧episode。只站内记录，通知渠道后选。",
+    "acceptance": "重复任务、阈值抖动、缺数据、恢复补评、重启、并发和规则变更样本通过；每次报警有bundle，程序误报和效用误报分开记录。",
+    "rollback": "规则噪音过高可静音该规则，仍保留记录和恢复依据；外部通知默认未启用不受影响。",
+    "operations_boundary": "持久写入和调度需确认；外发账号/费用不在本任务默认范围。",
+    "preimplementation_checks": "当前调度频率、可用完整窗口、用户提醒负担和已有监测状态。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-045",
+    "title": "实现P05观点复盘与学习记录",
+    "phase": "R3",
+    "depends_on": [
+      "WP-041",
+      "WP-042",
+      "WP-036",
+      "WP-037"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究复盘",
+    "affected": "既有：planned daily-review/perf/patterns仅作目标参考。拟新增：观点复盘结构与P05模板。",
+    "changes": "比较原观点条件、后续证据与结果，区分事实误读、条件未触发、来源修订、判断过强和不可结算。先程序列事实，再可选模型总结；不自动修改指标权重或给下一笔交易建议。",
+    "migration": "复盘作为新对象引用旧观点revision/report；不能把后来信息插入原记录。可导出学习条目时检查来源权利。",
+    "acceptance": "命中/不命中/未触发/无法结算/修订五类案例都能表达；模型不得把条件没发生写成预测正确；不以事后叙事合理化所有结果。",
+    "rollback": "模型复盘不可靠时保留结构化人工记录；不删除失败观点或只保留成功案例。",
+    "operations_boundary": "可选模型费用需预算，私人笔记外发需明确policy/用户设置。",
+    "preimplementation_checks": "用户复查节奏、哪些观点有明确结果、隐私与留存需求。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-046",
+    "title": "建设单问题事件研究实验台",
+    "phase": "R3",
+    "depends_on": [
+      "WP-027",
+      "WP-053"
+    ],
+    "optional_dependencies": [
+      "WP-057"
+    ],
+    "owner": "研究计算",
+    "affected": "拟新增：study配置/结果与批处理适配；优先现有Node或允许的本地研究环境，DuckDB不是硬依赖。",
+    "changes": "先预声明事件集合、前后窗口、比较基准、过滤、费用适用范围和训练/验证切分。区分描述反应与因果解释；报告样本量/缺口/试验次数。需要置信区间时比较arch等方法的前提，不默认套整个回测框架。",
+    "migration": "配置hash固定，结果写独立artifact；同问题修改窗口形成新study版本。旧描述性24h/3d/7d涨跌不冒充样本外结果。",
+    "acceptance": "人为加入未来修订/重叠标签/参数重选能被检测；相同数据/配置复算一致；不同合理窗口结果变化被展示而非只选最好；费用仅对模拟执行研究单列。",
+    "rollback": "历史版本不全或样本太少，降为描述统计；无稳定增量停止复杂方法，保留问题和失败结果。",
+    "operations_boundary": "研究代码执行、数据下载和依赖安装需授权；不生成生产交易信号。",
+    "preimplementation_checks": "明确事件问题、可用历史、计算环境与用户愿意维护的实验范围。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-047",
+    "title": "按条件启用Deribit有限期权截面",
+    "phase": "CONDITIONAL",
+    "depends_on": [
+      "WP-012",
+      "WP-015",
+      "WP-006",
+      "WP-002"
+    ],
+    "optional_dependencies": [],
+    "owner": "期权研究",
+    "affected": "既有：schema中的derivative_option_surface只作为兼容线索，无已确认活跃链。拟新增：Deribit instruments/summary采集、quote quality与期权面板。",
+    "changes": "先公开有限快照，记录contract_size、quote/settle、expiry、strike、采样跨度与bid/ask/mark质量；ATM期限结构仅在合法邻近样本内按方法插值，不外推完整曲面。需要独立IV校验才引入vollib；不以OI推断交易商净gamma。",
+    "migration": "已有空/未用表先确认再决定复用，不能因表名存在标数据已接入。新增数据从实际采集开始，历史另验证授权与覆盖。",
+    "acceptance": "无双边报价、极宽价差、到期临近、币本位单位、min_trade_amount与contract_size差别、采样跨时刻都正确标记；缺数据不补DVOL或Greeks。",
+    "rollback": "授权/报价/维护不满足就关闭CAP-OPTIONS，简报其他family正常；不为填“期权确认”文案强接劣质数据。",
+    "operations_boundary": "新增外部读取/可能历史费用，raw认证与采购另批准，默认不开启。",
+    "preimplementation_checks": "实际产品需求、可用接口/限流/权限、现有表是否有数据、长期维护与历史预算。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-048",
+    "title": "按条件验证L2回放或第二市场独立价值",
+    "phase": "CONDITIONAL",
+    "depends_on": [
+      "WP-010",
+      "WP-011",
+      "WP-002"
+    ],
+    "optional_dependencies": [],
+    "owner": "市场采集",
+    "affected": "既有：行情/强平/足迹采集器；拟新增部分仅限具体缺口，不默认替换为Cryptofeed/CCXT。",
+    "changes": "先定义第二市场或L2能回答的独立问题，再对照原生/统一适配/历史供应商。按快照增量序列恢复、断档与可见深度留存；说明公开可见簿不包含所有隐性订单。历史采购与未来自采分别比较。",
+    "migration": "新来源独立instrument/频道/方法版本；不合成旧不存在L2，不把多个不同清算口径相加为全市场总量。",
+    "acceptance": "断线/乱序/缺序列恢复、重复事件、源差异和总覆盖范围有固定样本；新增来源确实改变至少一个预声明研究判断才进入默认面板。",
+    "rollback": "独立价值不成立、历史昂贵或许可不兼容时停止，不影响已有采集。保留试验结论避免反复重做。",
+    "operations_boundary": "可能常驻服务/新依赖/商业数据/认证，必须另确定；本任务不是全市场建设承诺。",
+    "preimplementation_checks": "现有WS实际可靠性、历史需求、来源可达性/再分发、个人运维资源。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-049",
+    "title": "建立按权利分层的归档与清理迁移",
+    "phase": "R2",
+    "depends_on": [
+      "WP-015",
+      "WP-002"
+    ],
+    "optional_dependencies": [],
+    "owner": "存储/保留",
+    "affected": "既有：yuqing7天清理、snapshot30天/500条、历史API上限30天；拟新增：retention planner、artifact引用检查、legacy_link。",
+    "changes": "分别配置原始/聚合/报告/输入/预览/日志/用户笔记保留；清理先dry-run影响pinned view和restore_level。长期复盘只保留必要获准证据，不默认全量永久存。旧已清理内容标missing。",
+    "migration": "调整清理前核policy与用户目标；保护允许的引用图，明确到期/撤销时依法/依约处理并降级恢复。迁移旧reportId和仍存在的旧正文，不伪造丢失历史。",
+    "acceptance": "过期对象、被pinned引用、policy撤销、孤儿对象、API30天但实际7天、max500快照等场景正确；恢复等级真实；删除任务可审阅可重复。",
+    "rollback": "发现误删风险暂停新清理并保留已有数据在允许范围；不通过无限保留违反明确期限。恢复只能用合法实际备份。",
+    "operations_boundary": "涉及真实数据删除/延长保留和存储成本，必须单独确认；先交dry-run。",
+    "preimplementation_checks": "用户历史长度、实际数据量、来源保留条款、远程清理任务是否运行。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-050",
+    "title": "完成旧路由与报告ID兼容",
+    "phase": "R2",
+    "depends_on": [
+      "WP-041",
+      "WP-039",
+      "WP-004"
+    ],
+    "optional_dependencies": [],
+    "owner": "前端兼容",
+    "affected": "既有：js/app.js、js/config.js、js/nav.js、events.js、news.js及hash/query路由。",
+    "changes": "维护news与news-analysis语义和reportId映射；旧链接不被最新报告替代。planned/demo可隐藏但保留解释入口；现有图表选择迁为显示偏好而非伪历史对象。新增研究路由不占用已有不兼容参数。",
+    "migration": "路由别名和legacy_link版本化，可逐个切换；旧书签/导出链接样本纳入fixture。不存在或受限返回诚实说明。",
+    "acceptance": "旧reportId、旧导航、浏览器前进后退、刷新、空参数/错ID、移动菜单和直接深链全部测试；不能通过重定向到首页来算兼容。",
+    "rollback": "恢复旧路由handler但继续新ID查询适配；已创建新view仍可读。",
+    "operations_boundary": "前端/API发布安排，默认无新外部服务。",
+    "preimplementation_checks": "实际hash语法、历史query格式、UI治理改动与资产发布清单。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-051",
+    "title": "统一缓存、请求取消和资源释放",
+    "phase": "R1",
+    "depends_on": [
+      "WP-038",
+      "WP-035"
+    ],
+    "optional_dependencies": [],
+    "owner": "前端/运行",
+    "affected": "既有：js/data-engine.js、chart/orderflow pages、app生命周期和已治理取消机制。",
+    "changes": "复用现有Abort/请求元数据，增加研究state revision、bundle/method/owner cache key。live与pinned分开，晚响应不覆盖新选择。dispose释放timer、listener、stream、WS和chart实例，避免重复轮询与费用触发。",
+    "migration": "旧缓存版本失效但不删用户合法笔记；新的cache只是可重建派生，不承担唯一历史。权限版本变化需失效对应缓存。",
+    "acceptance": "快速切页面/品种/窗口、网络慢返回、重复挂载、历史pinned与live并行、tab关闭和再打开可重现；GET不创建run，拖拽不自动模型调用。",
+    "rollback": "禁用有问题的缓存/预热路径保留可用直接读取，不能关闭错误保护让旧响应写回。",
+    "operations_boundary": "本地前端/缓存改动；生产性能需另测，没有预设速度提升。",
+    "preimplementation_checks": "现有全局状态、请求取消owner、WS连接数、缓存寿命与隐式warmup。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-052",
+    "title": "落实认证、工具边界与故障观测",
+    "phase": "R1",
+    "depends_on": [
+      "WP-015",
+      "WP-036"
+    ],
+    "optional_dependencies": [
+      "WP-021",
+      "WP-037"
+    ],
+    "owner": "安全/运行",
+    "affected": "既有：Worker路由、设置、日志、Pages构建清单；拟新增：研究鉴权/SSRF/安全渲染与阶段健康。",
+    "changes": "确认并复用认证；私有owner隔离、CSRF/Origin、有限工具白名单、URL/重定向/内网阻断、响应大小/超时、Markdown安全渲染。监控source/capture/compute/model/validate/publish新鲜度，不只监测HTTP在线。",
+    "migration": "secret不入静态包、报告或日志；历史日志有敏感内容先核范围再脱敏。policy与身份版本影响缓存。没有认证不得开放公网写接口。",
+    "acceptance": "错owner、恶意URL/文章指令、超大body、危险HTML、未配置预算、模型超时、来源限流等样本通过；错误诊断不泄露token或SQL。",
+    "rollback": "安全问题先关闭受影响写/外发入口，保留允许只读和模板；不临时允许任意URL或CORS来修页面。",
+    "operations_boundary": "可能新增认证配置与网络规则，需后续确认；不读取账号凭据或部署生产。",
+    "preimplementation_checks": "现有认证、公开/私有范围、实际域名/CORS、是否已有统一日志与内容sanitize。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-053",
+    "title": "建立价值评估集和简单基线",
+    "phase": "R1",
+    "depends_on": [
+      "WP-006",
+      "WP-001"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究评价",
+    "affected": "既有：测试脚本、旧报告输出和允许的样本。拟新增：evaluation config、标签规范与B0—B5对照记录。",
+    "changes": "建立合成、授权历史、前瞻影子三类集合；以claim/event/report/alert/user task分层标注。B1核心指标模板作为强基线，B2不加模型，B3同bundle单综合。数字、引用、重复、遗漏、成本和用户耗时分别报告，不出总分掩盖关键错误。",
+    "migration": "旧PASS日志不导入实际效果标签；旧固定置信度不用于校准。数据集版本、抽样范围、人工分歧和未覆盖场景必须保存。",
+    "acceptance": "每个指标有分母和采集方式；测试包含无变化/冲突/过期/源变化；重要遗漏参考集范围明确；未知生产效果不填百分比。",
+    "rollback": "真实数据/权限不足先用合成检验机制，效果结论标未知；不把合成高分当真实市场准确率。",
+    "operations_boundary": "真实历史与模型评估需要数据权利/费用；本任务可先完成离线规范。",
+    "preimplementation_checks": "可取得的合法样本、人工复核资源、真实用户任务/时间尺度。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-054",
+    "title": "执行有限前瞻影子价值对照",
+    "phase": "R1/迭代",
+    "depends_on": [
+      "WP-035",
+      "WP-053",
+      "WP-038"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究评价",
+    "affected": "既有：新旧报告与测量记录。拟新增：shadow run标签、评估结果及决策记录。",
+    "changes": "按预声明样本/时间范围运行B1/B3，必要时B4；同bundle比较，额外检索收益单列。记录错误/遗漏/噪音/任务时间与真实费用；不依赖历史LLM记忆来证明预测能力。",
+    "migration": "shadow产物与正式观点隔离，不进入用户已发布历史；价格/model/prompt/source versions固定，变更形成新组。",
+    "acceptance": "能回答新增价值来自哪里、是否引入新错误和维护负担；每个严重错误留根因与回归case。样本不足或结果不明确时不宣布提升。",
+    "rollback": "费用/错误超界停止影子调用，保留模板；实验无增量则不升级默认模型流程。",
+    "operations_boundary": "会产生真实模型/来源调用和留存，需要明确试验预算与使用范围；不自动后台长期运行。",
+    "preimplementation_checks": "用户愿意参与的任务、试验持续范围、预算及可接受延迟。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-055",
+    "title": "完成已启用能力的端到端与资源回归",
+    "phase": "R1",
+    "depends_on": [
+      "WP-038",
+      "WP-040",
+      "WP-051",
+      "WP-053"
+    ],
+    "optional_dependencies": [
+      "WP-039",
+      "WP-041",
+      "WP-044",
+      "WP-050"
+    ],
+    "owner": "集成测试",
+    "affected": "既有：Playwright、Vite、scripts/run-bounded.cjs、治理UI与发布验证。",
+    "changes": "沿U01—U06测试当前发布scope；R1只要求已启用市场brief/证据/历史兼容，后续view/alert启用后追加对应矩阵。测试真实交互与状态，不用截图存在代替正确性。",
+    "migration": "fixture版本与测试环境清楚，旧组件样本保留。增加新发布资产检查但不绕过config/pages-assets.json。",
+    "acceptance": "关键数字/时间/来源从API到UI/导出一致；失败/缺数据不白屏；迟到请求不污染选择；无残留资源；秘密/私有输入不进dist。每条通过记录命令和时间，不能沿用旧PASS冒充新测。",
+    "rollback": "失败的能力保持flag关闭，已通过独立切片可交付；不要求所有条件项目完成才跑主线验收。",
+    "operations_boundary": "本地/隔离浏览器和构建测试；真实模型、生产连通不默认包括。",
+    "preimplementation_checks": "浏览器环境、当前构建allowlist、哪些异步行为需要模拟而非真实网络。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-056",
+    "title": "按独立发布切片影子切换并验证回退",
+    "phase": "R1",
+    "depends_on": [
+      "WP-054",
+      "WP-055",
+      "WP-052"
+    ],
+    "optional_dependencies": [
+      "WP-049",
+      "WP-050"
+    ],
+    "owner": "发布/迁移",
+    "affected": "既有：部署配置、dist/pages构建与Worker发布流程；不由本方案擅自变更线上。",
+    "changes": "按R0/R1/R2/R3分别确定enabled scope与兼容路径；一次切一个业务链。先合法副本/影子read，再有限真实流量，记录门槛和失败条件。WP-054真实试验尚未获准时不得宣称正式切换就绪，可交付离线候选。",
+    "migration": "使用additive迁移和flag，清楚哪个writer owner生效；新schema不drop旧表。每scope核对应保留/旧链接/安全条件，未启用模块不阻塞。",
+    "acceptance": "切换前后同run结果一致或差异有方法说明；出现source/模型/存储故障可按卷12恢复reader/模板；回退演练不删除新证据。",
+    "rollback": "回退业务flag、暂停新producer、保留新表只读；不git reset工作区，不恢复已纠正的虚假概率。",
+    "operations_boundary": "涉及生产发布、流量、远程迁移与费用，必须获得明确执行范围；本轮只设计。",
+    "preimplementation_checks": "远程现状、当前部署owner、监控/备份、用户可接受切换窗口与预算。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-057",
+    "title": "按实测需求试验DuckDB/Parquet批研究",
+    "phase": "CONDITIONAL",
+    "depends_on": [
+      "WP-013",
+      "WP-006",
+      "WP-002"
+    ],
+    "optional_dependencies": [],
+    "owner": "研究计算",
+    "affected": "既有：D1查询/聚合、可允许的数据副本；拟新增research-jobs或等价隔离批处理。",
+    "changes": "先量测代表性任务再比较现有SQL/预计算和Parquet/DuckDB；按任务启动、受控写入和分区文件，不先常驻查询服务。保留相同数据/方法、冷/热缓存、扫描/内存/对象请求和恢复结果。",
+    "migration": "输出文件契约与研究artifact相同，批cache可从合法输入重建；不将全生产数据库复制到未知主机。",
+    "acceptance": "结果与基线在声明精度内一致；在预定延迟/资源目标下有净收益，故障可恢复；只测小样本时明确不能外推全量。",
+    "rollback": "现有优化已满足需求或运维增加无收益就放弃新增环境；文件协议保留，不强行迁库。",
+    "operations_boundary": "依赖安装/代码运行/主机/对象存储可能计费需批准，非R1硬依赖。",
+    "preimplementation_checks": "真实D1容量/索引/延迟、计算任务、可用维护环境及输入数据权利。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-058",
+    "title": "按生命周期证据选择持久执行或独立服务",
+    "phase": "CONDITIONAL",
+    "depends_on": [
+      "WP-016",
+      "WP-052"
+    ],
+    "optional_dependencies": [
+      "WP-057"
+    ],
+    "owner": "架构/运行",
+    "affected": "既有：Workers任务、snapshot/采集器、Cron；候选Workflows/Queues或一个专用服务。",
+    "changes": "仅当request-bound确实不满足连续采集/长研究恢复要求时比较：现平台持久编排、一个独立进程、定时批处理。选择一个owner，避免同任务双调度。保留统一bundle/API边界和幂等。",
+    "migration": "新执行器先shadow，run记录executor_version；同一任务不能旧Cron和新队列同时生产。迁移不改变研究方法与来源权利。",
+    "acceptance": "重启/重复投递/租约超时/模型未知结果/客户端关闭场景可恢复；确认实际费用/CPU/墙钟/保留限制，不把waitUntil当永久后台。",
+    "rollback": "新执行器无净收益则保留request-bound/批任务；无法维护长期服务时缩小功能，不部署无人负责组件。",
+    "operations_boundary": "可能新云服务、主机、持续费用和配置修改，必须明确授权；无自动采购。",
+    "preimplementation_checks": "实际任务时长、触发类型、持续流需求、维护责任、平台额度与供应商可达性。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-059",
+    "title": "依据消融和维护成本收敛能力",
+    "phase": "R3",
+    "depends_on": [
+      "WP-054",
+      "WP-053"
+    ],
+    "optional_dependencies": [],
+    "owner": "产品/研究决策",
+    "affected": "既有：eval结果、源健康、模型用量和用户任务记录。",
+    "changes": "逐family/来源/模型步骤比较增量：没有独立信息的默认隐藏或退出；无价值的重复指标、无关频道、频繁搜索和多代理停用。必要时重新评估架构A/B/C，不为之前方案维护面子。保留停止理由与再考虑触发。",
+    "migration": "退役能力标deprecated并提供历史只读；删除外部依赖前核所有消费者，保留配置/方法版本解释旧报告。",
+    "acceptance": "每个保留项能对应用户问题、证据与成本；每个退出项有可复查依据，不依据Star或一两次感觉；不要只看模型总分。",
+    "rollback": "误退役时按已保留契约恢复指定能力，不恢复过时数据/许可；新版本需重新过相应测试。",
+    "operations_boundary": "默认只读分析与配置候选；停云服务/预算变更和生产flag需确认。",
+    "preimplementation_checks": "真实长期维护记录、用户反馈、统计样本是否足够。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  },
+  {
+    "id": "WP-060",
+    "title": "完成开发交接、状态清单与可持续运行手册",
+    "phase": "R3",
+    "depends_on": [
+      "WP-056",
+      "WP-059"
+    ],
+    "optional_dependencies": [
+      "WP-049",
+      "WP-058"
+    ],
+    "owner": "交付/运行",
+    "affected": "既有：docs/governance.md、operations/architecture文档、scripts/README.md、功能状态注册。",
+    "changes": "按实际实现更新事实基线、已启用/条件未启用/退出状态、API/schema/model/policy版本、任务完成证据和运维owner。提供重建一份报告/恢复一个view/定位一次失败的操作路径，避免交付只有源码。",
+    "migration": "归档迁移清单与允许的恢复材料；未做生产验证或真实模型试验明确未做。旧文档不静默删除，标superseded并链接新说明。",
+    "acceptance": "新开发者凭文档能找到权威模块、运行允许的测试、解释已知限制和回退条件；所有任务有done/blocked/deferred/not_applicable及证据，不把目录文件存在当实现完成。",
+    "rollback": "交接发现缺关键证据则回到对应WP，不宣称整体通过；已交付独立切片保持可用。",
+    "operations_boundary": "文档与状态更新；不额外部署/连接账号，最终生产验收另记录。",
+    "preimplementation_checks": "实际完成任务、遗留风险、长期维护/预算责任、未启用能力以后是否值得再做。",
+    "full_capability_task_only": true,
+    "current_scope_catalog": "../../10_final_review/scoped_tasks.json"
+  }
+]

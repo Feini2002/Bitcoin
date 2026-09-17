@@ -1,0 +1,74 @@
+[
+  {
+    "id": "FINAL-SRC01",
+    "title": "JSON Schema复用定义与引用",
+    "url": "https://json-schema.org/understanding-json-schema/structuring",
+    "queried_at": "2026-09-16",
+    "scope": "模块定义必须经引用作用于实例；仅存在$defs不是验证通过的证据。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  },
+  {
+    "id": "FINAL-SRC02",
+    "title": "Python jsonschema验证与format",
+    "url": "https://python-jsonschema.readthedocs.io/en/stable/validate/",
+    "queried_at": "2026-09-16",
+    "scope": "check_schema、实例验证、FormatChecker分开。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  },
+  {
+    "id": "FINAL-SRC03",
+    "title": "RFC8785 JSON Canonicalization Scheme",
+    "url": "https://www.rfc-editor.org/rfc/rfc8785.html",
+    "queried_at": "2026-09-16",
+    "scope": "规范排序及Unicode/数值有具体要求，普通sort_keys不能冒称全量JCS。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  },
+  {
+    "id": "FINAL-SRC04",
+    "title": "Tardis当前服务条款",
+    "url": "https://docs.tardis.dev/legal/terms-of-service",
+    "queried_at": "2026-09-16",
+    "scope": "仅核对9.5/9.6范围，不作用户合同法律意见。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  },
+  {
+    "id": "FINAL-SRC05",
+    "title": "Gemini附加条款",
+    "url": "https://ai.google.dev/gemini-api/terms",
+    "queried_at": "2026-09-16",
+    "scope": "核对服务路径与例外；没有用户合同和项目配置。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  },
+  {
+    "id": "FINAL-SRC06",
+    "title": "Gemini结构化输出",
+    "url": "https://ai.google.dev/gemini-api/docs/structured-output",
+    "queried_at": "2026-09-16",
+    "scope": "结构格式与内容语义分别测试。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  },
+  {
+    "id": "FINAL-SRC07",
+    "title": "D1读副本与Sessions",
+    "url": "https://developers.cloudflare.com/d1/best-practices/read-replication/",
+    "queried_at": "2026-09-16",
+    "scope": "读一致性机制不等于研究输入封存。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  },
+  {
+    "id": "FINAL-SRC08",
+    "title": "概率校准文档",
+    "url": "https://scikit-learn.org/stable/modules/calibration.html",
+    "queried_at": "2026-09-16",
+    "scope": "单个预测损失不等于全部校准质量。",
+    "type": "official_primary",
+    "execution": "read_not_run"
+  }
+]

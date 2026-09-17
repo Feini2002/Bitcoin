@@ -8,7 +8,8 @@
   "scripts": {
     "build": "npm run verify:all && npm run build:pages",
     "lint": "node scripts/check-syntax.cjs",
-    "test": "node scripts/verify-indicator-math.cjs && npm run verify:market-snapshot && npm run verify:footprint && node scripts/verify-kline-history.cjs && node scripts/verify-market-recovery.cjs",
+    "verify:batch2": "node scripts/verify-batch2.cjs",
+    "test": "node scripts/verify-indicator-math.cjs && npm run verify:market-snapshot && npm run verify:footprint && node scripts/verify-kline-history.cjs && node scripts/verify-market-recovery.cjs && node scripts/verify-batch2.cjs",
     "verify:chart-snapshot": "npm run verify:market-snapshot",
     "verify:market-snapshot": "node scripts/verify-market-snapshot-program.cjs && node scripts/verify-market-snapshot-worker.cjs",
     "diagnose": "node scripts/diagnose-klines.cjs",

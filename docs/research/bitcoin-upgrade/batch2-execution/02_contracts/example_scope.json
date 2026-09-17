@@ -1,0 +1,21 @@
+{
+  "kind": "scope",
+  "scope_id": "example-template",
+  "task_ids": [
+    "NEW-001",
+    "NEW-002",
+    "NEW-003",
+    "NEW-004",
+    "NEW-005",
+    "NEW-006",
+    "NEW-007",
+    "NEW-008",
+    "NEW-010"
+  ],
+  "enabled_methods": [
+    "M06"
+  ],
+  "model_enabled": false,
+  "external_calls_approved": false,
+  "production_write_approved": false
+}

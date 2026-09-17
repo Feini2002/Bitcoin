@@ -90,7 +90,12 @@ export function normalizeDataset(id,envelope) {
           closeTime:at(r[6]),quoteVolume:number(r[7]),trades:number(r[8]),takerBuyBase:number(r[9]),takerBuyQuote:number(r[10]),
           windowEnded:Number(r[6])<Date.parse(receivedAt),
           closed:Number.isFinite(Date.parse(envelope.requestedAt))?Number(r[6])<Date.parse(envelope.requestedAt):null,
-          closureBasis:'request-after-scheduled-close; no exchange confirmation flag'});
+          closureBasis:'request-after-scheduled-close; no exchange confirmation flag',
+          finality:Number(r[6])<Date.parse(receivedAt)?'time_elapsed_only':'forming'});
+        const last=rows[rows.length-1].values;
+        if(!(last.high>=last.open && last.high>=last.close && last.high>=last.low && last.low<=last.open && last.low<=last.close))throw new Error('dataset_invalid_ohlc');
+        if(last.baseVolume<0 || last.quoteVolume<0 || last.takerBuyBase<0)throw new Error('dataset_negative_volume');
+        if(last.takerBuyBase>last.baseVolume)throw new Error('dataset_taker_exceeds_total');
       } break;
     case 'premium': add(data.time,at(data.time),{...numeric(data,['markPrice','indexPrice','lastFundingRate','interestRate']),nextFundingTime:at(data.nextFundingTime)}); break;
     case 'funding': for(const r of list()) {if(r.symbol && r.symbol!=='BTCUSDT')throw new Error('dataset_instrument_mismatch'); add(r.fundingTime,at(r.fundingTime),numeric(r,['fundingRate','markPrice']));} break;
@@ -100,6 +105,7 @@ export function normalizeDataset(id,envelope) {
     case 'ratio': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['longAccount','shortAccount','longShortRatio'])); break;
     case 'basis': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['basis','basisRate','annualizedBasisRate','indexPrice','futuresPrice'])); break;
     case 'book': if(!Array.isArray(data.bids)||!Array.isArray(data.asks))throw new Error('dataset_invalid_book');
+      if(data.bids[0] && data.asks[0] && Number(data.asks[0][0])<Number(data.bids[0][0]))throw new Error('dataset_crossed_book');
       add(data.T||data.E||receivedAt,at(data.T||data.E),{lastUpdateId:data.lastUpdateId,bids:data.bids,asks:data.asks}); break;
     case 'instrument': {
       const instrument=data.symbols?.find(row=>row.symbol==='BTCUSDT');

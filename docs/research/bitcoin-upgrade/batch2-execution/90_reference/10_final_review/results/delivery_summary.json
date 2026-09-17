@@ -1,0 +1,54 @@
+{
+  "version": "final-review-1.1-design",
+  "date": "2026-09-16",
+  "findings": 16,
+  "document_checks": {
+    "checks": 281,
+    "passed": 281,
+    "failed": 0
+  },
+  "document_checks_by_layer": {
+    "file_structure": 44,
+    "schema_definition": 2,
+    "schema": 74,
+    "schema+reference_domain": 26,
+    "cross_contract": 3,
+    "reference_domain": 2,
+    "digest": 13,
+    "parser": 2,
+    "task_graph": 12,
+    "api_design": 101,
+    "sql_syntax_only": 1,
+    "provenance": 1
+  },
+  "local_markdown_links": {
+    "checked": 435,
+    "passed": 435,
+    "failed": 0
+  },
+  "change_counts_excluding_generated_self_records": {
+    "modified": 73,
+    "unchanged": 113,
+    "added": 22,
+    "archived_or_replaced": 2
+  },
+  "original_package_sha256": "c243f27d948a0c837c2bc375699231c472eef0e0d97fef39b0486608af6f2d15",
+  "kept_reference_scope": {
+    "execution_volumes": 16,
+    "research_topics": 25,
+    "reuse_cards": 67,
+    "cases": 14,
+    "inherited_sources": 150
+  },
+  "current_scopes": {
+    "profiles": 5,
+    "scoped_tasks": 11
+  },
+  "not_a_claim_of": [
+    "all source URLs rechecked",
+    "all GitHub code audited",
+    "98 real business tests executed",
+    "production implementation or deployment",
+    "prediction accuracy or benefit guarantee"
+  ]
+}

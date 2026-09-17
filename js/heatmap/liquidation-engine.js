@@ -85,13 +85,16 @@
     if (!msg || msg.e !== "forceOrder" || !msg.o) return null;
     const o = msg.o;
     const symbol = String(o.s || msg.s || DEFAULT_SYMBOL).toUpperCase();
+    const priceType = o.ap != null && o.ap !== "" ? "average_fill" : o.p != null && o.p !== "" ? "order_price" : "unknown";
+    const qtyType = o.z != null && o.z !== "" ? "cumulative_filled" : o.l != null && o.l !== "" ? "last_fill" : o.q != null && o.q !== "" ? "order_qty" : "unknown";
     const price = toNumber(o.ap, NaN) || toNumber(o.p, NaN);
     const qty = toNumber(o.z, NaN) || toNumber(o.l, NaN) || toNumber(o.q, NaN);
     if (!Number.isFinite(price) || !Number.isFinite(qty) || price <= 0 || qty <= 0) return null;
     const ts = toNumber(o.T, toNumber(msg.E, Date.now()));
     const rawSide = String(o.S || "");
+    const nativeId = o.i || o.c || null;
     return {
-      id: `binance:${symbol}:${ts}:${rawSide}:${price}:${qty}`,
+      id: nativeId ? `binance:${nativeId}` : `binance:${symbol}:${ts}:${rawSide}:${price}:${qty}`,
       exchange: "binance",
       symbol,
       ts,
@@ -99,6 +102,10 @@
       rawSide,
       price,
       qty,
+      priceType,
+      qtyType,
+      nativeId,
+      fingerprint: `binance:${symbol}:${ts}:${rawSide}:${price}:${qty}`,
       notional: price * qty,
       bucketPrice: null,
       receivedAt: Date.now(),
@@ -188,6 +195,7 @@
           price: bucketPrice,
           longNotional: 0,
           shortNotional: 0,
+          unknownNotional: 0,
           totalNotional: 0,
           count: 0,
           latestTs: 0,
@@ -195,15 +203,19 @@
         });
       }
       const row = rows.get(bucketPrice);
-      const sideKey = ev.positionSide === "short" ? "shortNotional" : "longNotional";
+      const sideKey = ev.positionSide === "short"
+        ? "shortNotional"
+        : ev.positionSide === "long"
+          ? "longNotional"
+          : "unknownNotional";
       row[sideKey] += ev.notional;
       row.totalNotional += ev.notional;
       row.count += 1;
       row.latestTs = Math.max(row.latestTs, Number(ev.ts) || 0);
       if (!row.exchanges[ev.exchange]) {
-        row.exchanges[ev.exchange] = { longNotional: 0, shortNotional: 0, count: 0 };
+        row.exchanges[ev.exchange] = { longNotional: 0, shortNotional: 0, unknownNotional: 0, count: 0 };
       }
-      row.exchanges[ev.exchange][sideKey] += ev.notional;
+      row.exchanges[ev.exchange][sideKey] = (row.exchanges[ev.exchange][sideKey] || 0) + ev.notional;
       row.exchanges[ev.exchange].count += 1;
     }
     return [...rows.values()].sort((a, b) => b.price - a.price);
@@ -218,6 +230,7 @@
       total15m: 0,
       longNotional: 0,
       shortNotional: 0,
+      unknownNotional: 0,
       maxEvent: null,
       activeSources: 0,
     };
@@ -225,7 +238,8 @@
     for (const ev of fifteen) stats.total15m += ev.notional;
     for (const ev of events) {
       if (ev.positionSide === "short") stats.shortNotional += ev.notional;
-      else stats.longNotional += ev.notional;
+      else if (ev.positionSide === "long") stats.longNotional += ev.notional;
+      else stats.unknownNotional += ev.notional;
       if (!stats.maxEvent || ev.notional > stats.maxEvent.notional) stats.maxEvent = ev;
     }
     for (const st of Object.values(sourceStatus || {})) {

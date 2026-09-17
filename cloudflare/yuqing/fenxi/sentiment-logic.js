@@ -5,12 +5,14 @@ import { itemSummary } from "../shijian/index.js";
 export function marketStateFromLegacy(legacy, marketSnapshot) {
   const dash = legacy && legacy.dashboard ? legacy.dashboard : null;
   const src = marketSnapshot && marketSnapshot.data && marketSnapshot.data.derivativesSnapshot && marketSnapshot.data.derivativesSnapshot.data;
-  const score = dash && dash.sentimentSummary ? 62 : marketSnapshot && marketSnapshot.ok ? 58 : 46;
+  const hasDash = !!(dash && dash.sentimentSummary);
+  const hasMarket = !!(marketSnapshot && marketSnapshot.ok);
   return {
-    regime: dash && dash.marketRegime ? dash.marketRegime : marketSnapshot && marketSnapshot.ok ? "市场数据可用，等待二次确认" : "市场快照存在缺口",
-    score,
-    bias: score >= 65 ? "偏多但需确认" : score <= 42 ? "偏谨慎" : "中性",
-    confidence: marketSnapshot && marketSnapshot.ok ? 72 : 54,
+    regime: dash && dash.marketRegime ? dash.marketRegime : hasMarket ? "市场数据可用，等待二次确认" : "市场快照存在缺口",
+    score: null,
+    bias: "未评分",
+    confidence: null,
+    scoreNote: hasDash ? "已有日报摘要，不把可用性写成概率" : hasMarket ? "市场快照可读，不等于方向概率" : "输入不足",
     summary:
       dash && dash.crossAsset
         ? dash.crossAsset
@@ -70,16 +72,18 @@ export function opportunitiesFromInputs(daily, marketSnapshot) {
     {
       label: "顺势确认",
       direction: "BTC 方向确认",
-      setup: hasMarket ? "事件日报主题与 K 线、衍生品、强平数据同向。" : "先恢复市场快照，再判断方向。",
+      setup: hasMarket ? "仅当事件、价格与衍生品同向时再提高权重；数据可用不等于证据同向。" : "先恢复市场快照，再判断方向。",
       invalidation: "价格反应与事件叙事背离，或资金费率/OI 出现拥挤。",
-      priority: hasMarket ? 76 : 52,
+      priority: null,
+      enabled: hasMarket,
+      aligned: false,
     },
     {
       label: "等待复核",
       direction: "不追第一反应",
       setup: "事件发生后等待 1-2 根高波动 K 线收敛，再观察 ETF/资金流确认。",
       invalidation: "上游日报事件被官方来源否认或热度迅速消退。",
-      priority: 66,
+      priority: null,
     },
   ];
 }
@@ -91,19 +95,25 @@ export function calendarFromFacts(facts) {
     const cat = String(it.category || "").toLowerCase();
     const title = String(it.title || "");
     if (!/macro|calendar|economic|cpi|fed|fomc|就业|通胀|利率/i.test(`${cat} ${title}`)) continue;
+    const published = Number(it.publishedAt);
+    const fetched = Number(it.fetchedAt);
+    const eventAt = Number.isFinite(published) ? published : Number.isFinite(fetched) ? fetched : null;
+    if (eventAt == null) continue;
     rows.push({
       id: it.id || `event-${rows.length}`,
       title: title || "宏观事件",
-      startsAtUtc: new Date(Number(it.publishedAt || it.fetchedAt || Date.now())).toISOString(),
-      precision: "date",
+      startsAtUtc: new Date(eventAt).toISOString(),
+      precision: Number.isFinite(published) ? "source_published" : "fetched_only",
       displayTimezone: "Asia/Shanghai",
       sourceType: it.sourceType || "fact_pool",
       sourceName: it.source || "Yuqing D1",
       sourceUrl: it.url || "",
-      confidence: Number(it.confidence || 0.62),
-      impactScore: Math.max(50, Math.round(Number(it.confidence || 0.62) * 100)),
+      confidence: it.confidence == null ? null : Number(it.confidence),
+      impactScore: it.confidence == null ? null : Math.round(Number(it.confidence) * 100),
       assets: ["BTC", "美元", "美债", "纳指"],
       why: itemSummary(it, "宏观事件可能影响风险资产定价。"),
+      officialSchedule: null,
+      futureCatalyst: false,
     });
   }
   return rows;
@@ -113,7 +123,7 @@ export function trendReadForSentiment(legacy, incremental) {
   const md = legacy && legacy.sections && legacy.sections.trends && legacy.sections.trends.markdown;
   return {
     strengthening: md ? ["云端趋势模块已生成，结合事件日报与市场快照给出二次判断。"] : ["事件日报和市场监测已合并为本轮舆情底座。"],
-    fracturing: incremental && incremental.used ? ["本轮触发按需增量搜索，说明上游事实或市场上下文存在缺口。"] : ["未触发额外搜索，说明上游日报与事实池覆盖暂时够用。"],
+    fracturing: incremental && incremental.used ? ["本轮触发按需增量搜索，说明上游事实或市场上下文存在缺口。"] : ["未执行增量搜索，覆盖状态未知，不能据此声称来源已足够。"],
     checklist: ["先核对市场监测页数据新鲜度。", "再看事件日报主题是否继续出现新事实。", "最后用风险雷达决定是否需要降低仓位或等待确认。"],
   };
 }

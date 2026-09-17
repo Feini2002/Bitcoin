@@ -1813,7 +1813,11 @@ async function loadDailyReport(reportId = "", options = {}) {
       ? await DataEngine.fetchYuqingReportItem(reportId, { signal: loadSignal })
       : await DataEngine.fetchYuqingReportLatest(DAILY_EVENT_KIND, { signal: loadSignal });
     const report = data && data.report;
-    if (report && dailyCloudReportShouldReplacePending(report, pendingBefore)) {
+    if (reportId && (!report || (report.id && String(report.id) !== String(reportId)))) {
+      dailyEventState.report = null;
+      dailyEventState.source = "error";
+      dailyEventState.status = "旧报告无法恢复，未改用最新";
+    } else if (report && dailyCloudReportShouldReplacePending(report, pendingBefore)) {
       dailyEventState.report = report;
       dailyEventState.streamPreviewRow = null;
       dailyEventState.source = "cloud";
@@ -1837,7 +1841,13 @@ async function loadDailyReport(reportId = "", options = {}) {
     }
   } catch (e) {
     if (loadSignal.aborted) return;
-    if (pendingBefore) {
+    if (reportId) {
+      dailyEventState.report = null;
+      dailyEventState.source = "error";
+      dailyEventState.status = /403|restricted/i.test(String(e && e.message || e))
+        ? "旧报告当前用途受限，未改用最新"
+        : "旧报告无法恢复，未改用最新";
+    } else if (pendingBefore) {
       dailyEventState.streamPreviewRow = pendingBefore;
       dailyEventState.report = pendingBefore;
       dailyEventState.source = "cloud";

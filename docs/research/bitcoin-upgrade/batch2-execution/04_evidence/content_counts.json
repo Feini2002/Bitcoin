@@ -1,0 +1,32 @@
+{
+  "record_role": "original_second_batch_content_count_not_recomputed_for_this_execution_reorganization",
+  "original_record": {
+    "definition": "Unicode Han characters U+3400..U+9FFF; no compendium duplication, no JSON, original inputs, old execution plan, navigation or previous QC counted. Chinese-character count is not token count.",
+    "current_docs": 21,
+    "current_han_characters": 59129,
+    "retained_research": {
+      "03_research": {
+        "files": 25,
+        "han_characters": 22803
+      },
+      "04_reuse_cards": {
+        "files": 67,
+        "han_characters": 32985
+      },
+      "05_cases": {
+        "files": 14,
+        "han_characters": 5542
+      },
+      "06_collection_design": {
+        "files": 7,
+        "han_characters": 8017
+      }
+    },
+    "retained_han_characters": 69347,
+    "total_counted_han_characters": 128476,
+    "minimum_requested": 100000,
+    "meets_requested_minimum": true
+  },
+  "current_package_count_path": "05_release/content_summary.json",
+  "note": "不把本次执行路由/重复任务定义加入原调研字数证明。"
+}

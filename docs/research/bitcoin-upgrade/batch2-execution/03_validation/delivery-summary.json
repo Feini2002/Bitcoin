@@ -1,0 +1,1841 @@
+{
+  "generated_at": "2026-09-17",
+  "scope": "Document-only checks. No repository functions, tests, market APIs, LLM calls, deployments or production operations were executed.",
+  "checks_passed": 360,
+  "checks_failed": 0,
+  "local_file_links_valid": 293,
+  "current_links_failed": [],
+  "historical_links_unresolved": [],
+  "synthetic_acceptance_scenarios": 66,
+  "repository_acceptance_scenarios_executed": 0,
+  "current_review_source_commit": "a6ef6c8974dcdaace32acf25c3a231ecd279ef37",
+  "content_counts": {
+    "definition": "Unicode Han characters U+3400..U+9FFF; no compendium duplication, no JSON, original inputs, old execution plan, navigation or previous QC counted. Chinese-character count is not token count.",
+    "current_docs": 21,
+    "current_han_characters": 59129,
+    "retained_research": {
+      "03_research": {
+        "files": 25,
+        "han_characters": 22803
+      },
+      "04_reuse_cards": {
+        "files": 67,
+        "han_characters": 32985
+      },
+      "05_cases": {
+        "files": 14,
+        "han_characters": 5542
+      },
+      "06_collection_design": {
+        "files": 7,
+        "han_characters": 8017
+      }
+    },
+    "retained_han_characters": 69347,
+    "total_counted_han_characters": 128476,
+    "minimum_requested": 100000,
+    "meets_requested_minimum": true
+  },
+  "checks": [
+    {
+      "check": "utf8:README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/example_report.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/example_metric_vwap.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/design.schema.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/api-design.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/example_observation_base.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/example_scope.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/example_capture.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:02_contracts/example_observation_quote.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:01_execution/tasks.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/06_orderflow_footprint.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/12_analysis_prompts_workflow.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/14_architecture_runtime_cost.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/18_codex_handoff.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/17_acceptance_and_experiments.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/19_sources_and_review_boundary.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/07_liquidation_radar.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/08_derivatives.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/02_findings_and_counterexamples.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/20_dataset_adoption_cards.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/05_chart_workbench.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/03_institutional_patterns.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/15_migration_rollback.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/09_method_registry.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/00_master_plan.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/13_ui_history_api.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/01_repository_baseline.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/16_work_packages.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/04_data_contracts_and_acquisition.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/10_macro_options_etf_onchain.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:00_current/11_intelligence_collection.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:03_validation/acceptance_cases.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:03_validation/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:03_validation/delivery-summary.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:04_evidence/content_counts.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:04_evidence/sources.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:04_evidence/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL007.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL010.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL044.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL060.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL022.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL030.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL041.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL067.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL023.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL026.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL061.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL050.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL046.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL066.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL038.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL001.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL053.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL006.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL027.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL033.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL054.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL040.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL005.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL016.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL042.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL048.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL034.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL032.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL051.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL062.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL063.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL036.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL011.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL020.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL017.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL049.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL028.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL008.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL052.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL019.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL021.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL047.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL045.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL018.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL058.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL057.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL003.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL056.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL009.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL024.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL064.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL029.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL014.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL055.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL025.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL065.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL039.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL037.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL004.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL013.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL012.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL035.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL002.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL043.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL059.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL031.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/04_reuse_cards/TOOL015.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/complete_plan.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE07_Glassnode与BlockSci的两种可复用价值.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE06_Tardis让购买历史变成可验收任务.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE02_Feedly去重与聚类不是同一层.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE08_Anthropic研究案例与TradingAgents的可迁移部分.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE12_Temporal与Haystack揭示的取消边界.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE11_FDC3工作区上下文迁移.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE09_FinRobot开放边界与金融方法迁移.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE10_Qlib与arch如何服务实验纪律.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE04_IPTC与W3C给证据模型的启示.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE14_开源商业服务和受限搜索的分界.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE01_订阅阅读器怎样成为收集底座.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE03_zenfeed与TrendRadar的情报产品取舍.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE05_官方日历与vintage的双时钟.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/05_cases/CASE13_Docling与GROBID避免只收标题.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/reuse_catalog.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/sources.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/package_qc.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/access_limits.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/case_index.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/research_diary.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/sources.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/research_index.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/accepted_plan_preservation.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/content_statistics.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/08_evidence/coverage_matrix.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/contract_examples.synthetic.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/06_evaluation_and_fixtures.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/discovery_recipes.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/04_alignment_with_accepted_contracts.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/02_source_catalog.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/07_operating_and_update_policy.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/03_lifecycle_and_contract.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/05_search_recipes.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/collection_cases.synthetic.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/source_catalog.candidates.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/01_collection_handbook.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/06_collection_design/collection.schema.design.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES19_研究知识库与证据生命周期.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES09_资金费持仓基差与强平.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES03_网页提取与浏览器采集.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES15_完整金融平台的可迁移经验.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES20_存储计算与部署路线.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES23_完整能力组合与自建采购对照.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES18_金融工作区与研究现场.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES07_历史回补时点与数据修订.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES22_许可数据权利成本与供应商退出.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES25_论文披露与复杂文档摄取.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES01_能力地图与复用决策.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES04_事件主张去重与更正.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES11_链上矿工与实体资金流.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES10_期权研究与波动率结构.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES17_报告质量评价与可观测性.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES24_信息价值覆盖与降噪评价.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES16_模型工具与多代理的适用边界.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES14_预测校准观点与决策记录.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES21_增量管道调度与失败恢复.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES02_持续订阅与来源发现.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES05_多语言检索与研究上下文.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES08_订单流足迹与盘口研究.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES06_实时行情采集与标准化.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES12_宏观ETF稳定币与跨资产.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/03_research/RES13_因子事件研究与可复现验证.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/00_start/01_master_solution.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/07_codex_usage/02_prompt_readonly_audit.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/07_codex_usage/01_reading_and_selection.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/07_codex_usage/03_prompt_scoped_execution.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/07_codex_usage/04_decision_record_template.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/07_codex_usage/slice_proposals.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/02_adversarial_review/01_adversarial_review.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/02_adversarial_review/02_scope_override_rules.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/02_adversarial_review/dependency_audit.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/scoped_work_packages.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/scoped_tasks.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/value_and_decision_tests.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/external_rechecks.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/findings.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/compatibility_map.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/contract_migration.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/text_patch_receipts.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/90_archive/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/external_evidence_scope.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/baseline_negative_probes.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/environment.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/change_inventory.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/document_checks.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/link_checks.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/review_inventory.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/10_final_review/results/delivery_summary.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/14_end_to_end_examples_and_handoff.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/04_market_data_contracts.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/06_catalysts_macro_etf_options.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/05_analysis_methods_and_scenarios.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/07_llm_prompts_workflows.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/08_workspace_views_and_alerts.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/12_migration_operations_and_rollback.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/02_external_research_and_decisions.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/09_architecture_runtime_and_storage.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/15_sources_glossary_and_open_questions.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/13_implementation_work_packages.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/03_product_information_and_noise.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/00_master_plan.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/01_repository_baseline.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/volumes/11_evaluation_and_acceptance.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/inputs/previous_research_review.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/inputs/repository_facts.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/contracts/research.schema.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/contracts/research_schema.proposed.sql",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/contracts/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/contracts/openapi.design.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/contracts/settings.design.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/acceptance_cases.synthetic.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_metrics.canonical.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_bundle.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_report.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_artifact.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_metrics.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_view.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_run.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/fixtures/sample_raw.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/meta/repository-facts.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/meta/sources.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/meta/document-qc.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/meta/task-topological-order.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "utf8:90_reference/01_accepted_plan/meta/tasks.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:01_execution/tasks.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/example_report.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/example_metric_vwap.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/design.schema.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/api-design.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/example_observation_base.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/example_scope.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/example_capture.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:02_contracts/example_observation_quote.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:03_validation/acceptance_cases.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:03_validation/delivery-summary.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:04_evidence/content_counts.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "json:04_evidence/sources.json",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "unique_task_ids",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "task_dag",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_tasks:S1-chart-trust",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_boundary:S1-chart-trust",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_tasks:S2-orderflow",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_boundary:S2-orderflow",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_tasks:S3-liquidation",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_boundary:S3-liquidation",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_tasks:S4-derivatives",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_boundary:S4-derivatives",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_tasks:S5-market-template",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_boundary:S5-market-template",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_tasks:S6-intelligence",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "slice_boundary:S6-intelligence",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-001",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-002",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-003",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-004",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-005",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-006",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-007",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-008",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-009",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-010",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-011",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-012",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-013",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-014",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-015",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-016",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-017",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-018",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-019",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-020",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-021",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-022",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-023",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-024",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-025",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-026",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-027",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-028",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-029",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-030",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-031",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-032",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-033",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-034",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-035",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-036",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-037",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-038",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-039",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-040",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-041",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-042",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-043",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-044",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-045",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-046",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-047",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "complete_task:NEW-048",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_positive:example_report",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_positive:example_metric_vwap",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_positive:example_observation_base",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_positive:example_scope",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_positive:example_capture",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_positive:example_observation_quote",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_negative:0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_negative:1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_negative:2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_negative:3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_negative:4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "schema_negative:5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "sample_ids_unique",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "sample_refs",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "sample_vwap",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "sample_window",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "sample_known_at",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "sample_initial_baseline",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "sample_scope_not_authorized",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "cases_unique",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "cases_not_claimed_run",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "all_findings_covered",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "minimum_100000_nonduplicate_han",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:06_orderflow_footprint.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:12_analysis_prompts_workflow.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:14_architecture_runtime_cost.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:18_codex_handoff.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:17_acceptance_and_experiments.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:19_sources_and_review_boundary.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:07_liquidation_radar.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:08_derivatives.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:02_findings_and_counterexamples.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:20_dataset_adoption_cards.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:05_chart_workbench.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:03_institutional_patterns.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:15_migration_rollback.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:09_method_registry.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:00_master_plan.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:13_ui_history_api.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:01_repository_baseline.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:16_work_packages.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:04_data_contracts_and_acquisition.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:10_macro_options_etf_onchain.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "resolved_sources:11_intelligence_collection.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "current_local_file_links",
+      "passed": true,
+      "detail": "[]"
+    },
+    {
+      "check": "no_auto_install_or_agent_files",
+      "passed": true,
+      "detail": "[]"
+    }
+  ]
+}

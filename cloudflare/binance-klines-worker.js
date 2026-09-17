@@ -5803,7 +5803,12 @@ export default {
    */
   async fetch(request, env, ctx) {
     const response = await (async () => {
-    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: headersMerge() });
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: accessCorsHeaders(env, { ...CORS, origin: request.headers.get("Origin") }),
+      });
+    }
     if (request.method !== "GET" && request.method !== "HEAD" && request.method !== "POST") {
       return json({ error: "Method Not Allowed" }, 405);
     }

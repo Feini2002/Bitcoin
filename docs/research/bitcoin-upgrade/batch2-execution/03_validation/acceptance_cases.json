@@ -1,0 +1,922 @@
+{
+  "status": "synthetic_not_executed_against_repository",
+  "cases": [
+    {
+      "id": "CHECK-001",
+      "name": "product_mismatch",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "expected": "perpetual",
+        "actual": "spot"
+      },
+      "expected": "拒绝进入永续确认输入",
+      "must_not_claim": "不能只因symbol相同接纳",
+      "finding": "F01",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-002",
+      "name": "legacy_source_unknown",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "source": null,
+        "old_symbol": "BTCUSDT"
+      },
+      "expected": "标legacy_unknown并限制单所研究",
+      "must_not_claim": "不能补Binance",
+      "finding": "F01",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-003",
+      "name": "dataset_catalog_only",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "registered": true,
+        "automaticCollection": false
+      },
+      "expected": "显示未持续采集/消费者待核",
+      "must_not_claim": "不能显示实时全接入",
+      "finding": "F02",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-004",
+      "name": "history_500_of_864",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "available": 500,
+        "required": 864
+      },
+      "expected": "覆盖不足或使用明确短窗",
+      "must_not_claim": "不能伪造缺364根",
+      "finding": "F03",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-005",
+      "name": "missing_3d",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "requested": "3d",
+        "registered": [
+          "1d",
+          "1w"
+        ]
+      },
+      "expected": "原生新增/已验重采样/未启用明确选择",
+      "must_not_claim": "不能偷换旧混源",
+      "finding": "F03",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-006",
+      "name": "ws_forming",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "native_x": false,
+        "clock_after_close": true
+      },
+      "expected": "保留形成中与冲突原因",
+      "must_not_claim": "不能凭时钟覆盖原生状态",
+      "finding": "F04",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-007",
+      "name": "transport_no_market",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "ws_open": true,
+        "market_event_at": null
+      },
+      "expected": "连接可用但行情新鲜未知",
+      "must_not_claim": "不能称实时价格",
+      "finding": "F05",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-008",
+      "name": "late_rest",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "rest_started_seq": 4,
+        "latest_ws_seq": 5,
+        "rest_return_seq": 6
+      },
+      "expected": "比较同价格类型市场时点/代次，拒绝旧观察覆盖",
+      "must_not_claim": "不能以到达顺序当事件新旧",
+      "finding": "F06",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-009",
+      "name": "frozen_breakout",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "known_level": 101,
+        "buffer": 1,
+        "previous_close": 100,
+        "closed_close": 103
+      },
+      "expected": "使用此前known_level验证突破",
+      "must_not_claim": "不能重新只选高于103的level再测试",
+      "finding": "F07",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-010",
+      "name": "vwap_exact",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "trades": [
+          [
+            90,
+            4
+          ],
+          [
+            110,
+            6
+          ]
+        ],
+        "quote_volume": 1020,
+        "base_volume": 10
+      },
+      "expected": "VWAP=102，HLC3近似=103.333…分开",
+      "must_not_claim": "不能同名混用",
+      "finding": "F08",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-011",
+      "name": "vwap_zero",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "quote_volume": 0,
+        "base_volume": 0
+      },
+      "expected": "null和zero_denominator",
+      "must_not_claim": "不能回填HLC3",
+      "finding": "F08",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-012",
+      "name": "vwap_anchor_partial",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "anchor": "00:00",
+        "first_input": "08:00"
+      },
+      "expected": "已观察区间VWAP，日锚点不完整",
+      "must_not_claim": "不能称完整日内",
+      "finding": "F08",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-013",
+      "name": "previous_day_gap",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "requested_day": "2026-09-16",
+        "only_prior": "2026-09-14"
+      },
+      "expected": "前日范围缺失，另列较早观察",
+      "must_not_claim": "不能标14日为15日",
+      "finding": "F09",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-014",
+      "name": "pivot_known_later",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "pivot_bar": 5,
+        "wing": 3,
+        "evaluation_bar": 6
+      },
+      "expected": "bar8之后才有确认资格",
+      "must_not_claim": "不能在bar6使用完整确认",
+      "finding": "F10",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-015",
+      "name": "poc_tie",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "levels": [
+          [
+            100,
+            5
+          ],
+          [
+            110,
+            5
+          ]
+        ],
+        "policy": "lowest-price"
+      },
+      "expected": "单bar与整窗均100并记录并列候选",
+      "must_not_claim": "不能由数组排序决定",
+      "finding": "F11",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-016",
+      "name": "rebin_non_associative",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "price": 4.6,
+        "old_grid": 1,
+        "target_grid": 10
+      },
+      "expected": "识别nearest-center旧方法非无损，保留版本",
+      "must_not_claim": "不能声明两阶段必等直接",
+      "finding": "F12",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-017",
+      "name": "sparse_tick",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "observed_prices": [
+          100,
+          110,
+          120
+        ],
+        "exchange_tick": 0.1
+      },
+      "expected": "样本gap10不是原生tick0.1",
+      "must_not_claim": "不能用最小观察差代替规格",
+      "finding": "F13",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-018",
+      "name": "display_resize",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "analysis_bin": 5,
+        "display_bin_before": 10,
+        "display_bin_after": 20
+      },
+      "expected": "固定分析结果不变，显示可变",
+      "must_not_claim": "不能重写封存POC",
+      "finding": "F13",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-019",
+      "name": "sfp_future_profile",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "candidate_bar": 5,
+        "profile_last_bar": 20
+      },
+      "expected": "回看标签或仅使用bar5前已知profile",
+      "must_not_claim": "不能伪称当时信号",
+      "finding": "F14",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-020",
+      "name": "sfp_confirmbar",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "confirm_bar_closed": true,
+        "latest_bar_closed": false
+      },
+      "expected": "按具体确认bar及质量判定",
+      "must_not_claim": "不能全局最新形成中抹掉旧确认",
+      "finding": "F15",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-021",
+      "name": "freshness_invented",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "last_trade_time": null,
+        "current_bar_end": "future",
+        "query_now": "now"
+      },
+      "expected": "观察时间未知，不构造age0",
+      "must_not_claim": "不能将barEnd当心跳",
+      "finding": "F16",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-022",
+      "name": "liquidation_sides",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "binance": "SELL",
+        "bybit": "Buy"
+      },
+      "expected": "两者均long，保留各自来源语义",
+      "must_not_claim": "不能按相同side文本统一反转",
+      "finding": "F17",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-023",
+      "name": "unknown_liquidation",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "positionSide": "unknown",
+        "notional": 100
+      },
+      "expected": "unknown累计或隔离；long不增加",
+      "must_not_claim": "不能else归long",
+      "finding": "F17",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-024",
+      "name": "binance_order_vs_fill",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "ap": 0,
+        "p": 100,
+        "z": 0,
+        "q": 10
+      },
+      "expected": "订单价/原始量不能伪装已成交",
+      "must_not_claim": "不能直接声称实际清算1000",
+      "finding": "F18",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-025",
+      "name": "bybit_bankruptcy",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "p": 100,
+        "v": 2
+      },
+      "expected": "200为破产价估值，类型保留",
+      "must_not_claim": "不能称实际成交损失200",
+      "finding": "F18",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-026",
+      "name": "cumulative_updates",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "native_order_id": "O1",
+        "z_values": [
+          2,
+          3,
+          3
+        ]
+      },
+      "expected": "足够身份下增量2+1+0，异常另记",
+      "must_not_claim": "不能加成8",
+      "finding": "F19",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-027",
+      "name": "no_native_identity",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "same_attributes_twice": true,
+        "native_id": null
+      },
+      "expected": "有限指纹去重、身份不确定",
+      "must_not_claim": "不能无损去重保证",
+      "finding": "F19",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-028",
+      "name": "short_oi_window",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "requested_hours": 24,
+        "actual_hours": 1,
+        "start": 100,
+        "end": 110
+      },
+      "expected": "24h变化null；1h描述10%另列",
+      "must_not_claim": "不能将10%标24h",
+      "finding": "F20",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-029",
+      "name": "old_anchor",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "target_at": "2026-09-15T12:00:00Z",
+        "anchor_at": "2026-09-12T12:00:00Z"
+      },
+      "expected": "按容差拒绝锚点",
+      "must_not_claim": "不能有prev就认为足够",
+      "finding": "F20",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-030",
+      "name": "basis_units",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "value": "1.01",
+        "unit": "decimal"
+      },
+      "expected": "显示101%，不猜为1.01%",
+      "must_not_claim": "不能按abs<=1分支",
+      "finding": "F21",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-031",
+      "name": "funding_interval",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "rate": "0.0001",
+        "interval_hours": 4
+      },
+      "expected": "0.01%/4h；按需每小时换算",
+      "must_not_claim": "不能固定8h",
+      "finding": "F21",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-032",
+      "name": "funding_unknown_interval",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "rate": "0.0001",
+        "interval_hours": null
+      },
+      "expected": "原生费率可显示，年化缺失",
+      "must_not_claim": "不能默认8h",
+      "finding": "F21",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-033",
+      "name": "pressure_method_identity",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "page_method": "weighted-v1",
+        "snapshot_method": "log-v1"
+      },
+      "expected": "不同方法分开或统一方法",
+      "must_not_claim": "不能称同一压力对照",
+      "finding": "F22",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-034",
+      "name": "any_fresh_mask",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "required_1h": "stale",
+        "optional_5m": "fresh"
+      },
+      "expected": "主任务stale/qualified",
+      "must_not_claim": "不能some(fresh)标全新",
+      "finding": "F23",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-035",
+      "name": "early_revision",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "last_time_equal": true,
+        "older_value_changed": true
+      },
+      "expected": "内容/方法身份更新，旧报告不覆盖",
+      "must_not_claim": "不能最新时间指纹不变当数据没变",
+      "finding": "F24",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-036",
+      "name": "raw_vs_computed",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "field": "rangePositionPct",
+        "computed": true
+      },
+      "expected": "computed_description",
+      "must_not_claim": "不能raw_fact",
+      "finding": "F24",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-037",
+      "name": "fixed_confidence",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "market_ok": true,
+        "assigned": 72
+      },
+      "expected": "规则/可用性，不校准概率",
+      "must_not_claim": "不能72%可信或胜率",
+      "finding": "F25",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-038",
+      "name": "availability_vs_alignment",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "market_ok": true,
+        "directions_not_computed": true
+      },
+      "expected": "不能生成同向机会",
+      "must_not_claim": "不能可用即同向",
+      "finding": "F25",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-039",
+      "name": "calendar_article",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "publishedAt": "2026-09-16",
+        "official_schedule": null
+      },
+      "expected": "历史报道或未知计划",
+      "must_not_claim": "不能未来催化剂",
+      "finding": "F26",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-040",
+      "name": "no_search_coverage",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "incremental_search_used": false,
+        "source_health": "unknown"
+      },
+      "expected": "覆盖未知",
+      "must_not_claim": "不能推足够",
+      "finding": "F26",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-041",
+      "name": "ohlc_invalid",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "open": 100,
+        "high": 90,
+        "low": 80,
+        "close": 105
+      },
+      "expected": "semantic_rejected",
+      "must_not_claim": "不能形状合法即通过",
+      "finding": "F27",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-042",
+      "name": "taker_exceeds_total",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "baseVolume": 10,
+        "takerBuyBase": 11
+      },
+      "expected": "拒绝/隔离该字段并告警",
+      "must_not_claim": "不能产生负卖量",
+      "finding": "F27",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-043",
+      "name": "crossed_book",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "bid": 101,
+        "ask": 100
+      },
+      "expected": "无效/源状态异常",
+      "must_not_claim": "不能负spread称收益",
+      "finding": "F27",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-044",
+      "name": "receipt_collision",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "same_receipt_key": true,
+        "digests": [
+          "A",
+          "B"
+        ]
+      },
+      "expected": "冲突登记，不静默忽略",
+      "must_not_claim": "不能DO NOTHING伪装幂等",
+      "finding": "F28",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-045",
+      "name": "revision_A_B_A",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "contents": [
+          "A",
+          "B",
+          "A"
+        ],
+        "receipts": [
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": "保留三次观察与两个内容版本",
+      "must_not_claim": "不能去重抹掉第三次观察",
+      "finding": "F28",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-046",
+      "name": "concurrent_refresh",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "expired_cache": true,
+        "concurrent": 3
+      },
+      "expected": "核单飞/预算，重复上游可观察",
+      "must_not_claim": "不能宣称缓存天然防重复",
+      "finding": "F29",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-047",
+      "name": "historical_health",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "known_at": "old",
+        "health_scope": "current"
+      },
+      "expected": "当前健康不能当历史当时健康",
+      "must_not_claim": "不能隐藏scope差别",
+      "finding": "F30",
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-048",
+      "name": "summary_bid_ask",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "bid_price": 1,
+        "ask_price": 2,
+        "mark_iv": 50
+      },
+      "expected": "复用已有summary字段再验证，不额外造无报价缺口",
+      "must_not_claim": "不能称summary天然没有bid/ask",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-049",
+      "name": "options_truncated",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "returned": 1000,
+        "available": 1400
+      },
+      "expected": "partial，不算全链总OI/偏斜",
+      "must_not_claim": "不能完整截面",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-050",
+      "name": "depth_band_incomplete",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "wanted_bps": 100,
+        "last_visible_bps": 10
+      },
+      "expected": "lower_bound或partial深度",
+      "must_not_claim": "不能剩余90bps视零",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-051",
+      "name": "macro_weekend",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "last_observed": "Friday",
+        "today": "Sunday"
+      },
+      "expected": "日历背景沿用，非新观察",
+      "must_not_claim": "不能生成周末实时利率",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-052",
+      "name": "fred_late_import",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "observation_date": "2024-01-01",
+        "received_at": "2026-09-17"
+      },
+      "expected": "system_observed历史不含该新导入",
+      "must_not_claim": "不能回填已知时间",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-053",
+      "name": "etf_partial",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "fund_a": 0,
+        "fund_b": null
+      },
+      "expected": "partial，总额不代表全集",
+      "must_not_claim": "不能None=0",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-054",
+      "name": "document_negation",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "a": "已批准",
+        "b": "未批准"
+      },
+      "expected": "保留相反极性或更正关系",
+      "must_not_claim": "不能近重复删反证",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-055",
+      "name": "same_origin_reposts",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "domains": 3,
+        "origin_id": "one-release"
+      },
+      "expected": "一根事实来源，三个载体",
+      "must_not_claim": "不能三份独立确认",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-056",
+      "name": "llm_fake_reference",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "allowed": [
+          "E1"
+        ],
+        "returned": [
+          "E9"
+        ]
+      },
+      "expected": "reject_candidate",
+      "must_not_claim": "不能渲染器找近似补链接",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-057",
+      "name": "capability_not_enabled",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "etf": false,
+        "claim": "ETF确认"
+      },
+      "expected": "reject_or_remove_claim",
+      "must_not_claim": "不能未启用确认",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-058",
+      "name": "initial_vs_no_change",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "comparison_capture": null,
+        "coverage": "good"
+      },
+      "expected": "initial_baseline",
+      "must_not_claim": "不能无重大变化",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-059",
+      "name": "insufficient_vs_quiet",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "coverage": "insufficient",
+        "changes": []
+      },
+      "expected": "insufficient_coverage",
+      "must_not_claim": "不能市场平静",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-060",
+      "name": "model_budget_missing",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "mode": "model",
+        "budget": null
+      },
+      "expected": "不调用；模板另路可用",
+      "must_not_claim": "不能null表示无限",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-061",
+      "name": "template_no_model",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "mode": "template",
+        "budget": null
+      },
+      "expected": "可在自身权限内生成模板",
+      "must_not_claim": "不能强制先部署预算平台",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-062",
+      "name": "provider_outcome_unknown",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "request_sent": true,
+        "timeout": true
+      },
+      "expected": "登记未知usage，先对账再决定",
+      "must_not_claim": "不能保证没收费/自动无限重试",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-063",
+      "name": "old_report_missing",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "report_id": "old",
+        "payload": null
+      },
+      "expected": "missing或合法元数据",
+      "must_not_claim": "不能latest/LLM补写冒充",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-064",
+      "name": "cancel_late_response",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "cancelled": true,
+        "late_response": true
+      },
+      "expected": "不发布，不改新选择，结算已知费用",
+      "must_not_claim": "不能复活为final",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-065",
+      "name": "hash_not_truth",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "digest_valid": true,
+        "claim_supported": false
+      },
+      "expected": "引用/真实性审核仍失败",
+      "must_not_claim": "不能hash有效=事实正确",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    },
+    {
+      "id": "CHECK-066",
+      "name": "source_revoked",
+      "kind": "synthetic_acceptance_specification",
+      "input": {
+        "store_allowed": true,
+        "send_model_allowed": false
+      },
+      "expected": "保留允许存储，禁止模型外发",
+      "must_not_claim": "不能已入库就授权",
+      "finding": null,
+      "repository_execution_status": "not_run"
+    }
+  ]
+}

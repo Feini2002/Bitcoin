@@ -1,0 +1,2070 @@
+{
+  "version": "batch2-execution-1.0-design",
+  "generated_on": "2026-09-17",
+  "based_on_original_package": "bitcoin_system_upgrade_2026-09-17.zip",
+  "code_review_baseline": "a6ef6c8974dcdaace32acf25c3a231ecd279ef37",
+  "canonical_entry": "EXECUTION_MASTER.md",
+  "progress_authority": "EXECUTION_LOG.md",
+  "status": "documentation_only_no_repository_execution",
+  "mainline_count": 39,
+  "conditional_count": 9,
+  "mainline_order": [
+    "NEW-001",
+    "NEW-002",
+    "NEW-003",
+    "NEW-047",
+    "NEW-004",
+    "NEW-005",
+    "NEW-006",
+    "NEW-007",
+    "NEW-008",
+    "NEW-009",
+    "NEW-010",
+    "NEW-011",
+    "NEW-012",
+    "NEW-035",
+    "NEW-036",
+    "NEW-039",
+    "NEW-021",
+    "NEW-022",
+    "NEW-023",
+    "NEW-024",
+    "NEW-013",
+    "NEW-014",
+    "NEW-015",
+    "NEW-016",
+    "NEW-017",
+    "NEW-018",
+    "NEW-019",
+    "NEW-020",
+    "NEW-031",
+    "NEW-032",
+    "NEW-033",
+    "NEW-034",
+    "NEW-037",
+    "NEW-038",
+    "NEW-040",
+    "NEW-041",
+    "NEW-043",
+    "NEW-044",
+    "NEW-048"
+  ],
+  "groups": [
+    {
+      "id": "P00",
+      "title": "绑定当前仓库与已归档资料，建立测试和权限基线",
+      "document": "01_execution/phases/P00_repository_binding.md",
+      "tasks": [
+        "NEW-001",
+        "NEW-002",
+        "NEW-003",
+        "NEW-047"
+      ]
+    },
+    {
+      "id": "P01",
+      "title": "建立供当前页面使用的最小数据、时间和方法边界",
+      "document": "01_execution/phases/P01_data_contracts.md",
+      "tasks": [
+        "NEW-004",
+        "NEW-005",
+        "NEW-006",
+        "NEW-007"
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "完成行情工作台的产品身份、确认状态、VWAP和结构修正",
+      "document": "01_execution/phases/P02_chart_workbench.md",
+      "tasks": [
+        "NEW-008",
+        "NEW-009",
+        "NEW-010",
+        "NEW-011",
+        "NEW-012"
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "尽早交付固定输入的市场变化模板与报告生命周期",
+      "document": "01_execution/phases/P03_market_template.md",
+      "tasks": [
+        "NEW-035",
+        "NEW-036",
+        "NEW-039"
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "统一衍生品单位、窗口、OI和跨消费者方法",
+      "document": "01_execution/phases/P04_derivatives.md",
+      "tasks": [
+        "NEW-021",
+        "NEW-022",
+        "NEW-023",
+        "NEW-024"
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "统一足迹分箱、POC、价值区、CVD和SFP时点",
+      "document": "01_execution/phases/P05_orderflow.md",
+      "tasks": [
+        "NEW-013",
+        "NEW-014",
+        "NEW-015",
+        "NEW-016"
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "修正强平事件语义、统计范围及压力条件",
+      "document": "01_execution/phases/P06_liquidations.md",
+      "tasks": [
+        "NEW-017",
+        "NEW-018",
+        "NEW-019",
+        "NEW-020"
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "完成有限来源、文档版本、事件去重与低噪音情报链",
+      "document": "01_execution/phases/P07_intelligence.md",
+      "tasks": [
+        "NEW-031",
+        "NEW-032",
+        "NEW-033",
+        "NEW-034"
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "接入受约束模型综合、根预算与输出核验",
+      "document": "01_execution/phases/P08_model_workflow.md",
+      "tasks": [
+        "NEW-037",
+        "NEW-038"
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "贯通四页证据、研究现场、旧链接与导出",
+      "document": "01_execution/phases/P09_workspace_history.md",
+      "tasks": [
+        "NEW-040",
+        "NEW-041"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "完成价值对照、跨页回归、迁移演练与开发收口",
+      "document": "01_execution/phases/P10_validation_handoff.md",
+      "tasks": [
+        "NEW-043",
+        "NEW-044",
+        "NEW-048"
+      ]
+    }
+  ],
+  "conditional_groups": [
+    {
+      "id": "C25",
+      "task": "NEW-025",
+      "check_at": "P02",
+      "trigger": "当前实际研究窗口超过有效历史，且消费者确需该窗口。"
+    },
+    {
+      "id": "C26",
+      "task": "NEW-026",
+      "check_at": "P01",
+      "trigger": "测量显示同值重复接收导致可观测写放大、成本或读取瓶颈。"
+    },
+    {
+      "id": "C27",
+      "task": "NEW-027",
+      "check_at": "P00",
+      "trigger": "任务要求持续数据，当前合法运行路径经授权验证仍不满足可达性/恢复目标。"
+    },
+    {
+      "id": "C28",
+      "task": "NEW-028",
+      "check_at": "P04",
+      "trigger": "现有已登记序列对当前研究问题有明确增量且用途可用。"
+    },
+    {
+      "id": "C29",
+      "task": "NEW-029",
+      "check_at": "P07",
+      "trigger": "有明确ETF问题、可取得的发行人/合规来源、字段与保存用途。"
+    },
+    {
+      "id": "C30",
+      "task": "NEW-030",
+      "check_at": "P04",
+      "trigger": "研究任务需期限/IV信息，已存summary覆盖和条款可支持。"
+    },
+    {
+      "id": "C42",
+      "task": "NEW-042",
+      "check_at": "P09",
+      "trigger": "用户任务明确需要可修订观点或站内条件提醒。"
+    },
+    {
+      "id": "C45",
+      "task": "NEW-045",
+      "check_at": "P10",
+      "trigger": "本地验收通过、真实迁移和来源状态可验证，并有明确生产操作授权。"
+    },
+    {
+      "id": "C46",
+      "task": "NEW-046",
+      "check_at": "P10",
+      "trigger": "代表性任务有实际性能/运行证据，现有SQL/JS经过合理局部改进仍不足。"
+    }
+  ],
+  "old_slices_role": "retired_as_entry; source original saved under 99_history; NEW identifiers preserved",
+  "tasks": [
+    {
+      "id": "NEW-001",
+      "title": "锁定本次工作区和能力范围",
+      "owner": "集成",
+      "depends_on": [],
+      "known_modules": [
+        "README.md",
+        "package.json",
+        "config/pages-assets.json",
+        "docs/research/bitcoin-upgrade/README.md"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "比对a6ef6c8与实际本机差异；只绑定本次受影响模块、schema、现有测试和治理owner，列已修复/仍成立/未知。",
+      "acceptance": "形成可复核路径表、文件摘要与未提交变更保护清单；没有reset或全仓重新治理。",
+      "rollback": "冲突文件暂停补丁，按新基线重做三方对照，不覆盖未知变化。",
+      "preflight_unknown": "实际分支、未跟踪文件、并发治理与远程版本均需确认。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P00_repository_binding.md#new-001",
+      "execution_group": "P00",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "本任务包含把第二批挂到现有第一批归档入口，但不重整第一批正文。绑定后继续执行固定主线，不再把“请先选择S1—S6”作为结束条件。",
+      "acceptance_case_refs": [],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-002",
+      "title": "登记启用来源的用途与运行条件",
+      "owner": "来源",
+      "depends_on": [
+        "NEW-001"
+      ],
+      "known_modules": [
+        "cloudflare/finance/registry.mjs",
+        "cloudflare/finance/gateway.mjs",
+        "cloudflare/yuqing/yuqing-worker.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "只核当前切片需要的API、访问凭据、保存/模型/导出用途、地区与费用，不审核全部67候选后才开工。",
+      "acceptance": "allowed/denied/unknown三种用途样本在读取、外发与导出分别正确；未知不自动允许。",
+      "rollback": "隔离受限用途，保留允许的模板与市场读取。",
+      "preflight_unknown": "真实合同、provider计划、展示范围、外层认证。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "官方资料只读；合同、账号、真实API及付费另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P00_repository_binding.md#new-002",
+      "execution_group": "P00",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "形成来源用途记录不等于批准所有用途。unknown/denied是合法登记值；它们阻塞实际取用/外发，而不阻塞使用合成样本完成适配和拒绝路径。",
+      "acceptance_case_refs": [
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-003",
+      "title": "把审查反例接到现有测试入口",
+      "owner": "测试",
+      "depends_on": [
+        "NEW-001"
+      ],
+      "known_modules": [
+        "scripts/verify-indicator-math.cjs",
+        "scripts/verify-footprint-aggregation.cjs",
+        "scripts/verify-liquidation-radar.cjs",
+        "scripts/verify-finance-datasets.cjs",
+        "package.json"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "把本包相关合成场景映射现有函数；保留已正确方向测试；数值测试与源码字符串测试分开。",
+      "acceptance": "原行为差异可定位到字段/方法；每个新assert有expected依据，不靠删失败样本变绿。",
+      "rollback": "新测试环境问题隔离而非删除反例，记录未运行范围。",
+      "preflight_unknown": "哪些脚本联网、Node与实际模块加载方式。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P00_repository_binding.md#new-003",
+      "execution_group": "P00",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "按阶段接入相应场景而非第一天实现66个全量业务测试；本任务负责框架与相关基线，NEW-044负责最终映射和全范围回归。历史测试记录不得重标为今天已跑。",
+      "acceptance_case_refs": [
+        "CHECK-001",
+        "CHECK-002",
+        "CHECK-003",
+        "CHECK-004",
+        "CHECK-005",
+        "CHECK-006",
+        "CHECK-007",
+        "CHECK-008",
+        "CHECK-009",
+        "CHECK-010",
+        "CHECK-011",
+        "CHECK-012",
+        "CHECK-013",
+        "CHECK-014",
+        "CHECK-015",
+        "CHECK-016",
+        "CHECK-017",
+        "CHECK-018",
+        "CHECK-019",
+        "CHECK-020",
+        "CHECK-021",
+        "CHECK-022",
+        "CHECK-023",
+        "CHECK-024",
+        "CHECK-025",
+        "CHECK-026",
+        "CHECK-027",
+        "CHECK-028",
+        "CHECK-029",
+        "CHECK-030",
+        "CHECK-031",
+        "CHECK-032",
+        "CHECK-033",
+        "CHECK-034",
+        "CHECK-035",
+        "CHECK-036",
+        "CHECK-037",
+        "CHECK-038",
+        "CHECK-039",
+        "CHECK-040",
+        "CHECK-041",
+        "CHECK-042",
+        "CHECK-043",
+        "CHECK-044",
+        "CHECK-045",
+        "CHECK-046",
+        "CHECK-047",
+        "CHECK-048",
+        "CHECK-049",
+        "CHECK-050",
+        "CHECK-051",
+        "CHECK-052",
+        "CHECK-053",
+        "CHECK-054",
+        "CHECK-055",
+        "CHECK-056",
+        "CHECK-057",
+        "CHECK-058",
+        "CHECK-059",
+        "CHECK-060",
+        "CHECK-061",
+        "CHECK-062",
+        "CHECK-063",
+        "CHECK-064",
+        "CHECK-065",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-004",
+      "title": "建立最小typed observation与quality适配",
+      "owner": "数据",
+      "depends_on": [
+        "NEW-001",
+        "NEW-002",
+        "NEW-003"
+      ],
+      "known_modules": [
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/finance/dataset-store.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "复用32目录；增加本次消费的product、unit、price/quantity type、时间和finality映射，补OHLC/非负量/盘口等域校验。",
+      "acceptance": "合法零值与缺失不同；负量、错产品、crossed book、无效日期与taker>total被隔离。",
+      "rollback": "保留旧读取，仅新研究禁用不合格输入，不无证据重写旧值。",
+      "preflight_unknown": "全链是否已有等价校验、规范表实际schema。",
+      "related_findings": [
+        "F01",
+        "F02",
+        "F27"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P01_data_contracts.md#new-004",
+      "execution_group": "P01",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "只规范实际使用字段。主线包含冲突检测与安全拒绝；大量receipt压缩、去重存储架构和迁移优化属于NEW-026条件分支。",
+      "acceptance_case_refs": [
+        "CHECK-001",
+        "CHECK-002",
+        "CHECK-041",
+        "CHECK-042",
+        "CHECK-043",
+        "CHECK-044",
+        "CHECK-050"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-005",
+      "title": "能力状态与真实新鲜度读取",
+      "owner": "数据",
+      "depends_on": [
+        "NEW-004"
+      ],
+      "known_modules": [
+        "cloudflare/finance/gateway.mjs",
+        "cloudflare/finance/dataset-store.mjs",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "区分registered/observed/continuous/consumer；按任务依赖返回收取年龄、源年龄、覆盖与缺项，不用any fresh。",
+      "acceptance": "新鲜5m不能掩盖旧1h；缺事件不判断线；当前health与historical scope明示。",
+      "rollback": "降级状态展示，不用固定百分数补齐。",
+      "preflight_unknown": "实际Cron、最后观察、source-specific SLA。",
+      "related_findings": [
+        "F02",
+        "F05",
+        "F16",
+        "F23",
+        "F30"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P01_data_contracts.md#new-005",
+      "execution_group": "P01",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "“能够读取数据”与“持续采集有效”分别验收。本文不重新承诺Cloudflare连通；读取陈旧缓存应显示陈旧，不能当新鲜燃料。",
+      "acceptance_case_refs": [
+        "CHECK-003",
+        "CHECK-007",
+        "CHECK-021",
+        "CHECK-034",
+        "CHECK-047",
+        "CHECK-059"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-006",
+      "title": "有界as-of与窗口选择",
+      "owner": "方法",
+      "depends_on": [
+        "NEW-004"
+      ],
+      "known_modules": [
+        "js/pages/derivatives.js",
+        "js/heatmap/pressure-matrix.js",
+        "cloudflare/finance/dataset-store.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "统一实际窗、目标锚点容差与同产品方法；市场cutoff和knowledge cutoff独立，短历史不冒充24h。",
+      "acceptance": "1h输入请求24h返回不足；过老锚点、跨source/spec、未来receipt均不进入确认值。",
+      "rollback": "仍可显示实际短窗口，不恢复最早点兜底24h。",
+      "preflight_unknown": "源timestamp期初末、容差目标、原caller默认窗口。",
+      "related_findings": [
+        "F20",
+        "F21",
+        "F30"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P01_data_contracts.md#new-006",
+      "execution_group": "P01",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "窗口规则是程序合同，不让模型决定。锚点容差、实际跨度和来源规格明确传给消费方；需要历史published时点而不存在则禁止相应声称。",
+      "acceptance_case_refs": [
+        "CHECK-028",
+        "CHECK-029",
+        "CHECK-047",
+        "CHECK-052"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-007",
+      "title": "纯方法注册与跨消费者映射",
+      "owner": "方法",
+      "depends_on": [
+        "NEW-003",
+        "NEW-004"
+      ],
+      "known_modules": [
+        "js/chart/indicator-math.js",
+        "js/orderflow/footprint-engine.js",
+        "js/heatmap/pressure-matrix.js",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "仅抽本切片方法的参数、版本和纯计算边界；页面与快照同输入同方法，禁止额外写一份启发式。",
+      "acceptance": "同一黄金样本跨消费者结果在声明容差内一致，纯模块无隐式fetch/Date.now。",
+      "rollback": "无法安全共享的部分保留适配和差异测试，不强行迁目录。",
+      "preflight_unknown": "现有模块格式、循环依赖与Pages打包边界。",
+      "related_findings": [
+        "F22",
+        "F24"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P01_data_contracts.md#new-007",
+      "execution_group": "P01",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "先提取当前任务已经使用的函数或做适配，不要求全部50项方法拥有新框架。展示色彩、像素与UI偏好不能成为金融参数。",
+      "acceptance_case_refs": [
+        "CHECK-033",
+        "CHECK-035",
+        "CHECK-036",
+        "CHECK-065"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-008",
+      "title": "主图接入规范同产品K线",
+      "owner": "主图",
+      "depends_on": [
+        "NEW-004",
+        "NEW-005"
+      ],
+      "known_modules": [
+        "js/pages/chart.js",
+        "js/data-engine.js",
+        "cloudflare/finance/datasets.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "增加新read adapter，保留base/quote/taker/count/finality；旧来源未知段单独显示；不再用D1位置证明Binance来源。",
+      "acceptance": "同symbol现货/永续与不同venue不会互换；切周期后请求和状态身份正确。",
+      "rollback": "切回旧只读带legacy说明，不把未知段标单所。",
+      "preflight_unknown": "data-engine完整返回契约与运行源覆盖。",
+      "related_findings": [
+        "F01",
+        "F02",
+        "F04",
+        "F05"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P02_chart_workbench.md#new-008",
+      "execution_group": "P02",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "接通规范读路径不等于一次性把32个数据集铺到四页。优先现有同产品数据，保留旧只读兼容和明确功能开关；生产读取未经授权不实际调用。",
+      "acceptance_case_refs": [
+        "CHECK-001",
+        "CHECK-002",
+        "CHECK-003",
+        "CHECK-004",
+        "CHECK-005"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-009",
+      "title": "主图实时确认和晚到请求保护",
+      "owner": "主图",
+      "depends_on": [
+        "NEW-008",
+        "NEW-003"
+      ],
+      "known_modules": [
+        "js/pages/chart.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "保留k.x/k.T/E；分离形成中与确认输入；标题REST单飞、返回时比较generation和可比观察时间。",
+      "acceptance": "旧REST在新WS后到达不能覆盖；切页取消；k.x=false不能满足收盘确认。",
+      "rollback": "停止新标题更新使用最后可信值并标旧，不恢复跨产品回退。",
+      "preflight_unknown": "当前ticker是否带可比较市场时间、代理响应头。",
+      "related_findings": [
+        "F04",
+        "F06"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P02_chart_workbench.md#new-009",
+      "execution_group": "P02",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "当前代码若已有有效的标题同产品限制和请求取消则保留，不重做已修内容。不同时间语义不可仅按receivedAt大小决定覆盖。",
+      "acceptance_case_refs": [
+        "CHECK-006",
+        "CHECK-007",
+        "CHECK-008",
+        "CHECK-064"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-010",
+      "title": "新增成交额、主动量与真实VWAP",
+      "owner": "主图",
+      "depends_on": [
+        "NEW-007",
+        "NEW-008"
+      ],
+      "known_modules": [
+        "js/chart/indicator-math.js",
+        "js/pages/chart.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "消费quote/base与taker字段；M06和HLC3近似分开；日锚点、零量、完整日与高周期模式显式。",
+      "acceptance": "90×4+110×6合成样本VWAP102；零分母null；跨日与窗口不足正确；单位一致。",
+      "rollback": "旧近似可保留明确命名，不回填真实VWAP。",
+      "preflight_unknown": "旧历史能否提供quote量；用户默认锚点。",
+      "related_findings": [
+        "F08"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P02_chart_workbench.md#new-010",
+      "execution_group": "P02",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "“真实VWAP”限定为所选同产品、同窗口、同样本覆盖的quote/base比值，不称全市场真值。源字段不足时只显示明确的近似或缺失。",
+      "acceptance_case_refs": [
+        "CHECK-010",
+        "CHECK-011",
+        "CHECK-012",
+        "CHECK-042"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-011",
+      "title": "修正结构价位和近端突破生命周期",
+      "owner": "主图",
+      "depends_on": [
+        "NEW-006",
+        "NEW-007",
+        "NEW-008"
+      ],
+      "known_modules": [
+        "js/chart/indicator-math.js",
+        "js/pages/chart.js",
+        "cloudflare/snapshot/chartStructureSnapshot.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "冻结被测level与known_at，nearest display另算；前日完整范围、pivot确认时点与reaction评分版本。",
+      "acceptance": "当前价100/level101跨越样本可触发正确分支；未来数据追加不改已封存前瞻事件。",
+      "rollback": "关新确认保留价位参考，不恢复不可达逻辑的确认文案。",
+      "preflight_unknown": "结构模块实际导出、旧反应评分所有消费位置。",
+      "related_findings": [
+        "F07",
+        "F09",
+        "F10"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P02_chart_workbench.md#new-011",
+      "execution_group": "P02",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "近端展示的nearest level与被测试的frozen level可以不同，须用身份和known_at解释。新逻辑不能用后续数据重新定义过去的被测价位。",
+      "acceptance_case_refs": [
+        "CHECK-009",
+        "CHECK-013",
+        "CHECK-014"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-012",
+      "title": "主图周期覆盖与默认信息层",
+      "owner": "主图",
+      "depends_on": [
+        "NEW-009",
+        "NEW-010",
+        "NEW-011"
+      ],
+      "known_modules": [
+        "js/pages/chart.js",
+        "js/chart/indicator-math.js",
+        "cloudflare/finance/datasets.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "明确500/864范围；3d选择原生/重采样/禁用；保留偏好，减少默认重叠指标，增加证据入口。",
+      "acceptance": "窗口不足不显示完整；3d无数据不偷用旧混源；默认调整不删除个人设置。",
+      "rollback": "回旧布局但保留语义和质量修复。",
+      "preflight_unknown": "3d原生规范、历史分页能力与用户实际用法。",
+      "related_findings": [
+        "F03"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P02_chart_workbench.md#new-012",
+      "execution_group": "P02",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "完整历史不足时实现不足状态与真实窗口并登记C25；若目标已明确要求完整窗口，任务保持partial直到验证，不靠永久禁用核心功能标完成。",
+      "acceptance_case_refs": [
+        "CHECK-004",
+        "CHECK-005",
+        "CHECK-006",
+        "CHECK-012",
+        "CHECK-013"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-013",
+      "title": "分离足迹分析格与显示格",
+      "owner": "足迹",
+      "depends_on": [
+        "NEW-004",
+        "NEW-007"
+      ],
+      "known_modules": [
+        "js/orderflow/footprint-engine.js",
+        "js/pages/orderflow.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "固定exchange/storage/analysis/display四层；新输入采用对齐边界格，旧中心桶保留方法。",
+      "acceptance": "4.6二次round反例被识别；可嵌套格重聚合守恒；resize不改变固定分析。",
+      "rollback": "保留旧桶读取并声明近似，不伪细分历史。",
+      "preflight_unknown": "渲染器返回的rebinned结果是否用于分析。",
+      "related_findings": [
+        "F12",
+        "F13"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P05_orderflow.md#new-013",
+      "execution_group": "P05",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "固定分析格与显示格分开；旧中心桶不可逆，禁止凭新schema造更细历史。重聚合是否可结合必须用具体反例验证。",
+      "acceptance_case_refs": [
+        "CHECK-016",
+        "CHECK-017",
+        "CHECK-018"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-014",
+      "title": "统一POC并列及价值区规则",
+      "owner": "足迹",
+      "depends_on": [
+        "NEW-013",
+        "NEW-003"
+      ],
+      "known_modules": [
+        "js/orderflow/footprint-engine.js",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "单bar与整窗使用同tie政策；保存pocCandidates、VA目标/实际覆盖和空格处理。",
+      "acceptance": "100/110等量两峰所有消费者同选择；同分布排列不改结果。",
+      "rollback": "保留旧方法版本对照，历史报告不重写。",
+      "preflight_unknown": "旧snapshot压缩算法是否另算POC。",
+      "related_findings": [
+        "F11"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P05_orderflow.md#new-014",
+      "execution_group": "P05",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "并列规则没有天然唯一金融答案，按原专项设计选定并版本化；所有消费者同一输入必须一致，不要求改成外部某产品默认。",
+      "acceptance_case_refs": [
+        "CHECK-015",
+        "CHECK-016"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-015",
+      "title": "SFP按已知价位和确认bar评估",
+      "owner": "足迹",
+      "depends_on": [
+        "NEW-006",
+        "NEW-013",
+        "NEW-014"
+      ],
+      "known_modules": [
+        "js/orderflow/footprint-engine.js",
+        "js/pages/orderflow.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "前缀/known_at评价，确认对具体confirmBar，保留已有degrade；旧confirmed时效和失效明确。",
+      "acceptance": "未来bar不能回写过去前瞻信号；最新bar形成中不错误抹掉旧confirm；回看单独标签。",
+      "rollback": "仅展示retrospective候选，停止前瞻确认承诺。",
+      "preflight_unknown": "调用方technicalLevels时点、原SFP快照是否使用。",
+      "related_findings": [
+        "F14",
+        "F15"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P05_orderflow.md#new-015",
+      "execution_group": "P05",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "前缀回放与真实前瞻验证分别记录。只修展示标签不等于完成SFP时点修正；必须定位technicalLevels的实际输入时间。",
+      "acceptance_case_refs": [
+        "CHECK-014",
+        "CHECK-019",
+        "CHECK-020"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-016",
+      "title": "足迹新鲜度、CVD与失衡方法",
+      "owner": "足迹",
+      "depends_on": [
+        "NEW-005",
+        "NEW-013"
+      ],
+      "known_modules": [
+        "js/orderflow/footprint-engine.js",
+        "js/pages/orderflow.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "真实接收/成交与bar计划末端分开；CVD显式anchor；同价与对角及两种连续性分开。",
+      "acceptance": "缺真实时间不age0；缺口断段；零分母不Infinity；对角方向与排列无关。",
+      "rollback": "未验证对角法保持未启用；保留原同价法命名。",
+      "preflight_unknown": "连续采集覆盖及具体CVD实现。",
+      "related_findings": [
+        "F16"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P05_orderflow.md#new-016",
+      "execution_group": "P05",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "没有持续成交日志时不保证完整CVD；静默成交流、缺口和缓存停更不同。新失衡方法离线通过才允许启用，不能只把按钮变可点。",
+      "acceptance_case_refs": [
+        "CHECK-007",
+        "CHECK-017",
+        "CHECK-018",
+        "CHECK-021"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-017",
+      "title": "强平类型与unknown方向",
+      "owner": "强平",
+      "depends_on": [
+        "NEW-004",
+        "NEW-003"
+      ],
+      "known_modules": [
+        "js/heatmap/liquidation-engine.js",
+        "cloudflare/binance-klines-worker.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "保留正确方向；unknown独立；ap/p、z/l/q、Bybit bankruptcy标类型和fallback。",
+      "acceptance": "未知不计long；平均成交与破产价不混成相同精确值；缺时间不造event now。",
+      "rollback": "旧数据legacy_unknown显示，不参与新版精确合计。",
+      "preflight_unknown": "Worker对应归一化与桶写入完整调用链。",
+      "related_findings": [
+        "F17",
+        "F18"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P06_liquidations.md#new-017",
+      "execution_group": "P06",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "已正确的Binance/Bybit方向固定样本必须保留；unknown应拒绝或独立统计，绝不能默认落在long。",
+      "acceptance_case_refs": [
+        "CHECK-022",
+        "CHECK-023",
+        "CHECK-024",
+        "CHECK-025"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-018",
+      "title": "强平事件身份与实时/历史互斥",
+      "owner": "强平",
+      "depends_on": [
+        "NEW-017",
+        "NEW-006"
+      ],
+      "known_modules": [
+        "js/heatmap/liquidation-engine.js",
+        "cloudflare/binance-klines-worker.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "区分原生ID/指纹；累计量仅有足够身份时差分；实时尾段和D1桶覆盖不重叠。",
+      "acceptance": "重复/累计回退/同属性两事件不被假保证；不能精确去重时输出限定统计。",
+      "rollback": "停增量叠加只读已验证桶并保留缺口。",
+      "preflight_unknown": "原生可用订单ID、桶边界、浏览器数量上限消费。",
+      "related_findings": [
+        "F19"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P06_liquidations.md#new-018",
+      "execution_group": "P06",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "没有稳定身份时，有限指纹去重必须标其限制。设计不能承诺上游未提供的订单级精确增量；真实尾段不得与历史桶重叠相加。",
+      "acceptance_case_refs": [
+        "CHECK-026",
+        "CHECK-027"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-019",
+      "title": "清算窗口和强度的范围化统计",
+      "owner": "强平",
+      "depends_on": [
+        "NEW-005",
+        "NEW-006",
+        "NEW-017",
+        "NEW-018"
+      ],
+      "known_modules": [
+        "js/heatmap/liquidation-engine.js",
+        "js/heatmap/pressure-matrix.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "按源及notional_method聚合长/短/unknown，区分零观测/断线/有限采样，历史分位同口径。",
+      "acceptance": "transport正常无事件不自动重连风暴；截断列表不称24h全集；质量不造完整率。",
+      "rollback": "只保留原生事件表与状态，不显示无法支持的合成强度。",
+      "preflight_unknown": "上游采样与heartbeat实际行为、历史数据覆盖。",
+      "related_findings": [
+        "F18",
+        "F20"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P06_liquidations.md#new-019",
+      "execution_group": "P06",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "没有事件不是零风险；统计按实际覆盖的来源、数量/价格方法和窗口表述。完整性未知时不得伪造一个准确百分数。",
+      "acceptance_case_refs": [
+        "CHECK-007",
+        "CHECK-024",
+        "CHECK-025",
+        "CHECK-026",
+        "CHECK-027",
+        "CHECK-028"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-020",
+      "title": "压力页与快照统一条件向量",
+      "owner": "强平",
+      "depends_on": [
+        "NEW-007",
+        "NEW-019",
+        "NEW-021",
+        "NEW-022"
+      ],
+      "known_modules": [
+        "js/heatmap/pressure-matrix.js",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "退出固定confidence%与log金额同名分，统一typed funding/OI/basis条件；规则排序与概率分开。",
+      "acceptance": "同输入页面、snapshot、LLM数值和方法一致；缺项只降依赖条件。",
+      "rollback": "停止场景主标签，保留原始观察和legacy规则解释。",
+      "preflight_unknown": "所有pressure字段的UI与LLM消费者。",
+      "related_findings": [
+        "F21",
+        "F22",
+        "F24"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P06_liquidations.md#new-020",
+      "execution_group": "P06",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "本轮默认在NEW-021和NEW-022之后实施本任务，保留原硬依赖。数据缺失可以停止对应情景而继续呈现已验证观察，不能为凑矩阵填值。",
+      "acceptance_case_refs": [
+        "CHECK-030",
+        "CHECK-031",
+        "CHECK-032",
+        "CHECK-033",
+        "CHECK-034",
+        "CHECK-036"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-021",
+      "title": "资金费与基差显式单位",
+      "owner": "衍生品",
+      "depends_on": [
+        "NEW-004",
+        "NEW-006",
+        "NEW-007"
+      ],
+      "known_modules": [
+        "js/pages/derivatives.js",
+        "js/heatmap/pressure-matrix.js",
+        "cloudflare/finance/datasets.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "删除abs<=1猜单位；资金费区分预测/结算/间隔；perp与quarter分开，不拿PERPETUAL填季度。",
+      "acceptance": "0.5/1/1.01按显式单位连续；间隔未知不年化；跨零变化用bp；空annualized保留空。",
+      "rollback": "旧字段保持deprecated解释，不重新猜单位。",
+      "preflight_unknown": "旧basis单位和真实季度来源；资金费规则证据。",
+      "related_findings": [
+        "F21"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P04_derivatives.md#new-021",
+      "execution_group": "P04",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "不通过把旧value统一乘100解决所有单位问题；先辨识每一来源与方法。季度产品缺失不能由永续annualized字段代替。",
+      "acceptance_case_refs": [
+        "CHECK-030",
+        "CHECK-031",
+        "CHECK-032"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-022",
+      "title": "OI窗口、规格与估值分解",
+      "owner": "衍生品",
+      "depends_on": [
+        "NEW-006",
+        "NEW-007"
+      ],
+      "known_modules": [
+        "js/pages/derivatives.js",
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "以完整产品/规格/来源分段，输出实际窗口；数量与估值分开，四象限保留竞争解释。",
+      "acceptance": "1h不冒充24h；同family不同产品拒绝；ΔV分解只对V=P×Q成立。",
+      "rollback": "仅原始OI与价格，关闭误导方向判断。",
+      "preflight_unknown": "原生OI单位、转换价型和变化锚点容差。",
+      "related_findings": [
+        "F20",
+        "F21"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P04_derivatives.md#new-022",
+      "execution_group": "P04",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "同一来源family不是同一经济产品；必须检查spec与价型。由空多双方共同构成的OI不能直接解释为新增多头/净资金。",
+      "acceptance_case_refs": [
+        "CHECK-028",
+        "CHECK-029",
+        "CHECK-036"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-023",
+      "title": "Taker和多空比例语义对齐",
+      "owner": "衍生品",
+      "depends_on": [
+        "NEW-004",
+        "NEW-006"
+      ],
+      "known_modules": [
+        "js/pages/derivatives.js",
+        "cloudflare/finance/registry.mjs",
+        "cloudflare/finance/datasets.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "账户、top账户、top持仓、taker分别展示；新增缺端点需核认证，不复用相似字段代替。",
+      "acceptance": "不按比值求和；缺一侧不造大户分歧；源时间/群体范围可查看。",
+      "rollback": "保留已确认比例，隐藏不支持比较。",
+      "preflight_unknown": "Top Trader当前认证要求与实际账号用途。",
+      "related_findings": [
+        "F27"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P04_derivatives.md#new-023",
+      "execution_group": "P04",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "需要新增实际端点时先核可用权利，未满足则比较保持关闭。代码开发、模拟契约和真实请求验证分别记账。",
+      "acceptance_case_refs": [
+        "CHECK-001",
+        "CHECK-029",
+        "CHECK-042"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-024",
+      "title": "衍生品页与四页快照同源方法",
+      "owner": "衍生品",
+      "depends_on": [
+        "NEW-021",
+        "NEW-022",
+        "NEW-023",
+        "NEW-005"
+      ],
+      "known_modules": [
+        "js/pages/derivatives.js",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "用统一方法结果压缩snapshot，修raw_fact误标签、any fresh与弱指纹。",
+      "acceptance": "改早期输入但末时间不变，内容版本仍变；raw/computed/hypothesis清楚。",
+      "rollback": "保留旧snapshot作为legacy，不让新报告混同。",
+      "preflight_unknown": "独立snapshot是否部署、四页真实消费者及方法版本。",
+      "related_findings": [
+        "F23",
+        "F24"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P04_derivatives.md#new-024",
+      "execution_group": "P04",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "先复用P01方法和实际输入；快照覆盖不等于4个页面原子同时刻。后续模板重新捕获新的输入，不回写P03旧报告。",
+      "acceptance_case_refs": [
+        "CHECK-030",
+        "CHECK-033",
+        "CHECK-034",
+        "CHECK-035",
+        "CHECK-036"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-025",
+      "title": "有界历史回补和周期覆盖",
+      "owner": "采集",
+      "depends_on": [
+        "NEW-002",
+        "NEW-004",
+        "NEW-005"
+      ],
+      "known_modules": [
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/finance/registry.mjs",
+        "cloudflare/finance/gateway.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "有限注册start/end/cursor与最大页数，尾段刷新和历史回补分开；保存不可回补缺口。",
+      "acceptance": "分页重复、插入、迟到和30天限制可解释；不足864不伪满。",
+      "rollback": "停止补历史并保留已校验范围，不填合成行情。",
+      "preflight_unknown": "每端点限额/日期/历史范围与当前真实访问。",
+      "related_findings": [
+        "F03"
+      ],
+      "conditional": true,
+      "external_boundary": "真实网络回补、Cloudflare写入和额度需确认；先合成分页",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-025",
+      "execution_group": "C25",
+      "execution_mode": "conditional",
+      "execution_refinement": "触发评价可以在P02发生，不必等附录最后；受限操作未批准只写有界适配与模拟分页，真实回补保持blocked。",
+      "acceptance_case_refs": [
+        "CHECK-004",
+        "CHECK-005",
+        "CHECK-006",
+        "CHECK-012",
+        "CHECK-013"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-026",
+      "title": "接收版本写放大与冲突优化",
+      "owner": "存储",
+      "depends_on": [
+        "NEW-004",
+        "NEW-006"
+      ],
+      "known_modules": [
+        "cloudflare/finance/dataset-store.mjs",
+        "cloudflare/finance/dataset-schema.sql"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "实测后分批次观察与内容版本；同键同hash幂等，不同hash冲突；保留A-B-A时间序列。",
+      "acceptance": "重复取500点只增加必要观察元数据，历史known_at不失真；碰撞不会静默丢。",
+      "rollback": "停止新投影，保留原receipt历史只读，不直接删旧数据。",
+      "preflight_unknown": "真实写入行数/空间、数据库迁移和旧查询性能。",
+      "related_findings": [
+        "F28"
+      ],
+      "conditional": true,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-026",
+      "execution_group": "C26",
+      "execution_mode": "conditional",
+      "execution_refinement": "同键不同payload的正确性拒绝属于主线NEW-004；本任务只在观察到写放大/成本瓶颈后做结构优化，保留A→B→A。",
+      "acceptance_case_refs": [
+        "CHECK-044",
+        "CHECK-045",
+        "CHECK-046",
+        "CHECK-047"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-027",
+      "title": "采集运行环境与持续性实验",
+      "owner": "运行",
+      "depends_on": [
+        "NEW-002",
+        "NEW-005",
+        "NEW-025"
+      ],
+      "known_modules": [
+        "cloudflare/wrangler.toml",
+        "cloudflare/finance/gateway.mjs",
+        "docs/research/workbench-binance-data-plan-2026-09-16.md"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "验证合法可达路径；必要时专用采集器以认证批次上传，接收时间由服务器记录，不默认迁站。",
+      "acceptance": "REST/WS有效数据、恢复、失联可见；没有绕过限制或伪称本机常在线。",
+      "rollback": "关专用采集器，保留有限缓存并标stale；可明确更换研究主市场。",
+      "preflight_unknown": "地区/服务条款、运维人、预算与云部署权限。",
+      "related_findings": [
+        "F02"
+      ],
+      "conditional": true,
+      "external_boundary": "涉及新服务/网络/账号/生产写入，必须独立批准",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-027",
+      "execution_group": "C27",
+      "execution_mode": "conditional",
+      "execution_refinement": "不得以历史403直接认定今天来源失效，也不允许用代理或别所数据绕过。若不能证明持续性，最终交付明确实时未验而非宣称数据底座已稳定。",
+      "acceptance_case_refs": [
+        "CHECK-003",
+        "CHECK-007",
+        "CHECK-021",
+        "CHECK-046",
+        "CHECK-059"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-028",
+      "title": "FRED与跨资产时点背景",
+      "owner": "宏观",
+      "depends_on": [
+        "NEW-002",
+        "NEW-004",
+        "NEW-006"
+      ],
+      "known_modules": [
+        "cloudflare/finance/datasets.mjs",
+        "js/pages/derivatives.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "先接已登记序列，保留单位和vintage；DXY名称纠正、利率bp与CPI指数/同比分开，休市对齐。",
+      "acceptance": "周末旧值不称实时；latest导入不能还原system observed；缺共识不称超预期。",
+      "rollback": "退为当前描述并标局限，停止历史因果或概率结论。",
+      "preflight_unknown": "真实发布时点、频率、合同与历史vintage覆盖。",
+      "related_findings": [],
+      "conditional": true,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-028",
+      "execution_group": "C28",
+      "execution_mode": "conditional",
+      "execution_refinement": "仅接已经登记且本任务有需要的序列；运行权限未满足时可以开发映射和样例。不可把新增背景当第一份模板前置。",
+      "acceptance_case_refs": [
+        "CHECK-051",
+        "CHECK-052"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-029",
+      "title": "有限ETF披露核对试点",
+      "owner": "ETF",
+      "depends_on": [
+        "NEW-002",
+        "NEW-004",
+        "NEW-006",
+        "NEW-031"
+      ],
+      "known_modules": [
+        "cloudflare/finance/registry.mjs",
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/yuqing/yuqing-facts.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "拟新增披露适配，发行人份额/NAV与流量估计分开；到齐/修订和as_of一致。",
+      "acceptance": "未知不填零；AUM变化不当flow；合计只覆盖确认可比成分。",
+      "rollback": "只保留披露链接和未解决项，不输出合成总流量。",
+      "preflight_unknown": "原始页面取得权、字段及真实历史完整度。",
+      "related_findings": [],
+      "conditional": true,
+      "external_boundary": "新增来源/可能付费/存储与外部推理另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-029",
+      "execution_group": "C29",
+      "execution_mode": "conditional",
+      "execution_refinement": "只有存在具体ETF研究问题与可用授权来源才启用；否则保留设计和状态，不创建全空页面冒充完成。",
+      "acceptance_case_refs": [
+        "CHECK-039",
+        "CHECK-053",
+        "CHECK-054"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-030",
+      "title": "期权摘要优先复用与有限截面",
+      "owner": "期权",
+      "depends_on": [
+        "NEW-002",
+        "NEW-004",
+        "NEW-006"
+      ],
+      "known_modules": [
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/finance/registry.mjs",
+        "js/pages/derivatives.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "先利用已存summary bid/ask/underlying，再补instrument和必要缺字段；声明截断与报价质量。",
+      "acceptance": "摘要不误报无bid/ask；无Greeks不算25delta/GEX；缺期限不外推全曲面。",
+      "rollback": "保留原生摘要与质量视图，关闭自算曲面。",
+      "preflight_unknown": "截面总量、字段单位、采样跨度、条款。",
+      "related_findings": [],
+      "conditional": true,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-030",
+      "execution_group": "C30",
+      "execution_mode": "conditional",
+      "execution_refinement": "先核已存summary字段与截断标记；不重复接一个已经能提供同义字段的接口。无Greeks、报价质量或期限覆盖则相关自算指标保持关闭。",
+      "acceptance_case_refs": [
+        "CHECK-043",
+        "CHECK-048",
+        "CHECK-049"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-031",
+      "title": "有限独立情报来源登记",
+      "owner": "情报",
+      "depends_on": [
+        "NEW-001",
+        "NEW-002"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/yuqing-worker.js",
+        "cloudflare/yuqing/yuqing-facts.js",
+        "cloudflare/finance/registry.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "选一个真实缺口，不批量接全部参考URL；持续发现与按需核验共享来源用途。",
+      "acceptance": "采集状态和发布内容区别；无权来源停止但其他路径可用。",
+      "rollback": "退到原来源或手工输入获准片段，不绕过访问限制。",
+      "preflight_unknown": "源入口、原生RSS/API、更新时间与内容保存权。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P07_intelligence.md#new-031",
+      "execution_group": "P07",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "第一批已归档收集手册直接借用，只有能力缺口才增源；不要重建资料库、重复索引67卡或批抓所有参考URL。",
+      "acceptance_case_refs": [
+        "CHECK-039",
+        "CHECK-040",
+        "CHECK-059",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-032",
+      "title": "文档版本与有界提取",
+      "owner": "情报",
+      "depends_on": [
+        "NEW-031",
+        "NEW-003"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/yuqing-facts.js",
+        "cloudflare/yuqing/yuqing-worker.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "保留首次见到内容版本与取得时间，提取器版本、原始定位，处理A-B-A及更正。",
+      "acceptance": "同URL更正保留；空正文不凭标题补全文；数字单位否定词不丢。",
+      "rollback": "保存获准元数据并标partial，停止模型抽取该文档。",
+      "preflight_unknown": "现有事实池schema、摘要/全文实际权利与保留。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P07_intelligence.md#new-032",
+      "execution_group": "P07",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "正文版本与获取观察不是同一对象；内容回到A也保留新的观察时点。旧全文不可合法保存时只保留允许定位并降低恢复等级。",
+      "acceptance_case_refs": [
+        "CHECK-045",
+        "CHECK-052",
+        "CHECK-054",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-033",
+      "title": "事件主张、转载和更正关系",
+      "owner": "情报",
+      "depends_on": [
+        "NEW-032"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/yuqing-facts.js",
+        "cloudflare/yuqing/shijian/index.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "文章/事件/主张分开，根来源分组、可逆合并、反证与更正不因相似删除。",
+      "acceptance": "多域同公告只一根证据；批准/未批准保留冲突；拆分后旧引用可恢复。",
+      "rollback": "只精确去重，关闭未经验证的语义自动合并。",
+      "preflight_unknown": "已有id/引用关系和人工复核入口。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P07_intelligence.md#new-033",
+      "execution_group": "P07",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "没有语义模型也应完成确定性关系与人工可逆机制。可逆合并是应用逻辑，不因用了向量库就自动成立。",
+      "acceptance_case_refs": [
+        "CHECK-054",
+        "CHECK-055",
+        "CHECK-065"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-034",
+      "title": "BTC相关性与覆盖不足状态",
+      "owner": "情报",
+      "depends_on": [
+        "NEW-031",
+        "NEW-033"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/shijian/index.js",
+        "cloudflare/yuqing/fenxi/sentiment-logic.js",
+        "js/pages/events.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "非BTC工程频道默认隔离；覆盖按来源/事件，不按18条；未搜索不等于足够，未来日历不用文章时间。",
+      "acceptance": "无变化/首次基线/源停采/未核实排期分别输出；重要更正不能被降噪吞掉。",
+      "rollback": "导航可回旧，模型输入仍保留相关性与错误状态。",
+      "preflight_unknown": "当前模块开关、真实来源范围与用户关注任务。",
+      "related_findings": [
+        "F25",
+        "F26"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P07_intelligence.md#new-034",
+      "execution_group": "P07",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "频道改动要尊重既有偏好与旧路由，不批量删除AI/GitHub内容。模型上下文隔离与页面是否展示分别检查。",
+      "acceptance_case_refs": [
+        "CHECK-039",
+        "CHECK-040",
+        "CHECK-055",
+        "CHECK-058",
+        "CHECK-059"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-035",
+      "title": "按能力封存输入和结果身份",
+      "owner": "研究",
+      "depends_on": [
+        "NEW-004",
+        "NEW-005",
+        "NEW-006",
+        "NEW-007"
+      ],
+      "known_modules": [
+        "cloudflare/snapshot/marketSnapshotProgram.mjs",
+        "cloudflare/yuqing/yuqing-worker.js",
+        "cloudflare/finance/dataset-store.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "只捕获已选切片输入，不依赖四页全部改完；市场/知识cutoff分开，新增证据用child。",
+      "acceptance": "同capture引用稳定；改旧输入可见新摘要；生成中不得悄换latest。",
+      "rollback": "仅当前描述不承诺历史重放，已有报告保留。",
+      "preflight_unknown": "实际capture owner、存储和旧report字段关系。",
+      "related_findings": [
+        "F24"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P03_market_template.md#new-035",
+      "execution_group": "P03",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "主线安排在主图之后，不等待全部页面。首次capture只列已启用能力；后来加入衍生品/事件时形成新capture或child，不把旧输入改掉。",
+      "acceptance_case_refs": [
+        "CHECK-001",
+        "CHECK-034",
+        "CHECK-035",
+        "CHECK-036",
+        "CHECK-047",
+        "CHECK-052",
+        "CHECK-065",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-036",
+      "title": "确定性变化简报与误导规则退出",
+      "owner": "分析",
+      "depends_on": [
+        "NEW-035"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/fenxi/sentiment-logic.js",
+        "cloudflare/yuqing/shijian/temperature.js",
+        "js/pages/news.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "用已启用方法形成事实/变化/分歧/未知；缺失不填50，固定score/confidence与机会条件退出新输出。",
+      "acceptance": "真实50与缺失不同；market.ok不生成同向机会；模板无模型也可用。",
+      "rollback": "保留旧报告legacy，禁用新解释而不恢复伪概率。",
+      "preflight_unknown": "分数被哪些排序/颜色/LLM使用；FNG实际调用。",
+      "related_findings": [
+        "F25",
+        "F26"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P03_market_template.md#new-036",
+      "execution_group": "P03",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "本任务在现有分析入口输出可见模板，P09只负责完善四页统一现场。缺失处理、固定百分数与能力假确认须在程序、页面、导出和模型输入一起检查。",
+      "acceptance_case_refs": [
+        "CHECK-037",
+        "CHECK-038",
+        "CHECK-039",
+        "CHECK-040",
+        "CHECK-057",
+        "CHECK-058",
+        "CHECK-059",
+        "CHECK-061"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-037",
+      "title": "根任务预算与模型适配",
+      "owner": "模型",
+      "depends_on": [
+        "NEW-002",
+        "NEW-035"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/yuqing-worker.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "保留Gemini，登记model/tool/price version、逻辑调用与attempt；外发前政策/预算检查，模板无模型预算依赖。",
+      "acceptance": "预算为空模型不发起；并发不会绕过预留；结果未知先对账，不保证供应商只计费一次。",
+      "rollback": "关闭模型保留模板；释放安全可释放资源并留未知usage。",
+      "preflight_unknown": "真实模型计划、计费与Grounding用途、外层执行模式。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "真实模型/搜索调用与费用、供应商条款确认后执行",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P08_model_workflow.md#new-037",
+      "execution_group": "P08",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "“预算控制代码可测”与“真实模型费用已验”分开。不配置预算不调用模型，但不停止本地模拟与P09工作。",
+      "acceptance_case_refs": [
+        "CHECK-060",
+        "CHECK-061",
+        "CHECK-062",
+        "CHECK-064",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-038",
+      "title": "受约束综合与程序核验",
+      "owner": "分析",
+      "depends_on": [
+        "NEW-036",
+        "NEW-037",
+        "NEW-003"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/yuqing-worker.js",
+        "cloudflare/yuqing/fenxi/sentiment-logic.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "接P-C候选、数字refs、能力状态和P-D条件审核；非必须多角色，硬检查后发布。",
+      "acceptance": "假引用、错单位、越窗、未启用ETF/期权确认被拒；同bundle比模板有可核验增量。",
+      "rollback": "回模板；证据不足降级，不无限重试。",
+      "preflight_unknown": "现有structured output及provider支持字段与预算。",
+      "related_findings": [
+        "F25"
+      ],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P08_model_workflow.md#new-038",
+      "execution_group": "P08",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "使用单次综合加条件核查为基线，P-A/P-B依真实任务触发；不可只复制提示词文件就标完。效果验收待真实对照，不由另一个LLM自评代替。",
+      "acceptance_case_refs": [
+        "CHECK-036",
+        "CHECK-037",
+        "CHECK-038",
+        "CHECK-056",
+        "CHECK-057",
+        "CHECK-060",
+        "CHECK-061",
+        "CHECK-062",
+        "CHECK-065",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-039",
+      "title": "预览与不可变最终报告",
+      "owner": "报告",
+      "depends_on": [
+        "NEW-035",
+        "NEW-036"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/yuqing-worker.js",
+        "cloudflare/migrations/yuqing/0002_reports.sql",
+        "js/pages/news.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "按实际schema扩展结果版本，SSE预览非final；租约/幂等/迟到结果和修订关系明确。",
+      "acceptance": "同ID不无声覆盖已发布；旧epoch不能发布；取消后晚到不更新当前页。",
+      "rollback": "保留旧只读report，停止新发布，恢复允许的可信reader。",
+      "preflight_unknown": "远程schema、旧预览存储与保留期限。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P03_market_template.md#new-039",
+      "execution_group": "P03",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "纯模板也走明确报告生命周期，但不必搭建持久多代理平台。最终不可变表示不无声改写，合法撤回/限制可附状态。",
+      "acceptance_case_refs": [
+        "CHECK-035",
+        "CHECK-056",
+        "CHECK-062",
+        "CHECK-063",
+        "CHECK-064"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-040",
+      "title": "统一四页证据入口与Research View",
+      "owner": "前端",
+      "depends_on": [
+        "NEW-035",
+        "NEW-039"
+      ],
+      "known_modules": [
+        "js/pages/chart.js",
+        "js/pages/orderflow.js",
+        "js/pages/derivatives.js",
+        "js/pages/news.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径；强平页面确切路径是实施前查找目标，不能将猜测路径当已知。",
+      "changes": "先确认heatmap页面路径实际存在；共享绝对选择及方法引用，保留各页布局和偏好。",
+      "acceptance": "跨页选择/返回报告/切run一致；缺输入显示恢复等级，不用latest补旧现场。",
+      "rollback": "停跨页自动联动，保留独立页面与证据链接。",
+      "preflight_unknown": "路由真实文件、hash编码、shared state和存储方式。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P09_workspace_history.md#new-040",
+      "execution_group": "P09",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "后期统一四页不阻塞P03模板可见。该任务不得只实现主图后标四页done；受阻页面明确partial及未启用范围。",
+      "acceptance_case_refs": [
+        "CHECK-001",
+        "CHECK-018",
+        "CHECK-034",
+        "CHECK-035",
+        "CHECK-047",
+        "CHECK-063",
+        "CHECK-064"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-041",
+      "title": "旧链接、导出和分层保留",
+      "owner": "历史",
+      "depends_on": [
+        "NEW-002",
+        "NEW-039",
+        "NEW-040"
+      ],
+      "known_modules": [
+        "cloudflare/yuqing/yuqing-worker.js",
+        "js/pages/news.js",
+        "cloudflare/snapshot/market-snapshot-worker.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "旧reportId只读映射；导出再查用途，缺材料有等级；保留/删除先影响清单。",
+      "acceptance": "旧链接不跳新报告；restricted与missing区别；已删不能LLM补造；导出不漏密钥。",
+      "rollback": "恢复旧reader兼容，暂停新清理，合法到期义务仍执行。",
+      "preflight_unknown": "真实历史存在范围与政策；本地外发副本不可召回边界。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P09_workspace_history.md#new-041",
+      "execution_group": "P09",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "保留期无用户目标/合同依据时不替用户决定一年或永久；先做配置边界与dry-run。删除义务和原有保留状态均需据证据处理。",
+      "acceptance_case_refs": [
+        "CHECK-002",
+        "CHECK-035",
+        "CHECK-047",
+        "CHECK-063",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-042",
+      "title": "观点记录与条件预警试点",
+      "owner": "研究",
+      "depends_on": [
+        "NEW-035",
+        "NEW-040"
+      ],
+      "known_modules": [
+        "js/config.js",
+        "js/features.js",
+        "cloudflare/yuqing/yuqing-worker.js"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "拟新增观点revision和站内episode，不接账户；状态/冷却/恢复/更正与证据绑定。",
+      "acceptance": "规则满足不等于有用；重试不重复episode，历史补齐不刷屏，改规则不重写过去。",
+      "rollback": "只保留笔记，禁提醒；旧planned保持原标签。",
+      "preflight_unknown": "是否需要提醒、真实用户检查周期、写认证。",
+      "related_findings": [],
+      "conditional": true,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-042",
+      "execution_group": "C42",
+      "execution_mode": "conditional",
+      "execution_refinement": "默认主线不新增交易账户或外发通知；站内试点也需明确任务与用户需要。不会因保留planned模块而自动转正。",
+      "acceptance_case_refs": [
+        "CHECK-014",
+        "CHECK-020",
+        "CHECK-039",
+        "CHECK-054",
+        "CHECK-058",
+        "CHECK-059",
+        "CHECK-064"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-043",
+      "title": "数据增量与模型增量分离评价",
+      "owner": "测试",
+      "depends_on": [
+        "NEW-003",
+        "NEW-036"
+      ],
+      "known_modules": [
+        "scripts/verify-yuqing-reports.cjs",
+        "scripts/verify-finance-datasets.cjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "定义旧/新材料×模板/模型对照；独立样本、抑制队列抽样、引用/噪音/遗漏/费用分母。",
+      "acceptance": "不能只用流畅度或低重复证明价值；模型组实际调用单独授权，未测不填提升。",
+      "rollback": "无增量的特征/源/角色移出默认，保留实验记录。",
+      "preflight_unknown": "真实获准样本、标注一致性、用户任务和费用目标。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P10_validation_handoff.md#new-043",
+      "execution_group": "P10",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "从P00/各阶段保留基线，这里完成对照汇总，不等最后才想样本。无真实样本则结果not_measured，不能用合成通过数宣传研究效果。",
+      "acceptance_case_refs": [
+        "CHECK-037",
+        "CHECK-038",
+        "CHECK-040",
+        "CHECK-054",
+        "CHECK-055",
+        "CHECK-056",
+        "CHECK-058",
+        "CHECK-059",
+        "CHECK-061",
+        "CHECK-065"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-044",
+      "title": "逐切片端到端与迁移演练",
+      "owner": "集成",
+      "depends_on": [
+        "NEW-003",
+        "NEW-039",
+        "NEW-040",
+        "NEW-041",
+        "NEW-043"
+      ],
+      "known_modules": [
+        "scripts/run-bounded.cjs",
+        "package.json",
+        "config/pages-assets.json"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "按选中slice执行对应语义、缓存、历史和资源测试；仅隔离副本演练，输出范围清单。",
+      "acceptance": "主图/足迹/强平/衍生品未启用项不算通过；有界测试、旧路径兼容、回退有效。",
+      "rollback": "停止受影响切片，其他已验能力不回退；不drop生产表。",
+      "preflight_unknown": "测试脚本网络副作用、实际部署边界。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P10_validation_handoff.md#new-044",
+      "execution_group": "P10",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "各阶段已有局部回归，这里合并执行已启用范围。某条件能力未启用可不适用，但核心未实现不能靠改分母全部变绿。",
+      "acceptance_case_refs": [
+        "CHECK-001",
+        "CHECK-002",
+        "CHECK-003",
+        "CHECK-004",
+        "CHECK-005",
+        "CHECK-006",
+        "CHECK-007",
+        "CHECK-008",
+        "CHECK-009",
+        "CHECK-010",
+        "CHECK-011",
+        "CHECK-012",
+        "CHECK-013",
+        "CHECK-014",
+        "CHECK-015",
+        "CHECK-016",
+        "CHECK-017",
+        "CHECK-018",
+        "CHECK-019",
+        "CHECK-020",
+        "CHECK-021",
+        "CHECK-022",
+        "CHECK-023",
+        "CHECK-024",
+        "CHECK-025",
+        "CHECK-026",
+        "CHECK-027",
+        "CHECK-028",
+        "CHECK-029",
+        "CHECK-030",
+        "CHECK-031",
+        "CHECK-032",
+        "CHECK-033",
+        "CHECK-034",
+        "CHECK-035",
+        "CHECK-036",
+        "CHECK-037",
+        "CHECK-038",
+        "CHECK-039",
+        "CHECK-040",
+        "CHECK-041",
+        "CHECK-042",
+        "CHECK-043",
+        "CHECK-044",
+        "CHECK-045",
+        "CHECK-046",
+        "CHECK-047",
+        "CHECK-048",
+        "CHECK-049",
+        "CHECK-050",
+        "CHECK-051",
+        "CHECK-052",
+        "CHECK-053",
+        "CHECK-054",
+        "CHECK-055",
+        "CHECK-056",
+        "CHECK-057",
+        "CHECK-058",
+        "CHECK-059",
+        "CHECK-060",
+        "CHECK-061",
+        "CHECK-062",
+        "CHECK-063",
+        "CHECK-064",
+        "CHECK-065",
+        "CHECK-066"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-045",
+      "title": "生产切换提案与有限观察",
+      "owner": "运行",
+      "depends_on": [
+        "NEW-044"
+      ],
+      "known_modules": [
+        "cloudflare/wrangler.toml",
+        "cloudflare/wrangler.yuqing.toml",
+        "config/pages-assets.json"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "形成待批准部署清单，先核远程schema/routes/Cron与权限，逐slice切换，记录真实费用和失败。",
+      "acceptance": "授权前不调用部署/清理脚本；发布后按实际测试证明，不把本包QA当生产验收。",
+      "rollback": "停写/停模型/回reader开关分别操作，保留版本证据。",
+      "preflight_unknown": "生产访问授权、维护责任、回滚窗口与数据保存。",
+      "related_findings": [],
+      "conditional": true,
+      "external_boundary": "生产访问、迁移、计费、部署全部需要明确批准",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-045",
+      "execution_group": "C45",
+      "execution_mode": "conditional",
+      "execution_refinement": "主线结束可以生成生产切换提案；实际发布、远程核验和观察仍等待显式授权。因此任务可能proposal_ready但production_not_run，不能标完整done。",
+      "acceptance_case_refs": [],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-046",
+      "title": "按实测评估批研究或独立数据库",
+      "owner": "架构",
+      "depends_on": [
+        "NEW-002",
+        "NEW-004",
+        "NEW-006",
+        "NEW-043"
+      ],
+      "known_modules": [
+        "cloudflare/finance/dataset-store.mjs",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "先现有SQL/JS和有限Parquet/DuckDB实验；同数据同查询含冷热缓存、失败恢复，不先部署ClickHouse。",
+      "acceptance": "结果一致与有净收益才接受新环境；没有负载证据则保留现状。",
+      "rollback": "撤实验服务，不删原数据；记录未采用理由。",
+      "preflight_unknown": "实际负载、存储规模、运维与授权副本。",
+      "related_findings": [],
+      "conditional": true,
+      "external_boundary": "新依赖/实验运行环境/费用另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P11_conditional_branches.md#new-046",
+      "execution_group": "C46",
+      "execution_mode": "conditional",
+      "execution_refinement": "先拿出真实负载与同任务对照；没有证据就deferred，不从包内候选生成新的数据库采购任务。",
+      "acceptance_case_refs": [
+        "CHECK-035",
+        "CHECK-044",
+        "CHECK-045",
+        "CHECK-046",
+        "CHECK-047"
+      ],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-047",
+      "title": "对手方资料和公共源复核登记",
+      "owner": "研究",
+      "depends_on": [
+        "NEW-001",
+        "NEW-002"
+      ],
+      "known_modules": [
+        "docs/research/bitcoin-upgrade/README.md"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "当前来源与历史参考分开；采用候选只核对应版本、许可、API与方法，不把旧150条重标今天verified。",
+      "acceptance": "每项采用结论有具体接口/方法与竞争替代；失败来源明确未知。",
+      "rollback": "弱证据候选降为待试验/思想参考，不删除历史。",
+      "preflight_unknown": "当前供应商合同/工具版本/停维护状态。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P00_repository_binding.md#new-047",
+      "execution_group": "P00",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "仅复核本次实际采用的接口、许可、方法和版本；记录查阅日期与支持范围，不能把历史150条来源日期全部改成今天。",
+      "acceptance_case_refs": [],
+      "metadata_role": "derived_index_not_independent_authority"
+    },
+    {
+      "id": "NEW-048",
+      "title": "开发接手与范围闭合",
+      "owner": "集成",
+      "depends_on": [
+        "NEW-043",
+        "NEW-044",
+        "NEW-047"
+      ],
+      "known_modules": [
+        "README.md",
+        "docs/research/bitcoin-upgrade/README.md"
+      ],
+      "proposed_modules": "仅在既有布局无等价职责时拟新增；先由NEW-001绑定路径",
+      "changes": "输出已实现/部分/未启用/未验证矩阵、方法与接口实际位置、费用、失败和后续触发，维护单一入口。",
+      "acceptance": "不能把历史研究卡、合成样本数和本包任务数当实现数；当前用户能复查结果。",
+      "rollback": "未过项留状态，不为全部绿色启用无用planned模块。",
+      "preflight_unknown": "实际启用scope、生产观察是否完成、后续维护owner。",
+      "related_findings": [],
+      "conditional": false,
+      "external_boundary": "仅本地代码/合成样本；安装、真实网络、费用、生产与部署另确认",
+      "status": "proposed_not_executed",
+      "canonical_md": "01_execution/phases/P10_validation_handoff.md#new-048",
+      "execution_group": "P10",
+      "execution_mode": "default_local_mainline",
+      "execution_refinement": "收口报告的核心是准确状态和恢复位置；不要求把条件项全部做完，也不允许把受阻主线称为完成。",
+      "acceptance_case_refs": [],
+      "metadata_role": "derived_index_not_independent_authority"
+    }
+  ]
+}

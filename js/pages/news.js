@@ -13,6 +13,7 @@ const analysisState = {
   status: "正在读取云端舆情分析...",
   source: "loading",
   loading: false,
+  recovery: null,
 };
 
 const analysisModuleRegistry = [
@@ -537,6 +538,52 @@ function renderAnalysisRiskTemperature(row) {
               .join("")}
           </div>
         </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderAnalysisMarketBrief(row) {
+  const Contracts = typeof BitContracts !== "undefined" ? BitContracts : null;
+  if (!Contracts || !Contracts.buildMarketBrief) return "";
+  const report = analysisReportBody(row);
+  const capture = Contracts.buildCaptureIdentity({
+    captureId: row && (row.id || row.reportId) || "local-preview",
+    marketCutoff: report.marketCutoff || null,
+    knowledgeCutoff: report.generatedAt || row && row.generatedAt || null,
+    enabledCapabilities: ["chart"],
+    inputs: {
+      regime: report.marketState && report.marketState.regime,
+      facts: (report.facts || []).slice(0, 8),
+    },
+    preview: !(row && row.id),
+    final: !!(row && row.id),
+  });
+  const brief = Contracts.buildMarketBrief({
+    capture,
+    facts: [
+      report.marketState && report.marketState.regime ? { id: "regime", text: report.marketState.regime } : null,
+      report.marketState && report.marketState.scoreNote ? { id: "scoreNote", text: report.marketState.scoreNote } : null,
+    ].filter(Boolean),
+    limits: [
+      "未启用衍生品/情报能力不纳入结论",
+      "本模板零模型调用",
+      capture.preview ? "当前为预览，不是已封存终稿" : "已绑定 capture 身份",
+    ],
+    previous: row && row.previousCaptureId ? { captureId: row.previousCaptureId } : null,
+  });
+  return `
+    <section class="news-panel span-12 daily-module-panel analysis-module-brief">
+      <div class="news-panel-head daily-module-head">
+        <div>
+          <span class="news-section-kicker">市场变化模板</span>
+          <h3>固定输入简报（无模型）</h3>
+          <p class="daily-module-subtitle">${analysisEscapeHtml(brief.status)} · capture ${analysisEscapeHtml(capture.captureId || "")}</p>
+        </div>
+      </div>
+      <div class="news-story-list">
+        ${(brief.facts || []).map((fact) => `<p>${analysisEscapeHtml(fact.text || "")}</p>`).join("")}
+        ${(brief.limits || []).map((line) => `<p class="muted">${analysisEscapeHtml(line)}</p>`).join("")}
       </div>
     </section>
   `;
@@ -1068,6 +1115,7 @@ function renderYuqingReport(row) {
       <span><i class="ph ph-newspaper-clipping"></i> ${upstreamLabel}</span>
       <span><i class="ph ph-chart-line-up"></i> macro_regime=${analysisEscapeHtml(meta.code)}</span>
       <span><i class="ph ph-calendar-check"></i> 09 / 14 / 22 · 定点二次分析</span>
+      ${analysisState.recovery && analysisState.recovery.action && analysisState.recovery.action !== "exact" ? `<span><i class="ph ph-warning"></i> 恢复 ${analysisEscapeHtml(analysisState.recovery.action)}，未改用最新</span>` : ""}
     </div>
 
     <div class="news-intel-grid daily-dashboard-grid analysis-dashboard-grid">
@@ -1083,6 +1131,8 @@ function renderYuqingReport(row) {
         </div>
         <div class="news-story-list">${renderAnalysisNarrativeValidation(r)}</div>
       </section>` : ""}
+
+      ${renderAnalysisMarketBrief(r)}
 
       ${visibility.hardDataMatrix ? `<section class="news-panel span-5 daily-module-panel daily-module-harddata analysis-module-harddata">
         <div class="news-panel-head daily-module-head">
@@ -1326,13 +1376,29 @@ async function loadAnalysisReport(reportId = "") {
   __yuqingAnalysisAbort = new AbortController();
   analysisState.source = "loading";
   analysisState.status = "正在读取云端 D1 舆情分析...";
+  analysisState.recovery = null;
   renderNewsIntoDom();
   try {
-    const data = reportId
-      ? await DataEngine.fetchYuqingReportItem(reportId, { signal: __yuqingAnalysisAbort.signal })
+    const requested = String(reportId || "").trim();
+    const data = requested
+      ? await DataEngine.fetchYuqingReportItem(requested, { signal: __yuqingAnalysisAbort.signal })
       : await DataEngine.fetchYuqingReportLatest(SENTIMENT_ANALYSIS_KIND, { signal: __yuqingAnalysisAbort.signal });
     const report = data && data.report;
-    if (report) {
+    if (requested) {
+      const resolved = typeof BitContracts !== "undefined" && BitContracts.resolveHistoricalReport
+        ? BitContracts.resolveHistoricalReport(requested, report ? { id: report.id } : null)
+        : { action: report ? "exact" : "missing", latestSubstitution: false };
+      analysisState.recovery = resolved;
+      if (resolved.action !== "exact") {
+        analysisState.report = null;
+        analysisState.source = "error";
+        analysisState.status = resolved.action === "restricted" ? "旧报告当前用途受限，未改用最新" : "旧报告无法恢复，未改用最新";
+      } else {
+        analysisState.report = report;
+        analysisState.source = "cloud";
+        analysisState.status = "云端 D1 舆情分析已加载";
+      }
+    } else if (report) {
       analysisState.report = report;
       analysisState.source = "cloud";
       analysisState.status = "云端 D1 舆情分析已加载";
@@ -1342,9 +1408,18 @@ async function loadAnalysisReport(reportId = "") {
       analysisState.status = data && data.d1Ready === false ? "D1 未绑定或迁移未执行" : "暂无云端舆情分析";
     }
   } catch (e) {
+    const msg = e && e.message ? e.message : String(e);
+    const requested = String(reportId || "").trim();
+    const restricted = /403|restricted/i.test(msg);
+    const resolved = requested && typeof BitContracts !== "undefined" && BitContracts.resolveHistoricalReport
+      ? BitContracts.resolveHistoricalReport(requested, restricted ? { id: requested, restricted: true } : null)
+      : null;
     analysisState.report = null;
+    analysisState.recovery = resolved;
     analysisState.source = "error";
-    analysisState.status = e && e.message ? e.message : String(e);
+    analysisState.status = requested
+      ? (restricted ? "旧报告当前用途受限，未改用最新" : "旧报告无法恢复，未改用最新")
+      : msg;
   }
   await loadAnalysisHistory();
   renderNewsIntoDom();

@@ -1,0 +1,584 @@
+{
+  "pinned_commit": "a6ef6c8974dcdaace32acf25c3a231ecd279ef37",
+  "queried_on": "2026-09-17",
+  "sources": [
+    {
+      "id": "C01",
+      "title": "README.md（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/README.md#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "用途、运行方式、历史部署记录；没有本轮访问生产。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        160
+      ]
+    },
+    {
+      "id": "C02",
+      "title": "docs/research/bitcoin-upgrade/README.md（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/docs/research/bitcoin-upgrade/README.md#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "现有研究包、32数据集、16260条回读、采集探测与部署的仓库记录；其测试未由本轮重跑。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        220
+      ]
+    },
+    {
+      "id": "C03",
+      "title": "docs/research/workbench-binance-data-plan-2026-09-16.md（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/docs/research/workbench-binance-data-plan-2026-09-16.md#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "当前计划、网络历史探测、数据口径与未接页面状态。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        160
+      ]
+    },
+    {
+      "id": "C04",
+      "title": "cloudflare/finance/datasets.mjs（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/finance/datasets.mjs#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "32个固定数据集、字段单位、读/刷新路径、自动采集和前端状态。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        76
+      ]
+    },
+    {
+      "id": "C05",
+      "title": "cloudflare/finance/datasets.mjs（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/finance/datasets.mjs#L77",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "归一化完整switch及末尾校验；options保留原始摘要行，可能已有bid/ask与underlying字段。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        77,
+        160
+      ]
+    },
+    {
+      "id": "C06",
+      "title": "cloudflare/finance/dataset-store.mjs（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/finance/dataset-store.mjs#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "追加receipt历史、readDataset已知时间选择、当前健康信息和截断。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        160
+      ]
+    },
+    {
+      "id": "C07",
+      "title": "cloudflare/finance/gateway.mjs（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/finance/gateway.mjs#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "固定上游、参数白名单、有界响应和错误分类。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        170
+      ]
+    },
+    {
+      "id": "C08",
+      "title": "cloudflare/finance/gateway.mjs（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/finance/gateway.mjs#L170",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "缓存、只读stored、GET取上游、dataset刷新与状态；外层认证未完整审计。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        170,
+        360
+      ]
+    },
+    {
+      "id": "C09",
+      "title": "cloudflare/finance/registry.mjs（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/finance/registry.mjs#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "已读范围内的来源、操作、费用标签及固定参数，不代表所有93操作逐一验证。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        115
+      ]
+    },
+    {
+      "id": "C10",
+      "title": "cloudflare/schema.sql（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/schema.sql#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "旧行情/足迹/强平/衍生品表，以及已有健康、锁和同步记录。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        190
+      ]
+    },
+    {
+      "id": "C11",
+      "title": "js/chart/indicator-math.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/chart/indicator-math.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "EMA/ATR/BB/RSI/MACD、HLC3 VWAP、上一观察日极值。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        240
+      ]
+    },
+    {
+      "id": "C12",
+      "title": "js/chart/indicator-math.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/chart/indicator-math.js#L235",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "候选价格按当前价两侧筛选、聚类评分、周期样本参数。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        235,
+        470
+      ]
+    },
+    {
+      "id": "C13",
+      "title": "js/chart/indicator-math.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/chart/indicator-math.js#L470",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "规范化、摆动与历史反应、结构构建。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        470,
+        720
+      ]
+    },
+    {
+      "id": "C14",
+      "title": "js/chart/indicator-math.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/chart/indicator-math.js#L720",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "近端突破条件与候选选择的矛盾、规则confidence和Fib。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        720,
+        930
+      ]
+    },
+    {
+      "id": "C15",
+      "title": "js/pages/chart.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/pages/chart.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "主图请求代次、取消、标题输入与回退注释。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        190
+      ]
+    },
+    {
+      "id": "C16",
+      "title": "js/pages/chart.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/pages/chart.js#L190",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "默认指标、共享状态、置信显示、上级周期选择。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        190,
+        440
+      ]
+    },
+    {
+      "id": "C17",
+      "title": "js/pages/chart.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/pages/chart.js#L900",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "同产品标题REST读取与周期轮询；需验证异步晚到保护。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        900,
+        1120
+      ]
+    },
+    {
+      "id": "C18",
+      "title": "js/pages/chart.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/pages/chart.js#L1370",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "主图WS行情、事件字段丢弃、连接状态与来源提示。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1370,
+        1600
+      ]
+    },
+    {
+      "id": "C19",
+      "title": "js/orderflow/footprint-engine.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/orderflow/footprint-engine.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "自动展示粒度、round分箱、同价失衡与单柱POC。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        210
+      ]
+    },
+    {
+      "id": "C20",
+      "title": "js/orderflow/footprint-engine.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/orderflow/footprint-engine.js#L210",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "失衡统计、整窗POC及价值区扩张。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        210,
+        350
+      ]
+    },
+    {
+      "id": "C21",
+      "title": "js/orderflow/footprint-engine.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/orderflow/footprint-engine.js#L350",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "SFP关键位从整个输入窗口建立再扫描历史。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        350,
+        600
+      ]
+    },
+    {
+      "id": "C22",
+      "title": "js/orderflow/footprint-engine.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/orderflow/footprint-engine.js#L600",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "SFP结构分、已存在的展示降级、最新bar收盘和推断新鲜度。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        600,
+        830
+      ]
+    },
+    {
+      "id": "C23",
+      "title": "js/pages/orderflow.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/pages/orderflow.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "足迹页面设置、缓存窗口和新鲜度读取。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        130
+      ]
+    },
+    {
+      "id": "C24",
+      "title": "js/heatmap/liquidation-engine.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/heatmap/liquidation-engine.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "逐交易所方向、价格/数量回退、unknown方向落多头聚合。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        220
+      ]
+    },
+    {
+      "id": "C25",
+      "title": "js/heatmap/pressure-matrix.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/heatmap/pressure-matrix.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "压力矩阵输入、窗口不足回退、固定8h和质量分。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        260
+      ]
+    },
+    {
+      "id": "C26",
+      "title": "js/heatmap/pressure-matrix.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/heatmap/pressure-matrix.js#L260",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "基差阈值、场景加分、llmBrief及结构百分数。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        260,
+        440
+      ]
+    },
+    {
+      "id": "C27",
+      "title": "js/pages/derivatives.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/js/pages/derivatives.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "单位猜测、source family筛选、变化时点、ratio解释和方向性文本。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        230
+      ]
+    },
+    {
+      "id": "C28",
+      "title": "cloudflare/snapshot/marketSnapshotProgram.mjs（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/snapshot/marketSnapshotProgram.mjs#L530",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "四页压缩、任一周期新鲜判页新鲜、原始标签混描述、其他启发式与指纹。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        530,
+        770
+      ]
+    },
+    {
+      "id": "C29",
+      "title": "cloudflare/yuqing/fenxi/sentiment-logic.js（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/cloudflare/yuqing/fenxi/sentiment-logic.js#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "固定分数、机会、由发布时间生成日历、未搜索即覆盖足够文本。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        185
+      ]
+    },
+    {
+      "id": "C30",
+      "title": "package.json（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/package.json#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "真实Node要求、验证命令、构建与部署命令；本轮均未执行。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        160
+      ]
+    },
+    {
+      "id": "C31",
+      "title": "docs/research/chart-workbench-review-2026-09-16.md（读取范围见登记）",
+      "url": "https://github.com/Feini2002/Bitcoin/blob/a6ef6c8974dcdaace32acf25c3a231ecd279ef37/docs/research/chart-workbench-review-2026-09-16.md#L1",
+      "kind": "pinned_source",
+      "queried_on": "2026-09-17",
+      "verified_scope": "同日较早审阅笔记，标题混源问题与当前代码有差异，不能照抄旧缺陷。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。",
+      "requested_line_range": [
+        1,
+        150
+      ]
+    },
+    {
+      "id": "E01",
+      "title": "Binance USDⓈ-M WebSocket市场数据",
+      "url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/ws-streams/market",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "aggTrade路径/聚合、q/nq、强平采样、K线字段；来源描述未做实测。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E02",
+      "title": "Binance USDⓈ-M REST市场数据",
+      "url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "OI一个月、basis/taker期初与OI期末、原生单位、Top Trader认证声明。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E03",
+      "title": "Bybit All Liquidation",
+      "url": "https://bybit-exchange.github.io/docs/v5/websocket/public/all-liquidation",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "方向为持仓方向，p破产价、v executed size；没有本轮链路完整率证明。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E04",
+      "title": "Deribit期权摘要",
+      "url": "https://docs.deribit.com/api-reference/market-data/public-get_book_summary_by_currency",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "摘要包括可空bid_price、ask_price、underlying_price、interest_rate、mark_iv和原生OI单位；不含完整深度/Greeks保证。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E05",
+      "title": "Databento市场schema与派生关系",
+      "url": "https://databento.com/docs/schemas-and-data-formats/whats-a-schema",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "MBO/MBP/Trades/OHLCV/Definition/Status区分与派生模式；不声称提供本项目全部BTC市场。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E06",
+      "title": "Kaiko交付",
+      "url": "https://docs.kaiko.com/cloud-delivery",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "批文件与云仓交付的公开说明；非实测性能/采购授权。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E07",
+      "title": "Kaiko流式接口",
+      "url": "https://docs.kaiko.com/stream",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "交易所/产品事件流交付方式；SLA和特定字段需合同。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E08",
+      "title": "Glassnode PiT",
+      "url": "https://docs.glassnode.com/data/point-in-time-metrics",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "标签修订、computed_at与发布延迟的区别、历史覆盖起点；不做精确历史范围采购保证。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E09",
+      "title": "RavenPack News Analytics",
+      "url": "https://www.ravenpack.com/products/edge/data/news-analytics",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "实体、事件、相关性、新颖性和时间分开建模；不采信其市场份额/收益宣传。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E10",
+      "title": "Anthropic多代理研究工程",
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "独立子任务、编排和上下文代价的工程案例，不证明BTC预测优势。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E11",
+      "title": "D1限制",
+      "url": "https://developers.cloudflare.com/d1/platform/limits/",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "单库10GB/500MB、30秒、每实例单线程、参数与批次限制。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E12",
+      "title": "Workers限制",
+      "url": "https://developers.cloudflare.com/workers/platform/limits/",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "付费默认30秒CPU可配置至300秒；具体触发/墙钟约束另审。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E13",
+      "title": "Durable Objects WebSocket",
+      "url": "https://developers.cloudflare.com/durable-objects/best-practices/websockets/",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "出站WebSocket不可休眠；不由此单独推导必须迁出。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E14",
+      "title": "Gemini附加条款",
+      "url": "https://ai.google.dev/gemini-api/terms",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "服务、Grounding和内容使用边界；实际合同和适用例外未知，不作法律结论。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E15",
+      "title": "FRED/ALFRED实时区间",
+      "url": "https://fred.stlouisfed.org/docs/api/fred/realtime_period.html",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "历史vintage与当前版本、日期级查询；不等于精确发布时间。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E16",
+      "title": "Lightweight Charts 4.1 API",
+      "url": "https://tradingview.github.io/lightweight-charts/docs/4.1/api/interfaces/IChartApi",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "现有大版本可用接口、定制series及释放；不代表项目已使用这些功能。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    },
+    {
+      "id": "E17",
+      "title": "Kaiko REST数据目录",
+      "url": "https://docs.kaiko.com/rest-api/data-feeds",
+      "kind": "external",
+      "queried_on": "2026-09-17",
+      "verified_scope": "目录级读取；不能据此证明具体数据深度。",
+      "limitations": "静态资料阅读；没有运行验证、服务SLA或完整维护审计。"
+    }
+  ],
+  "unavailable": [
+    {
+      "url": "https://www.alpha-sense.com/platform/deep-research/",
+      "status": "unavailable",
+      "note": "本轮正文未读，不纳入能力核验"
+    },
+    {
+      "url": "https://fdc3.finos.org/docs/2.2/context/overview",
+      "status": "unavailable",
+      "note": "本轮此页不可读，前轮资料仅保留其原查询日期"
+    },
+    {
+      "url": "https://www.cmegroup.com/education/courses/introduction-to-bitcoin/what-is-the-bitcoin-reference-rate.html",
+      "status": "unavailable",
+      "note": "不据此声称已读参考利率公式"
+    },
+    {
+      "url": "https://codeload.github.com/Feini2002/Bitcoin/tar.gz/a6ef6c8974dcdaace32acf25c3a231ecd279ef37",
+      "status": "download_unavailable",
+      "note": "下载失败，实际改用GitHub连接器分范围读，不声称已克隆仓库"
+    }
+  ]
+}

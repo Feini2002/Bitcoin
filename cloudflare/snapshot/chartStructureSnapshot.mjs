@@ -99,28 +99,30 @@ function normalizeKlineRows(klines) {
     .sort((a, b) => a.t - b.t);
 }
 
-function prevCompletedDayRange(klines) {
+function prevCompletedDayRange(klines, intervalMs) {
   if (!Array.isArray(klines) || klines.length < 2) return null;
   const latestDay = dayKeyUtc(klines[klines.length - 1].t);
-  let targetDay = null;
-  for (let i = klines.length - 2; i >= 0; i--) {
-    const key = dayKeyUtc(klines[i].t);
-    if (key < latestDay) {
-      targetDay = key;
-      break;
-    }
-  }
-  if (targetDay == null) return null;
+  const targetDay = latestDay - 24 * 60 * 60 * 1000;
   let high = -Infinity;
   let low = Infinity;
   let volume = 0;
+  let count = 0;
+  let minT = Infinity;
+  let maxT = -Infinity;
   for (const row of klines) {
     if (dayKeyUtc(row.t) !== targetDay) continue;
     high = Math.max(high, Number(row.h));
     low = Math.min(low, Number(row.l));
     volume += Number(row.v) || 0;
+    count += 1;
+    minT = Math.min(minT, Number(row.t));
+    maxT = Math.max(maxT, Number(row.t));
   }
-  if (!Number.isFinite(high) || !Number.isFinite(low)) return null;
+  if (!count || !Number.isFinite(high) || !Number.isFinite(low)) return null;
+  const step = intervalMs || 60 * 60 * 1000;
+  const expected = step >= 24 * 60 * 60 * 1000 ? 1 : Math.round((24 * 60 * 60 * 1000) / step);
+  const complete = expected <= 1 ? count >= 1 : count >= Math.floor(expected * 0.9) || (maxT - minT) >= 24 * 60 * 60 * 1000 - step;
+  if (!complete) return null;
   return { high, low, volume, day: targetDay };
 }
 
@@ -509,7 +511,15 @@ export function computeSnapshotChartStructureLevels(klines, opts = {}) {
     }
   }
 
-  const prev = prevCompletedDayRange(rows);
+  const prev = prevCompletedDayRange(rows, {
+    "5m": 5 * 60 * 1000,
+    "15m": 15 * 60 * 1000,
+    "1h": 60 * 60 * 1000,
+    "4h": 4 * 60 * 60 * 1000,
+    "1d": 24 * 60 * 60 * 1000,
+    "3d": 3 * 24 * 60 * 60 * 1000,
+    "1w": 7 * 24 * 60 * 60 * 1000,
+  }[interval] || 60 * 60 * 1000);
   addPreviousRangeLevels(resistancePool, supportPool, prev, mergeDistance, Math.max(0, historic.length - 1));
 
   const resistanceAll = finalizeChartLevelBands(resistancePool, historic.length - 1).sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
@@ -555,17 +565,24 @@ export function computeSnapshotChartStructureLevels(klines, opts = {}) {
   else if (Number(latestBar.h) > upper || currentPrice >= upper - touchDist) state = "测试区间上沿";
   else if (Number(latestBar.l) < lower || currentPrice <= lower + touchDist) state = "测试区间下沿";
 
-  const resistance = rankStructureLevels(resistanceAll, currentPrice, "resistance", limitVal);
-  const support = rankStructureLevels(supportAll, currentPrice, "support", limitVal);
+  const previousClose = Number(historic[historic.length - 1].c);
+  const displayResistance = rankStructureLevels(resistanceAll, currentPrice, "resistance", limitVal);
+  const displaySupport = rankStructureLevels(supportAll, currentPrice, "support", limitVal);
+  const testedResistance = rankStructureLevels(resistanceAll, previousClose, "resistance", limitVal);
+  const testedSupport = rankStructureLevels(supportAll, previousClose, "support", limitVal);
+  const frozenRes = testedResistance[0] || (upper > previousClose ? upperLevel : null);
+  const frozenSup = testedSupport[0] || (lower < previousClose ? lowerLevel : null);
+  const resistance = displayResistance;
+  const support = displaySupport;
   const nearResistance = resistance[0] || (upper > currentPrice ? upperLevel : null);
   const nearSupport = support[0] || (lower < currentPrice ? lowerLevel : null);
-  const nearBreakout = nearResistance ? { price: Number(nearResistance.price) + buffer, base: Number(nearResistance.price), buffer } : null;
-  const nearBreakdown = nearSupport ? { price: Number(nearSupport.price) - buffer, base: Number(nearSupport.price), buffer } : null;
+  const nearBreakout = frozenRes ? { price: Number(frozenRes.price) + buffer, base: Number(frozenRes.price), buffer, knownAtClose: previousClose } : null;
+  const nearBreakdown = frozenSup ? { price: Number(frozenSup.price) - buffer, base: Number(frozenSup.price), buffer, knownAtClose: previousClose } : null;
   let nearState = "区间内";
-  if (nearBreakout && currentPrice > nearBreakout.price) nearState = "近端上破确认";
-  else if (nearResistance && currentPrice > Number(nearResistance.price)) nearState = "测试近端压力";
-  else if (nearBreakdown && currentPrice < nearBreakdown.price) nearState = "近端跌破确认";
-  else if (nearSupport && currentPrice < Number(nearSupport.price)) nearState = "测试近端支撑";
+  if (frozenRes && currentPrice > Number(frozenRes.price) + buffer) nearState = "近端上破确认";
+  else if (frozenRes && currentPrice > Number(frozenRes.price)) nearState = "测试近端压力";
+  else if (frozenSup && currentPrice < Number(frozenSup.price) - buffer) nearState = "近端跌破确认";
+  else if (frozenSup && currentPrice < Number(frozenSup.price)) nearState = "测试近端支撑";
 
   const rangeTouchStrength = Math.min(1, ((Number(upperLevel.touches) || 1) + (Number(lowerLevel.touches) || 1)) / 8);
   const sampleStrength = Math.min(1, sampleBars / minBars);
@@ -608,6 +625,8 @@ export function computeSnapshotChartStructureLevels(klines, opts = {}) {
     nearContext: {
       resistance: nearResistance,
       support: nearSupport,
+      testedResistance: frozenRes || null,
+      testedSupport: frozenSup || null,
       breakout: nearBreakout,
       breakdown: nearBreakdown,
       state: nearState,

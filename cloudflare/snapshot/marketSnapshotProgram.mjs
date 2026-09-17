@@ -532,8 +532,12 @@ export async function buildChartSnapshot(env, options = {}) {
     atrPeriod,
   });
 
-  const sourceOk = summaries.some((row) => row.freshness && row.freshness.sourceOk);
+  const required = summaries.filter((row) => row.interval === current.interval);
+  const sourceOk = required.length ? required.every((row) => row.freshness && row.freshness.sourceOk) : false;
   const warnings = summaries.flatMap((row) => row.freshness.warnings || []).slice(0, 8);
+  if (summaries.some((row) => row.freshness && row.freshness.sourceOk) && !sourceOk) {
+    warnings.unshift("其他周期新鲜不能掩盖当前周期过期");
+  }
   const trendRows = summaries.filter((row) => row.trend === "up" || row.trend === "down");
   const trendBias = trendRows.length
     ? trendRows.filter((row) => row.trend === "up").length >= trendRows.filter((row) => row.trend === "down").length
@@ -678,9 +682,11 @@ export async function buildHeatmapSnapshot(env, options = {}) {
     currentViewTabs: {
       realtimeRadar: summary.windows["1h"],
       pressureMatrix: {
+        methodId: "heatmap-log10-v1",
+        distinctFromPageMethod: "heatmap-weighted-v1",
         primaryLabel: summary.pressure.primary,
         primaryScore: pressureScore,
-        confidence: summary.freshness.sourceOk ? 72 : 42,
+        quality: summary.freshness.sourceOk ? "source_ok" : "source_degraded",
         factors: [
           { key: "liquidations_1h", value: summary.windows["1h"].totalNotional },
           { key: "funding", value: funding ? round(funding.value, 8) : null },

@@ -25,6 +25,26 @@ export function d1Bound(env) {
   return !!(env && env.YUQING_DB && typeof env.YUQING_DB.prepare === "function");
 }
 
+export function documentContentDigest(payload) {
+  const text = typeof payload === "string" ? payload : JSON.stringify(payload || {});
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 33 + text.charCodeAt(i)) >>> 0;
+  return h.toString(16);
+}
+
+export function mergeDocumentVersion(prev, next) {
+  if (!prev) return { action: "insert", version: 1, contentDigest: next && next.contentDigest };
+  if (prev.contentDigest === (next && next.contentDigest)) return { action: "reuse", version: prev.version || 1, contentDigest: prev.contentDigest };
+  return { action: "revise", version: (prev.version || 1) + 1, previousDigest: prev.contentDigest, contentDigest: next.contentDigest };
+}
+
+export function eventDedupeKey(item) {
+  const title = String((item && item.title) || "").trim().toLowerCase().replace(/\s+/g, " ");
+  const source = String((item && item.source) || "");
+  const published = item && (item.publishedAt || item.officialAt || "");
+  return `${source}|${title}|${published}`;
+}
+
 async function sha256Short(input) {
   const buf = new TextEncoder().encode(input);
   const h = await crypto.subtle.digest("SHA-256", buf);
@@ -270,7 +290,14 @@ async function insertItemsBatch(db, rows) {
           r.fetchedAt != null ? Number(r.fetchedAt) : Date.now(),
           r.severity || "mid",
           r.confidence != null ? Number(r.confidence) : null,
-          r.rawJson || "",
+          (function attachVersionRaw(row) {
+            let parsed = {};
+            try { parsed = row.rawJson ? JSON.parse(row.rawJson) : {}; } catch (_) { parsed = { raw: row.rawJson }; }
+            parsed.contentDigest = row.contentDigest || parsed.contentDigest || documentContentDigest({ title: row.title, url: row.url, summary: row.summary });
+            parsed.dedupeKey = row.dedupeKey || parsed.dedupeKey || eventDedupeKey(row);
+            parsed.version = row.version || parsed.version || 1;
+            return JSON.stringify(parsed);
+          })(r),
         )
         .run();
       changes += out && out.meta && out.meta.changes != null ? Number(out.meta.changes) : 0;
@@ -319,7 +346,26 @@ export async function ingestFactPool(env, hooks) {
     if (!r.id) continue;
     if (!dedup.has(r.id)) dedup.set(r.id, r);
   }
-  const unique = [...dedup.values()];
+  const unique = [];
+  const seenDedupe = new Map();
+  for (const r of [...dedup.values()]) {
+    const key = eventDedupeKey(r);
+    const digest = documentContentDigest({ title: r.title, url: r.url, summary: r.summary });
+    const next = { ...r, dedupeKey: key, contentDigest: digest };
+    if (!seenDedupe.has(key)) {
+      seenDedupe.set(key, { ...next, version: 1 });
+      continue;
+    }
+    const prev = seenDedupe.get(key);
+    const merged = mergeDocumentVersion(
+      { version: prev.version || 1, contentDigest: prev.contentDigest },
+      { contentDigest: digest },
+    );
+    if (merged.action === "revise") {
+      seenDedupe.set(key, { ...next, version: merged.version, previousDigest: merged.previousDigest });
+    }
+  }
+  unique.push(...seenDedupe.values());
 
   const snapshotPayload = {
     capturedAt: new Date().toISOString(),

@@ -157,12 +157,15 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         .sort((a, b) => b.price - a.price);
       let buyVol = 0;
       let sellVol = 0;
-      let pocPrice = null;
+      const pocPick = (typeof BitContracts !== "undefined" && BitContracts.selectPoc)
+        ? BitContracts.selectPoc(levels.map((level) => ({ price: level.price, total: level.total })))
+        : null;
+      let pocPrice = pocPick && pocPick.pocPrice != null ? pocPick.pocPrice : null;
       let maxTotal = -1;
       for (const level of levels) {
         buyVol += level.buyVol;
         sellVol += level.sellVol;
-        if (level.total > maxTotal) {
+        if (pocPrice == null && level.total > maxTotal) {
           maxTotal = level.total;
           pocPrice = level.price;
         }
@@ -281,6 +284,9 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     let totalVolume = 0;
     let buyVol = 0;
     let sellVol = 0;
+    const pocPick = (typeof BitContracts !== "undefined" && BitContracts.selectPoc)
+      ? BitContracts.selectPoc(levels.map((level) => ({ price: level.price, total: level.total })))
+      : null;
     let pocIndex = -1;
     let maxTotal = -1;
     for (let i = 0; i < levels.length; i++) {
@@ -288,7 +294,9 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       totalVolume += level.total;
       buyVol += level.buyVol;
       sellVol += level.sellVol;
-      if (level.total > maxTotal) {
+      if (pocPick && pocPick.pocPrice != null) {
+        if (level.price === pocPick.pocPrice) pocIndex = i;
+      } else if (level.total > maxTotal) {
         maxTotal = level.total;
         pocIndex = i;
       }
@@ -566,12 +574,17 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     const volumeMedian = median(rows.map((bar) => bar.volume));
     const scanStart = Math.max(0, rows.length - lookbackBars);
     const candidates = [];
+    const lastClosedIndex = rows.length - 1;
+    const latestBarClosed = opts.latestBarClosed !== false;
 
-    for (const level of levels) {
+    for (let i = scanStart; i < rows.length; i++) {
+      const prefixLevels = Array.isArray(opts.keyLevels)
+        ? opts.keyLevels
+        : buildSfpKeyLevels(rows.slice(0, Math.max(1, i)), { ...opts, effectiveTickSize: tick });
+      for (const level of prefixLevels) {
       const price = Number(level.price);
       if (!Number.isFinite(price)) continue;
       const isSupport = level.side !== "resistance";
-      for (let i = scanStart; i < rows.length; i++) {
         const sweepBar = rows[i];
         const swept = isSupport
           ? sweepBar.low < price - sweepBuffer
@@ -581,6 +594,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         let confirmIndex = -1;
         const maxConfirm = Math.min(rows.length - 1, i + confirmBars);
         for (let j = i; j <= maxConfirm; j++) {
+          if (j === lastClosedIndex && latestBarClosed === false) continue;
           const close = Number(rows[j].close);
           if (isSupport ? close > price : close < price) {
             confirmIndex = j;
@@ -768,12 +782,9 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     const step = getIntervalMs(intervalName);
     const latestT = Number(meta.latestT != null ? meta.latestT : NaN);
     const lastTradeTime = Number(lastSync.last_trade_time != null ? lastSync.last_trade_time : NaN);
-    const fallbackBarT = hasInput && latestBar ? Number(latestBar.t) : NaN;
     const reference = Number.isFinite(lastTradeTime) && lastTradeTime > 0
       ? lastTradeTime
-      : (Number.isFinite(latestT) && latestT > 0
-        ? Math.min(now, latestT + step)
-        : (Number.isFinite(fallbackBarT) && fallbackBarT > 0 ? Math.min(now, fallbackBarT + step) : NaN));
+      : NaN;
     const ageMs = Number.isFinite(reference) ? Math.max(0, now - reference) : null;
     const latestBarT = latestBar ? Number(latestBar.t) : NaN;
     const latestBarClosed = Number.isFinite(latestBarT) ? now >= latestBarT + step : null;
@@ -1184,17 +1195,20 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     const close = barField(bar, "close", "c");
     let buyVol = 0;
     let sellVol = 0;
-    let pocPrice = null;
-    let maxTotal = -1;
     const levels = (bar.levels || [])
       .map((level) => normalizeLevel(level, ratio, minSmall))
       .filter((level) => Number.isFinite(level.price) && level.total > 0)
       .sort((a, b) => b.price - a.price);
+    const pocPick = (typeof BitContracts !== "undefined" && BitContracts.selectPoc)
+      ? BitContracts.selectPoc(levels.map((level) => ({ price: level.price, total: level.total })))
+      : null;
+    let pocPrice = pocPick && pocPick.pocPrice != null ? pocPick.pocPrice : null;
+    let maxTotal = -1;
 
     for (const level of levels) {
       buyVol += level.buyVol;
       sellVol += level.sellVol;
-      if (level.total > maxTotal) {
+      if (pocPrice == null && level.total > maxTotal) {
         maxTotal = level.total;
         pocPrice = level.price;
       }

@@ -1,0 +1,1323 @@
+{
+  "created_on": "2026-09-17",
+  "release": "batch2-execution-1.0-design",
+  "hash_algorithm": "sha256",
+  "self_excluded": true,
+  "files": [
+    {
+      "path": "00_current/00_master_plan.md",
+      "bytes": 13225,
+      "sha256": "fd3b319ba7ffc258ac4097b237283ef2959de34ae4c6eb0b42574a7c6e2c4e4c"
+    },
+    {
+      "path": "00_current/01_repository_baseline.md",
+      "bytes": 12369,
+      "sha256": "3303d75aafe8c11be8e1768cd926140b8d6c9776186158ac109485dac0a612e9"
+    },
+    {
+      "path": "00_current/02_findings_and_counterexamples.md",
+      "bytes": 17028,
+      "sha256": "3b58295eac5c41728f41a13b6fb8ba77aa1e1f3e7fbd6869fb334441548abfbf"
+    },
+    {
+      "path": "00_current/03_institutional_patterns.md",
+      "bytes": 11820,
+      "sha256": "41dbb2449db3f3bb410862cb7740f4a9fecd9a0b7b2156dfa8d63553a8f18200"
+    },
+    {
+      "path": "00_current/04_data_contracts_and_acquisition.md",
+      "bytes": 11916,
+      "sha256": "1cb6945cf31dcfdc338635030cf357c8273601646177fdad15825be300b67fc9"
+    },
+    {
+      "path": "00_current/05_chart_workbench.md",
+      "bytes": 16554,
+      "sha256": "1b5af33452eff2d2bf3ca16574deb55957c5470fd82cd5a9fd591eee4219351a"
+    },
+    {
+      "path": "00_current/06_orderflow_footprint.md",
+      "bytes": 13855,
+      "sha256": "7ec18c496edad348b774175bd34bd7e3c99b168ea7dd0cdf58aea0af9ae3c1c5"
+    },
+    {
+      "path": "00_current/07_liquidation_radar.md",
+      "bytes": 12706,
+      "sha256": "29e03757e105aee73e24e13606958ca184c87997a90f7a83688aa2713fed236a"
+    },
+    {
+      "path": "00_current/08_derivatives.md",
+      "bytes": 14052,
+      "sha256": "bf4efcd6c08eb3795fe20d4bfd2a8b59d48dc08400df951eecbe8672d4a29d89"
+    },
+    {
+      "path": "00_current/09_method_registry.md",
+      "bytes": 13214,
+      "sha256": "090ffe738a2f19d388b8e0f012a4fc1d29a780ce9cb2f9b56857b01dd7a94e44"
+    },
+    {
+      "path": "00_current/10_macro_options_etf_onchain.md",
+      "bytes": 10166,
+      "sha256": "ed4cb61fbe87e12646d2a4d6280718f9b16d168db63619a5514e12efa90deeb6"
+    },
+    {
+      "path": "00_current/11_intelligence_collection.md",
+      "bytes": 9002,
+      "sha256": "ed2a5441951601af07792eec70f5e151bfff1e458357f75624dbafc252ac5675"
+    },
+    {
+      "path": "00_current/12_analysis_prompts_workflow.md",
+      "bytes": 12946,
+      "sha256": "77752c637cc40a4c8742e26f773b4da6a39182a08e4d5833c7696ccfdbee14ba"
+    },
+    {
+      "path": "00_current/13_ui_history_api.md",
+      "bytes": 8747,
+      "sha256": "28cbdc04ed9109e21b30ef00e53c5195ef9b2e407f3156aee572f0ac302394ec"
+    },
+    {
+      "path": "00_current/14_architecture_runtime_cost.md",
+      "bytes": 9241,
+      "sha256": "3076430aebeb0f58650fbc850b5e958ae0e90312ec06845a5aac186557ffa856"
+    },
+    {
+      "path": "00_current/15_migration_rollback.md",
+      "bytes": 6985,
+      "sha256": "b319d4f7ac1b590d34e5ec48bed81748198d7f6c076d1e19e66abbae532dc740"
+    },
+    {
+      "path": "00_current/16_work_packages.md",
+      "bytes": 6257,
+      "sha256": "7d59e7b9d6f7efe13a77f9482a4709e27f1c8ee23a9001018f5251d5a14b35fa"
+    },
+    {
+      "path": "00_current/17_acceptance_and_experiments.md",
+      "bytes": 7321,
+      "sha256": "a6795861554907ef5dc1497f60cf6a0e27b3c76faf13edd09d0aa6aa3c9304b3"
+    },
+    {
+      "path": "00_current/18_codex_handoff.md",
+      "bytes": 1484,
+      "sha256": "b1bb3c3470a00f276538cf11fb7788b5ff736abcf8f8713e7ee8db548df9ee45"
+    },
+    {
+      "path": "00_current/19_sources_and_review_boundary.md",
+      "bytes": 5287,
+      "sha256": "723e4678d4888485ced3d1694689cdd70e5bdcbb774a146efb4a2207dbaf7c25"
+    },
+    {
+      "path": "00_current/20_dataset_adoption_cards.md",
+      "bytes": 7221,
+      "sha256": "3a1833fab984f6e8521e278177e763e083e5cb0640c5a81768b9cc48f30e0774"
+    },
+    {
+      "path": "01_execution/README.md",
+      "bytes": 778,
+      "sha256": "182f1ecb3c1d33ec7ef55bf34155358c15cd87767e07c5e94a37f1fb85d04a72"
+    },
+    {
+      "path": "01_execution/acceptance_map.json",
+      "bytes": 18820,
+      "sha256": "f63963e5742ac0dc04c5f08a3843defa8912ddafce7fa770e09c3367f4f2c1db"
+    },
+    {
+      "path": "01_execution/phases/P00_repository_binding.md",
+      "bytes": 16794,
+      "sha256": "2e50c3e36d15f0f233ca2d90b95e861bfcd5eabd16b5296f955e4280111d5b05"
+    },
+    {
+      "path": "01_execution/phases/P01_data_contracts.md",
+      "bytes": 14805,
+      "sha256": "903636afb1b784b79dd164e4c03bb3263fa1b206fb455135c9228f3e137335b2"
+    },
+    {
+      "path": "01_execution/phases/P02_chart_workbench.md",
+      "bytes": 17541,
+      "sha256": "31d5a38055e9160bfd89f528cd697c7ccf2da7acb1258cc036aa1403a77aff73"
+    },
+    {
+      "path": "01_execution/phases/P03_market_template.md",
+      "bytes": 12260,
+      "sha256": "e4b90a223c18e015d95dc870a049b2e0651daa3ed4739e16eb6b22dd3c3ff7c4"
+    },
+    {
+      "path": "01_execution/phases/P04_derivatives.md",
+      "bytes": 13863,
+      "sha256": "d4da2a7f72f9ddb179d011e950edea0a6cdb5505409c77ef884b990ffc10cb6e"
+    },
+    {
+      "path": "01_execution/phases/P05_orderflow.md",
+      "bytes": 13736,
+      "sha256": "d69ca2d3e8c6a26b9e4a024d6448ee0941f5fa63b86e9b6a49046a1717792589"
+    },
+    {
+      "path": "01_execution/phases/P06_liquidations.md",
+      "bytes": 14015,
+      "sha256": "ce677726fefbc324061e1d59aea8acc5814a4808c00dc40af7115ac6cf1faa0c"
+    },
+    {
+      "path": "01_execution/phases/P07_intelligence.md",
+      "bytes": 14705,
+      "sha256": "a4af7b3fef458132776f14daf0086193feac937012ff164ebb2afbe76e3dfc20"
+    },
+    {
+      "path": "01_execution/phases/P08_model_workflow.md",
+      "bytes": 9100,
+      "sha256": "445ff4fa74a97cb50305dd2b7d5f915852049c48a3c37b50bf0e4aa779023f90"
+    },
+    {
+      "path": "01_execution/phases/P09_workspace_history.md",
+      "bytes": 8974,
+      "sha256": "8a505347d6a5d6f959d476b55b8d21e238bfd1168deedb74bd617a212d78d8b7"
+    },
+    {
+      "path": "01_execution/phases/P10_validation_handoff.md",
+      "bytes": 13767,
+      "sha256": "18f4a8f4fd865ecb5ebd31c61cd57e1fb2ddf7ab531471eaccfe48343549db36"
+    },
+    {
+      "path": "01_execution/phases/P11_conditional_branches.md",
+      "bytes": 29646,
+      "sha256": "27869132931f2ae143f8da12f2602d42874bbae7ba63d7c254ab0467d4101d48"
+    },
+    {
+      "path": "01_execution/tasks.json",
+      "bytes": 87316,
+      "sha256": "f17662aa2aae316811dcde84289f8469233528168df81dd3a91e60a297a18477"
+    },
+    {
+      "path": "02_contracts/README.md",
+      "bytes": 825,
+      "sha256": "603e6d7f525825a27328e49fc175f405c8e96612c7618980a11c477ad6a6f255"
+    },
+    {
+      "path": "02_contracts/api-design.json",
+      "bytes": 1110,
+      "sha256": "3fecb505988a2800c31595ebd5f343ad0bc488935c269a588e68baf97e23f32e"
+    },
+    {
+      "path": "02_contracts/design.schema.json",
+      "bytes": 7739,
+      "sha256": "3a8c9f75fe6257aeb24eea6c6f7868b5a254b512a7399202da40756f1dae314b"
+    },
+    {
+      "path": "02_contracts/example_capture.json",
+      "bytes": 378,
+      "sha256": "68449980c39fb18d7a44411f77adb00a8bbbe6da866272c4f4bca7bb5040a1e8"
+    },
+    {
+      "path": "02_contracts/example_metric_vwap.json",
+      "bytes": 373,
+      "sha256": "62114c420668cdb522cb555d4f6bbefebe61ceb25a148f47ea256d1733cc1e9e"
+    },
+    {
+      "path": "02_contracts/example_observation_base.json",
+      "bytes": 388,
+      "sha256": "57c7fc58d35b4ccd999575ced3e9f0f35397106e0abc3329b5579287d29e2455"
+    },
+    {
+      "path": "02_contracts/example_observation_quote.json",
+      "bytes": 391,
+      "sha256": "f93ea3b05a47552092d9d9536080793f9048fd86ba37f8f821fbb52b2e567839"
+    },
+    {
+      "path": "02_contracts/example_report.json",
+      "bytes": 442,
+      "sha256": "c466bd7961039863d8829067f059292a3a4c606b87e10a66d15e28802b292f87"
+    },
+    {
+      "path": "02_contracts/example_scope.json",
+      "bytes": 348,
+      "sha256": "c76561e0f6b324a1fe60ca1a88327911d548623fc190c4eeb35598d43731e1e5"
+    },
+    {
+      "path": "03_validation/README.md",
+      "bytes": 806,
+      "sha256": "7bdce924915b07f24254e184d6138d1811cce4de6f2fd0b4bd20e99340a8c5b5"
+    },
+    {
+      "path": "03_validation/acceptance_cases.json",
+      "bytes": 26556,
+      "sha256": "7d1d045ea62d43d8b0f0418386ab6fffb17aea7945c7112c06206943b8194072"
+    },
+    {
+      "path": "03_validation/delivery-summary.json",
+      "bytes": 43902,
+      "sha256": "d87b8552c989d0acd845906529c25a860a86a2d2b430103e225f7252af923915"
+    },
+    {
+      "path": "04_evidence/README.md",
+      "bytes": 12578,
+      "sha256": "5e95bc515e932f0140ddc255bcf99865c86da58f3e73d3fef33495bacf330aee"
+    },
+    {
+      "path": "04_evidence/content_counts.json",
+      "bytes": 1093,
+      "sha256": "22d1cec87438a535efe0a16c2af3be78a6429db1330338af2947addc797ab8a2"
+    },
+    {
+      "path": "04_evidence/sources.json",
+      "bytes": 26038,
+      "sha256": "470467050496b13cb38944d6759f8c8e0ce486e9c21e92249959d41a50a5c345"
+    },
+    {
+      "path": "05_release/CHANGELOG.md",
+      "bytes": 2137,
+      "sha256": "7045a3c83fc1b83097e20361bb78a2d590d459d935acc14672eeb543d77ae78d"
+    },
+    {
+      "path": "05_release/REVIEW_BOUNDARY.md",
+      "bytes": 889,
+      "sha256": "f3eb494d25139885e57fb9bd1c4c94e9361a641a781fc38c8d85df794e9ffd69"
+    },
+    {
+      "path": "05_release/TASK_COVERAGE.md",
+      "bytes": 7125,
+      "sha256": "998a0db6f218fac39fa55056a9fb31bff3a76c94c2a89fa7d35cdbab199c954a"
+    },
+    {
+      "path": "05_release/content_summary.json",
+      "bytes": 26621,
+      "sha256": "75cd02071cb2ba0e0eb92f379c599968d3c98eb1d73040bc477c6ad0ad787b78"
+    },
+    {
+      "path": "05_release/delivery-checks.json",
+      "bytes": 251504,
+      "sha256": "ed5435631e7daa67df346418c259a7eb262b0d40a50f97fe0a4bf014d6444e19"
+    },
+    {
+      "path": "05_release/source-preservation.json",
+      "bytes": 14172,
+      "sha256": "717dbfa56a78a6c4f8dc8cf3e0331d61d7c6144a8965b63bb156ca6f333ec878"
+    },
+    {
+      "path": "90_reference/00_start/01_master_solution.md",
+      "bytes": 5046,
+      "sha256": "08e08ec61a3f434d4619fc4db79d2f59711b98472077cda0d8bb078cfb4a934d"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/README.md",
+      "bytes": 5843,
+      "sha256": "7fbe2ceed566f286b017a0a7d0f28087b2081cab28a6655b0b8e0f86bd93ac3e"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/complete_plan.md",
+      "bytes": 222,
+      "sha256": "1bc35d4f7bcbc5422bbd2826c35feef3b9c6790713ecb79cda0a0bde666e2584"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/contracts/README.md",
+      "bytes": 3329,
+      "sha256": "18c6ec1cdd67ee9797f3f3d15612635e92a892813654a90625bb2cf315e44ae1"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/contracts/openapi.design.json",
+      "bytes": 110683,
+      "sha256": "e371afdb77d9e5400810922adbcbd78d4cdf2c10a7e2e38f6e6d5effe288b142"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/contracts/research.schema.json",
+      "bytes": 90774,
+      "sha256": "8f00cdb34843ec2d7085492e702fed3dda67b6497269fda424fdb474d0663e05"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/contracts/research_schema.proposed.sql",
+      "bytes": 13467,
+      "sha256": "1d0050c8c780d6b2aa35f1b56436516e09719280d504478811297ad079b1f79e"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/contracts/settings.design.json",
+      "bytes": 1436,
+      "sha256": "035fda3803a7655d2c7c268ae2c8783548c5c139b61bb1237be0c10c61641cde"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/README.md",
+      "bytes": 1571,
+      "sha256": "1f633a8489cc9fa33f32cb541fdc0eb9016fd5a38642c067959c89259712427b"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/acceptance_cases.synthetic.json",
+      "bytes": 33758,
+      "sha256": "7f967aa835b095e449e04fb1fbecbe161b5fedba344957fa22a842bd5871ecfc"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_artifact.json",
+      "bytes": 526,
+      "sha256": "5fd6b5e2e00bdc75614e66d86030cd8a8df863e07c47b35e5e1857af80050a33"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_bundle.json",
+      "bytes": 2205,
+      "sha256": "bb6b811aa4278382aeb87fefa1fedbc72d512390642f434fa88ded4ff4b879a0"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_metrics.canonical.json",
+      "bytes": 1976,
+      "sha256": "9a1dcc5d102268327e65aefb049649d2fb06400ac139bc8f1262f9f99b647b89"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_metrics.json",
+      "bytes": 2578,
+      "sha256": "6806ffab66815e257394f5327f755ef5dde6b2db3351891317a198ab86c85b32"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_raw.json",
+      "bytes": 117,
+      "sha256": "be07be735f2a0f14fec4c9eaf47dd9226e5b2720e54a1f4ec1db642cffb968e6"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_report.json",
+      "bytes": 1922,
+      "sha256": "28bcbc80f5df55256bf5d029f1258ff027b3f90ace815dbdbf67b491df85c373"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_run.json",
+      "bytes": 1007,
+      "sha256": "f7fa5a3fa3777a447b289554ba51a2e5c307b2bb9857960411a533379934f177"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/sample_view.json",
+      "bytes": 687,
+      "sha256": "8d20eee1baef1bc886ffff284c12359f253f8ad6fda40f2db501516f566327b7"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/inputs/previous_research_review.md",
+      "bytes": 78075,
+      "sha256": "c48db0339013b82ce97115cad3e5ade4135c68bfd0fdad70e05ded0e32000615"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/inputs/repository_facts.md",
+      "bytes": 31191,
+      "sha256": "278d869530163f94abc0ecec09859da47277682cc25b9675781ca5371e944bc9"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/meta/document-qc.json",
+      "bytes": 247,
+      "sha256": "8efece92e746f80023eeffe80e8e503a1a8818f1f1a5f295ec627dc5d57e4fa6"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/meta/repository-facts.json",
+      "bytes": 3722,
+      "sha256": "45788e9eeb5f93644f5afa390e9411b3319a92fd9787b624f639014e9873953a"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/meta/sources.json",
+      "bytes": 24079,
+      "sha256": "3af4e766caa55bbbecb6aeb1085513bb3b9964c51ce49a3117a7f4eca47966e9"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/meta/task-topological-order.json",
+      "bytes": 723,
+      "sha256": "e2655efb54dacdf54332a6034a97b2d85949cdbe1618cbcdfd922612dc24d1c4"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/meta/tasks.json",
+      "bytes": 92472,
+      "sha256": "05016a3df61621851f6d61862bff9f54a987115b1a58669988d547f8117289fc"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/00_master_plan.md",
+      "bytes": 15163,
+      "sha256": "a075548a4e8f0bc1d4645120cd7acf7b66ec8cfda631950dc40afaa77650a2bd"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/01_repository_baseline.md",
+      "bytes": 18440,
+      "sha256": "ceedf40cc60aabfdd47772b19ef8e44d4bd9717bfb9efb6eb27c1cb1e54939ce"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/02_external_research_and_decisions.md",
+      "bytes": 33042,
+      "sha256": "bcea5b746ecfb4ab316e0249c8872fc12e861090c0fa48f152bfc945bdce4387"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/03_product_information_and_noise.md",
+      "bytes": 24804,
+      "sha256": "323506c30fadf1fd5b19c00a937e9b16fbdb7089f673589f021d61ec1aeb260e"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/04_market_data_contracts.md",
+      "bytes": 24517,
+      "sha256": "ee6820391c75d1b4d2e304452f017e1c5c3e4221692f96938c7b9f74eb9da16a"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/05_analysis_methods_and_scenarios.md",
+      "bytes": 23991,
+      "sha256": "6506dca770ad861f83cc62e8775f605291a8685f8b4217262c6016a15a9f8f57"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/06_catalysts_macro_etf_options.md",
+      "bytes": 24606,
+      "sha256": "8fee3b685c704543a79e7f9b633f1be5f137eccfcec3e2e54941798541ece5db"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/07_llm_prompts_workflows.md",
+      "bytes": 32785,
+      "sha256": "db20d02c62c69c098985a723688cc9a488466eaee826d39c3ee593a6f5235a1d"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/08_workspace_views_and_alerts.md",
+      "bytes": 20514,
+      "sha256": "17846c76bb84a8e9dd9273f1d70a701f8202e01c45ed2bb18caf46859586abfc"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/09_architecture_runtime_and_storage.md",
+      "bytes": 21566,
+      "sha256": "a91a6c2a537f1badeda80f1b3a5935797a0d1d925f8ff299c511a476cbcd908f"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
+      "bytes": 27909,
+      "sha256": "9279917502e56ba4fc83b273f6e95de3cd3b6d4fa17d92aa459ef263bbb9e6b3"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/11_evaluation_and_acceptance.md",
+      "bytes": 20366,
+      "sha256": "e59cc3c90a139c23b6672fc24afb13f979e4bf1a597e2373be69ccf2aaa2e381"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/12_migration_operations_and_rollback.md",
+      "bytes": 20300,
+      "sha256": "b6cc30dd96c3e4bfe3dc7b58c520dced07f612a35a1b3a310819089a8f69d828"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/13_implementation_work_packages.md",
+      "bytes": 100501,
+      "sha256": "828a9748a631607970076e95a95cba82ebfa6c77857c5a55ba175875f0b3d12f"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/14_end_to_end_examples_and_handoff.md",
+      "bytes": 20928,
+      "sha256": "081f72877ce7fb6da89baca1a9cb3f4564529914168a38660318d29c406c48d2"
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/15_sources_glossary_and_open_questions.md",
+      "bytes": 28052,
+      "sha256": "7d064c22d4a80ff506d035f83f6b5297e11ce2078b1a5b2ecdfaf1ef2d9da706"
+    },
+    {
+      "path": "90_reference/02_adversarial_review/01_adversarial_review.md",
+      "bytes": 9155,
+      "sha256": "c00c19b1ef35569b6942978dc6ff59ece9971e4b5a744d4ae4cf17cc46a439fa"
+    },
+    {
+      "path": "90_reference/02_adversarial_review/02_scope_override_rules.md",
+      "bytes": 1255,
+      "sha256": "110b088c661ef0cfccdd796c14d154cbcba551bd29a655ff9fec5bc849f9f406"
+    },
+    {
+      "path": "90_reference/02_adversarial_review/dependency_audit.json",
+      "bytes": 2454,
+      "sha256": "2c198022f641e59e40a5b58c92320c04564e08575d36991187b00103f82cb38a"
+    },
+    {
+      "path": "90_reference/03_research/README.md",
+      "bytes": 2723,
+      "sha256": "43380c45ec84849bb936818b87313ca8a60c11b94b53ea4aed2cb47699c33aef"
+    },
+    {
+      "path": "90_reference/03_research/RES01_能力地图与复用决策.md",
+      "bytes": 5061,
+      "sha256": "859f8025ba2a495e8f2b2c28a550c9df8a7e2249adbbe2a6f6028c3d916bd5e6"
+    },
+    {
+      "path": "90_reference/03_research/RES02_持续订阅与来源发现.md",
+      "bytes": 4950,
+      "sha256": "ef124cbaad503c9c0a81ac1853e9b6f1b64654c85688778474a48dd6b424e73b"
+    },
+    {
+      "path": "90_reference/03_research/RES03_网页提取与浏览器采集.md",
+      "bytes": 4849,
+      "sha256": "f942dd8a82e8986a44ee583fde501cbb1a042875909cb2a8ce953278fc89b204"
+    },
+    {
+      "path": "90_reference/03_research/RES04_事件主张去重与更正.md",
+      "bytes": 4290,
+      "sha256": "3b1a2e39cca2c06f8b0160bd7aaa6eb81580867eeff6b8572fc8d59cb550f304"
+    },
+    {
+      "path": "90_reference/03_research/RES05_多语言检索与研究上下文.md",
+      "bytes": 4131,
+      "sha256": "74fcc4ff308cf34976114e3058e658a1efb6dc024c054c9747a55c3194ff07aa"
+    },
+    {
+      "path": "90_reference/03_research/RES06_实时行情采集与标准化.md",
+      "bytes": 4239,
+      "sha256": "c161e62e5b0fe3cc9af101b9e5efe47bdb2ea01bc4285e6a7a5d1f954aceac39"
+    },
+    {
+      "path": "90_reference/03_research/RES07_历史回补时点与数据修订.md",
+      "bytes": 4501,
+      "sha256": "95044e8a984ebe185470705e075794fb11776c3a26d259fbecb95d7ce31ae95f"
+    },
+    {
+      "path": "90_reference/03_research/RES08_订单流足迹与盘口研究.md",
+      "bytes": 3968,
+      "sha256": "368fd224def6fb21b4c8119a159bcf19f36bd20db58b7308f5772d09afb0415d"
+    },
+    {
+      "path": "90_reference/03_research/RES09_资金费持仓基差与强平.md",
+      "bytes": 4580,
+      "sha256": "d28fb311cc5b31421375482cef56905778d558cdef8f1e9ddb63b9e876a10dea"
+    },
+    {
+      "path": "90_reference/03_research/RES10_期权研究与波动率结构.md",
+      "bytes": 4463,
+      "sha256": "3220dbdadf4b38025e977541aa974d4d8e054f9ab700244151a1c6ca7c55f449"
+    },
+    {
+      "path": "90_reference/03_research/RES11_链上矿工与实体资金流.md",
+      "bytes": 4151,
+      "sha256": "71b7b0c89e07f6e30ea86930a04a6e33836b0de3aa301181cd6e8154027b126d"
+    },
+    {
+      "path": "90_reference/03_research/RES12_宏观ETF稳定币与跨资产.md",
+      "bytes": 4938,
+      "sha256": "5542eeece4a820fe89466af8c5856a8c388e46bb58ada2dfcb6658df50df2f06"
+    },
+    {
+      "path": "90_reference/03_research/RES13_因子事件研究与可复现验证.md",
+      "bytes": 4470,
+      "sha256": "2d02f00bf62aa9b17e5f0a56dcd95bc411c055a5986bcad7d2cb9190ce066b23"
+    },
+    {
+      "path": "90_reference/03_research/RES14_预测校准观点与决策记录.md",
+      "bytes": 3790,
+      "sha256": "563f6dd21b58917ebcbf90564b27757ec35d1c7515c76f12f244edf411e1505e"
+    },
+    {
+      "path": "90_reference/03_research/RES15_完整金融平台的可迁移经验.md",
+      "bytes": 4687,
+      "sha256": "d0c59fa0a012493fd2c2f714b34139c2b8c62bcfefdc69618a3cf060bb3bfc58"
+    },
+    {
+      "path": "90_reference/03_research/RES16_模型工具与多代理的适用边界.md",
+      "bytes": 4353,
+      "sha256": "be5f1cc71deca8725e8cb0d3153677d25485542a285f8b904da9cb27962166c0"
+    },
+    {
+      "path": "90_reference/03_research/RES17_报告质量评价与可观测性.md",
+      "bytes": 3911,
+      "sha256": "36019fcfeaf4692c17bbbbb2f1c3851b9874ce669795ba337b23733fb90a203a"
+    },
+    {
+      "path": "90_reference/03_research/RES18_金融工作区与研究现场.md",
+      "bytes": 3771,
+      "sha256": "e4d0e4cef6d7b038318133c3243f739121847d61393beabb71cc27f7b1efdd79"
+    },
+    {
+      "path": "90_reference/03_research/RES19_研究知识库与证据生命周期.md",
+      "bytes": 3817,
+      "sha256": "5ea54d9d3bf079c36c3960c05e0b7865b0710d6f1e0afc6db617e894fa9a46b5"
+    },
+    {
+      "path": "90_reference/03_research/RES20_存储计算与部署路线.md",
+      "bytes": 4565,
+      "sha256": "c8404192e13161328de3681dc0cc30a08e8ce8c0d17fb05835fb8331ff7914aa"
+    },
+    {
+      "path": "90_reference/03_research/RES21_增量管道调度与失败恢复.md",
+      "bytes": 3916,
+      "sha256": "fb42d0ba593756404e5a1b3ae1775e90bb8a58571f56fd07f1ecea45e9e7bf63"
+    },
+    {
+      "path": "90_reference/03_research/RES22_许可数据权利成本与供应商退出.md",
+      "bytes": 4793,
+      "sha256": "31eed8586d29862cd6943b604f6b65be99cc3c1d8b4adb4cc0c388c04a18eee1"
+    },
+    {
+      "path": "90_reference/03_research/RES23_完整能力组合与自建采购对照.md",
+      "bytes": 4799,
+      "sha256": "36a5cce35cc6ae18fd5eebadb4615d5c8ce60435be47097c54dcdec611269d8b"
+    },
+    {
+      "path": "90_reference/03_research/RES24_信息价值覆盖与降噪评价.md",
+      "bytes": 3942,
+      "sha256": "f3a6aa461652e7eb08e27cc1fba6930d7c549878b9430bf6d763cfda2354786f"
+    },
+    {
+      "path": "90_reference/03_research/RES25_论文披露与复杂文档摄取.md",
+      "bytes": 4070,
+      "sha256": "5b26ec068009991530bd09e848d0a2ea26c756a8187caa4bd7947780b3906273"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/README.md",
+      "bytes": 13442,
+      "sha256": "4f42df7db0d014a55424cf717ec3a6384e8ea1eb742907bbac7de99c9d1f3218"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL001.md",
+      "bytes": 2714,
+      "sha256": "9cd7551402dcfa942d86d3be79026e89d84b1849206a6c0c0718f6e022163924"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL002.md",
+      "bytes": 2809,
+      "sha256": "5861aabfad64d051ccb640d5d2e161fe7a9673f44d1209d95f8eeec6d832a46c"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL003.md",
+      "bytes": 2777,
+      "sha256": "292785f6b005329b64c1d1aa33ab238288e43d8cb224d2d2026a7627b232f7e1"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL004.md",
+      "bytes": 2570,
+      "sha256": "af927e96e5f8c7dd9f04d62b3a38ead69bf1f13101ee5c8dcadb11321c02bd12"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL005.md",
+      "bytes": 2435,
+      "sha256": "5ee4ffcf2dfd2171580fcf95c42df30304f01f1d383609417e496cfb56c96953"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL006.md",
+      "bytes": 2610,
+      "sha256": "076ef793b7ea2c62378595f4ead891fe08ec38ffe70302a2d97af246dbf63999"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL007.md",
+      "bytes": 2444,
+      "sha256": "88072c8c4273ac1b604de3752e540d4bf69d13d7a456461ca64e73aad0fa4cb5"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL008.md",
+      "bytes": 2618,
+      "sha256": "f77e06795e96887a1a89b7ddcd422a0d07ce4dfe8ec100848e4cb00b59ea3303"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL009.md",
+      "bytes": 2582,
+      "sha256": "a7d3f2ba7d19fef1ec962ebf310ffef541c89a8e90ccc2b735211c52fb5f71a3"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL010.md",
+      "bytes": 2289,
+      "sha256": "4a8d7fbab069fe1028ed214834b8feacc81b08ac9fb77f42ee713a120bdd7cb4"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL011.md",
+      "bytes": 2510,
+      "sha256": "dde0d403e63c3165aee767b88c26f2c3d01ca0b70ae98de0bce5def1cdd34e23"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL012.md",
+      "bytes": 2774,
+      "sha256": "5789e0307b63bf9120800d8d01ed1852332ef34e7503bf74fd8668712500315e"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL013.md",
+      "bytes": 2433,
+      "sha256": "d6069ec3d37b8fdd1b077f5c74f68a1681388394cc4279275af437db7ffe04fc"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL014.md",
+      "bytes": 2500,
+      "sha256": "565decafba2127d32c85f579692c268d516887d00db441a287bfbc7c54889edb"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL015.md",
+      "bytes": 2714,
+      "sha256": "745630ee8c4cd5172fd96a95b4fc569fe86cf5b7078a62f79b863411778949b5"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL016.md",
+      "bytes": 2509,
+      "sha256": "956963e891027f4d1f4d2a6aa095fef6481ea1b9a00092a316735577be91dcc6"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL017.md",
+      "bytes": 2617,
+      "sha256": "668a50bb43dea2c3461b387fd5cd2db9b3140fc447ff1c25e6c24ed2a8e75c12"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL018.md",
+      "bytes": 2248,
+      "sha256": "837979336fc63bd179364cecb00f32b35d824b56aa161a7303e48d2c72065c83"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL019.md",
+      "bytes": 2260,
+      "sha256": "e76d9f424453cf8b034dc0cd4374d42e5087955c6a67d08e34138444bb49eba1"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL020.md",
+      "bytes": 2082,
+      "sha256": "222dc5966215a5582384ba2eabf944b0f5043d5854c6ffdfbd17dbaf5da2aca5"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL021.md",
+      "bytes": 2141,
+      "sha256": "f2d8ea1f71153045a6e53e5405c25b4f47504705db12e3b89a0d9970d31cc766"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL022.md",
+      "bytes": 2106,
+      "sha256": "357a0f6a6833232ad0b2b7e5cb2cce902d24b6dd46ab8a3bcba343344adabcc4"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL023.md",
+      "bytes": 2071,
+      "sha256": "c787472b568012a16b866a6aa05bd69bdc3d4f485488a6cc1f354fb0d80b7af6"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL024.md",
+      "bytes": 2612,
+      "sha256": "614f01220e3ebe1e71c97d313444f26be3a96643ec2c20af6211ca6bd47156ff"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL025.md",
+      "bytes": 2305,
+      "sha256": "29b84562d5be4bd7fd63a1b118c6878c6813f05a5cc8982d16795b9dd565f16d"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL026.md",
+      "bytes": 2270,
+      "sha256": "57c97b5887fa7f8c19246b037ae9b8dfad8b49620615ee009e82abd195288c71"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL027.md",
+      "bytes": 2029,
+      "sha256": "fee996d7dcf0fded66135218dc2769c34d2024999d3c0d7b1aac29a9d4b6ab5c"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL028.md",
+      "bytes": 2030,
+      "sha256": "ee9786c25e5a5ea4615dbd2589e434f07a6bf6352b5d4b35d8b7397ad9b5ea10"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL029.md",
+      "bytes": 2113,
+      "sha256": "b2ed9a434f8fe3818505b5aa6310ccbafb30878f21301722e795c3d81c162830"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL030.md",
+      "bytes": 2111,
+      "sha256": "3247efd50e9989f432c4d957b828f2a1548468c4d8aab67001687b5db8766332"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL031.md",
+      "bytes": 1996,
+      "sha256": "c917babd9c74f501209cb739977e0014be8c0fd9c40905a92cbbe930f3b998cf"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL032.md",
+      "bytes": 2093,
+      "sha256": "315ebf7461af8aa9a1c63532563f30ac6347f9254237dd6c8866959498a68d22"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL033.md",
+      "bytes": 2160,
+      "sha256": "5a1e1981a17e35cb21ca9a1989a03df7464637d85128ee1a06bec5c1fea90f24"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL034.md",
+      "bytes": 2005,
+      "sha256": "b6ebfda8352f03f56a27a3c82572bf845a050f1603cdcdd7734597dcc568c426"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL035.md",
+      "bytes": 2146,
+      "sha256": "4c2132d293352553711d5e68c47627e6e109ae8737e75e61c25f0208526985ba"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL036.md",
+      "bytes": 2199,
+      "sha256": "039b230a6fa935791b59b50afebfebfd0d80561fbcb07af7e5762992cae6e209"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL037.md",
+      "bytes": 2548,
+      "sha256": "27bc1c47b939a54b25badb93885e505244e6d951faa7e6dad9bb3efd8020164a"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL038.md",
+      "bytes": 2303,
+      "sha256": "98acc871cc68818a2c91f0169c6bd83da7375ead1836ea990389eeb6350ff102"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL039.md",
+      "bytes": 2270,
+      "sha256": "2f4a16950fdd26a54f893307b4473fbff38403cc0ed2a370a5a0ba14baea5e51"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL040.md",
+      "bytes": 2093,
+      "sha256": "3b8aee886384833b4fdf4a4927f6b28614e5470f8b95dfdae2093f14a6724012"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL041.md",
+      "bytes": 2072,
+      "sha256": "0b6ce3b3049d070a90fc104bab68b334dd87907ef2c22be286a22aec9534aea1"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL042.md",
+      "bytes": 2181,
+      "sha256": "16806fc18b0faeaa8622b2c1ecb53492149f7f4b2546cc10a01b19ed77c556f8"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL043.md",
+      "bytes": 2168,
+      "sha256": "8a3dd4bcbbd2a0102696c1888da218e648d068246fe548cdf8c5536a490e1eb9"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL044.md",
+      "bytes": 2058,
+      "sha256": "17b61e58bfc018f9c46ee88019270f9d56a1c76e51e40ea6b71d156c65c18aa0"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL045.md",
+      "bytes": 2085,
+      "sha256": "5d1bb40ed8a7391291a43447530a28568b6acc24d7a463a9acd023d365cfe827"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL046.md",
+      "bytes": 2119,
+      "sha256": "755c7270f9e755d136a005417d87a11338662f8ca07e9ebc0121d57a1b840115"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL047.md",
+      "bytes": 2075,
+      "sha256": "a122bdcd894330f75dfdd905182acecef82248c4591bbf4171bc34335c75983a"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL048.md",
+      "bytes": 2123,
+      "sha256": "f67c6db8921f2bbbf4344173c910665e05fcae70f8509ef979b23648fd0733ec"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL049.md",
+      "bytes": 2100,
+      "sha256": "3a2114da897ca42dd102e2973f9c08fd110a5ed0e5edab5c1b2ab27f12500df4"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL050.md",
+      "bytes": 1948,
+      "sha256": "7cc2982b3369fb0f81df129456f4c025d53992017d95758d72fd39409314d6e9"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL051.md",
+      "bytes": 2128,
+      "sha256": "6d5d8a27b22432c73e362bd30050645338bdf0e9cb91f8258758fce1809a5943"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL052.md",
+      "bytes": 1891,
+      "sha256": "9c7bb4830e1215b9ea00aee20e73b5b6e0658f773405c0725e325dd8cf6e7d4d"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL053.md",
+      "bytes": 2063,
+      "sha256": "2f96135120f8603c06c3a11e36391d91901729ca042fb9b4b88fff717a37f173"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL054.md",
+      "bytes": 2295,
+      "sha256": "18c4233d34315f2fcdba0d0ca8bf1ec749ac34b18dccca2079fc7a9add128256"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL055.md",
+      "bytes": 2052,
+      "sha256": "4d5a972f157e77e3058de94f2fd86b6da0e6ef947bfc5dc3d3292f4d3fc1b6df"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL056.md",
+      "bytes": 1904,
+      "sha256": "2534888cb872e6d2b05c92c0e24e8ab490b3c6f9d77c6324d1489f603717d4d2"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL057.md",
+      "bytes": 1884,
+      "sha256": "6f6c339f425532c310ec967bd4b99eaf9c391486835711337c5d57525cc7a0ea"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL058.md",
+      "bytes": 2051,
+      "sha256": "d2c9c496db9732aa09460e5f1b77b2c224636e7d2e5a34b805ed2845d7b70d26"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL059.md",
+      "bytes": 2000,
+      "sha256": "b5867c6d91047262fbb56586435c4a5a455b491823e4a9a4ee753b51ae007a83"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL060.md",
+      "bytes": 1996,
+      "sha256": "aa0541221fca6cde0f36f3025ebfe1ad60c8ac6a78fcd107ea0d25e034d2cd0a"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL061.md",
+      "bytes": 2086,
+      "sha256": "20fafa9dd47a429a99aa646d150595154a8857eac3b1660dfa9c88d455fb146a"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL062.md",
+      "bytes": 2216,
+      "sha256": "9f50476d294d7d961a455b5992608fa858f2b8a27bd109e5e707cf11ab67369c"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL063.md",
+      "bytes": 2219,
+      "sha256": "ce6d2a62de59484d0265f2ff207987d5b62866ea8e28354c9740d0f3460af02a"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL064.md",
+      "bytes": 2237,
+      "sha256": "7ea2fbffabc0bdd9b492c1df27ed23235ecd6a9866a922869bb6e37f60aeac3f"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL065.md",
+      "bytes": 2037,
+      "sha256": "55a2c88f0dd13721d560d9ff64b227ce6d532a89ecc11f84092b11fac378437c"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL066.md",
+      "bytes": 2136,
+      "sha256": "f45ebb064fb352539f81b38d3e8dd5719b8de0c94179f8315fd08e91b3a484a8"
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL067.md",
+      "bytes": 2189,
+      "sha256": "620371312aa7c7f9658e899ce4c3123e36c491d9ca24130a3e54930e5a2b210d"
+    },
+    {
+      "path": "90_reference/05_cases/CASE01_订阅阅读器怎样成为收集底座.md",
+      "bytes": 2161,
+      "sha256": "be23ff5e923f67a5675578573d884f837d5a8de3be1c064cdc3004cd27261f24"
+    },
+    {
+      "path": "90_reference/05_cases/CASE02_Feedly去重与聚类不是同一层.md",
+      "bytes": 2076,
+      "sha256": "d84f93c675c1756bdb62d14345e857c876c15df12a05c9a379964fc8d80ad9cb"
+    },
+    {
+      "path": "90_reference/05_cases/CASE03_zenfeed与TrendRadar的情报产品取舍.md",
+      "bytes": 2134,
+      "sha256": "fafed21bdc5791a88723c0c0a403bf1678611c6e1042f59ae2292ebfbc299414"
+    },
+    {
+      "path": "90_reference/05_cases/CASE04_IPTC与W3C给证据模型的启示.md",
+      "bytes": 1892,
+      "sha256": "2b2fe53cab1c5b00a4e4b5b87c9d56e2e1a5cf199e8e5416058b64d5e3c95867"
+    },
+    {
+      "path": "90_reference/05_cases/CASE05_官方日历与vintage的双时钟.md",
+      "bytes": 1896,
+      "sha256": "ee9996e60a81034e94c4ba60f02d57fe5898375c446d3a8a742d553364e27b28"
+    },
+    {
+      "path": "90_reference/05_cases/CASE06_Tardis让购买历史变成可验收任务.md",
+      "bytes": 1863,
+      "sha256": "3731032deb974da342500d3161a01198783656ceffe2c6ab3c790c920b25169d"
+    },
+    {
+      "path": "90_reference/05_cases/CASE07_Glassnode与BlockSci的两种可复用价值.md",
+      "bytes": 1960,
+      "sha256": "f2e8b7f50e2814a0612e1671b0ad4fd3e0ce6f2399c63bee3d66793a2d6d510d"
+    },
+    {
+      "path": "90_reference/05_cases/CASE08_Anthropic研究案例与TradingAgents的可迁移部分.md",
+      "bytes": 1855,
+      "sha256": "4eb2ba65dba1f13f669e315ca9c1ed991765abc7e25319c41f168c7932c247b5"
+    },
+    {
+      "path": "90_reference/05_cases/CASE09_FinRobot开放边界与金融方法迁移.md",
+      "bytes": 1939,
+      "sha256": "a5dc587785a96a59f44a2182a8c097ee37c395fa0b1d4ef7c92b3ea3207491d0"
+    },
+    {
+      "path": "90_reference/05_cases/CASE10_Qlib与arch如何服务实验纪律.md",
+      "bytes": 1840,
+      "sha256": "bbf99efa42eccbe863bf79f8806dd3616803057d01dc1358e359522cfc746a54"
+    },
+    {
+      "path": "90_reference/05_cases/CASE11_FDC3工作区上下文迁移.md",
+      "bytes": 1799,
+      "sha256": "7cbe77cb77b11c0ee69db228a089c7b7a533574b6f193fa1a56b89f9f2ddefcf"
+    },
+    {
+      "path": "90_reference/05_cases/CASE12_Temporal与Haystack揭示的取消边界.md",
+      "bytes": 1853,
+      "sha256": "edb6fb0942575fd4ccf60735df5e92daf14dedec3d9b363097454081ab88eb3c"
+    },
+    {
+      "path": "90_reference/05_cases/CASE13_Docling与GROBID避免只收标题.md",
+      "bytes": 1843,
+      "sha256": "3a74f56ea93c2c79add2cbe0852f9f7ad88a1bfca067cd192773df7452e64256"
+    },
+    {
+      "path": "90_reference/05_cases/CASE14_开源商业服务和受限搜索的分界.md",
+      "bytes": 2096,
+      "sha256": "3eafcb02f2a0207dfb53db668e3012b3e4ea911ca4752ca7d330d10fe64d0c9d"
+    },
+    {
+      "path": "90_reference/05_cases/README.md",
+      "bytes": 1975,
+      "sha256": "6dd7b9f301b47dde2d5ece281ae2fd3d58c82eaa7f26bd79b84ef9bc97524803"
+    },
+    {
+      "path": "90_reference/06_collection_design/01_collection_handbook.md",
+      "bytes": 10330,
+      "sha256": "8883cda6c97388ba3e0044c8a56118b436f6c52d43e0b801ff15ade76b63c5dc"
+    },
+    {
+      "path": "90_reference/06_collection_design/02_source_catalog.md",
+      "bytes": 5642,
+      "sha256": "d943c75c036f8c58f75e0ae70aa4fb171425b5750d3449067070086c0e0db0b0"
+    },
+    {
+      "path": "90_reference/06_collection_design/03_lifecycle_and_contract.md",
+      "bytes": 7365,
+      "sha256": "3a7b67a0ce056a419cae7ae72bfd390ee6096ca601806cfb65de69d37588ce91"
+    },
+    {
+      "path": "90_reference/06_collection_design/04_alignment_with_accepted_contracts.md",
+      "bytes": 2762,
+      "sha256": "96b155d9ef1dd117f9d4675d77e2d1906628b6d5da9c6dc3d175696de8fae60d"
+    },
+    {
+      "path": "90_reference/06_collection_design/05_search_recipes.md",
+      "bytes": 8128,
+      "sha256": "66d2cd6b68b32c84463e56a842a75bdde21b2591c6a138b3246d403ac29f71f0"
+    },
+    {
+      "path": "90_reference/06_collection_design/06_evaluation_and_fixtures.md",
+      "bytes": 4154,
+      "sha256": "ec0d530d7b329e3d1708b3db5ce663412799bf71afaa68654cbf3279ed0a4275"
+    },
+    {
+      "path": "90_reference/06_collection_design/07_operating_and_update_policy.md",
+      "bytes": 2181,
+      "sha256": "c48da8dced214d9d70bb50cfb587d46961e064988c2fcbdbeb707fc1f9be5a6f"
+    },
+    {
+      "path": "90_reference/06_collection_design/collection.schema.design.json",
+      "bytes": 22423,
+      "sha256": "b6d2d545a31826fb59a76cffaf6b8410b7fc64b8c994da0afe2b4e171fc3174b"
+    },
+    {
+      "path": "90_reference/06_collection_design/collection_cases.synthetic.json",
+      "bytes": 9024,
+      "sha256": "85b75bb7929b599bc7df722738b892aa87203cff0481cef81b17e86226290720"
+    },
+    {
+      "path": "90_reference/06_collection_design/contract_examples.synthetic.json",
+      "bytes": 3511,
+      "sha256": "a3c6ab1496c145a10e07bc53b0c7a2b1b7ce28d99c125d6d4d972a1de38ed24e"
+    },
+    {
+      "path": "90_reference/06_collection_design/discovery_recipes.json",
+      "bytes": 11117,
+      "sha256": "96c7ac3aceed8ce2b7f26b61c392a141961f31d6302b3df5d264db1cecd7a39f"
+    },
+    {
+      "path": "90_reference/06_collection_design/source_catalog.candidates.json",
+      "bytes": 25293,
+      "sha256": "cd65611ccf629042b95dbdefc0e9bfd0a84eb36f205f58614e62e4e043323e89"
+    },
+    {
+      "path": "90_reference/07_codex_usage/01_reading_and_selection.md",
+      "bytes": 1309,
+      "sha256": "7a26032309f115cddb52c2639beb4ec17fa705b987c6ddf70e3cdbc242ba007e"
+    },
+    {
+      "path": "90_reference/07_codex_usage/02_prompt_readonly_audit.md",
+      "bytes": 2073,
+      "sha256": "547374553bfbbdba92294dc0164bd4791b6070e01fd5c0c762bee8e2284131f5"
+    },
+    {
+      "path": "90_reference/07_codex_usage/03_prompt_scoped_execution.md",
+      "bytes": 2039,
+      "sha256": "b9bd70aa70f662c06b5e06f964fe1091662ab54792aad4b64ea7f4e660680403"
+    },
+    {
+      "path": "90_reference/07_codex_usage/04_decision_record_template.md",
+      "bytes": 1656,
+      "sha256": "875e5a9c41595920aad8a98a1fe1c54a561934eaf51c58d01151c7f3ff200aac"
+    },
+    {
+      "path": "90_reference/07_codex_usage/slice_proposals.json",
+      "bytes": 354,
+      "sha256": "f292e4c5624ec956a0e51a474d85f08136414400673d0ebed9f0551415145bf3"
+    },
+    {
+      "path": "90_reference/08_evidence/accepted_plan_preservation.json",
+      "bytes": 351,
+      "sha256": "82a20c4b1a1a63de1a265bd7dacc409cff22ddee47e3e8edc17a88c1c2aa2d30"
+    },
+    {
+      "path": "90_reference/08_evidence/access_limits.md",
+      "bytes": 2377,
+      "sha256": "c5cc6d6f933ffbdfaa1a7e777caba801ccf01a5e1ef7664e141b8167bee4fd8c"
+    },
+    {
+      "path": "90_reference/08_evidence/case_index.json",
+      "bytes": 3191,
+      "sha256": "24f757a537ae31ed6fe0b1467c22512ac5dc6dbd266a22153090ac7d5685b93b"
+    },
+    {
+      "path": "90_reference/08_evidence/content_statistics.json",
+      "bytes": 507,
+      "sha256": "39a63b826788cdb5fa02a143f941255bd507406b1be558427c574751c5145230"
+    },
+    {
+      "path": "90_reference/08_evidence/coverage_matrix.md",
+      "bytes": 2441,
+      "sha256": "cefe8c17a031d60d37cdb9057ce6307e2a6483ae4e5a28b5344fdb414fbf91b2"
+    },
+    {
+      "path": "90_reference/08_evidence/package_qc.json",
+      "bytes": 224,
+      "sha256": "d05bc5ba3401aab7aa170973919039b044d3b9c535324eb462840a18175ffc89"
+    },
+    {
+      "path": "90_reference/08_evidence/research_diary.md",
+      "bytes": 2891,
+      "sha256": "8f07c73a95bd69d76ade6fee3ffdfdc1b105363a8063384c8205a21346a5ae0f"
+    },
+    {
+      "path": "90_reference/08_evidence/research_index.json",
+      "bytes": 6244,
+      "sha256": "ac9ca8dfe46a781aee5a70d35e058ddb64e343319120ebc8d9050ad171b8c40b"
+    },
+    {
+      "path": "90_reference/08_evidence/reuse_catalog.json",
+      "bytes": 28664,
+      "sha256": "ac2f1aef1cfaa34a7edac6af96d183a340a5b0ceab98aa6905bc9910a988e681"
+    },
+    {
+      "path": "90_reference/08_evidence/sources.json",
+      "bytes": 110665,
+      "sha256": "6e6c04d4a8cc1bc10450736fc011e37ed8534629a52a00ca073789f4449b19e8"
+    },
+    {
+      "path": "90_reference/08_evidence/sources.md",
+      "bytes": 57144,
+      "sha256": "69f7cbef7f18cc92349ee217f1406eecedbd247868d4c0ca2c6cc5a590b54ad4"
+    },
+    {
+      "path": "90_reference/10_final_review/README.md",
+      "bytes": 1105,
+      "sha256": "f88c4bf08ce00307d7e3f14bf0acd178773c8ad09f5c68177eb1022d8f3b575b"
+    },
+    {
+      "path": "90_reference/10_final_review/compatibility_map.json",
+      "bytes": 1061,
+      "sha256": "303b0ecf2068a77b84e93b00337e184784a19cc64e09df37cc2384b62f026399"
+    },
+    {
+      "path": "90_reference/10_final_review/contract_migration.md",
+      "bytes": 5905,
+      "sha256": "6e1e90d5001ee6bc060930befb44da3eb34daf67b11cd4e837fffa0f92374fc4"
+    },
+    {
+      "path": "90_reference/10_final_review/external_rechecks.json",
+      "bytes": 2555,
+      "sha256": "10423e1bfd4c0c90e7dced7106f62eeacbf951e7297eeccd457f178af8c1126f"
+    },
+    {
+      "path": "90_reference/10_final_review/findings.json",
+      "bytes": 10437,
+      "sha256": "4880412da3581e531d0b0c93a2bd2dca12021c91f97fbbe340917e2682c6dd7f"
+    },
+    {
+      "path": "90_reference/10_final_review/results/README.md",
+      "bytes": 2488,
+      "sha256": "433bb36f72af98f5176c53eaa8ca48a4e4980d454136f2ab15a4ec25652d1b4e"
+    },
+    {
+      "path": "90_reference/10_final_review/results/baseline_negative_probes.json",
+      "bytes": 2406,
+      "sha256": "19d37866a3dfd5edf84b662a06cb6365239f51ffed53dabcf74aa8d9b8dde85b"
+    },
+    {
+      "path": "90_reference/10_final_review/results/change_inventory.json",
+      "bytes": 57127,
+      "sha256": "9efe6f522258bbf3002a6433cb62c60a8316085cf57675275185faabb60650a8"
+    },
+    {
+      "path": "90_reference/10_final_review/results/delivery_summary.json",
+      "bytes": 1273,
+      "sha256": "ebe39960b44387aceae414872df8c44cf58daa97812320a73ac369be90bb2447"
+    },
+    {
+      "path": "90_reference/10_final_review/results/document_checks.json",
+      "bytes": 58281,
+      "sha256": "dc454bcd7f9917b6779c3ecb2715fd0b1d7f001cf28c496cda1eeb9e37ec7e0c"
+    },
+    {
+      "path": "90_reference/10_final_review/results/environment.json",
+      "bytes": 229,
+      "sha256": "cfb8aa4f2b92e37f80f45ee4e5c174f786e9bf4d5b94fc8bd803bfa20b8238ab"
+    },
+    {
+      "path": "90_reference/10_final_review/results/external_evidence_scope.json",
+      "bytes": 621,
+      "sha256": "6c7faa6514486c914bd46c2e9fc873e6f1a8cb721c86f8b25f63900077ca43ed"
+    },
+    {
+      "path": "90_reference/10_final_review/results/link_checks.json",
+      "bytes": 80736,
+      "sha256": "8aa88f0b1541888540ba406089a6131bba17a546b40ad99436947e1aaa2515b3"
+    },
+    {
+      "path": "90_reference/10_final_review/results/review_inventory.json",
+      "bytes": 55953,
+      "sha256": "7c1ea8ffbc99c83bd141e2f23ff59a382d35971ffe548adcf8616737f044211e"
+    },
+    {
+      "path": "90_reference/10_final_review/scoped_tasks.json",
+      "bytes": 15275,
+      "sha256": "a66ed4018b5d822a835d67bf34c276483a05ef1f10344815d0ca1f19b34676b5"
+    },
+    {
+      "path": "90_reference/10_final_review/scoped_work_packages.md",
+      "bytes": 12993,
+      "sha256": "ef205928db22f38899f9dfb936999b51260a104095ca7638cd05d817b3605b6e"
+    },
+    {
+      "path": "90_reference/10_final_review/text_patch_receipts.json",
+      "bytes": 6211,
+      "sha256": "bb8af66b0c64289f9afc03496dccec5d08fb444f85fa62a3810bac44be35219a"
+    },
+    {
+      "path": "90_reference/10_final_review/value_and_decision_tests.md",
+      "bytes": 4072,
+      "sha256": "80dcd5f200f9b148ee7249f1e710b05f9cd2e9566b8e77c79a8b629003b1a558"
+    },
+    {
+      "path": "90_reference/90_archive/README.md",
+      "bytes": 495,
+      "sha256": "c06f18365a9b69fde5bde40e15f7553b0046c1458613036f49f1d3daca6fb6d2"
+    },
+    {
+      "path": "90_reference/README.md",
+      "bytes": 1007,
+      "sha256": "707d139e9566e83afbb9a7e3ae01d328a443cafdbae8a8f26f68c5516238ed2f"
+    },
+    {
+      "path": "99_history/README.md",
+      "bytes": 505,
+      "sha256": "9eb61f4dc0acdee911eb7ec118111fb209edd12530bb8120838b7f6029f4b70a"
+    },
+    {
+      "path": "99_history/batch2_original_entry_files.zip",
+      "bytes": 55149,
+      "sha256": "bcbf5bd51bb7999cfe3cb6d87dc2cefcef81f0e6688db4f2fc97063dc873b69b"
+    },
+    {
+      "path": "EXECUTION_LOG.md",
+      "bytes": 10447,
+      "sha256": "4c647f23f19780ad0db54dbc57606afaaf0b5d1fe6530a8161e476ea31062bda"
+    },
+    {
+      "path": "EXECUTION_MASTER.md",
+      "bytes": 19127,
+      "sha256": "8d41baefa79570a4b0ad00a31a64ab81eac2865af73b1f6614ec207759d6e763"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3986,
+      "sha256": "c47ebee4b13d9c5c30a04ef07aee2889994d49ab6a42c166287914fbd3cc2f70"
+    }
+  ]
+}

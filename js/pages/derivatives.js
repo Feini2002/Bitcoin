@@ -54,12 +54,15 @@ function fmtDerivPct(v, digits = 2) {
   return `${n >= 0 ? "+" : ""}${n.toFixed(digits)}%`;
 }
 
-function fmtDerivRate(v, digits = 2) {
+function fmtDerivRate(v, digits = 2, unit) {
   if (v == null || v === "") return "--";
   const n = derivNumber(v);
   if (!Number.isFinite(n)) return "--";
-  const scaled = Math.abs(n) <= 1 ? n * 100 : n;
-  return `${scaled >= 0 ? "+" : ""}${scaled.toFixed(digits)}%`;
+  const Contracts = typeof BitContracts !== "undefined" ? BitContracts : null;
+  const shown = Contracts && Contracts.fundingDisplay
+    ? Contracts.fundingDisplay({ rate: n, unit: unit || "decimal-per-settlement" })
+    : { percent: unit === "percent" ? n : n * 100, guessedUnit: false };
+  return `${shown.percent >= 0 ? "+" : ""}${shown.percent.toFixed(digits)}%`;
 }
 
 function fmtDerivFunding(v) {
@@ -143,7 +146,9 @@ function derivRatioState(value, high = DERIV_RATIO_BAND_HIGH, low = DERIV_RATIO_
 function derivBasisState(row) {
   const n = derivNumber(row && row.value);
   if (!Number.isFinite(n)) return "样本不足";
-  const pct = Math.abs(n) <= 1 ? n * 100 : n;
+  const unit = row && row.unit;
+  const pct = unit === "percent" || unit === "percent-per-year" ? n : n * 100;
+  if (!unit && Math.abs(n) > 1) return "单位未声明";
   if (pct > DERIV_BASIS_ELEVATED_PCT) return "升水偏高";
   if (pct < DERIV_BASIS_DISCOUNT_PCT) return "贴水";
   if (pct > 0) return "温和升水";
@@ -344,6 +349,8 @@ function pageDerivatives() {
           ${derivAgentLinkHtml("env")}
         </div>
       </section>
+
+      <p class="muted" id="deriv-research-evidence"></p>
 
       <div class="deriv-toolbar">
         <label class="deriv-field">
@@ -794,6 +801,15 @@ function renderDerivativesPayload(payload, syncReport = null) {
   if (liveChip) {
     liveChip.className = a.sourceOkCore ? "chip ok" : "chip warn";
     liveChip.textContent = a.sourceOkCore ? "D1 主链路达标" : "D1 需留意";
+  }
+  const evidenceEl = document.getElementById("deriv-research-evidence");
+  if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
+    evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
+      instrumentId: "BINANCE:USDM:BTCUSDT:PERPETUAL",
+      windowLabel: "30d",
+      source: fundingSrcLabel,
+      coverage: a.sourceOkCore ? "主链路达标" : "核心依赖不足",
+    });
   }
   const sideSummary = $("#deriv-side-summary");
   if (sideSummary) {

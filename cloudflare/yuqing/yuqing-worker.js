@@ -3439,7 +3439,7 @@ export default {
   async fetch(request, env, _ctx) {
     const response = await (async () => {
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders() });
+      return new Response(null, { status: 204, headers: corsHeaders({ origin: request.headers.get("Origin") }) });
     }
 
     if (maintenanceEnabled(env)) {
@@ -3546,8 +3546,8 @@ export default {
       try {
         const id = url.searchParams.get("id") || "";
         const report = await loadYuqingReportById(env.YUQING_DB, id);
-        if (!report) return json({ ok: false, error: "报告不存在" }, 404);
-        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report });
+        if (!report) return json({ ok: false, error: "报告不存在", recovery: { grade: "missing", latestSubstitution: false } }, 404);
+        return json({ ok: true, workerBuild: WORKER_BUILD, d1Ready: true, report, recovery: { grade: "exact_inputs", latestSubstitution: false } });
       } catch (e) {
         return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
       }

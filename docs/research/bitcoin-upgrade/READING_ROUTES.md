@@ -10,6 +10,7 @@
 
 | 想解决的问题 | 设计原文 | 深入研究与案例 | 仓库定位 |
 | --- | --- | --- | --- |
+| 按第二批主线连续开发 | [执行总任务](batch2-execution/EXECUTION_MASTER.md)、[执行日志](batch2-execution/EXECUTION_LOG.md) | 第一批专题仍按本表查阅，不另开第二套 WP/SLICE | [功能定位入口](QUICK_ROUTER.md) |
 | 分数、置信度、缺失值是否误导；简报如何表达变化与未知 | [卷05 分析方法](sources/2026-09-16/01_accepted_plan/volumes/05_analysis_methods_and_scenarios.md)、[价值对照](sources/2026-09-16/10_final_review/value_and_decision_tests.md) | [RES14 观点与校准](sources/2026-09-16/03_research/RES14_预测校准观点与决策记录.md)、[RES24 降噪评价](sources/2026-09-16/03_research/RES24_信息价值覆盖与降噪评价.md) | [舆情分析](REPOSITORY_MAP.md#analysis) |
 | 日报应该保留哪些内容；如何减少转载、无关资讯并保留反证 | [卷03 产品与信息](sources/2026-09-16/01_accepted_plan/volumes/03_product_information_and_noise.md)、[收集手册](sources/2026-09-16/06_collection_design/01_collection_handbook.md) | [RES04 归并与更正](sources/2026-09-16/03_research/RES04_事件主张去重与更正.md)、[CASE02 去重与聚类](sources/2026-09-16/05_cases/CASE02_Feedly去重与聚类不是同一层.md) | [事件日报](REPOSITORY_MAP.md#events) |
 | 补来源、订阅、正文提取、论文披露与检索 | [来源目录](sources/2026-09-16/06_collection_design/02_source_catalog.md)、[生命周期](sources/2026-09-16/06_collection_design/03_lifecycle_and_contract.md)、[搜索配方](sources/2026-09-16/06_collection_design/05_search_recipes.md) | [RES02 订阅](sources/2026-09-16/03_research/RES02_持续订阅与来源发现.md)、[RES03 网页提取](sources/2026-09-16/03_research/RES03_网页提取与浏览器采集.md)、[RES05 检索](sources/2026-09-16/03_research/RES05_多语言检索与研究上下文.md)、[RES25 复杂文档](sources/2026-09-16/03_research/RES25_论文披露与复杂文档摄取.md) | [事实池与采集](REPOSITORY_MAP.md#collection) |

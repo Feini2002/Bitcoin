@@ -76,8 +76,9 @@ function database(){
   await persistDataset(reorder,'fred-dgs2',sameValueNewRevision,'cloud-readthrough');
   assert.equal((await readDataset(reorder,'fred-dgs2',{knownAt:'2026-09-18T00:00:00.000Z'})).observations.find(r=>r.key==='2026-09-14').sourceRevision.realtimeStart,'2026-09-17');
   pass('out-of-order arrival and unchanged values with revised metadata retain correct versions');
-  await persistDataset(reorder,'binance-perp-oi',envelope('binance-perp-oi',{time:t,openInterest:'100'},new Date().toISOString()),'cloud-readthrough');
-  const stale=await readDataset(reorder,'binance-perp-oi',{knownAt:'2026-09-16T20:00:00Z'});
+  const oiReceivedAt=new Date().toISOString();
+  await persistDataset(reorder,'binance-perp-oi',envelope('binance-perp-oi',{time:t,openInterest:'100'},oiReceivedAt),'cloud-readthrough');
+  const stale=await readDataset(reorder,'binance-perp-oi',{knownAt:oiReceivedAt});
   assert.equal(stale.collectionStale,false);assert.equal(stale.sourceStale,true);assert.equal(stale.stale,true);
   for(const hour of ['07','08'])await persistDataset(reorder,'deribit-btc-options',envelope('deribit-btc-options',{result:[{instrument_name:'BTC-25SEP26-80000-C',creation_timestamp:t,open_interest:100}]},`2026-09-16T${hour}:00:00.000Z`),'cloud-readthrough');
   const options=await readDataset(reorder,'deribit-btc-options',{knownAt:'2026-09-16T09:00:00Z'});

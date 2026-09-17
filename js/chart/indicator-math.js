@@ -154,10 +154,20 @@
   }
 
   function vwapSeries(klines) {
+    const Contracts = global.BitContracts;
+    if (Contracts && typeof Contracts.sessionVwapSeries === "function") {
+      const hasQuote = (klines || []).some((row) => Number.isFinite(Number(row.q || row.quoteVolume)));
+      const series = Contracts.sessionVwapSeries(klines, { mode: hasQuote ? "quote_base" : "hlc3" });
+      return series.filter((pt) => Number.isFinite(pt.value)).map((pt) => ({
+        time: pt.time,
+        value: pt.value,
+        methodId: pt.methodId,
+      }));
+    }
     const out = [];
     let dayKey = null;
-    let cumPV = 0;
-    let cumV = 0;
+    let cumQuote = 0;
+    let cumBase = 0;
     for (let i = 0; i < klines.length; i++) {
       const row = klines[i];
       const ms = row.t;
@@ -165,15 +175,23 @@
       const key = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
       if (dayKey !== key) {
         dayKey = key;
-        cumPV = 0;
-        cumV = 0;
+        cumQuote = 0;
+        cumBase = 0;
       }
-      const tp = (row.h + row.l + row.c) / 3;
+      const quote = Number(row.q != null ? row.q : row.quoteVolume);
+      const base = Number(row.v != null ? row.v : row.baseVolume);
+      if (Number.isFinite(quote) && Number.isFinite(base) && base > 0) {
+        cumQuote += quote;
+        cumBase += base;
+        out.push({ time: timeSec(row), value: cumQuote / cumBase, methodId: "M06" });
+        continue;
+      }
       const vol = Number(row.v) || 0;
-      cumPV += tp * vol;
-      cumV += vol;
-      if (cumV > 0) out.push({ time: timeSec(row), value: cumPV / cumV });
-      else out.push({ time: timeSec(row), value: tp });
+      if (vol <= 0) continue;
+      const tp = (row.h + row.l + row.c) / 3;
+      cumQuote += tp * vol;
+      cumBase += vol;
+      out.push({ time: timeSec(row), value: cumQuote / cumBase, methodId: "M07" });
     }
     return out;
   }
@@ -211,29 +229,29 @@
     found.price = (found.price + candidate.price) / 2;
   }
 
-  function prevCompletedDayRange(klines) {
+  function prevCompletedDayRange(klines, intervalMs) {
+    const Contracts = global.BitContracts;
+    if (Contracts && typeof Contracts.prevCompletedUtcDayRange === "function") {
+      const result = Contracts.prevCompletedUtcDayRange(klines, { intervalMs: intervalMs || 60 * 60 * 1000 });
+      if (!result || !result.ok) return null;
+      return { high: result.high, low: result.low, volume: result.volume, day: result.day, complete: true };
+    }
     if (!Array.isArray(klines) || klines.length < 2) return null;
     const latestDay = dayKeyUtc(klines[klines.length - 1].t);
-    let targetDay = null;
-    for (let i = klines.length - 2; i >= 0; i--) {
-      const key = dayKeyUtc(klines[i].t);
-      if (key < latestDay) {
-        targetDay = key;
-        break;
-      }
-    }
-    if (targetDay == null) return null;
+    const targetDay = latestDay - 24 * 60 * 60 * 1000;
     let high = -Infinity;
     let low = Infinity;
     let volume = 0;
+    let count = 0;
     for (const row of klines) {
       if (dayKeyUtc(row.t) !== targetDay) continue;
       high = Math.max(high, Number(row.h));
       low = Math.min(low, Number(row.l));
       volume += Number(row.v) || 0;
+      count += 1;
     }
-    if (!Number.isFinite(high) || !Number.isFinite(low)) return null;
-    return { high, low, volume, day: targetDay };
+    if (!count || !Number.isFinite(high) || !Number.isFinite(low)) return null;
+    return { high, low, volume, day: targetDay, complete: true };
   }
 
   function rankLevels(levels, currentPrice, side, limit) {
@@ -247,6 +265,16 @@
       })
       .slice(0, limit || 6);
   }
+
+  const RANGE_INTERVAL_MS = {
+    "5m": 5 * 60 * 1000,
+    "15m": 15 * 60 * 1000,
+    "1h": 60 * 60 * 1000,
+    "4h": 4 * 60 * 60 * 1000,
+    "1d": 24 * 60 * 60 * 1000,
+    "3d": 3 * 24 * 60 * 60 * 1000,
+    "1w": 7 * 24 * 60 * 60 * 1000,
+  };
 
   /**
    * 各周期震荡区间窗口：按「根数」近似计划中的墙钟跨度（5m≈3 日 … 1w≈3 年）。
@@ -652,6 +680,7 @@
           scoreBase: 1 + recency,
           t: Number(row.t),
           index: i,
+          knownAtIndex: i + wing,
           reactionScore: reaction,
           evidence: reaction >= 1 ? "触碰后反向超过 1 ATR" : "摆动确认",
         }, mergeDistance);
@@ -666,13 +695,14 @@
           scoreBase: 1 + recency,
           t: Number(row.t),
           index: i,
+          knownAtIndex: i + wing,
           reactionScore: reaction,
           evidence: reaction >= 1 ? "触碰后反向超过 1 ATR" : "摆动确认",
         }, mergeDistance);
       }
     }
 
-    const prev = prevCompletedDayRange(rows);
+    const prev = prevCompletedDayRange(rows, RANGE_INTERVAL_MS[interval] || 60 * 60 * 1000);
     addPreviousRangeLevels(resistancePool, supportPool, prev, mergeDistance, Math.max(0, historic.length - 1));
 
     const resistanceAll = finalizeChartLevelBands(resistancePool, historic.length - 1)
@@ -718,21 +748,51 @@
     else if (Number(latestBar.h) > upper || currentPrice >= upper - touchDist) state = "测试区间上沿";
     else if (Number(latestBar.l) < lower || currentPrice <= lower + touchDist) state = "测试区间下沿";
 
-    const resistance = rankStructureLevels(resistanceAll, currentPrice, "resistance", Number(opts.limit) || 6);
-    const support = rankStructureLevels(supportAll, currentPrice, "support", Number(opts.limit) || 6);
+    const previousClose = Number(historic[historic.length - 1].c);
+    const displayResistance = rankStructureLevels(resistanceAll, currentPrice, "resistance", Number(opts.limit) || 6);
+    const displaySupport = rankStructureLevels(supportAll, currentPrice, "support", Number(opts.limit) || 6);
+    const testedResistance = rankStructureLevels(resistanceAll, previousClose, "resistance", Number(opts.limit) || 6);
+    const testedSupport = rankStructureLevels(supportAll, previousClose, "support", Number(opts.limit) || 6);
+    const frozenRes = testedResistance[0] || (upper > previousClose ? upperLevel : null);
+    const frozenSup = testedSupport[0] || (lower < previousClose ? lowerLevel : null);
+    const Contracts = global.BitContracts;
+    const frozenUp = frozenRes && Contracts && Contracts.evaluateFrozenBreakout
+      ? Contracts.evaluateFrozenBreakout({
+          knownLevel: Number(frozenRes.price),
+          buffer,
+          previousClose,
+          closedClose: currentPrice,
+          side: "resistance",
+        })
+      : frozenRes
+        ? { confirmed: currentPrice > Number(frozenRes.price) + buffer, knownLevel: Number(frozenRes.price) }
+        : null;
+    const frozenDown = frozenSup && Contracts && Contracts.evaluateFrozenBreakout
+      ? Contracts.evaluateFrozenBreakout({
+          knownLevel: Number(frozenSup.price),
+          buffer,
+          previousClose,
+          closedClose: currentPrice,
+          side: "support",
+        })
+      : frozenSup
+        ? { confirmed: currentPrice < Number(frozenSup.price) - buffer, knownLevel: Number(frozenSup.price) }
+        : null;
+    const resistance = displayResistance;
+    const support = displaySupport;
     const nearResistance = resistance[0] || (upper > currentPrice ? upperLevel : null);
     const nearSupport = support[0] || (lower < currentPrice ? lowerLevel : null);
-    const nearBreakout = nearResistance
-      ? { price: Number(nearResistance.price) + buffer, base: Number(nearResistance.price), buffer }
+    const nearBreakout = frozenRes
+      ? { price: Number(frozenRes.price) + buffer, base: Number(frozenRes.price), buffer, knownAtClose: previousClose }
       : null;
-    const nearBreakdown = nearSupport
-      ? { price: Number(nearSupport.price) - buffer, base: Number(nearSupport.price), buffer }
+    const nearBreakdown = frozenSup
+      ? { price: Number(frozenSup.price) - buffer, base: Number(frozenSup.price), buffer, knownAtClose: previousClose }
       : null;
     let nearState = "区间内";
-    if (nearBreakout && currentPrice > nearBreakout.price) nearState = "近端上破确认";
-    else if (nearResistance && currentPrice > Number(nearResistance.price)) nearState = "测试近端压力";
-    else if (nearBreakdown && currentPrice < nearBreakdown.price) nearState = "近端跌破确认";
-    else if (nearSupport && currentPrice < Number(nearSupport.price)) nearState = "测试近端支撑";
+    if (frozenUp && frozenUp.confirmed) nearState = "近端上破确认";
+    else if (frozenRes && currentPrice > Number(frozenRes.price)) nearState = "测试近端压力";
+    else if (frozenDown && frozenDown.confirmed) nearState = "近端跌破确认";
+    else if (frozenSup && currentPrice < Number(frozenSup.price)) nearState = "测试近端支撑";
 
     const rangeTouchStrength = Math.min(1, ((Number(upperLevel.touches) || 1) + (Number(lowerLevel.touches) || 1)) / 8);
     const sampleStrength = Math.min(1, sampleBars / minBars);
@@ -775,6 +835,8 @@
       nearContext: {
         resistance: nearResistance,
         support: nearSupport,
+        testedResistance: frozenRes || null,
+        testedSupport: frozenSup || null,
         breakout: nearBreakout,
         breakdown: nearBreakdown,
         state: nearState,
@@ -1097,7 +1159,7 @@
       }
     }
 
-    const prev = prevCompletedDayRange(rows);
+    const prev = prevCompletedDayRange(rows, RANGE_INTERVAL_MS[opts.interval] || 60 * 60 * 1000);
     if (prev) {
       mergeKeyLevelCandidate(resistancePool, {
         price: prev.high,
@@ -1216,6 +1278,21 @@
     computeFibonacciBands,
     resolveChartHigherInterval,
     resolveRangeIntervalConfig,
+    computeQuoteBaseVwap: function (rows) {
+      return global.BitContracts && global.BitContracts.computeQuoteBaseVwap
+        ? global.BitContracts.computeQuoteBaseVwap(rows)
+        : null;
+    },
+    computeHlc3ApproxVwap: function (rows) {
+      return global.BitContracts && global.BitContracts.computeHlc3ApproxVwap
+        ? global.BitContracts.computeHlc3ApproxVwap(rows)
+        : null;
+    },
+    evaluateFrozenBreakout: function (input) {
+      return global.BitContracts && global.BitContracts.evaluateFrozenBreakout
+        ? global.BitContracts.evaluateFrozenBreakout(input)
+        : null;
+    },
     timeSec,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -32,19 +32,33 @@
     return Number(row.shortNotional) || 0;
   }
 
+  function rowUnknownNotional(row) {
+    if (!row) return 0;
+    if (row.unknown_notional != null) return Number(row.unknown_notional) || 0;
+    return Number(row.unknownNotional) || 0;
+  }
+
+  const Contracts = (typeof require === "function" && typeof module !== "undefined")
+    ? require("../contracts/bit-contracts.js")
+    : (globalTarget && globalTarget.BitContracts) || null;
+
   function summarizeLiquidationRows(rows) {
     let longN = 0;
     let shortN = 0;
+    let unknownN = 0;
     for (const row of rows || []) {
       longN += rowLongNotional(row);
       shortN += rowShortNotional(row);
+      unknownN += rowUnknownNotional(row);
     }
-    const totalN = longN + shortN;
+    const knownN = longN + shortN;
     return {
       longN,
       shortN,
-      totalN,
-      longRatio: totalN > 0 ? longN / totalN : null,
+      unknownN,
+      totalN: knownN + unknownN,
+      longRatio: knownN > 0 ? longN / knownN : null,
+      unknownShare: (knownN + unknownN) > 0 ? unknownN / (knownN + unknownN) : null,
     };
   }
 
@@ -62,8 +76,17 @@
     return pts[pts.length - 1].value;
   }
 
-  function changePctOverWindow(series, windowMs) {
+  function changePctOverWindow(series, windowMs, asOf) {
     const pts = sortedSeriesPoints(series);
+    if (Contracts && typeof Contracts.selectAsOfWindow === "function") {
+      const selected = Contracts.selectAsOfWindow({
+        points: pts,
+        requestedWindowMs: windowMs,
+        asOf: asOf != null ? asOf : (pts.length ? pts[pts.length - 1].t : null),
+        toleranceMs: Math.min(60 * 60 * 1000, Math.max(15 * 60 * 1000, windowMs * 0.05)),
+      });
+      return selected && selected.ok ? selected.value : null;
+    }
     if (pts.length < 2) return null;
     const end = pts[pts.length - 1];
     const cutoff = end.t - windowMs;
@@ -74,8 +97,8 @@
         break;
       }
     }
-    if (!prev) prev = pts[0];
-    if (!prev || !prev.value || prev.value === 0) return null;
+    if (!prev) return null;
+    if (!prev.value || prev.value === 0) return null;
     return ((end.value - prev.value) / Math.abs(prev.value)) * 100;
   }
 
@@ -163,10 +186,11 @@
       warnings.push(`K线背景：${String(input.klinesError).slice(0, 120)}`);
     }
 
+    const asOf = Number.isFinite(Date.parse(generatedAt)) ? Date.parse(generatedAt) : Date.now();
     const fundingLast = deriv && deriv.series ? latestSeriesValue(deriv.series.funding_binance) : null;
     const oiSeries = deriv && deriv.series ? deriv.series.oi_binance : null;
-    const oiCh6 = changePctOverWindow(oiSeries, 6 * HOUR_MS);
-    const oiCh24 = changePctOverWindow(oiSeries, DAY_MS);
+    const oiCh6 = changePctOverWindow(oiSeries, 6 * HOUR_MS, asOf);
+    const oiCh24 = changePctOverWindow(oiSeries, DAY_MS, asOf);
     const priceCh24 = num(deriv && deriv.priceChange24hPct);
     const basisQ = basisLatestValue(deriv);
 
@@ -388,6 +412,7 @@
 
     return {
       snapshotVersion: "1.0.0",
+      methodId: "heatmap-weighted-v1",
       summary,
       rows: scenarios,
       warnings,
@@ -395,13 +420,15 @@
       inputsEcho: {
         aggregateSource,
         liquidationWindowNotional: liq.totalN,
+        unknownLiquidationNotional: liq.unknownN || 0,
+        oiChange24: oiCh24,
         hasDerivatives: !!deriv,
         hasKlines: k.ok,
       },
     };
   }
 
-  const HeatmapPressureMatrix = { build };
+  const HeatmapPressureMatrix = { build, changePctOverWindow };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = HeatmapPressureMatrix;

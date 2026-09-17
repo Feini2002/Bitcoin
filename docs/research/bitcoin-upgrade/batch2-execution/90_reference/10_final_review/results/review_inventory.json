@@ -1,0 +1,1507 @@
+[
+  {
+    "path": "00_start/01_master_solution.md",
+    "role": "current_design_or_checks",
+    "bytes": 4741,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/README.md",
+    "role": "current_design_or_checks",
+    "bytes": 5538,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/complete_plan.md",
+    "role": "current_design_or_checks",
+    "bytes": 485367,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/contracts/README.md",
+    "role": "current_design_or_checks",
+    "bytes": 3024,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/contracts/openapi.design.json",
+    "role": "current_design_or_checks",
+    "bytes": 110683,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/contracts/research.schema.json",
+    "role": "current_design_or_checks",
+    "bytes": 90774,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/contracts/research_schema.proposed.sql",
+    "role": "current_design_or_checks",
+    "bytes": 13467,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/contracts/settings.design.json",
+    "role": "current_design_or_checks",
+    "bytes": 1436,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/README.md",
+    "role": "current_design_or_checks",
+    "bytes": 1266,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/acceptance_cases.synthetic.json",
+    "role": "current_design_or_checks",
+    "bytes": 33758,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_artifact.json",
+    "role": "current_design_or_checks",
+    "bytes": 526,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_bundle.json",
+    "role": "current_design_or_checks",
+    "bytes": 2205,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_metrics.canonical.json",
+    "role": "current_design_or_checks",
+    "bytes": 1976,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_metrics.json",
+    "role": "current_design_or_checks",
+    "bytes": 2578,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_raw.json",
+    "role": "current_design_or_checks",
+    "bytes": 117,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_report.json",
+    "role": "current_design_or_checks",
+    "bytes": 1922,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_run.json",
+    "role": "current_design_or_checks",
+    "bytes": 1007,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/fixtures/sample_view.json",
+    "role": "current_design_or_checks",
+    "bytes": 687,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/inputs/previous_research_review.md",
+    "role": "input",
+    "bytes": 77770,
+    "review": "preserved_input",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/inputs/repository_facts.md",
+    "role": "input",
+    "bytes": 30888,
+    "review": "preserved_input",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/meta/document-qc.json",
+    "role": "current_design_or_checks",
+    "bytes": 247,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/meta/repository-facts.json",
+    "role": "current_design_or_checks",
+    "bytes": 3722,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/meta/sources.json",
+    "role": "current_design_or_checks",
+    "bytes": 24079,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/meta/task-topological-order.json",
+    "role": "current_design_or_checks",
+    "bytes": 723,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/meta/tasks.json",
+    "role": "current_design_or_checks",
+    "bytes": 92472,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/00_master_plan.md",
+    "role": "current_design_or_checks",
+    "bytes": 14858,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/01_repository_baseline.md",
+    "role": "current_design_or_checks",
+    "bytes": 18135,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/02_external_research_and_decisions.md",
+    "role": "current_design_or_checks",
+    "bytes": 32737,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/03_product_information_and_noise.md",
+    "role": "current_design_or_checks",
+    "bytes": 24499,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/04_market_data_contracts.md",
+    "role": "current_design_or_checks",
+    "bytes": 24212,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/05_analysis_methods_and_scenarios.md",
+    "role": "current_design_or_checks",
+    "bytes": 23686,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/06_catalysts_macro_etf_options.md",
+    "role": "current_design_or_checks",
+    "bytes": 24301,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/07_llm_prompts_workflows.md",
+    "role": "current_design_or_checks",
+    "bytes": 32480,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/08_workspace_views_and_alerts.md",
+    "role": "current_design_or_checks",
+    "bytes": 20209,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/09_architecture_runtime_and_storage.md",
+    "role": "current_design_or_checks",
+    "bytes": 21261,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
+    "role": "current_design_or_checks",
+    "bytes": 27604,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/11_evaluation_and_acceptance.md",
+    "role": "current_design_or_checks",
+    "bytes": 20061,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/12_migration_operations_and_rollback.md",
+    "role": "current_design_or_checks",
+    "bytes": 19995,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/13_implementation_work_packages.md",
+    "role": "current_design_or_checks",
+    "bytes": 100196,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/14_end_to_end_examples_and_handoff.md",
+    "role": "current_design_or_checks",
+    "bytes": 20623,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "01_accepted_plan/volumes/15_sources_glossary_and_open_questions.md",
+    "role": "current_design_or_checks",
+    "bytes": 27747,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "02_adversarial_review/01_adversarial_review.md",
+    "role": "current_design_or_checks",
+    "bytes": 8850,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "02_adversarial_review/02_scope_override_rules.md",
+    "role": "current_design_or_checks",
+    "bytes": 950,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "02_adversarial_review/dependency_audit.json",
+    "role": "current_design_or_checks",
+    "bytes": 2454,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/README.md",
+    "role": "research_reference",
+    "bytes": 2418,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES01_能力地图与复用决策.md",
+    "role": "research_reference",
+    "bytes": 4756,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES02_持续订阅与来源发现.md",
+    "role": "research_reference",
+    "bytes": 4645,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES03_网页提取与浏览器采集.md",
+    "role": "research_reference",
+    "bytes": 4544,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES04_事件主张去重与更正.md",
+    "role": "research_reference",
+    "bytes": 3985,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES05_多语言检索与研究上下文.md",
+    "role": "research_reference",
+    "bytes": 3826,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES06_实时行情采集与标准化.md",
+    "role": "research_reference",
+    "bytes": 3934,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES07_历史回补时点与数据修订.md",
+    "role": "research_reference",
+    "bytes": 4196,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES08_订单流足迹与盘口研究.md",
+    "role": "research_reference",
+    "bytes": 3663,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES09_资金费持仓基差与强平.md",
+    "role": "research_reference",
+    "bytes": 4275,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES10_期权研究与波动率结构.md",
+    "role": "research_reference",
+    "bytes": 4158,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES11_链上矿工与实体资金流.md",
+    "role": "research_reference",
+    "bytes": 3846,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES12_宏观ETF稳定币与跨资产.md",
+    "role": "research_reference",
+    "bytes": 4633,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES13_因子事件研究与可复现验证.md",
+    "role": "research_reference",
+    "bytes": 4165,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES14_预测校准观点与决策记录.md",
+    "role": "research_reference",
+    "bytes": 3485,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES15_完整金融平台的可迁移经验.md",
+    "role": "research_reference",
+    "bytes": 4382,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES16_模型工具与多代理的适用边界.md",
+    "role": "research_reference",
+    "bytes": 4048,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES17_报告质量评价与可观测性.md",
+    "role": "research_reference",
+    "bytes": 3606,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES18_金融工作区与研究现场.md",
+    "role": "research_reference",
+    "bytes": 3466,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES19_研究知识库与证据生命周期.md",
+    "role": "research_reference",
+    "bytes": 3512,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES20_存储计算与部署路线.md",
+    "role": "research_reference",
+    "bytes": 4260,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES21_增量管道调度与失败恢复.md",
+    "role": "research_reference",
+    "bytes": 3611,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES22_许可数据权利成本与供应商退出.md",
+    "role": "research_reference",
+    "bytes": 4488,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES23_完整能力组合与自建采购对照.md",
+    "role": "research_reference",
+    "bytes": 4494,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES24_信息价值覆盖与降噪评价.md",
+    "role": "research_reference",
+    "bytes": 3637,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "03_research/RES25_论文披露与复杂文档摄取.md",
+    "role": "research_reference",
+    "bytes": 3765,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/README.md",
+    "role": "research_reference",
+    "bytes": 13137,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL001.md",
+    "role": "research_reference",
+    "bytes": 2409,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL002.md",
+    "role": "research_reference",
+    "bytes": 2504,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL003.md",
+    "role": "research_reference",
+    "bytes": 2472,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL004.md",
+    "role": "research_reference",
+    "bytes": 2265,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL005.md",
+    "role": "research_reference",
+    "bytes": 2130,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL006.md",
+    "role": "research_reference",
+    "bytes": 2305,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL007.md",
+    "role": "research_reference",
+    "bytes": 2139,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL008.md",
+    "role": "research_reference",
+    "bytes": 2313,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL009.md",
+    "role": "research_reference",
+    "bytes": 2277,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL010.md",
+    "role": "research_reference",
+    "bytes": 1984,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL011.md",
+    "role": "research_reference",
+    "bytes": 2205,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL012.md",
+    "role": "research_reference",
+    "bytes": 2469,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL013.md",
+    "role": "research_reference",
+    "bytes": 2128,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL014.md",
+    "role": "research_reference",
+    "bytes": 2195,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL015.md",
+    "role": "research_reference",
+    "bytes": 2409,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL016.md",
+    "role": "research_reference",
+    "bytes": 2204,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL017.md",
+    "role": "research_reference",
+    "bytes": 2312,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL018.md",
+    "role": "research_reference",
+    "bytes": 1943,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL019.md",
+    "role": "research_reference",
+    "bytes": 1955,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL020.md",
+    "role": "research_reference",
+    "bytes": 1777,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL021.md",
+    "role": "research_reference",
+    "bytes": 1836,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL022.md",
+    "role": "research_reference",
+    "bytes": 1801,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL023.md",
+    "role": "research_reference",
+    "bytes": 1766,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL024.md",
+    "role": "research_reference",
+    "bytes": 2307,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL025.md",
+    "role": "research_reference",
+    "bytes": 2000,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL026.md",
+    "role": "research_reference",
+    "bytes": 1965,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL027.md",
+    "role": "research_reference",
+    "bytes": 1724,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL028.md",
+    "role": "research_reference",
+    "bytes": 1725,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL029.md",
+    "role": "research_reference",
+    "bytes": 1808,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL030.md",
+    "role": "research_reference",
+    "bytes": 1806,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL031.md",
+    "role": "research_reference",
+    "bytes": 1691,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL032.md",
+    "role": "research_reference",
+    "bytes": 1788,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL033.md",
+    "role": "research_reference",
+    "bytes": 1855,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL034.md",
+    "role": "research_reference",
+    "bytes": 1700,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL035.md",
+    "role": "research_reference",
+    "bytes": 1841,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL036.md",
+    "role": "research_reference",
+    "bytes": 1894,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL037.md",
+    "role": "research_reference",
+    "bytes": 2243,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL038.md",
+    "role": "research_reference",
+    "bytes": 1998,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL039.md",
+    "role": "research_reference",
+    "bytes": 1965,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL040.md",
+    "role": "research_reference",
+    "bytes": 1788,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL041.md",
+    "role": "research_reference",
+    "bytes": 1767,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL042.md",
+    "role": "research_reference",
+    "bytes": 1876,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL043.md",
+    "role": "research_reference",
+    "bytes": 1863,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL044.md",
+    "role": "research_reference",
+    "bytes": 1753,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL045.md",
+    "role": "research_reference",
+    "bytes": 1780,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL046.md",
+    "role": "research_reference",
+    "bytes": 1814,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL047.md",
+    "role": "research_reference",
+    "bytes": 1770,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL048.md",
+    "role": "research_reference",
+    "bytes": 1818,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL049.md",
+    "role": "research_reference",
+    "bytes": 1795,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL050.md",
+    "role": "research_reference",
+    "bytes": 1643,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL051.md",
+    "role": "research_reference",
+    "bytes": 1823,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL052.md",
+    "role": "research_reference",
+    "bytes": 1586,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL053.md",
+    "role": "research_reference",
+    "bytes": 1758,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL054.md",
+    "role": "research_reference",
+    "bytes": 1990,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL055.md",
+    "role": "research_reference",
+    "bytes": 1747,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL056.md",
+    "role": "research_reference",
+    "bytes": 1599,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL057.md",
+    "role": "research_reference",
+    "bytes": 1579,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL058.md",
+    "role": "research_reference",
+    "bytes": 1746,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL059.md",
+    "role": "research_reference",
+    "bytes": 1695,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL060.md",
+    "role": "research_reference",
+    "bytes": 1691,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL061.md",
+    "role": "research_reference",
+    "bytes": 1781,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL062.md",
+    "role": "research_reference",
+    "bytes": 1911,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL063.md",
+    "role": "research_reference",
+    "bytes": 1914,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL064.md",
+    "role": "research_reference",
+    "bytes": 1932,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL065.md",
+    "role": "research_reference",
+    "bytes": 1732,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL066.md",
+    "role": "research_reference",
+    "bytes": 1831,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "04_reuse_cards/TOOL067.md",
+    "role": "research_reference",
+    "bytes": 1884,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE01_订阅阅读器怎样成为收集底座.md",
+    "role": "research_reference",
+    "bytes": 1856,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE02_Feedly去重与聚类不是同一层.md",
+    "role": "research_reference",
+    "bytes": 1771,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE03_zenfeed与TrendRadar的情报产品取舍.md",
+    "role": "research_reference",
+    "bytes": 1829,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE04_IPTC与W3C给证据模型的启示.md",
+    "role": "research_reference",
+    "bytes": 1587,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE05_官方日历与vintage的双时钟.md",
+    "role": "research_reference",
+    "bytes": 1591,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE06_Tardis让购买历史变成可验收任务.md",
+    "role": "research_reference",
+    "bytes": 1558,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE07_Glassnode与BlockSci的两种可复用价值.md",
+    "role": "research_reference",
+    "bytes": 1655,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE08_Anthropic研究案例与TradingAgents的可迁移部分.md",
+    "role": "research_reference",
+    "bytes": 1550,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE09_FinRobot开放边界与金融方法迁移.md",
+    "role": "research_reference",
+    "bytes": 1634,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE10_Qlib与arch如何服务实验纪律.md",
+    "role": "research_reference",
+    "bytes": 1535,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE11_FDC3工作区上下文迁移.md",
+    "role": "research_reference",
+    "bytes": 1494,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE12_Temporal与Haystack揭示的取消边界.md",
+    "role": "research_reference",
+    "bytes": 1548,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE13_Docling与GROBID避免只收标题.md",
+    "role": "research_reference",
+    "bytes": 1538,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/CASE14_开源商业服务和受限搜索的分界.md",
+    "role": "research_reference",
+    "bytes": 1791,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "05_cases/README.md",
+    "role": "research_reference",
+    "bytes": 1670,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/01_collection_handbook.md",
+    "role": "current_design_or_checks",
+    "bytes": 10025,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/02_source_catalog.md",
+    "role": "current_design_or_checks",
+    "bytes": 5337,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/03_lifecycle_and_contract.md",
+    "role": "current_design_or_checks",
+    "bytes": 7060,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/04_alignment_with_accepted_contracts.md",
+    "role": "current_design_or_checks",
+    "bytes": 2457,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/05_search_recipes.md",
+    "role": "current_design_or_checks",
+    "bytes": 7823,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/06_evaluation_and_fixtures.md",
+    "role": "current_design_or_checks",
+    "bytes": 3849,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/07_operating_and_update_policy.md",
+    "role": "current_design_or_checks",
+    "bytes": 1876,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/collection.schema.design.json",
+    "role": "current_design_or_checks",
+    "bytes": 22423,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/collection_cases.synthetic.json",
+    "role": "current_design_or_checks",
+    "bytes": 9024,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/contract_examples.synthetic.json",
+    "role": "current_design_or_checks",
+    "bytes": 3511,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/discovery_recipes.json",
+    "role": "current_design_or_checks",
+    "bytes": 11117,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "06_collection_design/source_catalog.candidates.json",
+    "role": "current_design_or_checks",
+    "bytes": 25293,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "07_codex_usage/01_reading_and_selection.md",
+    "role": "current_design_or_checks",
+    "bytes": 1004,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "07_codex_usage/02_prompt_readonly_audit.md",
+    "role": "current_design_or_checks",
+    "bytes": 1768,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "07_codex_usage/03_prompt_scoped_execution.md",
+    "role": "current_design_or_checks",
+    "bytes": 1734,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "07_codex_usage/04_decision_record_template.md",
+    "role": "current_design_or_checks",
+    "bytes": 1351,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "07_codex_usage/slice_proposals.json",
+    "role": "current_design_or_checks",
+    "bytes": 354,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/accepted_plan_preservation.json",
+    "role": "research_reference",
+    "bytes": 351,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/access_limits.md",
+    "role": "research_reference",
+    "bytes": 2072,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/case_index.json",
+    "role": "research_reference",
+    "bytes": 3191,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/content_statistics.json",
+    "role": "research_reference",
+    "bytes": 507,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/coverage_matrix.md",
+    "role": "research_reference",
+    "bytes": 2136,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/package_qc.json",
+    "role": "research_reference",
+    "bytes": 224,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/research_diary.md",
+    "role": "research_reference",
+    "bytes": 2586,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/research_index.json",
+    "role": "research_reference",
+    "bytes": 6244,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/reuse_catalog.json",
+    "role": "research_reference",
+    "bytes": 28664,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/sources.json",
+    "role": "research_reference",
+    "bytes": 110665,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "08_evidence/sources.md",
+    "role": "research_reference",
+    "bytes": 56839,
+    "review": "file_structure_and_reference_scope",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "09_prior_research/README.md",
+    "role": "history",
+    "bytes": 698,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "09_prior_research/bitcoin_research_evidence_audit_2026-09-16.md",
+    "role": "history",
+    "bytes": 62473,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "09_prior_research/bitcoin_research_evidence_review_2026-09-16.md",
+    "role": "history",
+    "bytes": 77770,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "09_prior_research/bitcoin_research_modernization_2026-09-16.md",
+    "role": "history",
+    "bytes": 88926,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/README.md",
+    "role": "current_design_or_checks",
+    "bytes": 800,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/compatibility_map.json",
+    "role": "current_design_or_checks",
+    "bytes": 1061,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/contract_migration.md",
+    "role": "current_design_or_checks",
+    "bytes": 5600,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/external_rechecks.json",
+    "role": "current_design_or_checks",
+    "bytes": 2555,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/findings.json",
+    "role": "current_design_or_checks",
+    "bytes": 10437,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/results/README.md",
+    "role": "current_design_or_checks",
+    "bytes": 2183,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/results/baseline_negative_probes.json",
+    "role": "current_design_or_checks",
+    "bytes": 2406,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/results/change_inventory.json",
+    "role": "current_design_or_checks",
+    "bytes": 54108,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/results/document_checks.json",
+    "role": "current_design_or_checks",
+    "bytes": 57477,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/results/external_evidence_scope.json",
+    "role": "current_design_or_checks",
+    "bytes": 621,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/results/link_checks.json",
+    "role": "current_design_or_checks",
+    "bytes": 80736,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/results/review_inventory.json",
+    "role": "current_design_or_checks",
+    "bytes": 43894,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/scoped_tasks.json",
+    "role": "current_design_or_checks",
+    "bytes": 15275,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/scoped_work_packages.md",
+    "role": "current_design_or_checks",
+    "bytes": 12688,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/tests/canonical_profile.py",
+    "role": "current_design_or_checks",
+    "bytes": 1213,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/tests/link_audit.py",
+    "role": "current_design_or_checks",
+    "bytes": 2499,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/tests/validate_document_bundle.py",
+    "role": "current_design_or_checks",
+    "bytes": 21860,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/text_patch_receipts.json",
+    "role": "current_design_or_checks",
+    "bytes": 6211,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "10_final_review/value_and_decision_tests.md",
+    "role": "current_design_or_checks",
+    "bytes": 3767,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/README.md",
+    "role": "history",
+    "bytes": 336,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/previous_delivery_original.zip",
+    "role": "history",
+    "bytes": 941931,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/prior_01_accepted_plan__meta__document-qc.json",
+    "role": "history",
+    "bytes": 3026,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/prior_01_accepted_plan__meta__package-manifest.json",
+    "role": "history",
+    "bytes": 6613,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/prior_08_evidence__accepted_plan_preservation.json",
+    "role": "history",
+    "bytes": 7026,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/prior_08_evidence__content_statistics.json",
+    "role": "history",
+    "bytes": 735,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/prior_08_evidence__package_manifest.json",
+    "role": "history",
+    "bytes": 32688,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "90_archive/prior_08_evidence__package_qc.json",
+    "role": "history",
+    "bytes": 916,
+    "review": "historical_no_current_execution_authority",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "FINAL_REVIEW.md",
+    "role": "current_design_or_checks",
+    "bytes": 38070,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "LIBRARY_INDEX.json",
+    "role": "current_design_or_checks",
+    "bytes": 41421,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  },
+  {
+    "path": "README.md",
+    "role": "current_design_or_checks",
+    "bytes": 3965,
+    "review": "current_contract_or_design_review",
+    "external_claims_independently_reverified": "only_explicit_external_recheck_records"
+  }
+]

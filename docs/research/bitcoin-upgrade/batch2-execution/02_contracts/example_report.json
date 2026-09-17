@@ -1,0 +1,19 @@
+{
+  "kind": "report",
+  "id": "report-1",
+  "capture_id": "cap-1",
+  "generation_mode": "template",
+  "outcome": "initial_baseline",
+  "facts": [
+    {
+      "text": "该合成窗口的报价币成交额除基础币成交量为102 USD/BTC。",
+      "metric_ids": [
+        "metric-vwap-1"
+      ]
+    }
+  ],
+  "limitations": [
+    "只有单个合成窗口，没有变化对照；不是当前BTC市场行情。"
+  ],
+  "example_only": true
+}

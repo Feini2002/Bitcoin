@@ -1,0 +1,141 @@
+[
+  {
+    "id": "CASE01",
+    "title": "订阅阅读器怎样成为收集底座",
+    "path": "05_cases/CASE01_订阅阅读器怎样成为收集底座.md",
+    "sources": [
+      "EXT006",
+      "EXT009",
+      "EXT001"
+    ]
+  },
+  {
+    "id": "CASE02",
+    "title": "Feedly去重与聚类不是同一层",
+    "path": "05_cases/CASE02_Feedly去重与聚类不是同一层.md",
+    "sources": [
+      "EXT101",
+      "EXT102",
+      "EXT103"
+    ]
+  },
+  {
+    "id": "CASE03",
+    "title": "zenfeed与TrendRadar的情报产品取舍",
+    "path": "05_cases/CASE03_zenfeed与TrendRadar的情报产品取舍.md",
+    "sources": [
+      "EXT027",
+      "EXT028",
+      "EXT003",
+      "EXT092"
+    ]
+  },
+  {
+    "id": "CASE04",
+    "title": "IPTC与W3C给证据模型的启示",
+    "path": "05_cases/CASE04_IPTC与W3C给证据模型的启示.md",
+    "sources": [
+      "EXT041",
+      "EXT043"
+    ]
+  },
+  {
+    "id": "CASE05",
+    "title": "官方日历与vintage的双时钟",
+    "path": "05_cases/CASE05_官方日历与vintage的双时钟.md",
+    "sources": [
+      "EXT067",
+      "EXT068",
+      "EXT069"
+    ]
+  },
+  {
+    "id": "CASE06",
+    "title": "Tardis让购买历史变成可验收任务",
+    "path": "05_cases/CASE06_Tardis让购买历史变成可验收任务.md",
+    "sources": [
+      "EXT126",
+      "EXT066"
+    ]
+  },
+  {
+    "id": "CASE07",
+    "title": "Glassnode与BlockSci的两种可复用价值",
+    "path": "05_cases/CASE07_Glassnode与BlockSci的两种可复用价值.md",
+    "sources": [
+      "EXT062",
+      "EXT059",
+      "EXT060"
+    ]
+  },
+  {
+    "id": "CASE08",
+    "title": "Anthropic研究案例与TradingAgents的可迁移部分",
+    "path": "05_cases/CASE08_Anthropic研究案例与TradingAgents的可迁移部分.md",
+    "sources": [
+      "EXT085",
+      "EXT047"
+    ]
+  },
+  {
+    "id": "CASE09",
+    "title": "FinRobot开放边界与金融方法迁移",
+    "path": "05_cases/CASE09_FinRobot开放边界与金融方法迁移.md",
+    "sources": [
+      "EXT048",
+      "EXT049",
+      "EXT052"
+    ]
+  },
+  {
+    "id": "CASE10",
+    "title": "Qlib与arch如何服务实验纪律",
+    "path": "05_cases/CASE10_Qlib与arch如何服务实验纪律.md",
+    "sources": [
+      "EXT052",
+      "EXT086",
+      "EXT087"
+    ]
+  },
+  {
+    "id": "CASE11",
+    "title": "FDC3工作区上下文迁移",
+    "path": "05_cases/CASE11_FDC3工作区上下文迁移.md",
+    "sources": [
+      "EXT074",
+      "EXT134",
+      "EXT075"
+    ]
+  },
+  {
+    "id": "CASE12",
+    "title": "Temporal与Haystack揭示的取消边界",
+    "path": "05_cases/CASE12_Temporal与Haystack揭示的取消边界.md",
+    "sources": [
+      "EXT112",
+      "EXT077",
+      "EXT115"
+    ]
+  },
+  {
+    "id": "CASE13",
+    "title": "Docling与GROBID避免只收标题",
+    "path": "05_cases/CASE13_Docling与GROBID避免只收标题.md",
+    "sources": [
+      "EXT142",
+      "EXT144",
+      "EXT146"
+    ]
+  },
+  {
+    "id": "CASE14",
+    "title": "开源商业服务和受限搜索的分界",
+    "path": "05_cases/CASE14_开源商业服务和受限搜索的分界.md",
+    "sources": [
+      "EXT128",
+      "EXT066",
+      "EXT023",
+      "EXT127"
+    ]
+  }
+]

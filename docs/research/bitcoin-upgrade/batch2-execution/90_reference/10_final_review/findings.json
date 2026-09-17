@@ -1,0 +1,162 @@
+[
+  {
+    "id": "FR-01",
+    "title": "执行权威冲突",
+    "category": "设计一致性",
+    "evidence_location": "00_start/01_master_solution.md；02_adversarial_review/02_scope_override_rules.md",
+    "observed_problem": "前版一面保留原规范，一面提出改变依赖，却让每次执行再决定哪份优先。",
+    "document_correction": "根入口指定当前设计与历史档案；活跃正文/契约同步改，不再靠追加勘误。",
+    "verification_requirement": "只读当前入口并定位一个实际切片；不要求开发者自行合并三个版本。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-02",
+    "title": "最小简报沿完整任务图扩张",
+    "category": "交付范围",
+    "evidence_location": "01_accepted_plan/meta/tasks.json；卷13 WP-013/033",
+    "observed_problem": "WP-033有19项传递前置，包含简报未必使用的市场类别。无环不等于范围合理。",
+    "document_correction": "新增按五种能力profile展开的F-00—F-10切片，原WP保留为完整能力细节与部分完成映射。",
+    "verification_requirement": "每profile独立展开、无环、依赖存在，template不含model任务。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-03",
+    "title": "收集Schema根入口不施加对象定义",
+    "category": "机器契约",
+    "evidence_location": "06_collection_design/collection.schema.design.json 顶层",
+    "observed_problem": "旧根只有type/object与$defs，空对象和任意对象可通过。",
+    "document_correction": "根oneOf引用带object_type的对象定义；使用FormatChecker验证时间，不只check_schema。",
+    "verification_requirement": "空对象、任意对象和伪造attempt三个反例均拒绝。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-04",
+    "title": "时间模式和用途词汇不一致",
+    "category": "跨层语义",
+    "evidence_location": "原RunRequest/Bundle与收集RetrievalRequest/rights",
+    "observed_problem": "public_available与publicly_available、model_input与send_to_model等不一致，没有唯一机器映射。",
+    "document_correction": "统一公开时点模式和用途字段；compatibility_map只允许有日志的旧输入转换，当前契约拒绝混拼。",
+    "verification_requirement": "正名通过、旧别名直接请求拒绝；既有历史可走明确只读适配。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-05",
+    "title": "覆盖不足仍可取得静默资格",
+    "category": "机器契约",
+    "evidence_location": "CoverageReport",
+    "observed_problem": "insufficient + quiet_result_allowed=true通过旧结构；仅HTTP成功不能证明覆盖。",
+    "document_correction": "结构条件、非空面板、comparison_available及集合/窗口域校验；nochange限制在声明面板。",
+    "verification_requirement": "覆盖不足、空面板、失败必需源、缺比较均不能静默。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-06",
+    "title": "URL首次见时间不能证明修订版当时存在",
+    "category": "时点研究",
+    "evidence_location": "ResourceVersion；收集时间与内容身份说明",
+    "observed_problem": "first_seen可能属于旧网页；后来改正文但原发布时间不变，旧字段不足以判该版本当时可见。",
+    "document_correction": "增加version_observed_at、源内容与提取摘要分离；A→B→A保留观察转移。",
+    "verification_requirement": "历史模式拒绝截止后才看见的新正文，即使URL/发布时间更早。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-07",
+    "title": "一刀切排除撤回资料与历史复盘冲突",
+    "category": "产品与权限",
+    "evidence_location": "RetrievalRequest.include_retracted const false；收集手册",
+    "observed_problem": "私有合法审计无法查看当时曾被采用而后来撤回的说法，容易幸存者偏差。",
+    "document_correction": "current_valid_only / as_of_with_current_notice / audit_history；历史审计默认只用于私有展示，仍应用今天的权限。",
+    "verification_requirement": "允许有权的历史查看但带当前更正；禁止以审计标志绕过denied或用于普通模型确认。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-08",
+    "title": "示例身份写进全部运行契约",
+    "category": "模拟与真实分界",
+    "evidence_location": "CollectionAttempt等五个定义example_only const true；SourceCandidate",
+    "observed_problem": "规范只允许example_only=true，不能表达真实记录；候选却可enabled=true且无端点。",
+    "document_correction": "record_origin区分synthetic/observed/imported；候选永不直接启用，SourceRegistration独立登记。",
+    "verification_requirement": "真实形状可表达；synthetic进live流程由域校验拒绝；候选启用被拒绝。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-09",
+    "title": "RunRequest不能表达正文承诺的模式",
+    "category": "机器契约",
+    "evidence_location": "RunRequest",
+    "observed_problem": "budget_profile_id必填字符串但正文允许无模型模板；没有独立knowledge_cutoff_at。",
+    "document_correction": "generation_mode独立于execution_mode；template预算可空，model不可空；historical知识截止必填。",
+    "verification_requirement": "模板无模型预算通过，模型缺预算拒绝，历史知识截止缺失拒绝。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-10",
+    "title": "内容摘要与实际文件字节没有明确区分",
+    "category": "复现与证据",
+    "evidence_location": "Artifact示例；Bundle canonicalization规则",
+    "observed_problem": "sample_artifact记录1876字节的规范内容，但locator指向2466字节的美化JSON；哈希解释不清。",
+    "document_correction": "locator改指实际canonical字节文件；Bundle登记受限编码profile，算法/实现版本并列。",
+    "verification_requirement": "检查目标文件真实字节长度/hash、每个JSON pointer内容摘要及bundle摘要。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-11",
+    "title": "初始基线和覆盖不足没有统一报告状态",
+    "category": "产品与API",
+    "evidence_location": "Report.state；收集CoverageReport；方法变化检测",
+    "observed_problem": "只在正文说首次无比较不叫突变，Report又没有initial_baseline/insufficient_coverage且nochange无引用条件。",
+    "document_correction": "新增两种语义结果；nochange要求coverage与comparison引用，域校验核对实际报告与面板。",
+    "verification_requirement": "无比较可给基线，不可给相对上次无变化；流程published与研究结论状态分开。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-12",
+    "title": "幂等被写成供应商费用保证",
+    "category": "验收措辞",
+    "evidence_location": "卷12 R1验收",
+    "observed_problem": "“相同幂等请求不重复计费”强于系统能够保证的本地行为。",
+    "document_correction": "改为不重复启动本系统相同逻辑调用；外部结果未知先对账，无法约束的费用不得宣传硬封顶。",
+    "verification_requirement": "超时/迟到/重试记录账本，不将取消视为退费，也不自动再发相同费用请求。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-13",
+    "title": "新增资料数和文档通过数容易形成成熟错觉",
+    "category": "证据等级",
+    "evidence_location": "来源目录、旧QC与内容统计",
+    "observed_problem": "read包括不同支持范围；旧QC与新目录共存，统计规模不是质量或当前核验状态。",
+    "document_correction": "保留前轮记录、逐条标本轮是否复核；旧QC归档，当前覆盖表与结果分层；不继续用体量做验收。",
+    "verification_requirement": "列明文件级结构扫描、重点语义审查、外部抽核、业务未运行四层。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-14",
+    "title": "收益归因仍需要更明确的实验分离",
+    "category": "价值验证",
+    "evidence_location": "卷11 B0—B5；RES24",
+    "observed_problem": "原方案已有基线与消融，但收集升级+分析升级同时改变时容易把新增材料收益算给Agent。",
+    "document_correction": "明确旧/新输入×模板/模型二维对照；独立来源面板与被抑制样本复核，不用同一选中事实池充当完整真值。",
+    "verification_requirement": "预声明任务与成本，记录遗漏和不确定性，评价方向正确不等于论证成立。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-15",
+    "title": "版本与删除的概括措辞可被误读",
+    "category": "生命周期",
+    "evidence_location": "新收集手册 vs 原卷12",
+    "observed_problem": "新手册“清理导出”未重申已下载副本无法保证召回，原卷12其实已说明。",
+    "document_correction": "同步当前收集说明：仅保证受控存储撤销，下载副本记录分发/更正边界。",
+    "verification_requirement": "撤销影响缓存、索引和服务器导出，但不承诺抹除用户设备文件。",
+    "implementation_status": "not_implemented_in_repository"
+  },
+  {
+    "id": "FR-16",
+    "title": "分卷引用和合订本身份不一致",
+    "category": "交付可用性",
+    "evidence_location": "01_accepted_plan/volumes 的 #appendix-repository-facts 与旧合订本",
+    "observed_problem": "分卷引用只存在于合订本的本地锚点；旧合订本和新正文容易分叉。",
+    "document_correction": "分卷链接真实事实文件；合订本重新生成；根索引/JSON/QC一起更新。",
+    "verification_requirement": "相对路径和显式锚点检查，current与archive分开，事实输入字节不改。",
+    "implementation_status": "not_implemented_in_repository"
+  }
+]

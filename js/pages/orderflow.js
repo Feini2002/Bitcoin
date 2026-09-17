@@ -186,6 +186,8 @@ function pageOrderflow() {
         </div>
       </div>
 
+      <p class="muted" id="of-research-evidence"></p>
+
       <div class="orderflow-toolbar">
         <div class="orderflow-toolbar-primary">
           <div class="orderflow-tfs">${tfButtons}</div>
@@ -292,6 +294,17 @@ function updateOrderflowStats(statusText) {
     if (freshness.isDegraded || failed) chip.className = "chip warn";
     chip.textContent = cloud ? freshness.label : "D1 轮询快照";
     chip.title = `${text || "订单流数据连接状态"}；无浏览器直连 WS 主路径`;
+  }
+  const evidenceEl = document.getElementById("of-research-evidence");
+  if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
+    const state = readOrderflowState();
+    evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
+      instrumentId: "BINANCE:USDM:BTCUSDT:PERPETUAL",
+      interval: state.interval,
+      windowLabel: `可视 ${state.visibleBars} bars`,
+      source: "d1-footprint",
+      coverage: freshness && freshness.status === "unknown" ? "成交心跳未知，未用 barEnd 充数" : freshness.label,
+    });
   }
 
   const set = (id, text, cls) => {

@@ -1,0 +1,17 @@
+{
+  "kind": "capture",
+  "id": "cap-1",
+  "instrument_id": "EXAMPLE:LINEAR:BTCUSD",
+  "market_cutoff_at": "2026-09-16T00:05:00Z",
+  "knowledge_cutoff_at": "2026-09-16T00:05:05Z",
+  "time_mode": "system_observed",
+  "input_ids": [
+    "obs-q-1",
+    "obs-b-1"
+  ],
+  "metric_ids": [
+    "metric-vwap-1"
+  ],
+  "coverage": "sufficient_for_selected_scope",
+  "example_only": true
+}

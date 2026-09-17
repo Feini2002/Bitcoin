@@ -1,0 +1,733 @@
+{
+  "role": "test_routing_not_test_results",
+  "cases": [
+    {
+      "id": "CHECK-001",
+      "name": "product_mismatch",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-004",
+        "NEW-008",
+        "NEW-023",
+        "NEW-035",
+        "NEW-040"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-002",
+      "name": "legacy_source_unknown",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-004",
+        "NEW-008",
+        "NEW-041"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-003",
+      "name": "dataset_catalog_only",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-005",
+        "NEW-008",
+        "NEW-027"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-004",
+      "name": "history_500_of_864",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-008",
+        "NEW-012",
+        "NEW-025"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-005",
+      "name": "missing_3d",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-008",
+        "NEW-012",
+        "NEW-025"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-006",
+      "name": "ws_forming",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-009",
+        "NEW-012",
+        "NEW-025"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-007",
+      "name": "transport_no_market",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-005",
+        "NEW-009",
+        "NEW-016",
+        "NEW-019",
+        "NEW-027"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-008",
+      "name": "late_rest",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-009"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-009",
+      "name": "frozen_breakout",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-011"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-010",
+      "name": "vwap_exact",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-010"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-011",
+      "name": "vwap_zero",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-010"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-012",
+      "name": "vwap_anchor_partial",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-010",
+        "NEW-012",
+        "NEW-025"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-013",
+      "name": "previous_day_gap",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-011",
+        "NEW-012",
+        "NEW-025"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-014",
+      "name": "pivot_known_later",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-011",
+        "NEW-015",
+        "NEW-042"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-015",
+      "name": "poc_tie",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-014"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-016",
+      "name": "rebin_non_associative",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-013",
+        "NEW-014"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-017",
+      "name": "sparse_tick",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-013",
+        "NEW-016"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-018",
+      "name": "display_resize",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-013",
+        "NEW-016",
+        "NEW-040"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-019",
+      "name": "sfp_future_profile",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-015"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-020",
+      "name": "sfp_confirmbar",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-015",
+        "NEW-042"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-021",
+      "name": "freshness_invented",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-005",
+        "NEW-016",
+        "NEW-027"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-022",
+      "name": "liquidation_sides",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-017"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-023",
+      "name": "unknown_liquidation",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-017"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-024",
+      "name": "binance_order_vs_fill",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-017",
+        "NEW-019"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-025",
+      "name": "bybit_bankruptcy",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-017",
+        "NEW-019"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-026",
+      "name": "cumulative_updates",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-018",
+        "NEW-019"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-027",
+      "name": "no_native_identity",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-018",
+        "NEW-019"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-028",
+      "name": "short_oi_window",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-006",
+        "NEW-019",
+        "NEW-022"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-029",
+      "name": "old_anchor",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-006",
+        "NEW-022",
+        "NEW-023"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-030",
+      "name": "basis_units",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-020",
+        "NEW-021",
+        "NEW-024"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-031",
+      "name": "funding_interval",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-020",
+        "NEW-021"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-032",
+      "name": "funding_unknown_interval",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-020",
+        "NEW-021"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-033",
+      "name": "pressure_method_identity",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-007",
+        "NEW-020",
+        "NEW-024"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-034",
+      "name": "any_fresh_mask",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-005",
+        "NEW-020",
+        "NEW-024",
+        "NEW-035",
+        "NEW-040"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-035",
+      "name": "early_revision",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-007",
+        "NEW-024",
+        "NEW-035",
+        "NEW-039",
+        "NEW-040",
+        "NEW-041",
+        "NEW-046"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-036",
+      "name": "raw_vs_computed",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-007",
+        "NEW-020",
+        "NEW-022",
+        "NEW-024",
+        "NEW-035",
+        "NEW-038"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-037",
+      "name": "fixed_confidence",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-036",
+        "NEW-038",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-038",
+      "name": "availability_vs_alignment",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-036",
+        "NEW-038",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-039",
+      "name": "calendar_article",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-029",
+        "NEW-031",
+        "NEW-034",
+        "NEW-036",
+        "NEW-042"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-040",
+      "name": "no_search_coverage",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-031",
+        "NEW-034",
+        "NEW-036",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-041",
+      "name": "ohlc_invalid",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-004"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-042",
+      "name": "taker_exceeds_total",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-004",
+        "NEW-010",
+        "NEW-023"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-043",
+      "name": "crossed_book",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-004",
+        "NEW-030"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-044",
+      "name": "receipt_collision",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-004",
+        "NEW-026",
+        "NEW-046"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-045",
+      "name": "revision_A_B_A",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-026",
+        "NEW-032",
+        "NEW-046"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-046",
+      "name": "concurrent_refresh",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-026",
+        "NEW-027",
+        "NEW-046"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-047",
+      "name": "historical_health",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-005",
+        "NEW-006",
+        "NEW-026",
+        "NEW-035",
+        "NEW-040",
+        "NEW-041",
+        "NEW-046"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-048",
+      "name": "summary_bid_ask",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-030"
+      ],
+      "execution_status": "not_run_against_repository",
+      "activation_condition": "NEW-030期权分支触发后适用；主线未启用时标not_applicable并说明。"
+    },
+    {
+      "id": "CHECK-049",
+      "name": "options_truncated",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-030"
+      ],
+      "execution_status": "not_run_against_repository",
+      "activation_condition": "NEW-030期权分支触发后适用；主线未启用时标not_applicable并说明。"
+    },
+    {
+      "id": "CHECK-050",
+      "name": "depth_band_incomplete",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-004"
+      ],
+      "execution_status": "not_run_against_repository",
+      "activation_condition": "仅当本次消费有限深度并计算价差/指定bps覆盖时启用；未启用该方法须记not_applicable，不能把期权截面检查当深度检查。"
+    },
+    {
+      "id": "CHECK-051",
+      "name": "macro_weekend",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-028"
+      ],
+      "execution_status": "not_run_against_repository",
+      "activation_condition": "NEW-028宏观分支触发后适用。"
+    },
+    {
+      "id": "CHECK-052",
+      "name": "fred_late_import",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-006",
+        "NEW-028",
+        "NEW-032",
+        "NEW-035"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-053",
+      "name": "etf_partial",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-029"
+      ],
+      "execution_status": "not_run_against_repository",
+      "activation_condition": "NEW-029 ETF分支触发后适用。"
+    },
+    {
+      "id": "CHECK-054",
+      "name": "document_negation",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-029",
+        "NEW-032",
+        "NEW-033",
+        "NEW-042",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-055",
+      "name": "same_origin_reposts",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-033",
+        "NEW-034",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-056",
+      "name": "llm_fake_reference",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-038",
+        "NEW-039",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-057",
+      "name": "capability_not_enabled",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-036",
+        "NEW-038"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-058",
+      "name": "initial_vs_no_change",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-034",
+        "NEW-036",
+        "NEW-042",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-059",
+      "name": "insufficient_vs_quiet",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-005",
+        "NEW-027",
+        "NEW-031",
+        "NEW-034",
+        "NEW-036",
+        "NEW-042",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-060",
+      "name": "model_budget_missing",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-037",
+        "NEW-038"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-061",
+      "name": "template_no_model",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-036",
+        "NEW-037",
+        "NEW-038",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-062",
+      "name": "provider_outcome_unknown",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-037",
+        "NEW-038",
+        "NEW-039"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-063",
+      "name": "old_report_missing",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-039",
+        "NEW-040",
+        "NEW-041"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-064",
+      "name": "cancel_late_response",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-009",
+        "NEW-037",
+        "NEW-039",
+        "NEW-040",
+        "NEW-042"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-065",
+      "name": "hash_not_truth",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-007",
+        "NEW-033",
+        "NEW-035",
+        "NEW-038",
+        "NEW-043"
+      ],
+      "execution_status": "not_run_against_repository"
+    },
+    {
+      "id": "CHECK-066",
+      "name": "source_revoked",
+      "definition": "03_validation/acceptance_cases.json",
+      "primary_tasks": [
+        "NEW-002",
+        "NEW-031",
+        "NEW-032",
+        "NEW-035",
+        "NEW-037",
+        "NEW-038",
+        "NEW-041"
+      ],
+      "execution_status": "not_run_against_repository"
+    }
+  ]
+}

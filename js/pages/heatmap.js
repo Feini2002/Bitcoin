@@ -180,6 +180,8 @@ function pageHeatmap() {
       </div>
     </section>
 
+    <p class="muted" id="hm-research-evidence"></p>
+
     <div class="heatmap-toolbar">
       <label class="heatmap-field">
         <span>交易对</span>
@@ -208,6 +210,7 @@ function pageHeatmap() {
       </div>
       <div class="heatmap-kpi" title="多头仓位被强平的名义金额合计，按成交价格 × 数量计算。"><span>多头被强平</span><strong class="down" id="hm-kpi-long">--</strong></div>
       <div class="heatmap-kpi" title="空头仓位被强平的名义金额合计，按成交价格 × 数量计算。"><span>空头被强平</span><strong class="up" id="hm-kpi-short">--</strong></div>
+      <div class="heatmap-kpi" title="方向无法识别的强平名义金额，不计入多头或空头。"><span>方向未知</span><strong id="hm-kpi-unknown">--</strong></div>
       <div class="heatmap-kpi">
         <span>最大单笔 / 来源</span>
         <strong id="hm-kpi-max">--</strong>
@@ -355,6 +358,16 @@ function renderHeatmapKpis(snapshot) {
   );
   setHmText("hm-kpi-long", fmtHmMoney(stats.longNotional));
   setHmText("hm-kpi-short", fmtHmMoney(stats.shortNotional));
+  setHmText("hm-kpi-unknown", fmtHmMoney(stats.unknownNotional));
+  const evidenceEl = document.getElementById("hm-research-evidence");
+  if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
+    evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
+      instrumentId: "BINANCE:USDM:BTCUSDT:PERPETUAL",
+      windowLabel: heatmapWindowLabel(state.window),
+      source: snapshot.aggregateSource === "d1" ? "d1-liquidations" : "browser-stream",
+      coverage: Number(stats.unknownNotional) > 0 ? "含未知方向，未并入多头" : null,
+    });
+  }
   setHmText("hm-kpi-max", stats.maxEvent ? fmtHmMoney(stats.maxEvent.notional) : "--");
   setHmText("hm-kpi-sources", `${stats.activeSources || 0}/2`);
   renderHeatmapCloudWindows();

@@ -31,6 +31,15 @@ export function datasetWriteQueries(id,envelope,ingestionMode='cloud-readthrough
   return {queries,normalized};
 }
 
+export function classifyReceiptConflict(existing, incoming) {
+  if (!existing) return { action: 'insert' };
+  if (existing.datasetId===incoming.datasetId && existing.observationKey===incoming.observationKey && existing.receivedAt===incoming.receivedAt) {
+    if (JSON.stringify(existing.values)===JSON.stringify(incoming.values)) return { action: 'reuse' };
+    return { action: 'reject', reason: 'identity_content_conflict' };
+  }
+  return { action: 'insert' };
+}
+
 export async function persistDataset(db,id,envelope,ingestionMode) {
   const {queries,normalized}=datasetWriteQueries(id,envelope,ingestionMode);
   await db.batch(queries.map(q=>db.prepare(q.sql).bind(...q.params)));

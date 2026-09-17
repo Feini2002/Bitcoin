@@ -1,0 +1,2335 @@
+{
+  "scope": "offline_document_checks_only",
+  "network_used": false,
+  "software_installed": false,
+  "candidate_code_executed": false,
+  "production_accessed": false,
+  "checks": [
+    {
+      "name": "json:01_accepted_plan/contracts/openapi.design.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/contracts/research.schema.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/contracts/settings.design.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/acceptance_cases.synthetic.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_artifact.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_bundle.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_metrics.canonical.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_metrics.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_raw.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_report.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_run.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/fixtures/sample_view.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/meta/document-qc.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/meta/repository-facts.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/meta/sources.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/meta/task-topological-order.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:01_accepted_plan/meta/tasks.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:02_adversarial_review/dependency_audit.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:06_collection_design/collection.schema.design.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:06_collection_design/collection_cases.synthetic.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:06_collection_design/contract_examples.synthetic.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:06_collection_design/discovery_recipes.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:06_collection_design/source_catalog.candidates.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:07_codex_usage/slice_proposals.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:08_evidence/accepted_plan_preservation.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:08_evidence/case_index.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:08_evidence/content_statistics.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:08_evidence/package_qc.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:08_evidence/research_index.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:08_evidence/reuse_catalog.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:08_evidence/sources.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/compatibility_map.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/external_rechecks.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/findings.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/results/baseline_negative_probes.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/results/change_inventory.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/results/document_checks.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/results/environment.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/results/external_evidence_scope.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/results/link_checks.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/results/review_inventory.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/scoped_tasks.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:10_final_review/text_patch_receipts.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json:LIBRARY_INDEX.json",
+      "layer": "file_structure",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "schema_definition:research",
+      "layer": "schema_definition",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "schema_definition:collection",
+      "layer": "schema_definition",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_def:CollectionAttempt",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_root:CollectionAttempt",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_def:ResourceVersion",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_root:ResourceVersion",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_def:ClaimCandidate",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_root:ClaimCandidate",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_def:CoverageReport",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_root:CoverageReport",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_def:RetrievalRequest",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_root:RetrievalRequest",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_def:SourceRegistration",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "positive_root:SourceRegistration",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:MACRO-FED",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:MACRO-BLS",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:MACRO-ALFRED",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:REG-SEC",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:ETF-IBIT",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:STABLE-CIRCLE",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:STABLE-TETHER",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:MARKET-BINANCE",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:HISTORY-BINANCE",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:MARKET-BYBIT",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:OPTIONS-DERIBIT",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:HISTORY-TARDIS",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:CHAIN-CM",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:CHAIN-GLASSNODE",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:CHAIN-MEMPOOL",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:NEWS-MEDIACLOUD",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:NEWS-EVENTREGISTRY",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:DISCOVERY-SEARXNG",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:DISCOVERY-RSSHUB",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:RESEARCH-FORECAST",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:RESEARCH-OFI",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:RESEARCH-ALCE",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:ENGINEERING-FINOS",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:ENGINEERING-NINJS",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:ENGINEERING-DOCLING",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:DERIV-LAEVITAS",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "candidate:DERIV-AMBERDATA",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "root_negative:empty",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "{} is not valid under any of the given schemas\n\nFailed validating 'oneOf' in schema:\n    {'$schema': 'https://json-schema.org/draft/2020-12/schema',\n     '$id': 'https://example.invalid/research-library/collection-design-v2',\n     'title': "
+    },
+    {
+      "name": "root_negative:arbitrary",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "{'anything': 'passes'} is not valid under any of the given schemas\n\nFailed validating 'oneOf' in schema:\n    {'$schema': 'https://json-schema.org/draft/2020-12/schema',\n     '$id': 'https://example.invalid/research-library/collection-design"
+    },
+    {
+      "name": "root_negative:malformed",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "{'attempt_id': 123, 'state': 'bogus'} is not valid under any of the given schemas\n\nFailed validating 'oneOf' in schema:\n    {'$schema': 'https://json-schema.org/draft/2020-12/schema',\n     '$id': 'https://example.invalid/research-library/co"
+    },
+    {
+      "name": "runtime_shape:CollectionAttempt",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "synthetic_live_rejected:CollectionAttempt",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "SYNTHETIC_IN_LIVE_PIPELINE"
+    },
+    {
+      "name": "runtime_shape:ResourceVersion",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "synthetic_live_rejected:ResourceVersion",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "SYNTHETIC_IN_LIVE_PIPELINE"
+    },
+    {
+      "name": "runtime_shape:ClaimCandidate",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "synthetic_live_rejected:ClaimCandidate",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "SYNTHETIC_IN_LIVE_PIPELINE"
+    },
+    {
+      "name": "runtime_shape:CoverageReport",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "synthetic_live_rejected:CoverageReport",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "SYNTHETIC_IN_LIVE_PIPELINE"
+    },
+    {
+      "name": "runtime_shape:RetrievalRequest",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "synthetic_live_rejected:RetrievalRequest",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "SYNTHETIC_IN_LIVE_PIPELINE"
+    },
+    {
+      "name": "runtime_shape:SourceRegistration",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "synthetic_live_rejected:SourceRegistration",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "SYNTHETIC_IN_LIVE_PIPELINE"
+    },
+    {
+      "name": "time_mode_enum_alignment",
+      "layer": "cross_contract",
+      "passed": true,
+      "actual": [
+        "system_observed",
+        "publicly_available",
+        "retrospective_latest"
+      ],
+      "expected": [
+        "system_observed",
+        "publicly_available",
+        "retrospective_latest"
+      ],
+      "detail": null
+    },
+    {
+      "name": "publication_precision_alignment",
+      "layer": "cross_contract",
+      "passed": true,
+      "actual": [
+        "second",
+        "minute",
+        "date",
+        "unknown"
+      ],
+      "expected": [
+        "second",
+        "minute",
+        "date",
+        "unknown"
+      ],
+      "detail": null
+    },
+    {
+      "name": "purpose_keys_are_existing_rights",
+      "layer": "cross_contract",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "shared_time_mode",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "old_alias_rejected",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "'public_available' is not one of ['system_observed', 'publicly_available', 'retrospective_latest']\n\nFailed validating 'enum' in schema['properties']['mode']:\n    {'enum': ['system_observed',\n              'publicly_available',\n             "
+    },
+    {
+      "name": "date_format_checked",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "'not-a-date' is not a 'date-time'\n\nFailed validating 'format' in schema['properties']['as_of']:\n    {'type': ['string', 'null'], 'format': 'date-time'}\n\nOn instance['as_of']:\n    'not-a-date'"
+    },
+    {
+      "name": "authorized_private_history",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "history_denied_policy",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "CURRENT_RIGHTS_NOT_ALLOWED"
+    },
+    {
+      "name": "history_unknown_policy",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "CURRENT_RIGHTS_NOT_ALLOWED"
+    },
+    {
+      "name": "history_no_audit_permission",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "AUDIT_PERMISSION_REQUIRED"
+    },
+    {
+      "name": "history_not_generic_model_input",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "'display_private' was expected\n\nFailed validating 'const' in schema['allOf'][1]['then']['properties']['purpose']:\n    {'const': 'display_private'}\n\nOn instance['purpose']:\n    'send_to_model'"
+    },
+    {
+      "name": "candidate_cannot_activate",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "False was expected\n\nFailed validating 'const' in schema['properties']['enabled']:\n    {'const': False}\n\nOn instance['enabled']:\n    True"
+    },
+    {
+      "name": "registration_needs_endpoint_check",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "None is not of type 'string'\n\nFailed validating 'type' in schema['allOf'][0]['then']['properties']['endpoint_verified_at']:\n    {'type': 'string', 'format': 'date-time'}\n\nOn instance['endpoint_verified_at']:\n    None"
+    },
+    {
+      "name": "quiet_insufficient_rejected",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "'usable' was expected\n\nFailed validating 'const' in schema['allOf'][0]['then']['properties']['coverage_class']:\n    {'const': 'usable'}\n\nOn instance['coverage_class']:\n    'insufficient'"
+    },
+    {
+      "name": "quiet_valid_declared_panel",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "coverage:empty_required",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "[] should be non-empty\n\nFailed validating 'minItems' in schema['allOf'][0]['then']['properties']['required_sources']:\n    {'type': 'array',\n     'items': {'type': 'string', 'minLength': 1},\n     'uniqueItems': True,\n     'minItems': 1}\n\nOn "
+    },
+    {
+      "name": "coverage:missing_comparison",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "True was expected\n\nFailed validating 'const' in schema['allOf'][0]['then']['properties']['comparison_available']:\n    {'const': True}\n\nOn instance['comparison_available']:\n    False"
+    },
+    {
+      "name": "coverage:missing_usable_source",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "REQUIRED_COVERAGE_MISSING"
+    },
+    {
+      "name": "coverage:failed_required",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "USABLE_FAILED_OVERLAP"
+    },
+    {
+      "name": "coverage:wrong_window",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "INVALID_WINDOW"
+    },
+    {
+      "name": "duplicate_required_rejected",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "['example_official', 'example_other', 'example_official', 'example_other'] has non-unique elements\n\nFailed validating 'uniqueItems' in schema['properties']['required_sources']:\n    {'type': 'array',\n     'items': {'type': 'string', 'minLeng"
+    },
+    {
+      "name": "revised_body_not_backdated",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "VERSION_NOT_KNOWN_AT_CUTOFF"
+    },
+    {
+      "name": "unproven_public_version",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "PUBLIC_VERSION_UNPROVEN"
+    },
+    {
+      "name": "current_model_rights_denied",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "CURRENT_RIGHTS_NOT_ALLOWED"
+    },
+    {
+      "name": "resource_to_article_shape",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "article_calendar_date",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "date_precision_without_fake_midnight",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "date_precision_shape_mismatch",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "'2026-09-14T00:00:00Z' is not a 'date'\n\nFailed validating 'format' in schema['allOf'][1]['then']['properties']['source_published_at']:\n    {'type': 'string', 'format': 'date'}\n\nOn instance['source_published_at']:\n    '2026-09-14T00:00:00Z'"
+    },
+    {
+      "name": "extractor_change_does_not_change_source_digest",
+      "layer": "reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "content_dedup_does_not_erase_A_B_A_observations",
+      "layer": "reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "research_fixture:sample_run.json",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "research_fixture:sample_bundle.json",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "research_fixture:sample_report.json",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "research_fixture:sample_artifact.json",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "research_fixture:sample_view.json",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "metric:e_return",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "metric:e_oi",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "template_without_model_budget",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "model_requires_budget_id",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "None is not of type 'string'\n\nFailed validating 'type' in schema['allOf'][0]['then']['properties']['budget_profile_id']:\n    {'type': 'string', 'pattern': '^[A-Za-z][A-Za-z0-9_.:-]{0,159}$'}\n\nOn instance['budget_profile_id']:\n    None"
+    },
+    {
+      "name": "model_budget_id_not_approval",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "MODEL_BUDGET_UNAPPROVED"
+    },
+    {
+      "name": "model_with_approved_budget",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "historical_requires_knowledge_cutoff",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "None is not of type 'string'\n\nFailed validating 'type' in schema['allOf'][1]['then']['properties']['knowledge_cutoff_at']:\n    {'type': 'string', 'format': 'date-time'}\n\nOn instance['knowledge_cutoff_at']:\n    None"
+    },
+    {
+      "name": "independent_historical_knowledge_cutoff",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "durable_field_not_executor",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "DURABLE_EXECUTOR_UNAVAILABLE"
+    },
+    {
+      "name": "nochange_requires_references",
+      "layer": "schema",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "None is not of type 'string'\n\nFailed validating 'type' in schema['allOf'][0]['then']['properties']['coverage_id']:\n    {'type': 'string', 'pattern': '^[A-Za-z][A-Za-z0-9_.:-]{0,159}$'}\n\nOn instance['coverage_id']:\n    None"
+    },
+    {
+      "name": "nochange_valid_context",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "nochange_cannot_hide_actual_change",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "HIDING_MATERIAL_CHANGE"
+    },
+    {
+      "name": "outcome:initial_baseline",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "outcome:insufficient_coverage",
+      "layer": "schema",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "report_evidence_refs",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unknown_numeric_ref",
+      "layer": "schema+reference_domain",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "detail": "NUMERIC_REF_NOT_IN_BUNDLE"
+    },
+    {
+      "name": "artifact_byte_length",
+      "layer": "digest",
+      "passed": true,
+      "actual": 1976,
+      "expected": 1976,
+      "detail": null
+    },
+    {
+      "name": "artifact_exact_byte_hash",
+      "layer": "digest",
+      "passed": true,
+      "actual": "9a1dcc5d102268327e65aefb049649d2fb06400ac139bc8f1262f9f99b647b89",
+      "expected": "9a1dcc5d102268327e65aefb049649d2fb06400ac139bc8f1262f9f99b647b89",
+      "detail": null
+    },
+    {
+      "name": "readable_metrics_equal_stored_content",
+      "layer": "digest",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "evidence_digest:e_return",
+      "layer": "digest",
+      "passed": true,
+      "actual": "bf4d2dc0cc9a0e180b4d2b56529ef40bb2f0daaecd3e1dcce5c919cdf44b2d45",
+      "expected": "bf4d2dc0cc9a0e180b4d2b56529ef40bb2f0daaecd3e1dcce5c919cdf44b2d45",
+      "detail": null
+    },
+    {
+      "name": "evidence_digest:e_oi",
+      "layer": "digest",
+      "passed": true,
+      "actual": "84ae6b18a4e037f294d84d67e9718aaf386130fa26ba4402888d0a18cbe9dec0",
+      "expected": "84ae6b18a4e037f294d84d67e9718aaf386130fa26ba4402888d0a18cbe9dec0",
+      "detail": null
+    },
+    {
+      "name": "bundle_digest",
+      "layer": "digest",
+      "passed": true,
+      "actual": "d7647f06829d5a7df073046f7732f233d0ffcae95625fc7cefd861d5587e51f6",
+      "expected": "d7647f06829d5a7df073046f7732f233d0ffcae95625fc7cefd861d5587e51f6",
+      "detail": null
+    },
+    {
+      "name": "report_digest",
+      "layer": "digest",
+      "passed": true,
+      "actual": "3e27e23ef6f079fc0fdcc8a7688c91aa858e8d3323685e5f33f2ff5beb55ab7d",
+      "expected": "3e27e23ef6f079fc0fdcc8a7688c91aa858e8d3323685e5f33f2ff5beb55ab7d",
+      "detail": null
+    },
+    {
+      "name": "canonical_reject:unsafe_integer",
+      "layer": "digest",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "canonical_reject:float",
+      "layer": "digest",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "canonical_reject:unicode_key",
+      "layer": "digest",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "canonical_reject:surrogate",
+      "layer": "digest",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "arrays_not_sorted",
+      "layer": "digest",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unicode_values_not_normalized",
+      "layer": "digest",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json_import_reject:duplicate_keys",
+      "layer": "parser",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "json_import_reject:nan",
+      "layer": "parser",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "scope_dag:market_template",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": [
+        "F-00",
+        "F-01",
+        "F-02",
+        "F-03",
+        "F-08",
+        "F-09",
+        "F-10"
+      ]
+    },
+    {
+      "name": "no_model_task:market_template",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "no_forced_new_sources:market_template",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "scope_dag:collection_pilot",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": [
+        "F-00",
+        "F-04",
+        "F-05",
+        "F-08",
+        "F-09",
+        "F-10"
+      ]
+    },
+    {
+      "name": "no_model_task:collection_pilot",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "scope_dag:integrated_template",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": [
+        "F-00",
+        "F-01",
+        "F-02",
+        "F-03",
+        "F-04",
+        "F-05",
+        "F-06",
+        "F-08",
+        "F-09",
+        "F-10"
+      ]
+    },
+    {
+      "name": "no_model_task:integrated_template",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "scope_dag:model_brief",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": [
+        "F-00",
+        "F-01",
+        "F-02",
+        "F-03",
+        "F-07",
+        "F-08",
+        "F-09",
+        "F-10"
+      ]
+    },
+    {
+      "name": "no_forced_new_sources:model_brief",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "scope_dag:integrated_model",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": [
+        "F-00",
+        "F-01",
+        "F-02",
+        "F-03",
+        "F-04",
+        "F-05",
+        "F-06",
+        "F-07",
+        "F-08",
+        "F-09",
+        "F-10"
+      ]
+    },
+    {
+      "name": "original_full_task_dag",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "WP033_full_ancestors_documented",
+      "layer": "task_graph",
+      "passed": true,
+      "actual": 19,
+      "expected": 19,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/capabilities",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_capabilities",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/runs",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_runs",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/runs/{run_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_runs_run_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/runs/{run_id}/cancel",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_runs_run_id_cancel",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/runs/{run_id}/stream",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_runs_run_id_stream",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/bundles/{bundle_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_bundles_bundle_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/evidence/{evidence_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_evidence_evidence_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/metrics",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_metrics",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/changes",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_changes",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/events",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_events",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/events/{event_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_events_event_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/claims/{claim_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_claims_claim_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/calendar",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_calendar",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/reports",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_reports",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/reports/{report_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_reports_report_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/reports/{report_id}/export",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_reports_report_id_export",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/views",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_views",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/views",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_views",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/views/{view_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_views_view_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:put/api/research/v2/views/{view_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:put_views_view_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/viewpoints",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_viewpoints",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/viewpoints",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_viewpoints",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/viewpoints/{viewpoint_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_viewpoints_viewpoint_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:put/api/research/v2/viewpoints/{viewpoint_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:put_viewpoints_viewpoint_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/forecasts",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_forecasts",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/forecasts",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_forecasts",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/forecasts/{forecast_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_forecasts_forecast_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/alerts/rules",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_alerts_rules",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/alerts/rules",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_alerts_rules",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/alerts/episodes",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_alerts_episodes",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/sources/policies",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_sources_policies",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/studies",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_studies",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/studies/{study_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_studies_study_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/health/research",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_health_research",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/reviews",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_reviews",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:post/api/research/v2/reviews",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:post_reviews",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/alerts/rules/{rule_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_alerts_rules_rule_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:put/api/research/v2/alerts/rules/{rule_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:put_alerts_rules_rule_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_security:get/api/research/v2/reviews/{review_id}",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "unique_operation:get_reviews_review_id",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_operation_count",
+      "layer": "api_design",
+      "passed": true,
+      "actual": 39,
+      "expected": 39,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:#/components/responses/DomainError",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/AlertEpisode",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/AlertRule",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/AlertRuleCreate",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Bundle",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Claim",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Error",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Event",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/EvidenceRef",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Forecast",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/ForecastCreate",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Metric",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Report",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/ResearchView",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/ResearchViewCreate",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Review",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/ReviewRequest",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Run",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/RunRequest",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/SourcePolicy",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/Viewpoint",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "api_local_ref:./research.schema.json#/$defs/ViewpointCreate",
+      "layer": "api_design",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    },
+    {
+      "name": "reference_sql_syntax",
+      "layer": "sql_syntax_only",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": 30
+    },
+    {
+      "name": "repository_facts_preserved_bytes",
+      "layer": "provenance",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "detail": null
+    }
+  ],
+  "summary": {
+    "checks": 281,
+    "passed": 281,
+    "failed": 0
+  },
+  "not_proven": [
+    "repository implementation",
+    "all external source claims",
+    "production database/API/model performance",
+    "real source completeness",
+    "real billing caps",
+    "financial predictive usefulness"
+  ]
+}

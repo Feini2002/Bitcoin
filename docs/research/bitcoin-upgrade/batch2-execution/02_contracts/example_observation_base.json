@@ -1,0 +1,18 @@
+{
+  "kind": "observation",
+  "id": "obs-b-1",
+  "dataset_id": "synthetic-base-volume",
+  "instrument_id": "EXAMPLE:LINEAR:BTCUSD",
+  "received_at": "2026-09-16T00:05:02Z",
+  "window": {
+    "start_at": "2026-09-16T00:00:00Z",
+    "end_at": "2026-09-16T00:05:00Z"
+  },
+  "value": "10",
+  "unit": "BTC",
+  "quality": {
+    "status": "usable",
+    "reasons": []
+  },
+  "example_only": true
+}

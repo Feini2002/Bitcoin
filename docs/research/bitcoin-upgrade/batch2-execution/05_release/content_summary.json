@@ -1,0 +1,1005 @@
+{
+  "role": "delivery_inventory_not_research_quality_metric",
+  "files": [
+    {
+      "path": "README.md",
+      "characters": 2160,
+      "cjk_characters": 839
+    },
+    {
+      "path": "EXECUTION_MASTER.md",
+      "characters": 8705,
+      "cjk_characters": 4735
+    },
+    {
+      "path": "EXECUTION_LOG.md",
+      "characters": 8199,
+      "cjk_characters": 984
+    },
+    {
+      "path": "90_reference/README.md",
+      "characters": 497,
+      "cjk_characters": 228
+    },
+    {
+      "path": "03_validation/README.md",
+      "characters": 400,
+      "cjk_characters": 185
+    },
+    {
+      "path": "99_history/README.md",
+      "characters": 225,
+      "cjk_characters": 130
+    },
+    {
+      "path": "04_evidence/README.md",
+      "characters": 9208,
+      "cjk_characters": 1447
+    },
+    {
+      "path": "01_execution/README.md",
+      "characters": 388,
+      "cjk_characters": 177
+    },
+    {
+      "path": "00_current/11_intelligence_collection.md",
+      "characters": 3932,
+      "cjk_characters": 2279
+    },
+    {
+      "path": "00_current/17_acceptance_and_experiments.md",
+      "characters": 2963,
+      "cjk_characters": 1986
+    },
+    {
+      "path": "00_current/01_repository_baseline.md",
+      "characters": 7325,
+      "cjk_characters": 2238
+    },
+    {
+      "path": "00_current/00_master_plan.md",
+      "characters": 6767,
+      "cjk_characters": 2891
+    },
+    {
+      "path": "00_current/10_macro_options_etf_onchain.md",
+      "characters": 4864,
+      "cjk_characters": 2379
+    },
+    {
+      "path": "00_current/07_liquidation_radar.md",
+      "characters": 6912,
+      "cjk_characters": 2598
+    },
+    {
+      "path": "00_current/04_data_contracts_and_acquisition.md",
+      "characters": 6276,
+      "cjk_characters": 2519
+    },
+    {
+      "path": "00_current/02_findings_and_counterexamples.md",
+      "characters": 10058,
+      "cjk_characters": 3123
+    },
+    {
+      "path": "00_current/03_institutional_patterns.md",
+      "characters": 5226,
+      "cjk_characters": 3011
+    },
+    {
+      "path": "00_current/18_codex_handoff.md",
+      "characters": 576,
+      "cjk_characters": 405
+    },
+    {
+      "path": "00_current/09_method_registry.md",
+      "characters": 6832,
+      "cjk_characters": 2871
+    },
+    {
+      "path": "00_current/06_orderflow_footprint.md",
+      "characters": 6983,
+      "cjk_characters": 3098
+    },
+    {
+      "path": "00_current/12_analysis_prompts_workflow.md",
+      "characters": 6080,
+      "cjk_characters": 3068
+    },
+    {
+      "path": "00_current/13_ui_history_api.md",
+      "characters": 4373,
+      "cjk_characters": 1942
+    },
+    {
+      "path": "00_current/08_derivatives.md",
+      "characters": 7377,
+      "cjk_characters": 2939
+    },
+    {
+      "path": "00_current/15_migration_rollback.md",
+      "characters": 3309,
+      "cjk_characters": 1636
+    },
+    {
+      "path": "00_current/20_dataset_adoption_cards.md",
+      "characters": 4007,
+      "cjk_characters": 1470
+    },
+    {
+      "path": "00_current/16_work_packages.md",
+      "characters": 4767,
+      "cjk_characters": 718
+    },
+    {
+      "path": "00_current/05_chart_workbench.md",
+      "characters": 8757,
+      "cjk_characters": 3446
+    },
+    {
+      "path": "00_current/19_sources_and_review_boundary.md",
+      "characters": 2137,
+      "cjk_characters": 1421
+    },
+    {
+      "path": "00_current/14_architecture_runtime_cost.md",
+      "characters": 4539,
+      "cjk_characters": 2103
+    },
+    {
+      "path": "02_contracts/README.md",
+      "characters": 415,
+      "cjk_characters": 180
+    },
+    {
+      "path": "05_release/CHANGELOG.md",
+      "characters": 859,
+      "cjk_characters": 580
+    },
+    {
+      "path": "05_release/REVIEW_BOUNDARY.md",
+      "characters": 337,
+      "cjk_characters": 246
+    },
+    {
+      "path": "05_release/TASK_COVERAGE.md",
+      "characters": 5713,
+      "cjk_characters": 686
+    },
+    {
+      "path": "01_execution/phases/P08_model_workflow.md",
+      "characters": 4192,
+      "cjk_characters": 2166
+    },
+    {
+      "path": "01_execution/phases/P05_orderflow.md",
+      "characters": 6224,
+      "cjk_characters": 3316
+    },
+    {
+      "path": "01_execution/phases/P00_repository_binding.md",
+      "characters": 8004,
+      "cjk_characters": 3799
+    },
+    {
+      "path": "01_execution/phases/P10_validation_handoff.md",
+      "characters": 6715,
+      "cjk_characters": 3019
+    },
+    {
+      "path": "01_execution/phases/P11_conditional_branches.md",
+      "characters": 13464,
+      "cjk_characters": 7109
+    },
+    {
+      "path": "01_execution/phases/P07_intelligence.md",
+      "characters": 6613,
+      "cjk_characters": 3589
+    },
+    {
+      "path": "01_execution/phases/P03_market_template.md",
+      "characters": 5762,
+      "cjk_characters": 2857
+    },
+    {
+      "path": "01_execution/phases/P04_derivatives.md",
+      "characters": 6469,
+      "cjk_characters": 3243
+    },
+    {
+      "path": "01_execution/phases/P01_data_contracts.md",
+      "characters": 6993,
+      "cjk_characters": 3407
+    },
+    {
+      "path": "01_execution/phases/P09_workspace_history.md",
+      "characters": 4082,
+      "cjk_characters": 2161
+    },
+    {
+      "path": "01_execution/phases/P02_chart_workbench.md",
+      "characters": 8109,
+      "cjk_characters": 4147
+    },
+    {
+      "path": "01_execution/phases/P06_liquidations.md",
+      "characters": 6595,
+      "cjk_characters": 3255
+    },
+    {
+      "path": "90_reference/07_codex_usage/04_decision_record_template.md",
+      "characters": 688,
+      "cjk_characters": 423
+    },
+    {
+      "path": "90_reference/07_codex_usage/01_reading_and_selection.md",
+      "characters": 611,
+      "cjk_characters": 308
+    },
+    {
+      "path": "90_reference/07_codex_usage/03_prompt_scoped_execution.md",
+      "characters": 817,
+      "cjk_characters": 548
+    },
+    {
+      "path": "90_reference/07_codex_usage/02_prompt_readonly_audit.md",
+      "characters": 807,
+      "cjk_characters": 561
+    },
+    {
+      "path": "90_reference/10_final_review/README.md",
+      "characters": 559,
+      "cjk_characters": 239
+    },
+    {
+      "path": "90_reference/10_final_review/scoped_work_packages.md",
+      "characters": 6401,
+      "cjk_characters": 2807
+    },
+    {
+      "path": "90_reference/10_final_review/value_and_decision_tests.md",
+      "characters": 1522,
+      "cjk_characters": 1163
+    },
+    {
+      "path": "90_reference/10_final_review/contract_migration.md",
+      "characters": 3053,
+      "cjk_characters": 1289
+    },
+    {
+      "path": "90_reference/03_research/RES09_资金费持仓基差与强平.md",
+      "characters": 2220,
+      "cjk_characters": 1065
+    },
+    {
+      "path": "90_reference/03_research/RES25_论文披露与复杂文档摄取.md",
+      "characters": 2018,
+      "cjk_characters": 922
+    },
+    {
+      "path": "90_reference/03_research/README.md",
+      "characters": 1321,
+      "cjk_characters": 661
+    },
+    {
+      "path": "90_reference/03_research/RES01_能力地图与复用决策.md",
+      "characters": 2489,
+      "cjk_characters": 1163
+    },
+    {
+      "path": "90_reference/03_research/RES17_报告质量评价与可观测性.md",
+      "characters": 1763,
+      "cjk_characters": 970
+    },
+    {
+      "path": "90_reference/03_research/RES14_预测校准观点与决策记录.md",
+      "characters": 1665,
+      "cjk_characters": 951
+    },
+    {
+      "path": "90_reference/03_research/RES04_事件主张去重与更正.md",
+      "characters": 2166,
+      "cjk_characters": 944
+    },
+    {
+      "path": "90_reference/03_research/RES06_实时行情采集与标准化.md",
+      "characters": 2207,
+      "cjk_characters": 917
+    },
+    {
+      "path": "90_reference/03_research/RES18_金融工作区与研究现场.md",
+      "characters": 1811,
+      "cjk_characters": 878
+    },
+    {
+      "path": "90_reference/03_research/RES02_持续订阅与来源发现.md",
+      "characters": 2462,
+      "cjk_characters": 1121
+    },
+    {
+      "path": "90_reference/03_research/RES13_因子事件研究与可复现验证.md",
+      "characters": 2192,
+      "cjk_characters": 1018
+    },
+    {
+      "path": "90_reference/03_research/RES05_多语言检索与研究上下文.md",
+      "characters": 1957,
+      "cjk_characters": 979
+    },
+    {
+      "path": "90_reference/03_research/RES12_宏观ETF稳定币与跨资产.md",
+      "characters": 2664,
+      "cjk_characters": 1019
+    },
+    {
+      "path": "90_reference/03_research/RES11_链上矿工与实体资金流.md",
+      "characters": 2083,
+      "cjk_characters": 927
+    },
+    {
+      "path": "90_reference/03_research/RES08_订单流足迹与盘口研究.md",
+      "characters": 1886,
+      "cjk_characters": 939
+    },
+    {
+      "path": "90_reference/03_research/RES15_完整金融平台的可迁移经验.md",
+      "characters": 2509,
+      "cjk_characters": 984
+    },
+    {
+      "path": "90_reference/03_research/RES20_存储计算与部署路线.md",
+      "characters": 2455,
+      "cjk_characters": 946
+    },
+    {
+      "path": "90_reference/03_research/RES19_研究知识库与证据生命周期.md",
+      "characters": 1801,
+      "cjk_characters": 900
+    },
+    {
+      "path": "90_reference/03_research/RES22_许可数据权利成本与供应商退出.md",
+      "characters": 2659,
+      "cjk_characters": 946
+    },
+    {
+      "path": "90_reference/03_research/RES03_网页提取与浏览器采集.md",
+      "characters": 2579,
+      "cjk_characters": 1012
+    },
+    {
+      "path": "90_reference/03_research/RES24_信息价值覆盖与降噪评价.md",
+      "characters": 1822,
+      "cjk_characters": 965
+    },
+    {
+      "path": "90_reference/03_research/RES10_期权研究与波动率结构.md",
+      "characters": 2263,
+      "cjk_characters": 987
+    },
+    {
+      "path": "90_reference/03_research/RES23_完整能力组合与自建采购对照.md",
+      "characters": 2581,
+      "cjk_characters": 1006
+    },
+    {
+      "path": "90_reference/03_research/RES16_模型工具与多代理的适用边界.md",
+      "characters": 2243,
+      "cjk_characters": 958
+    },
+    {
+      "path": "90_reference/03_research/RES21_增量管道调度与失败恢复.md",
+      "characters": 1852,
+      "cjk_characters": 931
+    },
+    {
+      "path": "90_reference/03_research/RES07_历史回补时点与数据修订.md",
+      "characters": 2303,
+      "cjk_characters": 980
+    },
+    {
+      "path": "90_reference/01_accepted_plan/README.md",
+      "characters": 3513,
+      "cjk_characters": 1027
+    },
+    {
+      "path": "90_reference/01_accepted_plan/complete_plan.md",
+      "characters": 104,
+      "cjk_characters": 53
+    },
+    {
+      "path": "90_reference/06_collection_design/04_alignment_with_accepted_contracts.md",
+      "characters": 1334,
+      "cjk_characters": 657
+    },
+    {
+      "path": "90_reference/06_collection_design/03_lifecycle_and_contract.md",
+      "characters": 3953,
+      "cjk_characters": 1510
+    },
+    {
+      "path": "90_reference/06_collection_design/05_search_recipes.md",
+      "characters": 5448,
+      "cjk_characters": 1148
+    },
+    {
+      "path": "90_reference/06_collection_design/07_operating_and_update_policy.md",
+      "characters": 865,
+      "cjk_characters": 596
+    },
+    {
+      "path": "90_reference/06_collection_design/01_collection_handbook.md",
+      "characters": 4916,
+      "cjk_characters": 2427
+    },
+    {
+      "path": "90_reference/06_collection_design/06_evaluation_and_fixtures.md",
+      "characters": 1904,
+      "cjk_characters": 1061
+    },
+    {
+      "path": "90_reference/06_collection_design/02_source_catalog.md",
+      "characters": 3418,
+      "cjk_characters": 1073
+    },
+    {
+      "path": "90_reference/90_archive/README.md",
+      "characters": 203,
+      "cjk_characters": 134
+    },
+    {
+      "path": "90_reference/05_cases/CASE11_FDC3工作区上下文迁移.md",
+      "characters": 887,
+      "cjk_characters": 412
+    },
+    {
+      "path": "90_reference/05_cases/README.md",
+      "characters": 1107,
+      "cjk_characters": 406
+    },
+    {
+      "path": "90_reference/05_cases/CASE07_Glassnode与BlockSci的两种可复用价值.md",
+      "characters": 928,
+      "cjk_characters": 471
+    },
+    {
+      "path": "90_reference/05_cases/CASE09_FinRobot开放边界与金融方法迁移.md",
+      "characters": 963,
+      "cjk_characters": 440
+    },
+    {
+      "path": "90_reference/05_cases/CASE12_Temporal与Haystack揭示的取消边界.md",
+      "characters": 889,
+      "cjk_characters": 433
+    },
+    {
+      "path": "90_reference/05_cases/CASE03_zenfeed与TrendRadar的情报产品取舍.md",
+      "characters": 1008,
+      "cjk_characters": 512
+    },
+    {
+      "path": "90_reference/05_cases/CASE08_Anthropic研究案例与TradingAgents的可迁移部分.md",
+      "characters": 875,
+      "cjk_characters": 441
+    },
+    {
+      "path": "90_reference/05_cases/CASE04_IPTC与W3C给证据模型的启示.md",
+      "characters": 872,
+      "cjk_characters": 457
+    },
+    {
+      "path": "90_reference/05_cases/CASE06_Tardis让购买历史变成可验收任务.md",
+      "characters": 821,
+      "cjk_characters": 473
+    },
+    {
+      "path": "90_reference/05_cases/CASE10_Qlib与arch如何服务实验纪律.md",
+      "characters": 896,
+      "cjk_characters": 428
+    },
+    {
+      "path": "90_reference/05_cases/CASE14_开源商业服务和受限搜索的分界.md",
+      "characters": 1014,
+      "cjk_characters": 485
+    },
+    {
+      "path": "90_reference/05_cases/CASE13_Docling与GROBID避免只收标题.md",
+      "characters": 867,
+      "cjk_characters": 433
+    },
+    {
+      "path": "90_reference/05_cases/CASE01_订阅阅读器怎样成为收集底座.md",
+      "characters": 991,
+      "cjk_characters": 527
+    },
+    {
+      "path": "90_reference/05_cases/CASE05_官方日历与vintage的双时钟.md",
+      "characters": 910,
+      "cjk_characters": 444
+    },
+    {
+      "path": "90_reference/05_cases/CASE02_Feedly去重与聚类不是同一层.md",
+      "characters": 974,
+      "cjk_characters": 496
+    },
+    {
+      "path": "90_reference/02_adversarial_review/02_scope_override_rules.md",
+      "characters": 545,
+      "cjk_characters": 317
+    },
+    {
+      "path": "90_reference/02_adversarial_review/01_adversarial_review.md",
+      "characters": 4404,
+      "cjk_characters": 2167
+    },
+    {
+      "path": "90_reference/08_evidence/research_diary.md",
+      "characters": 1439,
+      "cjk_characters": 617
+    },
+    {
+      "path": "90_reference/08_evidence/sources.md",
+      "characters": 32304,
+      "cjk_characters": 10298
+    },
+    {
+      "path": "90_reference/08_evidence/access_limits.md",
+      "characters": 1229,
+      "cjk_characters": 520
+    },
+    {
+      "path": "90_reference/08_evidence/coverage_matrix.md",
+      "characters": 1303,
+      "cjk_characters": 525
+    },
+    {
+      "path": "90_reference/00_start/01_master_solution.md",
+      "characters": 2122,
+      "cjk_characters": 1323
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL067.md",
+      "characters": 1025,
+      "cjk_characters": 524
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL037.md",
+      "characters": 1188,
+      "cjk_characters": 610
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL022.md",
+      "characters": 914,
+      "cjk_characters": 538
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL010.md",
+      "characters": 1003,
+      "cjk_characters": 582
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL039.md",
+      "characters": 1022,
+      "cjk_characters": 563
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL008.md",
+      "characters": 1168,
+      "cjk_characters": 657
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL059.md",
+      "characters": 932,
+      "cjk_characters": 480
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL065.md",
+      "characters": 937,
+      "cjk_characters": 498
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL028.md",
+      "characters": 854,
+      "cjk_characters": 532
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL060.md",
+      "characters": 1010,
+      "cjk_characters": 444
+    },
+    {
+      "path": "90_reference/04_reuse_cards/README.md",
+      "characters": 6398,
+      "cjk_characters": 3250
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL029.md",
+      "characters": 895,
+      "cjk_characters": 552
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL024.md",
+      "characters": 1270,
+      "cjk_characters": 606
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL032.md",
+      "characters": 927,
+      "cjk_characters": 528
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL036.md",
+      "characters": 917,
+      "cjk_characters": 581
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL062.md",
+      "characters": 990,
+      "cjk_characters": 550
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL057.md",
+      "characters": 848,
+      "cjk_characters": 469
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL052.md",
+      "characters": 825,
+      "cjk_characters": 484
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL009.md",
+      "characters": 1170,
+      "cjk_characters": 640
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL021.md",
+      "characters": 957,
+      "cjk_characters": 532
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL011.md",
+      "characters": 1102,
+      "cjk_characters": 633
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL055.md",
+      "characters": 958,
+      "cjk_characters": 492
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL001.md",
+      "characters": 1162,
+      "cjk_characters": 694
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL005.md",
+      "characters": 1077,
+      "cjk_characters": 615
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL017.md",
+      "characters": 1257,
+      "cjk_characters": 612
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL016.md",
+      "characters": 1147,
+      "cjk_characters": 613
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL047.md",
+      "characters": 919,
+      "cjk_characters": 521
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL015.md",
+      "characters": 1238,
+      "cjk_characters": 669
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL063.md",
+      "characters": 1071,
+      "cjk_characters": 522
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL012.md",
+      "characters": 1278,
+      "cjk_characters": 675
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL019.md",
+      "characters": 1050,
+      "cjk_characters": 541
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL034.md",
+      "characters": 867,
+      "cjk_characters": 515
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL027.md",
+      "characters": 871,
+      "cjk_characters": 522
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL004.md",
+      "characters": 1144,
+      "cjk_characters": 643
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL007.md",
+      "characters": 1122,
+      "cjk_characters": 598
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL038.md",
+      "characters": 1075,
+      "cjk_characters": 557
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL014.md",
+      "characters": 1072,
+      "cjk_characters": 643
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL058.md",
+      "characters": 881,
+      "cjk_characters": 534
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL002.md",
+      "characters": 1269,
+      "cjk_characters": 688
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL042.md",
+      "characters": 1035,
+      "cjk_characters": 516
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL033.md",
+      "characters": 962,
+      "cjk_characters": 543
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL048.md",
+      "characters": 1023,
+      "cjk_characters": 496
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL053.md",
+      "characters": 899,
+      "cjk_characters": 525
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL043.md",
+      "characters": 1028,
+      "cjk_characters": 514
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL026.md",
+      "characters": 1060,
+      "cjk_characters": 542
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL049.md",
+      "characters": 946,
+      "cjk_characters": 524
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL040.md",
+      "characters": 963,
+      "cjk_characters": 505
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL031.md",
+      "characters": 886,
+      "cjk_characters": 503
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL018.md",
+      "characters": 954,
+      "cjk_characters": 587
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL044.md",
+      "characters": 932,
+      "cjk_characters": 508
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL064.md",
+      "characters": 1011,
+      "cjk_characters": 551
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL056.md",
+      "characters": 824,
+      "cjk_characters": 488
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL046.md",
+      "characters": 957,
+      "cjk_characters": 519
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL051.md",
+      "characters": 892,
+      "cjk_characters": 559
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL041.md",
+      "characters": 910,
+      "cjk_characters": 529
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL023.md",
+      "characters": 871,
+      "cjk_characters": 542
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL061.md",
+      "characters": 932,
+      "cjk_characters": 521
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL013.md",
+      "characters": 1077,
+      "cjk_characters": 614
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL066.md",
+      "characters": 1024,
+      "cjk_characters": 505
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL020.md",
+      "characters": 914,
+      "cjk_characters": 527
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL030.md",
+      "characters": 917,
+      "cjk_characters": 540
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL054.md",
+      "characters": 1045,
+      "cjk_characters": 567
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL045.md",
+      "characters": 917,
+      "cjk_characters": 531
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL035.md",
+      "characters": 916,
+      "cjk_characters": 562
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL003.md",
+      "characters": 1281,
+      "cjk_characters": 667
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL025.md",
+      "characters": 1015,
+      "cjk_characters": 583
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL050.md",
+      "characters": 870,
+      "cjk_characters": 489
+    },
+    {
+      "path": "90_reference/04_reuse_cards/TOOL006.md",
+      "characters": 1214,
+      "cjk_characters": 626
+    },
+    {
+      "path": "90_reference/01_accepted_plan/contracts/README.md",
+      "characters": 1651,
+      "cjk_characters": 746
+    },
+    {
+      "path": "90_reference/01_accepted_plan/fixtures/README.md",
+      "characters": 861,
+      "cjk_characters": 309
+    },
+    {
+      "path": "90_reference/01_accepted_plan/inputs/repository_facts.md",
+      "characters": 14864,
+      "cjk_characters": 7249
+    },
+    {
+      "path": "90_reference/01_accepted_plan/inputs/previous_research_review.md",
+      "characters": 37474,
+      "cjk_characters": 18361
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/03_product_information_and_noise.md",
+      "characters": 11129,
+      "cjk_characters": 6138
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/01_repository_baseline.md",
+      "characters": 8738,
+      "cjk_characters": 4340
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/00_master_plan.md",
+      "characters": 6468,
+      "cjk_characters": 3915
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/09_architecture_runtime_and_storage.md",
+      "characters": 10785,
+      "cjk_characters": 4771
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/11_evaluation_and_acceptance.md",
+      "characters": 8587,
+      "cjk_characters": 5324
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/05_analysis_methods_and_scenarios.md",
+      "characters": 10644,
+      "cjk_characters": 6002
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/12_migration_operations_and_rollback.md",
+      "characters": 9058,
+      "cjk_characters": 5065
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/13_implementation_work_packages.md",
+      "characters": 45459,
+      "cjk_characters": 24292
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/06_catalysts_macro_etf_options.md",
+      "characters": 12352,
+      "cjk_characters": 5419
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/15_sources_glossary_and_open_questions.md",
+      "characters": 16288,
+      "cjk_characters": 5350
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/14_end_to_end_examples_and_handoff.md",
+      "characters": 8776,
+      "cjk_characters": 5504
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/02_external_research_and_decisions.md",
+      "characters": 15732,
+      "cjk_characters": 7808
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
+      "characters": 13744,
+      "cjk_characters": 6368
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/04_market_data_contracts.md",
+      "characters": 12939,
+      "cjk_characters": 5160
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/07_llm_prompts_workflows.md",
+      "characters": 17300,
+      "cjk_characters": 6940
+    },
+    {
+      "path": "90_reference/01_accepted_plan/volumes/08_workspace_views_and_alerts.md",
+      "characters": 10119,
+      "cjk_characters": 4612
+    },
+    {
+      "path": "90_reference/10_final_review/results/README.md",
+      "characters": 1162,
+      "cjk_characters": 589
+    }
+  ]
+}

@@ -8,7 +8,9 @@ export function accessAllowedOrigin(env, origin) {
   const allowed = splitList(env && env.ACCESS_ALLOWED_ORIGINS).concat(DEFAULT_ALLOWED_ORIGIN);
   const unique = new Set(allowed.map((v) => v.replace(/\/$/, "")));
   const normalized = origin ? String(origin).replace(/\/$/, "") : DEFAULT_ALLOWED_ORIGIN;
-  return unique.has(normalized) ? normalized : DEFAULT_ALLOWED_ORIGIN;
+  if (unique.has(normalized)) return normalized;
+  if (isPagesPreviewOrigin(normalized)) return normalized;
+  return DEFAULT_ALLOWED_ORIGIN;
 }
 
 export function accessCorsHeaders(env, extra = {}) {
@@ -82,6 +84,18 @@ function splitList(value) {
     .split(/[,\s]+/)
     .map((v) => v.trim())
     .filter(Boolean);
+}
+
+function isPagesPreviewOrigin(origin) {
+  try {
+    const u = new URL(origin);
+    return u.protocol === "https:" && (
+      u.hostname === "bit-trading-desk.pages.dev" ||
+      u.hostname.endsWith(".bit-trading-desk.pages.dev")
+    );
+  } catch {
+    return false;
+  }
 }
 
 function accessJwtConfig(env) {

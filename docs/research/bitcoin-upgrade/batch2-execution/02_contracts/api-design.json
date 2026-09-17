@@ -1,0 +1,41 @@
+{
+  "status": "proposed_not_implemented",
+  "namespace_must_be_bound_to_repository": true,
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/api/research/v3/capabilities",
+      "meaning": "只读已验证能力与缺失，不取上游"
+    },
+    {
+      "method": "POST",
+      "path": "/api/research/v3/captures",
+      "meaning": "有限输入捕获，幂等；按已登记来源与权利"
+    },
+    {
+      "method": "POST",
+      "path": "/api/research/v3/runs",
+      "meaning": "选择template/model，模型需预算与许可"
+    },
+    {
+      "method": "GET",
+      "path": "/api/research/v3/runs/{id}",
+      "meaning": "只读真实执行状态，不隐式重试"
+    },
+    {
+      "method": "GET",
+      "path": "/api/research/v3/reports/{id}",
+      "meaning": "按当前权限读取固定报告"
+    },
+    {
+      "method": "POST",
+      "path": "/api/research/v3/views",
+      "meaning": "保存绝对研究选择"
+    },
+    {
+      "method": "POST",
+      "path": "/api/research/v3/reports/{id}/export",
+      "meaning": "按当前导出权利生成有限副本"
+    }
+  ]
+}

@@ -1,0 +1,357 @@
+{
+  "version": "final-review-1.1",
+  "profiles": [
+    "market_template",
+    "collection_pilot",
+    "integrated_template",
+    "model_brief",
+    "integrated_model"
+  ],
+  "tasks": [
+    {
+      "id": "F-00",
+      "title": "绑定一个真实研究任务与工作区",
+      "profiles": [
+        "market_template",
+        "collection_pilot",
+        "integrated_template",
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-001",
+        "WP-053"
+      ],
+      "scope": "核对news-analysis及相关输入/保存路径，只记录受影响文件和已有测试；选择本次窗口、数据family、来源与用户可见产物。",
+      "affected_responsibilities": "原事实报告涉及的yuqing Worker、news.js、相关行情/快照职责，路径需现场确认。",
+      "migration": "不迁数据；保留旧输入报告和未提交工作区。",
+      "acceptance": "给出已有/需改/未知对照、基线输出和范围；不把connected当在线。",
+      "rollback": "不reset/clean；冲突文件停改，其余不相关治理不重开。",
+      "operations_boundary": "只读当前代码与本地文档；无远程/付费默认授权。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-01",
+      "title": "修正本切片会消费的虚假精度",
+      "profiles": [
+        "market_template",
+        "integrated_template",
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-00"
+      ],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-003",
+        "WP-006"
+      ],
+      "scope": "覆盖FNG missing/真实50/stale与固定confidence消费者，退出未启用期权ETF确认；只修所用规则，不重写全部指标。",
+      "affected_responsibilities": "temperature.js、sentiment-logic.js、页面/导出/模型上下文实际消费者。",
+      "migration": "新输出版本化，旧报告只读标legacy；原值不重写。",
+      "acceptance": "三类50可区分；固定分数不冒充概率；新增无依据文案被拒。",
+      "rollback": "可回退布局，不恢复误导语义。",
+      "operations_boundary": "本地代码/离线测试；生产发布单独。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-02",
+      "title": "封存本次实际输入与最小证据身份",
+      "profiles": [
+        "market_template",
+        "integrated_template",
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-00"
+      ],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-007",
+        "WP-008",
+        "WP-013",
+        "WP-014",
+        "WP-015",
+        "WP-016"
+      ],
+      "scope": "选唯一capture owner，复用现有快照纯逻辑；只包含启用的数据、来源、窗口、版本和缺失，建立最小payload/manifest，不照抄30表。",
+      "affected_responsibilities": "marketSnapshotProgram、yuqing并行市场上下文、实际报告/快照存储。",
+      "migration": "允许现有表JSON扩展；旧source未知不补假来源，原hash保留。",
+      "acceptance": "同输入重算、修订被识别、当前使用字段有单位和来源；未启用family不阻塞。",
+      "rollback": "失败只降级依赖字段；不另起第三采集器。",
+      "operations_boundary": "本地适配；真实数据/远程写入按范围。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-03",
+      "title": "交付模板市场简报与一个证据入口",
+      "profiles": [
+        "market_template",
+        "integrated_template",
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-01",
+        "F-02"
+      ],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-018",
+        "WP-019",
+        "WP-020",
+        "WP-030",
+        "WP-038",
+        "WP-040"
+      ],
+      "scope": "确定性变化、分歧、条件、未知；在现有分析页提供固定窗口、证据和历史读取，不先整体换UI。",
+      "affected_responsibilities": "现有news-analysis、news.js与统一capture结果。",
+      "migration": "结果按新版本保存；旧reportId原路可读；不扩大保留期默认值。",
+      "acceptance": "初始基线/覆盖不足/变化/无变化区分；页面导出使用同一输入；模板无模型调用。",
+      "rollback": "恢复旧reader但保留新结果；不重定向旧ID到latest。",
+      "operations_boundary": "本地页面和测试；不默认外发通知。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-04",
+      "title": "选择一个真正填补缺口的来源试点",
+      "profiles": [
+        "collection_pilot",
+        "integrated_template",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-00"
+      ],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-002",
+        "WP-021"
+      ],
+      "scope": "明确用途、端点、更新规律、权限和限制；已有独立证据足够可不激活此任务。源数量不是目标。",
+      "affected_responsibilities": "yuqing-facts来源配置/已有获取方式；新来源登记需现场绑定。",
+      "migration": "候选enabled=false；SourceRegistration经明确范围才启用。",
+      "acceptance": "能说明新源增加什么独立信息；unknown用途不自动allowed；拒绝/限流可见。",
+      "rollback": "替代为已有来源/人工获准材料或放弃试点。",
+      "operations_boundary": "若实际网络、账号、付费未授权，止于登记与合成样本。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-05",
+      "title": "资料版本、更正和可解释筛选",
+      "profiles": [
+        "collection_pilot",
+        "integrated_template",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-04"
+      ],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-022",
+        "WP-023",
+        "WP-024",
+        "WP-025"
+      ],
+      "scope": "正文与提取版本分离；URL同而更新可追踪；保留否认/更正，先规则后必要模型；统一用途和时点。",
+      "affected_responsibilities": "当前事实池和来源日志，复用Artifact/Article责任。",
+      "migration": "只追加启用来源版本；旧未知不伪造发布时间；A→B→A保留观察。",
+      "acceptance": "重复不增加独立支持数；更正未丢失；源停采与无更新不同；版本历史按正确时点筛选。",
+      "rollback": "关掉新源或合并规则，保留原始合法版本，索引可重建。",
+      "operations_boundary": "提取/模型费用需分别许可；模板profile不隐含模型抽取。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-06",
+      "title": "将有限事件与市场简报接成一个闭环",
+      "profiles": [
+        "integrated_template",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-03",
+        "F-05"
+      ],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-016",
+        "WP-025",
+        "WP-030",
+        "WP-040"
+      ],
+      "scope": "只有满足本次用途/时间/相关性的事件进入child bundle；将声明与市场观察分开，纠正不覆盖旧报告。",
+      "affected_responsibilities": "capture与facts输入连接、现有报告渲染。",
+      "migration": "新bundle/事件版本映射，旧报告不重写。",
+      "acceptance": "同一输入跨页面一致；有根源关系；重要反证可见；事件没有增量时能不用。",
+      "rollback": "退回纯市场模板，保留事件独立查询。",
+      "operations_boundary": "不要求采购ETF/期权或新增数据库。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-07",
+      "title": "可选模型增强与真实调用控制",
+      "profiles": [
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-03"
+      ],
+      "requires_by_profile": {
+        "integrated_model": [
+          "F-06"
+        ]
+      },
+      "original_wp_subscopes": [
+        "WP-002",
+        "WP-005",
+        "WP-017",
+        "WP-033",
+        "WP-034",
+        "WP-035",
+        "WP-036",
+        "WP-037"
+      ],
+      "scope": "复用Gemini适配；固定bundle一次综合+程序验证，必要时审核；总调用与价格模式明确，Grounding与归档用途隔离。",
+      "affected_responsibilities": "现有Gemini REST/stream、费用/状态/模型设置。",
+      "migration": "新增step/预算记录可复用现有表；preview与final区分，旧记录只读。",
+      "acceptance": "model无预算不调用，template仍可用；超时outcome_unknown不盲重试；数字引用和窗口通过。",
+      "rollback": "模型失败/无增量回模板，不撤销正确事实层。",
+      "operations_boundary": "真实模型/搜索、费用和项目设置必须在本次范围明确。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-08",
+      "title": "完成本切片的安全和生命周期回归",
+      "profiles": [
+        "market_template",
+        "collection_pilot",
+        "integrated_template",
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-00"
+      ],
+      "requires_by_profile": {
+        "market_template": [
+          "F-03"
+        ],
+        "collection_pilot": [
+          "F-05"
+        ],
+        "integrated_template": [
+          "F-06"
+        ],
+        "model_brief": [
+          "F-07"
+        ],
+        "integrated_model": [
+          "F-07"
+        ]
+      },
+      "original_wp_subscopes": [
+        "WP-006",
+        "WP-049",
+        "WP-050",
+        "WP-051",
+        "WP-052",
+        "WP-055"
+      ],
+      "scope": "按实际暴露入口核身份、用途、渲染、取消、并发、缓存、导出和恢复；不是建企业治理平台。",
+      "affected_responsibilities": "当前认证、发布清单、报告/事实读写与前端资源。",
+      "migration": "不运行破坏性清理；保留旧链接及正确降级。",
+      "acceptance": "反例拒绝、旧owner隔离、取消不覆盖新run、history不冒用latest；无外部入口则标不适用理由。",
+      "rollback": "关受影响能力，保留其他可靠功能；不关闭验证取绿。",
+      "operations_boundary": "与已批准本地测试一致；远程/删除须显式范围。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-09",
+      "title": "做与本profile相称的价值对照",
+      "profiles": [
+        "market_template",
+        "collection_pilot",
+        "integrated_template",
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-00"
+      ],
+      "requires_by_profile": {
+        "market_template": [
+          "F-03"
+        ],
+        "collection_pilot": [
+          "F-05"
+        ],
+        "integrated_template": [
+          "F-06"
+        ],
+        "model_brief": [
+          "F-07"
+        ],
+        "integrated_model": [
+          "F-07"
+        ]
+      },
+      "original_wp_subscopes": [
+        "WP-053",
+        "WP-054",
+        "WP-059"
+      ],
+      "scope": "用value_and_decision_tests定义的模板/模型和旧/新材料对照；不能让新增资料收益算给Agent。",
+      "affected_responsibilities": "现有回归测试、获准样本与输出记录。",
+      "migration": "固定样本及方法版本，记录未知，不挑成功案例。",
+      "acceptance": "数值/引用/遗漏/重复/任务时间/成本分别记录；无真实模型则不声称模型效果。",
+      "rollback": "无增量缩范围，保存失败理由，停止扩源/加角色。",
+      "operations_boundary": "本地合成先行；真实评估数据、模型由范围批准。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    },
+    {
+      "id": "F-10",
+      "title": "独立交付与可退回接手",
+      "profiles": [
+        "market_template",
+        "collection_pilot",
+        "integrated_template",
+        "model_brief",
+        "integrated_model"
+      ],
+      "requires": [
+        "F-08",
+        "F-09"
+      ],
+      "requires_by_profile": {},
+      "original_wp_subscopes": [
+        "WP-056",
+        "WP-060"
+      ],
+      "scope": "按本次启用能力交付变更、实际测试、未完成、回退及WP子范围；部署并非自动步骤。",
+      "affected_responsibilities": "实际选中模块及发布清单唯一owner。",
+      "migration": "附实际迁移/保留范围，无未审核DROP或全表重写。",
+      "acceptance": "本profile用户产物可访问/可核；WP只标本次子范围；可关闭增强不破坏旧历史。",
+      "rollback": "不靠git reset或删除新证据回退，按reader/producer/feature分离。",
+      "operations_boundary": "生产部署只有明确批准才执行，否则交付待部署状态。",
+      "repository_checks": "核对当前真实文件、数据格式、已有等价实现、权限和并发治理；本文件不假定函数名。",
+      "completion": "本scope子范围完成不等于整个WP完成。"
+    }
+  ],
+  "note": "这是新切片依赖，不修改原WP完整能力依赖；原WP必须记录partial。不是自动执行授权。"
+}
