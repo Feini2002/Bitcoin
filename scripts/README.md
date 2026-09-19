@@ -6,6 +6,8 @@
 | --- | --- | --- |
 | 按功能/文件查询研究资料 | node scripts/research-context.cjs 问题；--file ID；--find 关键词 | 只读，输出有数量上限；不自动调用图工具、测试或网络 |
 | 刷新/核对研究资料目录 | node scripts/research-context.cjs --refresh / --check | refresh只写FILE_CATALOG.json；check只读，不执行资料包内容 |
+
+资料目录覆盖本地核验记录、第一批归档与第二批执行包（291份），按「批次＋权威等级」标注：本地核验 > 第一批设计 > 备选参考 > 仅追溯；`90_reference` 与第一批重复，只存指针不重复编目。查询输出直接显示等级，冲突时据此取舍。
 | 离线完整验证 + 网站产物 | npm run build | 仅本地 dist/pages/ |
 | 网站资产构建 | npm run build:pages | 重建可再生 dist/pages/ |
 | 发布边界验证 | npm run verify:pages | 本地固定样例与发布产物 |

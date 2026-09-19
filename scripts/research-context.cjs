@@ -3,7 +3,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
+const RESEARCH = 'docs/research';
 const LIBRARY = 'docs/research/bitcoin-upgrade';
+const BATCH2 = LIBRARY + '/batch2-execution';
+const BATCH2_REFERENCE = BATCH2 + '/90_reference';
 const routing = JSON.parse(fs.readFileSync(path.join(ROOT, LIBRARY, 'routing.json'), 'utf8'));
 const CATALOG = path.join(ROOT, LIBRARY, 'FILE_CATALOG.json');
 const text = file => fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
@@ -46,10 +49,73 @@ const descriptions = {
   'slice_proposals.json': '可选切片提案，不是自动执行队列。'
 };
 
+// 批次与权威等级：本地核验记录 > 第一批设计快照 > 外部经验/候选；用于冲突时排序，不改变资料原文。
+const BATCH = {
+  local: { label: '本地核验', note: '本仓库 2026-09-16 的实际核验记录；反映当时仓库与网络事实，优先于外部设计。' },
+  batch2: { label: '第二批', note: '第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。' },
+  batch1: { label: '第一批', note: '第一批研究/设计快照（2026-09-16）；用于方法、组件与工程细节，不是当前执行指令。' },
+  archive: { label: '历史档案', note: '更早一轮原件，仅作追溯。' }
+};
+const AUTHORITY = {
+  high: '本地核验/执行权威',
+  design: '设计依据',
+  reference: '备选参考',
+  history: '仅追溯'
+};
+function classify(repoPath) {
+  const p = posix(repoPath);
+  if (p.startsWith(RESEARCH + '/') && !p.startsWith(LIBRARY + '/')) return { batch: 'local', authority: 'high' };
+  if (p.startsWith(BATCH2 + '/')) {
+    if (p.includes('/90_reference/')) return { batch: 'batch2', authority: 'reference' };
+    if (p.includes('/99_history/')) return { batch: 'batch2', authority: 'history' };
+    if (/EXECUTION_(MASTER|LOG)\.md$/.test(p) || p.includes('/01_execution/')) return { batch: 'batch2', authority: 'high' };
+    return { batch: 'batch2', authority: 'design' };
+  }
+  if (p.startsWith(LIBRARY + '/sources/2026-09-16/90_archive/')) return { batch: 'archive', authority: 'history' };
+  if (p.startsWith(LIBRARY + '/repository-baseline/')) return { batch: 'batch1', authority: 'design' };
+  if (p.startsWith(LIBRARY + '/sources/')) return { batch: 'batch1', authority: 'design' };
+  if (p.startsWith(LIBRARY + '/archives/') || p.startsWith(LIBRARY + '/batch2-execution/')) return { batch: 'batch1', authority: 'history' };
+  return { batch: 'batch1', authority: 'reference' };
+}
+
 function importedFiles() {
   const sources = walk(path.join(ROOT, routing.sourceRoot));
   const baselines = walk(path.join(ROOT, LIBRARY, 'repository-baseline')).filter(p => path.basename(p).startsWith('bitcoin_research_'));
-  return [...sources, ...baselines, path.join(ROOT, LIBRARY, 'archives/bitcoin_research_final_2026-09-16.zip')];
+  // 本地核验记录：docs/research 顶层文件，仅本仓库产物。
+  const local = walk(path.join(ROOT, RESEARCH)).filter(p => path.relative(path.join(ROOT, RESEARCH), p).split(path.sep).length === 1);
+  // 第二批：排除 90_reference（201 份与第一批逐路径完全重复），只保留第二批自有内容。
+  const batch2 = walk(path.join(ROOT, BATCH2)).filter(p => !p.startsWith(path.join(ROOT, BATCH2_REFERENCE) + path.sep));
+  const archives = walk(path.join(ROOT, LIBRARY, 'archives')).filter(p => path.extname(p) === '.zip');
+  return [...sources, ...baselines, ...local, ...batch2, ...archives];
+}
+
+function batch2Meta(repoPath) {
+  const rel = repoPath.slice(BATCH2.length + 1);
+  const phase = rel.match(/^01_execution\/phases\/(P\d{2})_/);
+  if (phase) return { id: phase[1], role: '第二批阶段任务定义' };
+  if (/(^|\/)EXECUTION_MASTER\.md$/.test(rel)) return { id: 'EXECUTION-MASTER', role: '第二批唯一执行总任务' };
+  if (/(^|\/)EXECUTION_LOG\.md$/.test(rel)) return { id: 'EXECUTION-LOG', role: '第二批实际进度日志' };
+  if (rel.startsWith('00_current/')) return { id: 'B2-' + rel.match(/(\d{2})_/)?.[1], role: '第二批技术方案正文' };
+  if (rel === 'README.md') return { id: 'B2-README', role: '第二批说明与阶段表' };
+  if (rel.startsWith('01_execution/')) return { id: 'B2-EXEC-' + path.basename(rel), role: '第二批执行导航/镜像' };
+  if (rel.startsWith('02_contracts/')) return { id: 'B2-CONTRACT', role: '第二批拟议契约/合成样例' };
+  if (rel.startsWith('03_validation/')) return { id: 'B2-VALIDATION', role: '第二批原验收场景，未在仓库执行' };
+  if (rel.startsWith('04_evidence/')) return { id: 'B2-EVIDENCE', role: '第二批依据与清单' };
+  if (rel.startsWith('05_release/')) return { id: 'B2-RELEASE', role: '第二批重整说明与保全' };
+  if (rel.startsWith('99_history/')) return { id: 'B2-HISTORY', role: '被替换的旧入口原件' };
+  return null;
+}
+
+function localMeta(repoPath) {
+  const name = path.basename(repoPath);
+  const ids = {
+    'binance-connectivity-2026-09-16.md': 'LOCAL-BINANCE',
+    'chart-workbench-review-2026-09-16.md': 'LOCAL-CHART',
+    'free-financial-api-channels-2026-09-16.md': 'LOCAL-CHANNELS',
+    'free-financial-platform-limits-2026-09-16.md': 'LOCAL-LIMITS',
+    'workbench-binance-data-plan-2026-09-16.md': 'LOCAL-WORKBENCH'
+  };
+  return ids[name] ? { id: ids[name], role: '本仓库本地核验记录（权威最高，但仅代表核验当时）' } : null;
 }
 
 function headings(body) {
@@ -74,11 +140,15 @@ function buildCatalog() {
     const volume = rel.match(/^01_accepted_plan\/volumes\/(\d{2})_/);
     const collection = rel.match(/^06_collection_design\/(\d{2})_/);
     const special = { '10_final_review/contract_migration.md': 'CONTRACT-MIGRATION', '10_final_review/value_and_decision_tests.md': 'VALUE-TESTS' };
-    const id = meta?.id || (volume ? 'V' + volume[1] : collection ? 'COL' + collection[1] : special[rel]) || repoPath;
+    const local = localMeta(repoPath);
+    const b2 = repoPath.startsWith(BATCH2 + '/') ? batch2Meta(repoPath) : null;
+    const extra = local || b2;
+    const id = extra?.id || meta?.id || (volume ? 'V' + volume[1] : collection ? 'COL' + collection[1] : special[rel]) || repoPath;
     let title = meta?.title || meta?.name || name;
     let summary = descriptions[name];
+    const klass = classify(repoPath);
     let sections = [];
-    let role = roles[rel.split('/')[0]] || '来源/归档';
+    let role = extra?.role || roles[repoPath.startsWith(LIBRARY + '/sources/') ? rel.split('/')[0] : ''] || '来源/归档';
     if (repoPath.includes('/repository-baseline/')) role = '原仓库事实/审阅';
     if (extension === '.md') {
       const body = text(file);
@@ -97,12 +167,14 @@ function buildCatalog() {
       role = '参考检查脚本'; summary = '资料包作者的离线文档检查脚本；本导航只登记，不执行或安装依赖。';
     } else if (extension === '.zip') {
       role = '原始压缩包'; summary = '原始交付包，供追溯；不递归展开或执行包内内容。';
+    } else if (repoPath.startsWith(BATCH2 + '/')) {
+      summary = extra ? BATCH[b2 ? 'batch2' : 'local'].note : summary;
     } else if (rel.includes('/fixtures/') || /synthetic|sample_/.test(name)) {
       role = '合成样例'; summary = '设计用合成输入/输出或验收场景：' + name + '；不代表真实采集或已通过业务验收。';
     } else if (rel.includes('/results/') || /qc|preservation|statistics|prior_/.test(name)) {
       role = '作者检查/历史记录'; summary = summary || '原包作者的检查或历史记录：' + name + '；不作为本轮仓库验证结果。';
     }
-    return { id, path: repoPath, title, role, summary: clip(summary || role + '结构化材料：' + name), bytes: fs.statSync(file).size, headings: sections };
+    return { id, path: repoPath, title, role, batch: klass.batch, authority: klass.authority, summary: clip(summary || role + '结构化材料：' + name), bytes: fs.statSync(file).size, headings: sections };
   });
 }
 
@@ -132,9 +204,13 @@ function rank(query) {
 function sectionMatches(file, query) {
   return file.headings.filter(h => !query || normalize(h.title).includes(normalize(query)));
 }
+function tag(file) {
+  const b = BATCH[file.batch], a = AUTHORITY[file.authority];
+  return '批次:' + (b?.label || file.batch) + '｜权威:' + (a || file.authority);
+}
 function printFile(file, query) {
   console.log(file.id + ' | ' + file.title + ' [' + file.role + ']');
-  console.log(file.path + '\n' + file.summary);
+  console.log(tag(file) + '\n' + file.path + '\n' + file.summary);
   const matches = sectionMatches(file, query);
   if (query && !matches.length) console.log('没有标题命中，以下仅显示目录前8项；可换关键词。');
   for (const h of (matches.length ? matches : file.headings).slice(0, 8)) console.log('  L' + h.line + ' ' + h.title);
@@ -148,10 +224,12 @@ function printRoute(route, files) {
   route.primary.forEach(ref => {
     const file = findFile(files, ref.id);
     const section = ref.section ? sectionMatches(file, ref.section)[0] : file.headings[0];
-    console.log('  ' + ref.id + ' ' + file.path + (section ? ':' + section.line : '') + ' — ' + (section?.title || file.title));
+    console.log('  ' + ref.id + ' ' + file.path + (section ? ':' + section.line : '') + ' — ' + (section?.title || file.title) + ' [' + tag(file) + ']');
   });
   console.log('\n代码图：codegraph explore "' + route.graph + '" --max-files 2');
   if (route.graphNote) console.log('已知图索引限制：' + route.graphNote);
+  const conflict = route.primary.map(ref => findFile(files, ref.id)).filter(f => f.authority !== 'design');
+  if (new Set(conflict.map(f => f.authority)).size > 1) console.log('权威提示：命中多等级资料，冲突时按 本地核验 > 第一批设计 > 备选参考 取舍，并记录依据。');
   console.log('关联扩展（仅命中对应情况时继续）：');
   route.related.forEach(r => console.log('  ' + r.id + '：' + r.when));
   console.log('补充资料ID：' + route.expand.join(', '));

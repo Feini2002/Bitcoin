@@ -6,6 +6,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/00_start/01_master_solution.md",
       "title": "当前总纲｜围绕研究任务，而不是围绕文件数量执行",
       "role": "总纲",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "用户需要看懂发生了什么、什么真正改变、证据是否支持、哪里还不知道，并回头检查过去观点。数据展示、信息收集和分析是职责，不必须对应三个部署服务。价格等结构化观察和事件材料并行进入研究；解释由程序事实与可核对证据约束。",
       "bytes": 4741,
       "headings": [
@@ -51,6 +53,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/README.md",
       "title": "比特币真实仓库全面升级执行方案｜2026-09-16",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "交付状态：设计文档已完成；仓库改造、真实模型/数据调用与生产部署未执行。",
       "bytes": 5538,
       "headings": [
@@ -91,6 +95,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/complete_plan.md",
       "title": "比特币金融分析系统｜当前16卷执行设计",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "合订阅读副本，内容与分卷/终审材料重叠；具体问题优先查询相应分卷，避免重复加载。",
       "bytes": 485367,
       "headings": [
@@ -196,6 +202,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/contracts/README.md",
       "title": "正式设计契约说明",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本目录所有接口、对象和表均为拟议设计，未在用户仓库创建、迁移或部署。先与真实schema、认证、Worker绑定和治理目录核对；优先复用已满足相同业务合同的实现。",
       "bytes": 3024,
       "headings": [
@@ -236,6 +244,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/contracts/openapi.design.json",
       "title": "openapi.design.json",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "拟议研究API接口；不是现有Worker已实现的接口清单。",
       "bytes": 110683,
       "headings": []
@@ -245,6 +255,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/contracts/research.schema.json",
       "title": "research.schema.json",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "拟议研究对象结构与字段约束。",
       "bytes": 90774,
       "headings": []
@@ -254,6 +266,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/contracts/research_schema.proposed.sql",
       "title": "research_schema.proposed.sql",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "拟议研究存储DDL；未应用于D1。",
       "bytes": 13467,
       "headings": []
@@ -263,6 +277,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/contracts/settings.design.json",
       "title": "settings.design.json",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "拟议设置及尚未配置的预算/保留目标。",
       "bytes": 1436,
       "headings": []
@@ -272,6 +288,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/README.md",
       "title": "合成验证材料",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "所有价格、数量、事件、来源身份、policy allowed值、时间和validator字段都是本方案构造的离线样例，不代表真实市场、实际授权或已运行验证。不得导入生产事实池。",
       "bytes": 1266,
       "headings": [
@@ -287,6 +305,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/acceptance_cases.synthetic.json",
       "title": "acceptance_cases.synthetic.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：acceptance_cases.synthetic.json；不代表真实采集或已通过业务验收。",
       "bytes": 33758,
       "headings": []
@@ -296,6 +316,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_artifact.json",
       "title": "sample_artifact.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_artifact.json；不代表真实采集或已通过业务验收。",
       "bytes": 526,
       "headings": []
@@ -305,6 +327,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_bundle.json",
       "title": "sample_bundle.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_bundle.json；不代表真实采集或已通过业务验收。",
       "bytes": 2205,
       "headings": []
@@ -314,6 +338,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_metrics.canonical.json",
       "title": "sample_metrics.canonical.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_metrics.canonical.json；不代表真实采集或已通过业务验收。",
       "bytes": 1976,
       "headings": []
@@ -323,6 +349,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_metrics.json",
       "title": "sample_metrics.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_metrics.json；不代表真实采集或已通过业务验收。",
       "bytes": 2578,
       "headings": []
@@ -332,6 +360,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_raw.json",
       "title": "sample_raw.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_raw.json；不代表真实采集或已通过业务验收。",
       "bytes": 117,
       "headings": []
@@ -341,6 +371,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_report.json",
       "title": "sample_report.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_report.json；不代表真实采集或已通过业务验收。",
       "bytes": 1922,
       "headings": []
@@ -350,6 +382,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_run.json",
       "title": "sample_run.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_run.json；不代表真实采集或已通过业务验收。",
       "bytes": 1007,
       "headings": []
@@ -359,6 +393,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/fixtures/sample_view.json",
       "title": "sample_view.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：sample_view.json；不代表真实采集或已通过业务验收。",
       "bytes": 687,
       "headings": []
@@ -368,6 +404,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/inputs/previous_research_review.md",
       "title": "比特币金融分析系统：证据核验、研究纠偏与能力升级报告",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "核验日期：2026 年 9 月 16 日，Asia/Singapore。 交付性质：公开资料研究、条件化能力建议和实施前仓库核验材料。 执行边界：未读取实际项目仓库；未安装软件、运行候选代码、接入账号、调用交易接口或操作生产系统。",
       "bytes": 77770,
       "headings": [
@@ -618,6 +656,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/inputs/repository_facts.md",
       "title": "比特币金融分析系统：仓库总纲、当前事实与调研问题回答",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "README 将项目称为面向个人期货交易台的静态 Web 控制台，围绕看盘、研判、复盘与自动化报告组织导航。技术主体是原生 HTML/CSS/JavaScript、Cloudflare Pages、Workers 和 D1。",
       "bytes": 30888,
       "headings": [
@@ -858,6 +898,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/meta/document-qc.json",
       "title": "document-qc.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：document-qc.json；不作为本轮仓库验证结果。",
       "bytes": 247,
       "headings": []
@@ -867,6 +909,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/meta/repository-facts.json",
       "title": "repository-facts.json",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "调查时的仓库事实元数据，不是当前线上证明。",
       "bytes": 3722,
       "headings": []
@@ -876,6 +920,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/meta/sources.json",
       "title": "sources.json",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "该目录所属研究的来源登记与证据范围。",
       "bytes": 24079,
       "headings": []
@@ -885,6 +931,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/meta/task-topological-order.json",
       "title": "task-topological-order.json",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原工作包的依赖顺序。",
       "bytes": 723,
       "headings": []
@@ -894,6 +942,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/meta/tasks.json",
       "title": "tasks.json",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原60个WP的范围、依赖、验收与回退规格。",
       "bytes": 92472,
       "headings": []
@@ -903,6 +953,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/00_master_plan.md",
       "title": "卷 00｜真实仓库全面升级总纲与阅读入口",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "方案版本：1.1-design；研究日期：2026-09-16；工作时区：Asia/Singapore。",
       "bytes": 14858,
       "headings": [
@@ -978,6 +1030,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/01_repository_baseline.md",
       "title": "卷 01｜仓库事实基线、分析诊断与保留／替换清单",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本次收到的是《仓库总纲、当前事实与调研问题回答》事实版 v2。它记录另一开发代理对本地工作区的源码审阅与此前离线测试。本方案没有直接打开用户 E 盘、完整源代码、Cloudflare 控制台、生产 D1、模型账号或私有合同。因此使用“事实报告核验到”“按报告记录”，而不声称本方案作者已经复核每个实现。事实报告与上一轮外…",
       "bytes": 18135,
       "headings": [
@@ -1083,6 +1137,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/02_external_research_and_decisions.md",
       "title": "卷 02｜补充研究、候选比较与架构决策记录",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "前两轮偏重“还能接哪些组件”，本轮从真实仓库的四个矛盾反向检索：固定分数如何变成可解释描述与可校准预测；全球新闻如何变成有来源独立性的事件；多个上下文摘要如何组成同一研究问题的输入；短期报告如何形成观点—条件—结果闭环。由此扩展到新闻提取、近似去重、预测问题设计、时间序列验证、多代理消融、使用权和报告评价，而不只搜索 …",
       "bytes": 32737,
       "headings": [
@@ -1213,6 +1269,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/03_product_information_and_noise.md",
       "title": "卷 03｜产品任务、信息架构与事件降噪的详细设计",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷全部目标行为和规则为拟议设计 D；当前行为依据 R 引用。阈值、容量和默认周期只是可调整的实现起点，尚未经用户行为或统计效果验证。本卷不授权任何新闻抓取、付费订阅或外发通知。",
       "bytes": 24499,
       "headings": [
@@ -1388,6 +1446,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/04_market_data_contracts.md",
       "title": "卷 04｜行情、来源回退、足迹与强平的数据契约和迁移",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷是拟实施规格。现有文件只按事实报告列明，新增表/字段/接口均为提议；必须先核查实际schema与消费者。目标是让当前已有数据产生可信分析，不先建设全市场原始事件湖。",
       "bytes": 24212,
       "headings": [
@@ -1588,6 +1648,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/05_analysis_methods_and_scenarios.md",
       "title": "卷 05｜分析方法重设计：从固定分数到变化、分歧和条件",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷定义拟议的权威数值与解释边界。公式是明确可复算的方法规格，不是已验证的获利模型；任何阈值均须登记为描述约定或待验证参数。当前代码中的相同指标应优先复用并对齐，不另维护重复实现。",
       "bytes": 23686,
       "headings": [
@@ -1813,6 +1875,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/06_catalysts_macro_etf_options.md",
       "title": "卷 06｜催化剂、宏观、ETF、稳定币与期权能力的实施设计",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷将新的业务分析能力拆成可以独立交付的模块。官方催化剂和宏观版本、BTC ETF流量、期权预期不要求同时接通；每项有自己的数据权利、覆盖门槛和退出条件。不存在的数据源不得由静态文案补齐。",
       "bytes": 24301,
       "headings": [
@@ -2043,6 +2107,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/07_llm_prompts_workflows.md",
       "title": "卷 07｜LLM提示词、上下文、工具协议与报告工作流",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷给出可实施的提示词和工作流规格，不是实际模型运行记录。所有数值样例为合成测试数据；provider/model/budget需后续按现有设置绑定。本方案不恢复已退役本机CLI，不要求更换现有Gemini适配器。",
       "bytes": 32480,
       "headings": [
@@ -2273,6 +2339,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/08_workspace_views_and_alerts.md",
       "title": "卷 08｜研究工作区、观点记录、历史恢复与低噪音预警",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷为界面与状态的实施规格，不是要求另造一个复杂交易终端。主图底座暂保留Lightweight Charts 4.1.3；v4→v5迁移有API差异，应作为独立对照任务而非工作区改造的隐含前置。R02｜仓库事实报告§1，L16-26 S056｜Lightweight Charts v4到v5迁移",
       "bytes": 20209,
       "headings": [
@@ -2483,6 +2551,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/09_architecture_runtime_and_storage.md",
       "title": "卷 09｜目标架构、运行方式、存储与一致性",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷是架构设计，不代表真实仓库已按此组织。已有模块按附件确认；所有新路径均为拟新增或职责建议，实施前检查冲突。目标是在业务分析层完成有实质价值的重设计，同时让计算和采集可以按证据独立扩展。",
       "bytes": 21261,
       "headings": [
@@ -2643,6 +2713,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/10_api_schema_and_state_contracts.md",
       "title": "卷 10｜API、持久模型、数据契约与状态不变量",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷是拟议研究域的接口设计，不是对当前数据库或路由的描述。已有行情表、报告表和接口仍以仓库源码为准；当前已知文件见卷01。包内 contracts/research.schema.json、openapi.design.json、research_schema.proposed.sql 和 settings.desig…",
       "bytes": 27604,
       "headings": [
@@ -2763,6 +2835,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/11_evaluation_and_acceptance.md",
       "title": "卷 11｜价值、降噪、研究正确性与运行成本的评价体系",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前事实报告没有测量噪音率、重复报道率、引用错误、观点校准、模型增量或真实使用收益。既有161/96/15个PASS标记来自此前离线检查，不能当作独立用例总数，更不能当作本方案已经通过的测试。本卷定义后续测量，不填写虚构的提升百分比。R18｜仓库事实报告§12-13，L326-352 R11｜仓库事实报告§6，L150…",
       "bytes": 20061,
       "headings": [
@@ -2888,6 +2962,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/12_migration_operations_and_rollback.md",
       "title": "卷 12｜迁移、兼容、运行手册、安全与退出机制",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "仓库调查针对含大量未提交/未跟踪变更的当前工作区，本地配置与远程实际状态不同；旧HEAD不能代表完整工作区，远程Cron、路由、数据库版本未知。实施前需只读记录真实边界，不可直接checkout旧提交、git reset、覆盖并发治理文件或执行远程迁移。R01｜仓库事实报告§导言，L3-10 R03｜仓库事实报告§1.…",
       "bytes": 19995,
       "headings": [
@@ -3028,6 +3104,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/13_implementation_work_packages.md",
       "title": "卷 13｜60个有依赖的实施工作包",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "每项都是拟实施任务，不是本轮已执行记录。实际仓库只由上传的事实报告间接核验；已知路径用于定位职责，新增路径必须在WP-001绑定。依赖表示技术/数据前置，不是产品运行时审批阶段。费用、账号、生产写入、删除与部署必须在后续明确权限范围。",
       "bytes": 100196,
       "headings": [
@@ -3378,6 +3456,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/14_end_to_end_examples_and_handoff.md",
       "title": "卷 14｜端到端案例、开发接手顺序与剩余决策",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本卷把分散规格连接成开发者可以沿链路验证的具体行为。全部价格、数量、事件、日期、来源身份和结果都是合成示例，不是当前行情、已产生的模型报告、真实授权或测试通过记录。包内fixtures包含对应结构与74个边界案例，不得将其导入生产事实池。",
       "bytes": 20623,
       "headings": [
@@ -3603,6 +3683,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/01_accepted_plan/volumes/15_sources_glossary_and_open_questions.md",
       "title": "卷 15｜统一术语、来源索引、未解决项与一致性规则",
       "role": "设计方案",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "R：仓库调查事实。 来自用户上传的事实版v2，作者检查的是当前本地工作区。网页端据此可以针对已报告实现提出评价，但不能自称重新读过全部源码或验证远程部署。",
       "bytes": 27747,
       "headings": [
@@ -3658,6 +3740,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/02_adversarial_review/01_adversarial_review.md",
       "title": "交付前终审｜从研究价值到可执行契约",
       "role": "终审纠偏",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "方案的核心业务方向仍成立，但上一版还不适合让开发者不加区分地照表执行。问题不是“缺更多热门项目”，而是几个正例自检掩盖了契约反例，叠加多套当前规范与过粗任务依赖。此次直接修订当前文本/Schema/样例/入口，而非再附一层建议。旧包原字节在历史档案。",
       "bytes": 8850,
       "headings": [
@@ -3703,6 +3787,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/02_adversarial_review/02_scope_override_rules.md",
       "title": "当前范围规则",
       "role": "终审纠偏",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "不再要求每次开发自行决定新审查是否覆盖旧设计。根README和当前契约已整合终审；原完整包在archive，不能并行当执行规范。",
       "bytes": 950,
       "headings": [
@@ -3718,6 +3804,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/02_adversarial_review/dependency_audit.json",
       "title": "dependency_audit.json",
       "role": "终审纠偏",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包任务依赖审查记录。",
       "bytes": 2454,
       "headings": []
@@ -3727,6 +3815,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/README.md",
       "title": "专题研究索引",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "这些是独立基础资料，不预设现有架构，也不是安装清单。正文包含研究比较和推理，事实就近链接原始资料；末尾提供继续核验入口。",
       "bytes": 2418,
       "headings": [
@@ -3742,6 +3832,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES01_能力地图与复用决策.md",
       "title": "能力地图与复用决策",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "金融研究产品可以分成六个问题：能否发现重要信息、能否持续取得并保留允许的材料、能否按正确时间解释数据、能否完成可复算研究、能否把解释交给用户、能否追踪解释后来怎样变化。一个平台通常擅长其中几项，不应由“金融AI”或“研究助手”的命名推断全覆盖。",
       "bytes": 4756,
       "headings": [
@@ -3787,6 +3879,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES02_持续订阅与来源发现.md",
       "title": "持续订阅与来源发现",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "订阅回答“指定来源出现了什么新内容”，搜索回答“围绕当前问题还能找到什么”。前者可以测更新时间与漏采，后者适合发现新来源和补缺。仅靠模型每日报告时临时搜索，难以知道没有发现某件事是因为它不重要、搜索没召回还是来源无法访问。反过来，无差别订阅所有热榜会制造大量待处理库存。",
       "bytes": 4645,
       "headings": [
@@ -3832,6 +3926,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES03_网页提取与浏览器采集.md",
       "title": "网页提取与浏览器采集",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "结构化API可用时，不先调用浏览器。静态HTML可读时，不先使用需要模型的抓取。只有真实页面依赖脚本且获取用途允许，才考虑浏览器自动化。这个顺序减少资源和攻击面，不是断言所有简单提取器准确率更高。",
       "bytes": 4544,
       "headings": [
@@ -3877,6 +3973,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES04_事件主张去重与更正.md",
       "title": "事件主张去重与更正",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "文章是某发布者的内容版本；事件是现实过程；主张是可被支持或反驳的陈述；证据是特定来源对主张提供的观察或声明。同一事件可有多篇文章、同一文章可含多个主张，一个原始公告的十次转载仍只有一个根源。",
       "bytes": 3985,
       "headings": [
@@ -3922,6 +4020,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES05_多语言检索与研究上下文.md",
       "title": "多语言检索与研究上下文",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "研究助手不只要召回主题相近内容，还要在正确语言、时间、权限与证据层次内查找。用户问“当时市场知道什么”时，最新文章即使最相关也可能不能使用。检索必须接受as_of与用途条件，不能生成后再靠提示词剔除未来信息。",
       "bytes": 3826,
       "headings": [
@@ -3967,6 +4067,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES06_实时行情采集与标准化.md",
       "title": "实时行情采集与标准化",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "CCXT和Cryptofeed能减少适配劳动，但字段统一不能抹去经济含义。Binance的maker方向、Bybit清算持仓方向、不同合约数量和价格字段必须按原协议映射。统一后的side不能既表示主动买卖又表示被清算仓位。EXT056｜CCXT 官方仓库 EXT057｜Cryptofeed 官方仓库 EXT123｜Bi…",
       "bytes": 3934,
       "headings": [
@@ -4012,6 +4114,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES07_历史回补时点与数据修订.md",
       "title": "历史回补时点与数据修订",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "研究至少区分四种时间：市场事件发生、来源发布、系统收到、数据后来修订。今天下载的历史文件可能已经修正，不能证明过去系统收到同样内容。Binance归档说明允许后续替换；ALFRED提供历史版本机制；Glassnode说明实体聚类等会改变历史。EXT064｜Binance 公开归档README EXT069｜FRED/A…",
       "bytes": 4196,
       "headings": [
@@ -4057,6 +4161,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES08_订单流足迹与盘口研究.md",
       "title": "订单流足迹与盘口研究",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "成交delta/CVD来自被分类的主动成交；盘口不平衡来自可见挂单；订单流不平衡OFI可按具体方法结合最优价位事件变化。它们观察不同现象，不能仅因名字含flow就合成三票确认。",
       "bytes": 3663,
       "headings": [
@@ -4102,6 +4208,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES09_资金费持仓基差与强平.md",
       "title": "资金费持仓基差与强平",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "资金费描述持有永续多空之间的支付安排或预期，不直接表示资金流入；OI是未平仓存量，不等于净多头；基差比较特定期货/永续与现货基准；可见强平只描述接口提供的强制平仓事件。把四者各投一票得到“75%偏多”没有统计依据。",
       "bytes": 4275,
       "headings": [
@@ -4152,6 +4260,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES10_期权研究与波动率结构.md",
       "title": "期权研究与波动率结构",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "一个可解释截面至少有instrument、到期、行权价、call/put、基础/报价/结算币、合约乘数、bid/ask/mark、指数/远期参考、时间与质量。Deribit提供相关字段和采集模式，但公开接口不保证免费完整多年期权历史。EXT125｜Deribit get_order_book EXT065｜Deribi…",
       "bytes": 4158,
       "headings": [
@@ -4202,6 +4312,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES11_链上矿工与实体资金流.md",
       "title": "链上矿工与实体资金流",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "区块、交易、UTXO与手续费是链上观测；地址聚类、交易所归属、矿池归属是带方法的标签；净流量与实体活动是派生指标；“矿工准备卖出”属于经济解释。后面每一层都增加假设，不能用一条交易hash证明整段解释。",
       "bytes": 3846,
       "headings": [
@@ -4247,6 +4359,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES12_宏观ETF稳定币与跨资产.md",
       "title": "宏观ETF稳定币与跨资产",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "宏观序列有观察期、发布和修订；ETF有交易日、份额/NAV披露和汇总确认；稳定币有发行、赎回、跨链映射及储备披露；证券价格有休市与复权。合成到BTC背景面板之前应分别定义，不能只加一个统一datetime。",
       "bytes": 4633,
       "headings": [
@@ -4297,6 +4411,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES13_因子事件研究与可复现验证.md",
       "title": "因子事件研究与可复现验证",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "描述回答样本发生了什么；关联比较条件与结果；预测要在目标之前提交输出；因果需要识别假设。一个框架支持backtest，不代表这四类结论都已被证明。",
       "bytes": 4165,
       "headings": [
@@ -4347,6 +4463,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES14_预测校准观点与决策记录.md",
       "title": "预测校准观点与决策记录",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "“价格上涨但OI不支持，需要下一窗口确认”是条件判断；“未来24小时某市场收盘高于X的概率为p”是可结算预测。两者需要不同记录和评价。数据完整度、来源质量、语言自信与概率不能共用confidence百分数。",
       "bytes": 3485,
       "headings": [
@@ -4392,6 +4510,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES15_完整金融平台的可迁移经验.md",
       "title": "完整金融平台的可迁移经验",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "这些定位来自公开项目和文档，运行表现本轮未复现。EXT053｜OpenBB 官方仓库 EXT052｜Qlib Workflow文档 EXT046｜TradingAgents 官方仓库 EXT048｜FinRobot 当前README EXT050｜FinGPT 官方仓库",
       "bytes": 4382,
       "headings": [
@@ -4437,6 +4557,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES16_模型工具与多代理的适用边界.md",
       "title": "模型工具与多代理的适用边界",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "一个模型总结五个栏目，与五个模型重复读同样材料，都不等于更深入研究。适合拆分的是独立证据需求，例如核对某ETF披露、确认合约OI单位、查找某公告原文；不适合的是让三个角色用同一摘要投票。",
       "bytes": 4048,
       "headings": [
@@ -4482,6 +4604,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES17_报告质量评价与可观测性.md",
       "title": "报告质量评价与可观测性",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "数值错误、引用不支持、时间错位、关键遗漏和无关重复不是同一指标。一个总分可能让流畅文风掩盖严重伪造数字。建议关键错误硬门与一般质量分层：关键数值/来源/权限不通过就拒绝发布，语言质量和阅读负担用于比较候选。",
       "bytes": 3606,
       "headings": [
@@ -4527,6 +4651,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES18_金融工作区与研究现场.md",
       "title": "金融工作区与研究现场",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "用户通常需要看变化、核对来源、追问分歧、记录条件和回到旧判断。把图表、新闻和报告各放一页不自动形成工作区；关键是它们共享哪个instrument、时间窗口、数据版本和问题。",
       "bytes": 3466,
       "headings": [
@@ -4572,6 +4698,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES19_研究知识库与证据生命周期.md",
       "title": "研究知识库与证据生命周期",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "方法库保存论文、协议、工具卡；事件库保存现实变化和主张版本；观点库保存使用者当时判断。它们可以关联，但更新节奏、事实意义和权利不同。工具教程不能支持当前行情，旧观点也不能被检索成今天已确认事实。",
       "bytes": 3512,
       "headings": [
@@ -4617,6 +4745,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES20_存储计算与部署路线.md",
       "title": "存储计算与部署路线",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "市场原始事件是高写入/可回放资料，报告与观点是较低量版本对象，用户设置是事务配置，长历史研究是批扫描。它们不一定都需要不同数据库，但应分别测量，不因都属于BTC就强行一个库，也不为每种表新建服务。",
       "bytes": 4260,
       "headings": [
@@ -4662,6 +4792,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES21_增量管道调度与失败恢复.md",
       "title": "增量管道调度与失败恢复",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "定期拉取新文章适合增量游标/条件请求；多年市场回补适合可分区批任务；持续流需要连接和背压；多步骤模型研究还要管理预算与外部副作用。不能只用一个“定时任务成功”状态代表这些不同义务。",
       "bytes": 3611,
       "headings": [
@@ -4707,6 +4839,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES22_许可数据权利成本与供应商退出.md",
       "title": "许可数据权利成本与供应商退出",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "代码许可回答软件怎样使用/修改/分发；数据条款回答内容能否取得、保存、展示和派生；模型/搜索条款回答输入与结果怎样处理；商业合同还约束账号、地域、服务和退出。开源爬虫不授予新闻全文权，免费API不自动允许收费再分发。",
       "bytes": 4488,
       "headings": [
@@ -4752,6 +4886,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES23_完整能力组合与自建采购对照.md",
       "title": "完整能力组合与自建采购对照",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "一个可用系统必须覆盖从来源到产物的全链路，并明确每个对象唯一责任。下列是独立于当前仓库的方案路线，不是所有都安装的推荐。",
       "bytes": 4494,
       "headings": [
@@ -4792,6 +4928,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES24_信息价值覆盖与降噪评价.md",
       "title": "信息价值覆盖与降噪评价",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "把报告从二十条压成三条，可能减少重复，也可能删掉唯一重要反证。降噪必须同时量测无关减少、重复减少、关键变化召回与证据支持。资料更少只有在用户更容易完成研究任务时才算改善。",
       "bytes": 3637,
       "headings": [
@@ -4837,6 +4975,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES25_论文披露与复杂文档摄取.md",
       "title": "论文披露与复杂文档摄取",
       "role": "专题研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "论文、发行人披露、储备报告、监管附件和方法说明常以PDF或复杂文档发布。只做RSS标题与HTML摘要，会遗漏表格、脚注和方法限制。但“支持PDF”也不代表可以把所有数字直接交给金融计算。",
       "bytes": 3765,
       "headings": [
@@ -4882,6 +5022,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/README.md",
       "title": "复用卡索引",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "67项按软件、服务、规范和方法分别评价；“当前仓库暂不采用”不等于没有通用价值。维护不明就标未知，文档可读不等于运行稳定。每卡含具体可吸收点、限制、权利、环境、维护、替代和实验。",
       "bytes": 13137,
       "headings": [
@@ -4897,6 +5039,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL001.md",
       "title": "RSSHub",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可以辅助现有事实池，不默认替换它；优先补一个独立信息缺口而非部署全源目录。",
       "bytes": 2409,
       "headings": [
@@ -4957,6 +5101,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL002.md",
       "title": "Miniflux",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "这是原方案值得增加的完整平台对照；是否直接接入取决于现有事实池是否已具备同等订阅管理。",
       "bytes": 2504,
       "headings": [
@@ -5017,6 +5163,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL003.md",
       "title": "FreshRSS",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可成为独立“资料阅读端”候选，不应与BTC默认简报强制绑定。",
       "bytes": 2472,
       "headings": [
@@ -5077,6 +5225,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL004.md",
       "title": "changedetection.io",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可先监控少量官方规则/日历，更好地支持既有报告与来源维护；不需要重做行情层。",
       "bytes": 2265,
       "headings": [
@@ -5137,6 +5287,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL005.md",
       "title": "Mozilla Readability",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "与当前JS适配相容的实验起点；不能据此认定必须使用它替换已有解析。",
       "bytes": 2130,
       "headings": [
@@ -5197,6 +5349,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL006.md",
       "title": "Trafilatura",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "需要新增Python环境时把价值与运维一起比较；不因一次网页噪音就重写收集层。",
       "bytes": 2305,
       "headings": [
@@ -5257,6 +5411,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL007.md",
       "title": "Scrapy",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前不必替换已有交易所采集；新增新闻历史批处理时可以独立采用。",
       "bytes": 2139,
       "headings": [
@@ -5317,6 +5473,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL008.md",
       "title": "Crawl4AI",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可放独立收集实验，不因它热门就把现有Worker迁至全浏览器采集。",
       "bytes": 2313,
       "headings": [
@@ -5377,6 +5535,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL009.md",
       "title": "Firecrawl",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前保持替代路线，不自动加入费用；若现有收集维护成本明显高再小样本评估。",
       "bytes": 2277,
       "headings": [
@@ -5437,6 +5597,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL010.md",
       "title": "SearXNG",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "与现有Google Grounding是不同路线；对外使用权和成本确认前只做设计候选。",
       "bytes": 1984,
       "headings": [
@@ -5497,6 +5659,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL011.md",
       "title": "TrendRadar",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "若当前收集部分难以维护，可比较独立部署/替换；若已具备同等能力，仅吸收单点设计，避免双事实池。",
       "bytes": 2205,
       "headings": [
@@ -5557,6 +5721,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL012.md",
       "title": "zenfeed",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可以成为独立收集层实验，是否替换当前事实池由映射和迁移样本决定。",
       "bytes": 2469,
       "headings": [
@@ -5617,6 +5783,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL013.md",
       "title": "Media Cloud",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "先用它审计收集盲区；不要求成为BTC在线每次报告的必调服务。",
       "bytes": 2128,
       "headings": [
@@ -5677,6 +5845,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL014.md",
       "title": "Event Registry／NewsAPI.ai",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "只在来源与维护预算明确后评估，不成为首份简报的阻塞采购项。",
       "bytes": 2195,
       "headings": [
@@ -5737,6 +5907,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL015.md",
       "title": "Feedly 去重与情报阅读模式",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可改进当前日报展示；不能据此声称已找到可直接复制的Feedly去重算法。",
       "bytes": 2409,
       "headings": [
@@ -5797,6 +5969,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL016.md",
       "title": "datasketch / MinHash LSH",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "值得试验；当前不应为少量资讯专门加Python服务。",
       "bytes": 2204,
       "headings": [
@@ -5857,6 +6031,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL017.md",
       "title": "Sentence Transformers：召回与重排",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "在已有事实池出现可测检索遗漏后引入；先把版本和查询条件定义好。",
       "bytes": 2312,
       "headings": [
@@ -5917,6 +6093,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL018.md",
       "title": "SQLite FTS5",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "能在真实运行环境使用时优先与现有搜索对照，不预承诺D1支持细节。",
       "bytes": 1943,
       "headings": [
@@ -5977,6 +6155,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL019.md",
       "title": "IPTC ninjs",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可补原方案的新闻契约依据，无需大规模重构。",
       "bytes": 1955,
       "headings": [
@@ -6037,6 +6217,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL020.md",
       "title": "W3C Web Annotation",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "推荐借鉴选择器和目标版本，不强制实现全规范。",
       "bytes": 1777,
       "headings": [
@@ -6097,6 +6279,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL021.md",
       "title": "Zotero 与 Web API v3",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前可先用本包证据索引；不是运行网站的新依赖。",
       "bytes": 1836,
       "headings": [
@@ -6157,6 +6341,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL022.md",
       "title": "CCXT",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "已有少数交易所实现，先找重复维护证据，不先全量换接入层。",
       "bytes": 1801,
       "headings": [
@@ -6217,6 +6403,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL023.md",
       "title": "Cryptofeed",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "不解决“没有采集器”的问题；当前属于条件候选。",
       "bytes": 1766,
       "headings": [
@@ -6277,6 +6465,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL024.md",
       "title": "原生交易所协议与公开归档",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "优先复用当前正确实现，重点补语义和追溯而非重造。",
       "bytes": 2307,
       "headings": [
@@ -6337,6 +6527,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL025.md",
       "title": "Tardis.dev",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "按明确研究问题采购，不能成为默认全站数据底座。",
       "bytes": 2000,
       "headings": [
@@ -6397,6 +6589,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL026.md",
       "title": "Deribit 原生行情接口",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "目前事实报告未确认活跃采集链；单独条件实验，不阻塞已有市场简报。",
       "bytes": 1965,
       "headings": [
@@ -6457,6 +6651,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL027.md",
       "title": "mempool",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "先解决具体研究问题，不为“链上完整”搬入浏览器全栈。",
       "bytes": 1724,
       "headings": [
@@ -6517,6 +6713,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL028.md",
       "title": "Bitcoin Core",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前不默认自建；避免其成为情报与报告升级前置。",
       "bytes": 1725,
       "headings": [
@@ -6577,6 +6775,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL029.md",
       "title": "BlockSci",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "暂不采用其运行栈；避免因知名度把维护债搬进来。",
       "bytes": 1808,
       "headings": [
@@ -6637,6 +6837,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL030.md",
       "title": "Glassnode Point-in-Time",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "先证明该实体指标增加独立信息，再考虑采购。",
       "bytes": 1806,
       "headings": [
@@ -6697,6 +6899,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL031.md",
       "title": "Coin Metrics Community",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "不默认作为对外收费系统的数据底座。",
       "bytes": 1691,
       "headings": [
@@ -6757,6 +6961,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL032.md",
       "title": "OpenBB",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前先评估单provider；整体替换必须证明净收益。",
       "bytes": 1788,
       "headings": [
@@ -6817,6 +7023,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL033.md",
       "title": "Microsoft Qlib",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "先借鉴记录器，不把模型训练平台设为简报前置。",
       "bytes": 1855,
       "headings": [
@@ -6877,6 +7085,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL034.md",
       "title": "NautilusTrader",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "借鉴为主，执行平台不纳入当前范围。",
       "bytes": 1700,
       "headings": [
@@ -6937,6 +7147,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL035.md",
       "title": "HftBacktest",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前仅借鉴方法，未见必须引入执行仿真的需求。",
       "bytes": 1841,
       "headings": [
@@ -6997,6 +7209,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL036.md",
       "title": "FinGPT",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "暂不启动微调工程；先积累真实任务与合法评价样本。",
       "bytes": 1894,
       "headings": [
@@ -7057,6 +7271,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL037.md",
       "title": "TradingAgents",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "方法与子任务试验优先；不把五员工demo直接等同该框架真实能力。",
       "bytes": 2243,
       "headings": [
@@ -7117,6 +7333,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL038.md",
       "title": "FinRobot",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "局部借鉴；公开版本之外的能力不得当现成车轮子。",
       "bytes": 1998,
       "headings": [
@@ -7177,6 +7395,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL039.md",
       "title": "DuckDB 与 Parquet",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "按需要试验，不作为第一份简报的硬前置。",
       "bytes": 1965,
       "headings": [
@@ -7237,6 +7457,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL040.md",
       "title": "Polars",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "只在具体变换节省复杂度时采用，不为“快”迁移所有指标。",
       "bytes": 1788,
       "headings": [
@@ -7297,6 +7519,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL041.md",
       "title": "dlt",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "适合未来结构化来源增多，先与已有同步逻辑对照。",
       "bytes": 1767,
       "headings": [
@@ -7357,6 +7581,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL042.md",
       "title": "Dagster",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "先借鉴分区/血缘，完整部署由任务数量与恢复需求触发。",
       "bytes": 1876,
       "headings": [
@@ -7417,6 +7643,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL043.md",
       "title": "Temporal",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "不作为简单日报默认基础设施。",
       "bytes": 1863,
       "headings": [
@@ -7477,6 +7705,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL044.md",
       "title": "Haystack",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "目前不默认替换Gemini适配；按复杂检索实验需求考虑。",
       "bytes": 1753,
       "headings": [
@@ -7537,6 +7767,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL045.md",
       "title": "DSPy",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "有稳定评价后再试，不用它代替第一轮分析任务定义。",
       "bytes": 1780,
       "headings": [
@@ -7597,6 +7829,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL046.md",
       "title": "Langfuse",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "条件采用；不要求在业务价值尚未验证前建完整观测栈。",
       "bytes": 1814,
       "headings": [
@@ -7657,6 +7891,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL047.md",
       "title": "promptfoo",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可作为开发辅助，不是上线新服务。",
       "bytes": 1770,
       "headings": [
@@ -7717,6 +7953,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL048.md",
       "title": "LangGraph",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "先证明需要分支/中断，不能把员工角色数量当引入依据。",
       "bytes": 1818,
       "headings": [
@@ -7777,6 +8015,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL049.md",
       "title": "LlamaIndex",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "候选保留，不能以引入RAG取代已有事实池语义设计。",
       "bytes": 1795,
       "headings": [
@@ -7837,6 +8077,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL050.md",
       "title": "arch",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "作为独立研究任务工具，不放每份日报主链。",
       "bytes": 1643,
       "headings": [
@@ -7897,6 +8139,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL051.md",
       "title": "ruptures",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "只借鉴或实验，不作为默认市场方向分类。",
       "bytes": 1823,
       "headings": [
@@ -7957,6 +8201,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL052.md",
       "title": "River",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "目前先监测质量，不默认自动训练交易预测器。",
       "bytes": 1586,
       "headings": [
@@ -8017,6 +8263,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL053.md",
       "title": "DoWhy",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "方法借鉴优先，不把复杂因果模型列成必做功能。",
       "bytes": 1758,
       "headings": [
@@ -8077,6 +8325,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL054.md",
       "title": "ForecastBench 与概率校准方法",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "长期观点复盘可用；不得恢复旧固定confidence。",
       "bytes": 1990,
       "headings": [
@@ -8137,6 +8387,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL055.md",
       "title": "FINOS FDC3",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "优先借鉴context/intent，不强制引入完整桌面代理。",
       "bytes": 1747,
       "headings": [
@@ -8197,6 +8449,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL056.md",
       "title": "Perspective",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "条件采用，先证明表格操作确实重复耗时。",
       "bytes": 1599,
       "headings": [
@@ -8257,6 +8511,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL057.md",
       "title": "Lightweight Charts",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "已存在底座优先保留；新交互需要时单独升级。",
       "bytes": 1579,
       "headings": [
@@ -8317,6 +8573,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL058.md",
       "title": "KLineChart",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前不默认切换。",
       "bytes": 1746,
       "headings": [
@@ -8377,6 +8635,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL059.md",
       "title": "vollib",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "期权数据链成立后再试，非首份市场分析前置。",
       "bytes": 1695,
       "headings": [
@@ -8437,6 +8697,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL060.md",
       "title": "exchange_calendars",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "与Yahoo等现有跨资产路径结合，不混同宏观vintage管道。",
       "bytes": 1691,
       "headings": [
@@ -8497,6 +8759,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL061.md",
       "title": "AKShare",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "补缺型候选，不能作为所有金融数据默认来源。",
       "bytes": 1781,
       "headings": [
@@ -8557,6 +8821,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL062.md",
       "title": "Laevitas 与 Amberdata",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "保留采购候选，不默认接入任何付费账号。",
       "bytes": 1911,
       "headings": [
@@ -8617,6 +8883,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL063.md",
       "title": "FRED/ALFRED 与官方发布订阅",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "适合小范围新增收集试点，不等待全部宏观数据齐备。",
       "bytes": 1914,
       "headings": [
@@ -8677,6 +8945,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL064.md",
       "title": "Docling",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "研究文献与披露采集试验，非当前简报必须依赖。",
       "bytes": 1932,
       "headings": [
@@ -8737,6 +9007,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL065.md",
       "title": "GROBID",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "用于长期研究文献，避免影响实时市场链的简单性。",
       "bytes": 1732,
       "headings": [
@@ -8797,6 +9069,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL066.md",
       "title": "Unstructured",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "按真实文档类型和维护负担选择，不因已有connector列表就全量引入。",
       "bytes": 1831,
       "headings": [
@@ -8857,6 +9131,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/04_reuse_cards/TOOL067.md",
       "title": "Qdrant",
       "role": "复用候选",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前按测得检索需求再选，不把向量库当研究系统标准配置。",
       "bytes": 1884,
       "headings": [
@@ -8917,6 +9193,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE01_订阅阅读器怎样成为收集底座.md",
       "title": "订阅阅读器怎样成为收集底座",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Miniflux的API可管理订阅和条目并暴露检查状态，FreshRSS通过阅读器兼容接口提供同步；RSSHub则把来源适配成feed。直接证据在文末，未实际部署。",
       "bytes": 1856,
       "headings": [
@@ -8962,6 +9240,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE02_Feedly去重与聚类不是同一层.md",
       "title": "Feedly去重与聚类不是同一层",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Feedly官方说明把内容近重复与同主题/事件分组分开，后者保留不同报道；代表文章的选择与展示位置有关。文档描述的是产品规则，不能推定其内部算法全貌或当前所有套餐可用。",
       "bytes": 1771,
       "headings": [
@@ -9007,6 +9287,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE03_zenfeed与TrendRadar的情报产品取舍.md",
       "title": "zenfeed与TrendRadar的情报产品取舍",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "zenfeed官方配置围绕标签化处理和查询组织内容；TrendRadar提供聚合、筛选与推送形态。作者/社区帖子只用于发现使用问题，不把旧免费模型和效果说法当当前保证。",
       "bytes": 1829,
       "headings": [
@@ -9052,6 +9334,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE04_IPTC与W3C给证据模型的启示.md",
       "title": "IPTC与W3C给证据模型的启示",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "ninjs提供新闻JSON规范；Web Annotation表达注释主体、目标和定位。规范有版本与不同实现范围，本案例不声称它们提供完整金融情报产品。",
       "bytes": 1587,
       "headings": [
@@ -9097,6 +9381,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE05_官方日历与vintage的双时钟.md",
       "title": "官方日历与vintage的双时钟",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Fed有官方主题订阅，BLS日历给出发布排期和时区，ALFRED提供宏观历史版本。这三种入口分别描述消息、排期和数值版本。",
       "bytes": 1591,
       "headings": [
@@ -9142,6 +9428,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE06_Tardis让购买历史变成可验收任务.md",
       "title": "Tardis让购买历史变成可验收任务",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "供应商提供按交易所、合约和频道的历史覆盖说明；数据服务条款与开源SDK权利不同。文档起始日期不是每个合约每天完整的保证。",
       "bytes": 1558,
       "headings": [
@@ -9187,6 +9475,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE07_Glassnode与BlockSci的两种可复用价值.md",
       "title": "Glassnode与BlockSci的两种可复用价值",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Glassnode PiT说明估计链上指标历史会受标签/计算修订影响；BlockSci维护者明确停止主动支持。一个仍有商业维护的方法文档和一个停止维护的研究工具，都可能有参考价值，但复用方式不同。",
       "bytes": 1655,
       "headings": [
@@ -9232,6 +9522,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE08_Anthropic研究案例与TradingAgents的可迁移部分.md",
       "title": "Anthropic研究案例与TradingAgents的可迁移部分",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "厂商工程案例讨论并行研究的任务分解与成本，TradingAgents的变更记录包含历史输入等修正。它们不是在相同BTC数据/预算下做过的直接对照。",
       "bytes": 1550,
       "headings": [
@@ -9277,6 +9569,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE09_FinRobot开放边界与金融方法迁移.md",
       "title": "FinRobot开放边界与金融方法迁移",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "FinRobot的当前README区分公开版本、尚未开放的在线版本与开发中的后续版本。开源许可只覆盖实际授权代码，不将演示产品自动变为可复制成果。",
       "bytes": 1634,
       "headings": [
@@ -9322,6 +9616,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE10_Qlib与arch如何服务实验纪律.md",
       "title": "Qlib与arch如何服务实验纪律",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Qlib有工作流/记录器，arch提供依赖结构下的重采样，概率校准有明确评价方法。这些工具负责组织和计算，不提供研究问题本身。",
       "bytes": 1535,
       "headings": [
@@ -9367,6 +9663,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE11_FDC3工作区上下文迁移.md",
       "title": "FDC3工作区上下文迁移",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "FDC3将跨金融应用动作表达为context/intent；Lightweight Charts和Perspective分别负责金融序列与分析表格显示。标准、组件和数据权限是三个边界。",
       "bytes": 1494,
       "headings": [
@@ -9412,6 +9710,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE12_Temporal与Haystack揭示的取消边界.md",
       "title": "Temporal与Haystack揭示的取消边界",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Temporal活动强调幂等和重试；Haystack区分同步线程与异步取消；LangGraph有检查点与恢复。它们说明“任务恢复”与“外部操作只发生一次”不同。",
       "bytes": 1548,
       "headings": [
@@ -9457,6 +9757,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE13_Docling与GROBID避免只收标题.md",
       "title": "Docling与GROBID避免只收标题",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Docling处理多格式和文档结构，GROBID偏学术结构，Unstructured提供元素化处理。此案例基于文档，不宣称实际转换过用户或第三方PDF。",
       "bytes": 1538,
       "headings": [
@@ -9502,6 +9804,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/CASE14_开源商业服务和受限搜索的分界.md",
       "title": "开源商业服务和受限搜索的分界",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "Google Search Grounding具有独立用途和留存规则，Tardis条款区分供应商与独立直采数据，Firecrawl自托管/云服务不完全等同，Coinbase数据分发有专门要求。",
       "bytes": 1791,
       "headings": [
@@ -9547,6 +9851,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/05_cases/README.md",
       "title": "案例索引",
       "role": "案例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "案例分析基于公开方法、产品说明和源码文档，不声称本研究实际使用产品或复现其收益。已公开做法与迁移建议分开，每例给出反例或不适用条件。",
       "bytes": 1670,
       "headings": [
@@ -9562,6 +9868,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/01_collection_handbook.md",
       "title": "收集能力手册｜从发现来源到可检索证据",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本手册是新增设计，不是已运行的采集器。它独立于Cloudflare与JavaScript，允许直接依赖、独立服务、API或只借模型。原方案已有事件与证据对象优先复用，具体映射见本目录04。",
       "bytes": 10025,
       "headings": [
@@ -9632,6 +9940,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/02_source_catalog.md",
       "title": "来源候选目录｜不自动启用",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "这些入口经过本文资料核验，但多数是官方目录/文档，不是已经试运行的feed地址。runtime_endpoint为空，enabled=false；按来源的实际取得方式与用途核验后才能注册。工程/论文资料只进入方法库，不默认成为BTC日行情事实。",
       "bytes": 5337,
       "headings": [
@@ -9647,6 +9957,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/03_lifecycle_and_contract.md",
       "title": "收集生命周期与最小契约",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本节字段是拟议设计，应映射原卷10及真实schema；不要求建立平行数据库。本目录JSON Schema仅校验补充对象，不替代完整业务校验。",
       "bytes": 7060,
       "headings": [
@@ -9702,6 +10014,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/04_alignment_with_accepted_contracts.md",
       "title": "与原执行方案对齐｜不建设第二事实池",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本次终审已经同步修订活跃卷03/05/07/10/11/12/13及收集契约；旧原字节只在90_archive中。执行以根入口和当前scope清单为准，详细方法仍查对应卷，并绑定真实代码。",
       "bytes": 2457,
       "headings": [
@@ -9717,6 +10031,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/05_search_recipes.md",
       "title": "中英文发现与反向核验模板",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "以下是供后续研究复用的查询模板，不声称本轮逐字执行了每条。每个主题先广泛发现，再回原始文档；反向查询要找限制、失败、更正、许可和停止维护。不要自动执行账号、抓取、下载或安装。",
       "bytes": 7823,
       "headings": [
@@ -9852,6 +10168,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/06_evaluation_and_fixtures.md",
       "title": "收集验收场景与评价",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "24项全部是本研究编写的合成测试规格，未接到真实仓库执行。schema样例校验只证明文档结构，不证明采集/模型/运行通过。原方案74项仍原样保留，不能相加后称98项真实测试。",
       "bytes": 3849,
       "headings": [
@@ -9872,6 +10190,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/07_operating_and_update_policy.md",
       "title": "运行与资料更新策略",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "研究资料库中EXT是“这份资料曾被查阅”的证据身份；SourceCandidate是“值得考虑的运行来源”；只有实际确认用途、端点、负责人和预算后的SourceRegistration才可启用。不得把本包150余个参考链接自动批量抓取到线上。",
       "bytes": 1876,
       "headings": [
@@ -9917,6 +10237,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/collection.schema.design.json",
       "title": "collection.schema.design.json",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "采集、来源与内容版本的拟议对象结构。",
       "bytes": 22423,
       "headings": []
@@ -9926,6 +10248,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/collection_cases.synthetic.json",
       "title": "collection_cases.synthetic.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：collection_cases.synthetic.json；不代表真实采集或已通过业务验收。",
       "bytes": 9024,
       "headings": []
@@ -9935,6 +10259,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/contract_examples.synthetic.json",
       "title": "contract_examples.synthetic.json",
       "role": "合成样例",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "设计用合成输入/输出或验收场景：contract_examples.synthetic.json；不代表真实采集或已通过业务验收。",
       "bytes": 3511,
       "headings": []
@@ -9944,6 +10270,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/discovery_recipes.json",
       "title": "discovery_recipes.json",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "来源发现和检索问题配方。",
       "bytes": 11117,
       "headings": []
@@ -9953,6 +10281,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/06_collection_design/source_catalog.candidates.json",
       "title": "source_catalog.candidates.json",
       "role": "采集设计",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "候选来源、取得方式和用途信息；不是已启用来源。",
       "bytes": 25293,
       "headings": []
@@ -9962,6 +10292,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/07_codex_usage/01_reading_and_selection.md",
       "title": "Codex接手：从当前入口选择一个scope",
       "role": "提示词/使用参考",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "顺序：根README → 00_start/01_master_solution.md → 10_final_review/scoped_work_packages.md → 相关1—3个专题/候选 → 原卷具体方法/接口/迁移。原事实报告只作路径线索，当前工作区必须实际核查。",
       "bytes": 1004,
       "headings": [
@@ -9977,6 +10309,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/07_codex_usage/02_prompt_readonly_audit.md",
       "title": "可复制指令｜只读选择一次升级",
       "role": "提示词/使用参考",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "请读取根README、当前F任务与终审，以及与我本次研究问题直接有关的专题/组件卡。再读取当前真实仓库，核对相关模块、数据流、设置、共享状态、缓存、导出、模型输入与报告历史。",
       "bytes": 1768,
       "headings": [
@@ -9992,6 +10326,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/07_codex_usage/03_prompt_scoped_execution.md",
       "title": "可复制指令｜执行已选切片",
       "role": "提示词/使用参考",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "使用前由用户填写或明确本次scope_id、目标和授权动作；空白不代表允许。",
       "bytes": 1734,
       "headings": [
@@ -10007,6 +10343,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/07_codex_usage/04_decision_record_template.md",
       "title": "决策记录模板｜手工复制后填写，不自动生效",
       "role": "提示词/使用参考",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "实际输入来源、时间模式、单位、缺失、修订、权利；输出对象和用户行为；共享状态/缓存/导出/模型/历史影响；哪些拟新增、哪些直接复用。",
       "bytes": 1351,
       "headings": [
@@ -10052,6 +10390,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/07_codex_usage/slice_proposals.json",
       "title": "slice_proposals.json",
       "role": "提示词/使用参考",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "可选切片提案，不是自动执行队列。",
       "bytes": 354,
       "headings": []
@@ -10061,6 +10401,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/accepted_plan_preservation.json",
       "title": "accepted_plan_preservation.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：accepted_plan_preservation.json；不作为本轮仓库验证结果。",
       "bytes": 351,
       "headings": []
@@ -10070,6 +10412,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/access_limits.md",
       "title": "访问限制与未完成核验",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "以下失败/不完整项保留为证据边界，不计为相应页面正文已验证。可用的替代官方页面在来源库另有记录。",
       "bytes": 2072,
       "headings": [
@@ -10125,6 +10469,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/case_index.json",
       "title": "case_index.json",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "14个案例及证据来源索引。",
       "bytes": 3191,
       "headings": []
@@ -10134,6 +10480,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/content_statistics.json",
       "title": "content_statistics.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：content_statistics.json；不作为本轮仓库验证结果。",
       "bytes": 507,
       "headings": []
@@ -10143,6 +10491,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/coverage_matrix.md",
       "title": "研究覆盖与证据强度",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "“覆盖”表示有实质资料与设计，不表示全部产品/平台已搜遍或目标代码已验收。",
       "bytes": 2136,
       "headings": [
@@ -10158,6 +10508,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/package_qc.json",
       "title": "package_qc.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：package_qc.json；不作为本轮仓库验证结果。",
       "bytes": 224,
       "headings": []
@@ -10167,6 +10519,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/research_diary.md",
       "title": "本轮研究过程与检索覆盖",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "日期：2026-09-16。这是主题化工作记录，不声称是每一次工具调用的逐字日志；可复用的中英文查询模板在06_collection_design，不冒称所有模板均逐字执行过。",
       "bytes": 2586,
       "headings": [
@@ -10202,6 +10556,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/research_index.json",
       "title": "research_index.json",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "25个专题的编号、标题、文件和来源索引。",
       "bytes": 6244,
       "headings": []
@@ -10211,6 +10567,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/reuse_catalog.json",
       "title": "reuse_catalog.json",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "67项软件/服务/规范/方法的复用比较与限制。",
       "bytes": 28664,
       "headings": []
@@ -10220,6 +10578,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/sources.json",
       "title": "sources.json",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "该目录所属研究的来源登记与证据范围。",
       "bytes": 110665,
       "headings": []
@@ -10229,6 +10589,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/08_evidence/sources.md",
       "title": "外部来源与阅读范围",
       "role": "证据记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "类型：official_source_or_documentation；状态：read；日期：2026-09-16。",
       "bytes": 56839,
       "headings": [
@@ -10994,6 +11356,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/09_prior_research/README.md",
       "title": "既往研究归档",
       "role": "前期研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本目录保存此前生成的研究材料原文件，供追溯观点与修订过程，不算本轮新增研究正文。它们可能包含后来已修正的版本、许可或选择倾向，应结合本轮对抗审核及EXT证据阅读。不要按“同一天日期”认为各版结论完全一致，也不要把旧访问/测试记录当本轮重验。",
       "bytes": 698,
       "headings": [
@@ -11009,6 +11373,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/09_prior_research/bitcoin_research_evidence_audit_2026-09-16.md",
       "title": "比特币金融分析系统：证据核验与能力升级修订报告",
       "role": "前期研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "查询日期：2026 年 9 月 16 日。版本：实施前研究修订版。 适用对象：系统负责人、仓库开发者及获得只读仓库权限的开发代理。 本报告可以独立使用，替代上一版作为后续讨论依据。它不是代码审计结果、性能测试报告、数据采购意见或实施授权。",
       "bytes": 62473,
       "headings": [
@@ -11194,6 +11560,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/09_prior_research/bitcoin_research_evidence_review_2026-09-16.md",
       "title": "比特币金融分析系统：证据核验、研究纠偏与能力升级报告",
       "role": "前期研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "核验日期：2026 年 9 月 16 日，Asia/Singapore。 交付性质：公开资料研究、条件化能力建议和实施前仓库核验材料。 执行边界：未读取实际项目仓库；未安装软件、运行候选代码、接入账号、调用交易接口或操作生产系统。",
       "bytes": 77770,
       "headings": [
@@ -11444,6 +11812,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/09_prior_research/bitcoin_research_modernization_2026-09-16.md",
       "title": "比特币金融分析系统：能力、数据与架构演进研究报告",
       "role": "前期研究",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "检索与核验日期：2026-09-16（Asia/Singapore） 性质：公开资料研究与条件性改造建议；不是代码审计、运行验证、投资建议或上线方案执行记录。",
       "bytes": 88926,
       "headings": [
@@ -11794,6 +12164,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/README.md",
       "title": "终审材料目录",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "参考Schema并不等于可直接上线的数据服务；本轮校验只证明列明的设计正反例与文件关系，不替代业务环境回归。",
       "bytes": 800,
       "headings": [
@@ -11809,6 +12181,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/compatibility_map.json",
       "title": "compatibility_map.json",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "新旧设计契约的兼容关系。",
       "bytes": 1061,
       "headings": []
@@ -11818,6 +12192,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/contract_migration.md",
       "title": "契约迁移与适配说明｜v2.1 / collection v2",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本轮只更改拟议契约与合成示例，未对真实数据表执行ALTER，也未推断线上字段。旧对象保留原内容、版本和摘要；需要使用新约束时经过明确适配，记录来源版本和无法提供的字段。不存在的历史数据不能由默认值补成“已验证”。",
       "bytes": 5600,
       "headings": [
@@ -11868,6 +12244,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/external_rechecks.json",
       "title": "external_rechecks.json",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "终审期间的外部抽核记录。",
       "bytes": 2555,
       "headings": []
@@ -11877,6 +12255,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/findings.json",
       "title": "findings.json",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "终审发现及所做的文档修订。",
       "bytes": 10437,
       "headings": []
@@ -11886,6 +12266,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/README.md",
       "title": "实际检查、覆盖与交付边界",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "本次对上一轮188个包内文件建立目录/身份基线；对当前全部活跃Markdown、JSON、引用和参考SQL做结构检查，对市场方法、提示词、时间/版本、覆盖、权限、报告、任务和迁移进行重点交叉对抗。文件清单见review_inventory.json。不是150个外部网站和67个仓库的逐行源码审计。",
       "bytes": 2183,
       "headings": [
@@ -11921,6 +12303,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/baseline_negative_probes.json",
       "title": "baseline_negative_probes.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：baseline_negative_probes.json；不作为本轮仓库验证结果。",
       "bytes": 2406,
       "headings": []
@@ -11930,6 +12314,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/change_inventory.json",
       "title": "change_inventory.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：change_inventory.json；不作为本轮仓库验证结果。",
       "bytes": 57127,
       "headings": []
@@ -11939,6 +12325,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/delivery_summary.json",
       "title": "delivery_summary.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：delivery_summary.json；不作为本轮仓库验证结果。",
       "bytes": 1273,
       "headings": []
@@ -11948,6 +12336,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/document_checks.json",
       "title": "document_checks.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：document_checks.json；不作为本轮仓库验证结果。",
       "bytes": 58281,
       "headings": []
@@ -11957,6 +12347,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/environment.json",
       "title": "environment.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：environment.json；不作为本轮仓库验证结果。",
       "bytes": 229,
       "headings": []
@@ -11966,6 +12358,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/external_evidence_scope.json",
       "title": "external_evidence_scope.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：external_evidence_scope.json；不作为本轮仓库验证结果。",
       "bytes": 621,
       "headings": []
@@ -11975,6 +12369,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/link_checks.json",
       "title": "link_checks.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：link_checks.json；不作为本轮仓库验证结果。",
       "bytes": 80736,
       "headings": []
@@ -11984,6 +12380,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/results/review_inventory.json",
       "title": "review_inventory.json",
       "role": "作者检查/历史记录",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包作者的检查或历史记录：review_inventory.json；不作为本轮仓库验证结果。",
       "bytes": 55953,
       "headings": []
@@ -11993,6 +12391,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/scoped_tasks.json",
       "title": "scoped_tasks.json",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "F-00至F-10及五种profile的范围依赖；未启动实施。",
       "bytes": 15275,
       "headings": []
@@ -12002,6 +12402,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/scoped_work_packages.md",
       "title": "当前切片任务｜按实际启用能力，而不是按完整愿景排队",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "F编号界定本次最小范围，WP保留完整细节与partial映射。不是删除必要依赖；使用中的身份、用途、数值语义、时间、费用与失败边界仍须完成。",
       "bytes": 12688,
       "headings": [
@@ -12072,6 +12474,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/tests/canonical_profile.py",
       "title": "canonical_profile.py",
       "role": "参考检查脚本",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "资料包作者的离线文档检查脚本；本导航只登记，不执行或安装依赖。",
       "bytes": 1213,
       "headings": []
@@ -12081,6 +12485,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/tests/link_audit.py",
       "title": "link_audit.py",
       "role": "参考检查脚本",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "资料包作者的离线文档检查脚本；本导航只登记，不执行或安装依赖。",
       "bytes": 2499,
       "headings": []
@@ -12090,6 +12496,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/tests/validate_document_bundle.py",
       "title": "validate_document_bundle.py",
       "role": "参考检查脚本",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "资料包作者的离线文档检查脚本；本导航只登记，不执行或安装依赖。",
       "bytes": 21860,
       "headings": []
@@ -12099,6 +12507,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/text_patch_receipts.json",
       "title": "text_patch_receipts.json",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "终审文档修订回执。",
       "bytes": 6211,
       "headings": []
@@ -12108,6 +12518,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/10_final_review/value_and_decision_tests.md",
       "title": "第一性原理验收：系统究竟替用户减少了什么错误",
       "role": "终审资料",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "1. 删除这一指标、角色或服务，用户的答案、证据或操作成本是否真的变差？若不变，它不是默认必需件。 2. 换一份同样流畅但不相关的材料，报告是否仍几乎相同？若相同，分析可能只是模板修辞。 3. 把价格方向反过来而维持新闻不变，解释是否随意换成相反故事？需要预声明比较和反证，不能靠事后叙事。 4. 把关键来源停掉，系统会…",
       "bytes": 3767,
       "headings": [
@@ -12153,6 +12565,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/README.md",
       "title": "历史档案：不得作为当前执行入口",
       "role": "历史档案",
+      "batch": "archive",
+      "authority": "history",
       "summary": "previous_delivery_original.zip是上一轮完整交付的原字节副本，供逐项追溯，不是另一套当前规范。当前执行请从根README开始。",
       "bytes": 336,
       "headings": [
@@ -12168,6 +12582,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/previous_delivery_original.zip",
       "title": "previous_delivery_original.zip",
       "role": "原始压缩包",
+      "batch": "archive",
+      "authority": "history",
       "summary": "原始交付包，供追溯；不递归展开或执行包内内容。",
       "bytes": 941931,
       "headings": []
@@ -12177,6 +12593,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/prior_01_accepted_plan__meta__document-qc.json",
       "title": "prior_01_accepted_plan__meta__document-qc.json",
       "role": "作者检查/历史记录",
+      "batch": "archive",
+      "authority": "history",
       "summary": "原包作者的检查或历史记录：prior_01_accepted_plan__meta__document-qc.json；不作为本轮仓库验证结果。",
       "bytes": 3026,
       "headings": []
@@ -12186,6 +12604,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/prior_01_accepted_plan__meta__package-manifest.json",
       "title": "prior_01_accepted_plan__meta__package-manifest.json",
       "role": "作者检查/历史记录",
+      "batch": "archive",
+      "authority": "history",
       "summary": "原包作者的检查或历史记录：prior_01_accepted_plan__meta__package-manifest.json；不作为本轮仓库验证结果。",
       "bytes": 6613,
       "headings": []
@@ -12195,6 +12615,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/prior_08_evidence__accepted_plan_preservation.json",
       "title": "prior_08_evidence__accepted_plan_preservation.json",
       "role": "作者检查/历史记录",
+      "batch": "archive",
+      "authority": "history",
       "summary": "原包作者的检查或历史记录：prior_08_evidence__accepted_plan_preservation.json；不作为本轮仓库验证结果。",
       "bytes": 7026,
       "headings": []
@@ -12204,6 +12626,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/prior_08_evidence__content_statistics.json",
       "title": "prior_08_evidence__content_statistics.json",
       "role": "作者检查/历史记录",
+      "batch": "archive",
+      "authority": "history",
       "summary": "原包作者的检查或历史记录：prior_08_evidence__content_statistics.json；不作为本轮仓库验证结果。",
       "bytes": 735,
       "headings": []
@@ -12213,6 +12637,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/prior_08_evidence__package_manifest.json",
       "title": "prior_08_evidence__package_manifest.json",
       "role": "作者检查/历史记录",
+      "batch": "archive",
+      "authority": "history",
       "summary": "原包作者的检查或历史记录：prior_08_evidence__package_manifest.json；不作为本轮仓库验证结果。",
       "bytes": 32688,
       "headings": []
@@ -12222,6 +12648,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/90_archive/prior_08_evidence__package_qc.json",
       "title": "prior_08_evidence__package_qc.json",
       "role": "作者检查/历史记录",
+      "batch": "archive",
+      "authority": "history",
       "summary": "原包作者的检查或历史记录：prior_08_evidence__package_qc.json；不作为本轮仓库验证结果。",
       "bytes": 916,
       "headings": []
@@ -12231,6 +12659,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/DELIVERY_STATUS.md",
       "title": "最终交付状态",
       "role": "来源/归档",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "当前设计已整合终审，不再需要拼接多轮勘误。16项发现的文档修订与选定反例已落地，仍不能由此宣称真实系统没有其他问题。",
       "bytes": 869,
       "headings": [
@@ -12246,6 +12676,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/FINAL_REVIEW.md",
       "title": "最终交付审查与执行入口合订本",
       "role": "来源/归档",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "合订阅读副本，内容与分卷/终审材料重叠；具体问题优先查询相应分卷，避免重复加载。",
       "bytes": 38070,
       "headings": [
@@ -12291,6 +12723,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/LIBRARY_INDEX.json",
       "title": "LIBRARY_INDEX.json",
       "role": "来源/归档",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包的专题、复用卡、案例与资料角色索引。",
       "bytes": 41421,
       "headings": []
@@ -12300,6 +12734,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/MANIFEST.json",
       "title": "MANIFEST.json",
       "role": "来源/归档",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "原包文件清单；不描述外层仓库导航。",
       "bytes": 38286,
       "headings": []
@@ -12309,6 +12745,8 @@
       "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/README.md",
       "title": "比特币研究系统｜最终交付审查版",
       "role": "来源/归档",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "先读当前总纲，再按切片任务选择本次范围；需要具体算法/提示词/迁移细节时查16卷设计。不要从完整30表DDL、39项API或60个WP逐项安装与实现。",
       "bytes": 3965,
       "headings": [
@@ -12354,6 +12792,8 @@
       "path": "docs/research/bitcoin-upgrade/repository-baseline/bitcoin_research_evidence_review_2026-09-16.md",
       "title": "比特币金融分析系统：证据核验、研究纠偏与能力升级报告",
       "role": "原仓库事实/审阅",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "核验日期：2026 年 9 月 16 日，Asia/Singapore。 交付性质：公开资料研究、条件化能力建议和实施前仓库核验材料。 执行边界：未读取实际项目仓库；未安装软件、运行候选代码、接入账号、调用交易接口或操作生产系统。",
       "bytes": 78370,
       "headings": [
@@ -12604,6 +13044,8 @@
       "path": "docs/research/bitcoin-upgrade/repository-baseline/bitcoin_research_repository_response_2026-09-16.md",
       "title": "比特币金融分析系统：仓库总纲、当前事实与调研问题回答",
       "role": "原仓库事实/审阅",
+      "batch": "batch1",
+      "authority": "design",
       "summary": "README 将项目称为面向个人期货交易台的静态 Web 控制台，围绕看盘、研判、复盘与自动化报告组织导航。技术主体是原生 HTML/CSS/JavaScript、Cloudflare Pages、Workers 和 D1。",
       "bytes": 31239,
       "headings": [
@@ -12840,10 +13282,3115 @@
       ]
     },
     {
+      "id": "LOCAL-BINANCE",
+      "path": "docs/research/binance-connectivity-2026-09-16.md",
+      "title": "币安连接诊断与修复（2026-09-16）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "币安连接诊断与修复（2026-09-16）",
+      "bytes": 5110,
+      "headings": [
+        {
+          "title": "币安连接诊断与修复（2026-09-16）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "可复核证据与边界",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "网络调研与可行路径",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "验收与恢复",
+          "line": 20,
+          "level": 2
+        },
+        {
+          "title": "修复后结果",
+          "line": 25,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-CHART",
+      "path": "docs/research/chart-workbench-review-2026-09-16.md",
+      "title": "行情工作台：数据口径与 K 线评估",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "日期：2026-09-16。对象：当前仓库 #chart；图表版本 Lightweight Charts 4.1.3。依据为当前代码、用户截图、仓库 V04/V05/V08 与本次官方资料核验。本文是诊断与建议，不代表已完成数据层升级，也不把附带研究资料中的命令当作用户指令。",
+      "bytes": 9456,
+      "headings": [
+        {
+          "title": "行情工作台：数据口径与 K 线评估",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "结论",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "已核对问题",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "建议的数据组织",
+          "line": 25,
+          "level": 2
+        },
+        {
+          "title": "K 线交互建议",
+          "line": 33,
+          "level": 2
+        },
+        {
+          "title": "后续实施范围与验收",
+          "line": 42,
+          "level": 2
+        },
+        {
+          "title": "资料与本次补充核验",
+          "line": 52,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-CHANNELS",
+      "path": "docs/research/free-financial-api-channels-2026-09-16.md",
+      "title": "免费金融数据通道（2026-09-16）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "最新扩展：现为40个平台/产品、93个公开操作。新增9项Binance规则/统计通道，以及独立的32项规范观察数据集；完整现状见币安主源数据与改版方案，逐平台限制见限制矩阵。下文各时间节点的84项统计是当时实测记录，保留原样，不冒充93项已全量重测。",
+      "bytes": 19152,
+      "headings": [
+        {
+          "title": "免费金融数据通道（2026-09-16）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "需求与研究依据",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "已实施范围",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "覆盖与免费证据",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "免费通道配置",
+          "line": 44,
+          "level": 2
+        },
+        {
+          "title": "不冒充已接通的范围",
+          "line": 61,
+          "level": 2
+        },
+        {
+          "title": "验证、发布与维护",
+          "line": 65,
+          "level": 2
+        },
+        {
+          "title": "发布与实测记录",
+          "line": 75,
+          "level": 2
+        },
+        {
+          "title": "免费 Key 申请与配置（后续记录）",
+          "line": 94,
+          "level": 2
+        },
+        {
+          "title": "按需 D1 存储与加固依据（2026-09-16）",
+          "line": 118,
+          "level": 2
+        },
+        {
+          "title": "D1 接口使用与最终验收（2026-09-16 15:33 北京时间）",
+          "line": 130,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-LIMITS",
+      "path": "docs/research/free-financial-platform-limits-2026-09-16.md",
+      "title": "免费金融平台限制与连接记录（2026-09-16）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "本页列出全部40个平台/产品、93个操作的用途与边界。来源为仓库已核验的官方资料及当前注册表；历史全量实测时间为 2026-09-16T07:32:35.912Z，当时84个操作、61通过、23失败。下表历史状态不等于本轮全部93项已重新验证；新增9项均为Binance公开数据。32个规范数据集的最新接入、D1和工作台…",
+      "bytes": 13482,
+      "headings": [
+        {
+          "title": "免费金融平台限制与连接记录（2026-09-16）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "重要配额与数据授权",
+          "line": 50,
+          "level": 2
+        },
+        {
+          "title": "故障归因与处理",
+          "line": 63,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-WORKBENCH",
+      "path": "docs/research/workbench-binance-data-plan-2026-09-16.md",
+      "title": "币安主源行情工作台：数据接入与改版依据",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "研究/实施日期：2026-09-16。用户确认本轮完成数据接入、D1 沉淀、对抗审查与详细方案，页面下一轮改。本文区分事实、已实施内容和后续方案，不把 API 可调用当作数据可用于交易决策。",
+      "bytes": 26669,
+      "headings": [
+        {
+          "title": "币安主源行情工作台：数据接入与改版依据",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "本轮采用的依据",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "实时核对的关键事实",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "本轮数据底座设计",
+          "line": 21,
+          "level": 2
+        },
+        {
+          "title": "实施与验证顺序",
+          "line": 30,
+          "level": 2
+        },
+        {
+          "title": "第一性原理：系统到底需要证明什么",
+          "line": 38,
+          "level": 2
+        },
+        {
+          "title": "32 个规范数据集与使用边界",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "对抗审查与处理决定",
+          "line": 72,
+          "level": 2
+        },
+        {
+          "title": "仍缺什么：分开可补、需建设和免费范围不能证明的内容",
+          "line": 88,
+          "level": 2
+        },
+        {
+          "title": "下一轮工作台方案（本轮不实施）",
+          "line": 104,
+          "level": 2
+        },
+        {
+          "title": "信息顺序",
+          "line": 106,
+          "level": 3
+        },
+        {
+          "title": "聚合逻辑",
+          "line": 113,
+          "level": 3
+        },
+        {
+          "title": "K线与图表规则",
+          "line": 122,
+          "level": 3
+        },
+        {
+          "title": "联动文件与实施次序",
+          "line": 131,
+          "level": 3
+        },
+        {
+          "title": "免费预算、保留与持续采集的决定",
+          "line": 143,
+          "level": 2
+        },
+        {
+          "title": "代码、操作与恢复",
+          "line": 154,
+          "level": 2
+        },
+        {
+          "title": "本轮实际交付与验收（2026-09-16 北京时间）",
+          "line": 160,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/00_master_plan.md",
+      "title": "卷00｜当前仓库系统升级技术总纲（执行入口已统一）",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "审查日期：2026-09-17，Asia/Singapore。代码基线：a6ef6c8974dcdaace32acf25c3a231ecd279ef37。 本版直接读取 GitHub 固定提交的关键源码及文档；没有运行该仓库、访问生产数据库、调用真实模型、修改代码或部署。它不是上一版事实报告换日期。",
+      "bytes": 13225,
+      "headings": [
+        {
+          "title": "卷00｜当前仓库系统升级技术总纲（执行入口已统一）",
+          "line": 3,
+          "level": 1
+        },
+        {
+          "title": "1. 一句话结论",
+          "line": 7,
+          "level": 2
+        },
+        {
+          "title": "2. 研究起点已发生变化",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "3. 用户的三层，应怎样落实",
+          "line": 21,
+          "level": 2
+        },
+        {
+          "title": "4. 当前最优先的五个结果",
+          "line": 31,
+          "level": 2
+        },
+        {
+          "title": "5. 明确的保留、修改、新增和退出",
+          "line": 43,
+          "level": 2
+        },
+        {
+          "title": "6. 架构选择：目标是混合职责，不是预购一台服务器",
+          "line": 56,
+          "level": 2
+        },
+        {
+          "title": "7. 当前默认实施顺序",
+          "line": 64,
+          "level": 2
+        },
+        {
+          "title": "8. 文档如何使用",
+          "line": 74,
+          "level": 2
+        },
+        {
+          "title": "9. 完成与不能保证的事情",
+          "line": 80,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/01_repository_baseline.md",
+      "title": "卷01｜当前仓库证据基线与旧报告差异",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "R-current：本轮直接读取的固定提交源码；可证明代码中的逻辑和声明。R-record：同一提交中的测试、运行和部署记录；可证明作者记录了这些事，不能冒充本轮重新测试。R-local-old：用户提供的2026-09-16本地事实报告，包含未提交与未跟踪修改；不等于当前remote commit。E：本轮公开官方资…",
+      "bytes": 12369,
+      "headings": [
+        {
+          "title": "卷01｜当前仓库证据基线与旧报告差异",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 五类证据不能互相替代",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 当前系统不是“几个空页面加API”",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 已读取模块地图",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "4. 必须纠正的旧结论",
+          "line": 36,
+          "level": 2
+        },
+        {
+          "title": "4.1 FRED与期权不再是“未找到任何代码”",
+          "line": 38,
+          "level": 3
+        },
+        {
+          "title": "4.2 主图标题混现货已不是同一个问题",
+          "line": 42,
+          "level": 3
+        },
+        {
+          "title": "4.3 不能再泛称没有质量控制",
+          "line": 46,
+          "level": 3
+        },
+        {
+          "title": "4.4 不应将仓库文档中的PASS当成本轮结论",
+          "line": 50,
+          "level": 3
+        },
+        {
+          "title": "5. 新数据的三个成熟度不能混为一谈",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "6. 固定提交到开发工作区的绑定步骤",
+          "line": 62,
+          "level": 2
+        },
+        {
+          "title": "7. 审查仍然没有覆盖什么",
+          "line": 68,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/02_findings_and_counterexamples.md",
+      "title": "02｜当前源码审查：问题、反例、影响范围与修正决定",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "基线：a6ef6c8974dcdaace32acf25c3a231ecd279ef37；查询日期：2026-09-17。 本卷依据实际读取的源码范围，不是线上故障统计。以下“可推导”表示从函数与条件可严格推导，未执行原函数；“风险路径”表示需要调用链或运行样本确定影响。P0/P1/P2是本方案的修复排序，不是交易风险评…",
+      "bytes": 17028,
+      "headings": [
+        {
+          "title": "02｜当前源码审查：问题、反例、影响范围与修正决定",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 先撤销已经过时的诊断",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 审查清单",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "3. 四个不用真实行情就能理解的反例",
+          "line": 50,
+          "level": 2
+        },
+        {
+          "title": "3.1 “最近压力”不等于“刚刚突破的压力”",
+          "line": 52,
+          "level": 3
+        },
+        {
+          "title": "3.2 VWAP的近似差异",
+          "line": 56,
+          "level": 3
+        },
+        {
+          "title": "3.3 POC及价格格的确定性",
+          "line": 60,
+          "level": 3
+        },
+        {
+          "title": "3.4 24h标签不能靠函数参数证明",
+          "line": 64,
+          "level": 3
+        },
+        {
+          "title": "4. 不应错误扩大结论的地方",
+          "line": 70,
+          "level": 2
+        },
+        {
+          "title": "5. 修正后的实施规则",
+          "line": 76,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/03_institutional_patterns.md",
+      "title": "03｜专业机构与成熟平台：可以吸收什么，不能凭名称推断什么",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "外部核验日期：2026-09-17。 本卷比较公开技术能力与设计模式，不评价谁是世界第一，不声称掌握机构私有策略、实际收益或完整内部架构。商业数据商、研究产品和模型工程团队解决的是不同问题，不能放在一个“最强系统”排名中。",
+      "bytes": 11820,
+      "headings": [
+        {
+          "title": "03｜专业机构与成熟平台：可以吸收什么，不能凭名称推断什么",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 对“顶尖公司怎么做”的可回答范围",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 可核验案例地图",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 从字段规范学习，而不是从“大数据库”学习",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "4. 从交付分工学习，而不是默认维护三套平台",
+          "line": 31,
+          "level": 2
+        },
+        {
+          "title": "5. 从PiT学习：版本不止是一个时间戳",
+          "line": 39,
+          "level": 2
+        },
+        {
+          "title": "6. 从新闻产品学习：事件比文章重要，证据比热度重要",
+          "line": 47,
+          "level": 2
+        },
+        {
+          "title": "7. 从代理工程学习：按证据任务分工，不按组织图分工",
+          "line": 55,
+          "level": 2
+        },
+        {
+          "title": "8. 自建、组件与采购的实际对照",
+          "line": 63,
+          "level": 2
+        },
+        {
+          "title": "9. 采购前必须取得的证明",
+          "line": 76,
+          "level": 2
+        },
+        {
+          "title": "10. 未核验与不可引用的案例",
+          "line": 82,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/04_data_contracts_and_acquisition.md",
+      "title": "04｜数据底座：从已接入API到可供四页与分析共同消费的事实",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "当前代码基线：a6ef6c8；设计日期2026-09-17。 本卷不要求替换全部旧表。最小目标是把已存在的规范数据变成可信、持续、带范围的数据产品，并让四页只通过同一语义读取。",
+      "bytes": 11916,
+      "headings": [
+        {
+          "title": "04｜数据底座：从已接入API到可供四页与分析共同消费的事实",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 数据状态不得压成一个connected",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 统一外壳，不抹平来源语义",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 三种时间加两种历史模式",
+          "line": 40,
+          "level": 2
+        },
+        {
+          "title": "4. K线与状态的保真",
+          "line": 48,
+          "level": 2
+        },
+        {
+          "title": "5. 当前D1存储怎样演进",
+          "line": 56,
+          "level": 2
+        },
+        {
+          "title": "6. 采集与回补的最小状态机",
+          "line": 66,
+          "level": 2
+        },
+        {
+          "title": "7. 持续币安采集的部署决策",
+          "line": 74,
+          "level": 2
+        },
+        {
+          "title": "8. 频率与历史不是统一数字",
+          "line": 82,
+          "level": 2
+        },
+        {
+          "title": "9. 质量门槛不能用一个百分数代替",
+          "line": 96,
+          "level": 2
+        },
+        {
+          "title": "10. 页面、快照、模型与导出共同验收",
+          "line": 102,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/05_chart_workbench.md",
+      "title": "05｜行情工作台：逐项计算、数据和交互改造设计",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "范围：#chart及其实际消费者。 当前主体为js/pages/chart.js、js/chart/indicator-math.js、js/data-engine.js、多周期组件与独立快照。后两者须由执行者继续绑定具体调用；本轮不宣称已经阅读所有实现。新设计优先复用Lightweight Charts 4.1.3，…",
+      "bytes": 16554,
+      "headings": [
+        {
+          "title": "05｜行情工作台：逐项计算、数据和交互改造设计",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 页面要回答的问题",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 产品身份与价格类型",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 两套合法视图：实时预览与确认研究",
+          "line": 19,
+          "level": 2
+        },
+        {
+          "title": "4. 历史范围与周期",
+          "line": 27,
+          "level": 2
+        },
+        {
+          "title": "5. OHLCV重采样与完整性",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "6. 真正增加价值的成交面板",
+          "line": 43,
+          "level": 2
+        },
+        {
+          "title": "7. VWAP重设计",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "7.1 三种方法必须分开",
+          "line": 53,
+          "level": 3
+        },
+        {
+          "title": "7.2 锚点与零量",
+          "line": 59,
+          "level": 3
+        },
+        {
+          "title": "7.3 偏离与标准差带",
+          "line": 65,
+          "level": 3
+        },
+        {
+          "title": "8. EMA、ATR、RSI、布林与MACD",
+          "line": 71,
+          "level": 2
+        },
+        {
+          "title": "9. 结构价位与近端突破",
+          "line": 81,
+          "level": 2
+        },
+        {
+          "title": "9.1 独立对象",
+          "line": 83,
+          "level": 3
+        },
+        {
+          "title": "9.2 生命周期",
+          "line": 89,
+          "level": 3
+        },
+        {
+          "title": "9.3 强度、合并与缺失",
+          "line": 95,
+          "level": 3
+        },
+        {
+          "title": "10. 多周期上下文",
+          "line": 101,
+          "level": 2
+        },
+        {
+          "title": "11. 界面、导出与资源生命周期",
+          "line": 109,
+          "level": 2
+        },
+        {
+          "title": "12. 迁移与验收",
+          "line": 117,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/06_orderflow_footprint.md",
+      "title": "06｜订单流与足迹：保留真实成交基础，修正聚合与历史信号",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "对象：js/orderflow/footprint-engine.js、js/pages/orderflow.js及D1足迹桶、快照。 当前足迹基于Binance aggTrade，不是仅依K线涨跌估算。当前5m桶可再合并更长周期，已有买卖量及恢复逻辑；本轮不建议新建第二套采集器。C19｜js/orderflow/fo…",
+      "bytes": 13855,
+      "headings": [
+        {
+          "title": "06｜订单流与足迹：保留真实成交基础，修正聚合与历史信号",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 研究用途与数据边界",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 四种粒度必须独立",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 时间聚合与量守恒",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "4. 价格分箱的数学合同",
+          "line": 30,
+          "level": 2
+        },
+        {
+          "title": "5. POC与价值区",
+          "line": 38,
+          "level": 2
+        },
+        {
+          "title": "6. 同价失衡与对角失衡",
+          "line": 46,
+          "level": 2
+        },
+        {
+          "title": "7. CVD与成交参与度",
+          "line": 56,
+          "level": 2
+        },
+        {
+          "title": "8. SFP：从回看形状到有时间条件的研究事件",
+          "line": 64,
+          "level": 2
+        },
+        {
+          "title": "8.1 先解决何时知道价位",
+          "line": 66,
+          "level": 3
+        },
+        {
+          "title": "8.2 确认、失效与当前bar",
+          "line": 72,
+          "level": 3
+        },
+        {
+          "title": "8.3 结构分的地位",
+          "line": 80,
+          "level": 3
+        },
+        {
+          "title": "9. 新鲜度与完整度",
+          "line": 84,
+          "level": 2
+        },
+        {
+          "title": "10. 页面组织与跨页联动",
+          "line": 92,
+          "level": 2
+        },
+        {
+          "title": "11. 失败与恢复",
+          "line": 100,
+          "level": 2
+        },
+        {
+          "title": "12. 验收切片",
+          "line": 106,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/07_liquidation_radar.md",
+      "title": "07｜强平雷达：观测事件、价格类型与风险条件重设计",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "当前源码：js/heatmap/liquidation-engine.js、pressure-matrix.js与独立快照。 本页已明确区分估算压力和潜在清算池，不应被整体当作伪造热力图。需要解决的是观测范围、未知分类、金额口径、窗口和跨层规则一致性。C24｜js/heatmap/liquidation-engine.…",
+      "bytes": 12706,
+      "headings": [
+        {
+          "title": "07｜强平雷达：观测事件、价格类型与风险条件重设计",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 三个面板，不混成一张颜色图",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 逐交易所方向保留现有正确实现",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 价格和数量规范",
+          "line": 19,
+          "level": 2
+        },
+        {
+          "title": "4. 去重与累计更新",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "5. 采样与缺口",
+          "line": 43,
+          "level": 2
+        },
+        {
+          "title": "6. 5m桶与价格热区",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "7. 压力矩阵退出无校准百分数",
+          "line": 59,
+          "level": 2
+        },
+        {
+          "title": "8. 真正有增量的三个聚合",
+          "line": 67,
+          "level": 2
+        },
+        {
+          "title": "9. 当前页面与快照必须统一",
+          "line": 75,
+          "level": 2
+        },
+        {
+          "title": "10. 页面行为与资源管理",
+          "line": 81,
+          "level": 2
+        },
+        {
+          "title": "11. 测试与迁移",
+          "line": 89,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/08_derivatives.md",
+      "title": "08｜衍生品面板：资金费、OI、基差、期权与宏观的分层升级",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "当前依据：js/pages/derivatives.js、finance/datasets.mjs及快照。 本页不是缺少字段，而是旧指标槽、单位推断、比较窗口和旁路解释与新数据底座尚未统一。新设计以“持有成本、仓位存量、主动成交、期限结构、外部背景”五个问题组织，不把所有数值加成多空总分。C27｜js/pages/de…",
+      "bytes": 14052,
+      "headings": [
+        {
+          "title": "08｜衍生品面板：资金费、OI、基差、期权与宏观的分层升级",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 现有能力应保留什么",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 统一窗口比较合同",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 资金费率：报价、预测、结算分别存",
+          "line": 19,
+          "level": 2
+        },
+        {
+          "title": "4. OI：数量、估值与持仓变化",
+          "line": 31,
+          "level": 2
+        },
+        {
+          "title": "5. 主动成交比、账户比与头部持仓比",
+          "line": 41,
+          "level": 2
+        },
+        {
+          "title": "6. 基差：停止按数值大小猜单位",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "7. 期权：已有摘要，尚未自动具备曲面",
+          "line": 61,
+          "level": 2
+        },
+        {
+          "title": "8. 宏观背景必须另一个时间层",
+          "line": 71,
+          "level": 2
+        },
+        {
+          "title": "9. 面板组织与读取方式",
+          "line": 77,
+          "level": 2
+        },
+        {
+          "title": "10. 迁移与测试",
+          "line": 83,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/09_method_registry.md",
+      "title": "09｜统一分析方法注册表：新增价值、公式、参数与失效条件",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "本卷定义的是拟采用方法，不是已验证预测器。 保留当前合法的EMA/ATR/RSI等实现，修改的是同名方法跨页面不一致、输入语义与质量边界；新增方法按实际数据能力启用，不能全部默认加载。当前实现证据见C11｜js/chart/indicator-math.js（读取范围见登记） C19｜js/orderflow/foot…",
+      "bytes": 13214,
+      "headings": [
+        {
+          "title": "09｜统一分析方法注册表：新增价值、公式、参数与失效条件",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 注册规范",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 价格、成交与波动",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 足迹与分布",
+          "line": 32,
+          "level": 2
+        },
+        {
+          "title": "4. 持仓、费率与价格关系",
+          "line": 49,
+          "level": 2
+        },
+        {
+          "title": "5. 清算、订单簿与执行条件",
+          "line": 67,
+          "level": 2
+        },
+        {
+          "title": "6. 跨资产、期权与事件",
+          "line": 82,
+          "level": 2
+        },
+        {
+          "title": "7. 公共边界函数",
+          "line": 98,
+          "level": 2
+        },
+        {
+          "title": "8. 参数与默认值政策",
+          "line": 104,
+          "level": 2
+        },
+        {
+          "title": "9. 同输入复算的含义",
+          "line": 110,
+          "level": 2
+        },
+        {
+          "title": "10. 价值筛选：每个新增方法至少赢什么",
+          "line": 116,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/10_macro_options_etf_onchain.md",
+      "title": "10｜辅助数据升级：宏观、ETF、稳定币、链上与期权",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "当前规范目录已经登记九条FRED序列、SOFR、USDT/USDC供应、CoinGecko全局数据、mempool费用和Deribit期权摘要。它们不是过去事实报告描述的空白区域，但目录仍不代表已被前端和LLM消费，也不代表实时采集持续成功。C04｜cloudflare/finance/datasets.mjs（读取范…",
+      "bytes": 10166,
+      "headings": [
+        {
+          "title": "10｜辅助数据升级：宏观、ETF、稳定币、链上与期权",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 先纠正当前状态",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 利率与美元：尽量先用可解释的派生",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. CPI：水平、增速和惊喜是三个概念",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "4. 所谓流动性合成指标",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "5. ETF：正式新增，而不是用股票ETF报价替代",
+          "line": 29,
+          "level": 2
+        },
+        {
+          "title": "6. 稳定币：供应、价格、链映射与市值分开",
+          "line": 39,
+          "level": 2
+        },
+        {
+          "title": "7. 链上与矿工的分层",
+          "line": 47,
+          "level": 2
+        },
+        {
+          "title": "8. 期权能力的分级交付",
+          "line": 57,
+          "level": 2
+        },
+        {
+          "title": "9. 全部辅助数据与三层分析的接法",
+          "line": 65,
+          "level": 2
+        },
+        {
+          "title": "10. 发布与停止条件",
+          "line": 71,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/11_intelligence_collection.md",
+      "title": "11｜舆情与情报层：敏锐意味着发现重要变化，不是搜得最多",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "结构化市场数据与情报收集是并行输入。分析层可以基于数据先发现异常，再让情报层核查一个明确事件；也可以先收到事件再检查市场反应。它们不应成为必须先跑全球日报、再跑每个角色、最后才能看BTC的长串链。",
+      "bytes": 9002,
+      "headings": [
+        {
+          "title": "11｜舆情与情报层：敏锐意味着发现重要变化，不是搜得最多",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 数据层、情报层与分析层的关系",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 持续发现与按需核验",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 来源面板按独立信息选择",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 文章、事件与主张的数据模型",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "5. 去重不等于证据合并",
+          "line": 31,
+          "level": 2
+        },
+        {
+          "title": "6. 相关性、新颖性与重要性",
+          "line": 39,
+          "level": 2
+        },
+        {
+          "title": "7. 技术复用与替代",
+          "line": 47,
+          "level": 2
+        },
+        {
+          "title": "8. 失败、撤回与时间",
+          "line": 60,
+          "level": 2
+        },
+        {
+          "title": "9. 安全与成本",
+          "line": 66,
+          "level": 2
+        },
+        {
+          "title": "10. 接入与评价",
+          "line": 74,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/12_analysis_prompts_workflow.md",
+      "title": "12｜分析层：角色、证据、工具、提示词与发布流程",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "当前marketStateFromLegacy按数据是否存在产生62/58/46与72/54，三个分数全部处于其中性阈值；opportunitiesFromInputs在市场可用时直接写“同向”，而不是检验同向；固定calendar与未搜索文案也有语义问题。它们不是模型智力不足造成，而是输入与程序规则已经给了无依据结论…",
+      "bytes": 12946,
+      "headings": [
+        {
+          "title": "12｜分析层：角色、证据、工具、提示词与发布流程",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 对当前实现的处理",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 角色按任务启用",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 输入包与执行状态",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "4. 标准上下文",
+          "line": 30,
+          "level": 2
+        },
+        {
+          "title": "5. P-A｜主张抽取提示词",
+          "line": 57,
+          "level": 2
+        },
+        {
+          "title": "6. P-B｜缺口研究提示词",
+          "line": 74,
+          "level": 2
+        },
+        {
+          "title": "7. P-C｜市场变化综合提示词",
+          "line": 90,
+          "level": 2
+        },
+        {
+          "title": "8. P-D｜论证审核提示词",
+          "line": 108,
+          "level": 2
+        },
+        {
+          "title": "9. P-E｜观点复盘提示词",
+          "line": 121,
+          "level": 2
+        },
+        {
+          "title": "10. 四种完整行为示例",
+          "line": 134,
+          "level": 2
+        },
+        {
+          "title": "11. 成本、延迟与资源释放",
+          "line": 144,
+          "level": 2
+        },
+        {
+          "title": "12. 评估与迁移",
+          "line": 152,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/13_ui_history_api.md",
+      "title": "13｜页面、共享状态、API、历史与导出的统一设计",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "行情页解释价格、参与度和已知结构；足迹页解释成交分布与主动量；强平页解释已观测事件与有条件的压力背景；衍生品页解释成本、存量、比例和价格关系。四页不是四个独立计算宇宙，应共享研究选择、时间语义、方法输出和质量元数据。",
+      "bytes": 8747,
+      "headings": [
+        {
+          "title": "13｜页面、共享状态、API、历史与导出的统一设计",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 四页保留职责，研究入口重新组织",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 共享选择对象",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 一张卡如何显示事实边界",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "4. 现有与拟新增API的边界",
+          "line": 25,
+          "level": 2
+        },
+        {
+          "title": "5. 统一结果外壳与错误",
+          "line": 43,
+          "level": 2
+        },
+        {
+          "title": "6. 存储不是必须新建几十张表",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "7. 历史恢复等级",
+          "line": 59,
+          "level": 2
+        },
+        {
+          "title": "8. 缓存与刷新",
+          "line": 67,
+          "level": 2
+        },
+        {
+          "title": "9. 预警与观点作为后续独立能力",
+          "line": 73,
+          "level": 2
+        },
+        {
+          "title": "10. 正常/失败/资源验收",
+          "line": 79,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/14_architecture_runtime_cost.md",
+      "title": "14｜架构与运行：推荐混合职责，按证据决定部署",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "每个方框是职责，可以在现有Worker/模块中实现。当前已经有finance存储、旧市场表、独立snapshot和yuqing，不应新建第五个没有清楚责任的数据中心。先指定每种对象唯一写入者与转换边界，再按负载分进程。C04｜cloudflare/finance/datasets.mjs（读取范围见登记） C06｜cl…",
+      "bytes": 9241,
+      "headings": [
+        {
+          "title": "14｜架构与运行：推荐混合职责，按证据决定部署",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 推荐架构不是强制迁云",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 三条路线",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "3. Cloudflare限制只在适用范围内引用",
+          "line": 32,
+          "level": 2
+        },
+        {
+          "title": "4. 现有数据资产分工",
+          "line": 40,
+          "level": 2
+        },
+        {
+          "title": "5. 计算环境选择",
+          "line": 46,
+          "level": 2
+        },
+        {
+          "title": "6. 单飞、调度与并发",
+          "line": 52,
+          "level": 2
+        },
+        {
+          "title": "7. 费用模型与限额",
+          "line": 60,
+          "level": 2
+        },
+        {
+          "title": "8. 可观测性与故障恢复",
+          "line": 68,
+          "level": 2
+        },
+        {
+          "title": "9. 安全与发布边界",
+          "line": 74,
+          "level": 2
+        },
+        {
+          "title": "10. 何时值得较大重构",
+          "line": 80,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/15_migration_rollback.md",
+      "title": "15｜迁移、兼容、回退与并发治理边界",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "本包审查固定GitHub提交a6ef6c8，不覆盖用户本机未提交变化。此前事实报告针对有大量未提交/未跟踪文件的工作区，不能简单按旧HEAD或本包SHA执行reset。实施前只读记录当前branch/HEAD、相关diff、配置与受影响文件摘要，确定哪些旧问题已修复，哪些新的变化需要保留。",
+      "bytes": 6985,
+      "headings": [
+        {
+          "title": "15｜迁移、兼容、回退与并发治理边界",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 当前提交与本机工作区分开",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 迁移总图",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 数据兼容矩阵",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "4. 每个切片的发布步骤",
+          "line": 41,
+          "level": 2
+        },
+        {
+          "title": "5. 切换开关",
+          "line": 47,
+          "level": 2
+        },
+        {
+          "title": "6. 回退单位",
+          "line": 53,
+          "level": 2
+        },
+        {
+          "title": "7. 保留与清理",
+          "line": 59,
+          "level": 2
+        },
+        {
+          "title": "8. 文件和命令边界",
+          "line": 65,
+          "level": 2
+        },
+        {
+          "title": "9. 生产切换前核验",
+          "line": 71,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/16_work_packages.md",
+      "title": "16｜执行任务导航（已收口）",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "本版不再从旧S1—S6任意选择或与旧WP并行执行。唯一调度入口：EXECUTION_MASTER.md；39项默认主线和9项条件分支的原NEW编号均保留。",
+      "bytes": 6257,
+      "headings": [
+        {
+          "title": "16｜执行任务导航（已收口）",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/17_acceptance_and_experiments.md",
+      "title": "17｜验收与实验：证明数据、方法和研究价值，而非证明文件很多",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第一层是实现正确性：给定输入是否遵守单位、窗口、来源、公式、状态和权限。第二层是研究合理性：结果是否受证据支持，是否存在前视、样本偏差、错误合并或不恰当因果解释。第三层是用户价值：能否更快找到重要变化、核数字、识别反证、恢复研究现场。",
+      "bytes": 7321,
+      "headings": [
+        {
+          "title": "17｜验收与实验：证明数据、方法和研究价值，而非证明文件很多",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 三层不同证明",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 对照组",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 必须检查的数值不变量",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "4. 故障注入与资源",
+          "line": 30,
+          "level": 2
+        },
+        {
+          "title": "5. 五项最低成本实验",
+          "line": 36,
+          "level": 2
+        },
+        {
+          "title": "EX1 四页方法一致性",
+          "line": 38,
+          "level": 3
+        },
+        {
+          "title": "EX2 主图与足迹前缀稳定性",
+          "line": 42,
+          "level": 3
+        },
+        {
+          "title": "EX3 收集增量与降噪",
+          "line": 46,
+          "level": 3
+        },
+        {
+          "title": "EX4 模型与模板",
+          "line": 50,
+          "level": 3
+        },
+        {
+          "title": "EX5 部署与查询必要性",
+          "line": 54,
+          "level": 3
+        },
+        {
+          "title": "6. 评价指标及分母",
+          "line": 58,
+          "level": 2
+        },
+        {
+          "title": "7. 预测实验边界",
+          "line": 73,
+          "level": 2
+        },
+        {
+          "title": "8. 发布门槛",
+          "line": 79,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/18_codex_handoff.md",
+      "title": "18｜开发者接手（唯一入口版）",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "请从EXECUTION_MASTER.md执行。原本“先只读、等用户再选一个切片”的接手方式，已由本轮用户要求改为：明确默认主线、P00核对后继续开发、常规阶段不重复索要scope。",
+      "bytes": 1484,
+      "headings": [
+        {
+          "title": "18｜开发者接手（唯一入口版）",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/19_sources_and_review_boundary.md",
+      "title": "19｜证据、审阅覆盖、未解决项与统计规则",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "当前代码基线为GitHub main读取时的a6ef6c8974dcdaace32acf25c3a231ecd279ef37。先读取commit/tree与目录，再通过GitHub连接器逐范围读取关键文件。没有克隆整个仓库，没有运行依赖安装、候选代码、仓库测试、API诊断或生产部署。",
+      "bytes": 5287,
+      "headings": [
+        {
+          "title": "19｜证据、审阅覆盖、未解决项与统计规则",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 本轮直接审阅与历史资料分开",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "2. 对旧事实报告的处理",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "3. 外部研究边界",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "4. 四种结论",
+          "line": 25,
+          "level": 2
+        },
+        {
+          "title": "5. 无法由目前证据确定的重点",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "6. 正文规模如何计算",
+          "line": 41,
+          "level": 2
+        },
+        {
+          "title": "7. 文档质量检查不等于产品验证",
+          "line": 47,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/00_current/20_dataset_adoption_cards.md",
+      "title": "20｜32个当前规范数据集的接入清单",
+      "role": "第二批技术方案正文",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "来源为固定提交cloudflare/finance/datasets.mjs及其归一化。下表不是新增32个API或自动采集配置；同一目录已存在，重点是消费、覆盖和领域验收。C04｜cloudflare/finance/datasets.mjs（读取范围见登记） C05｜cloudflare/finance/datase…",
+      "bytes": 7221,
+      "headings": [
+        {
+          "title": "20｜32个当前规范数据集的接入清单",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "实施排序",
+          "line": 40,
+          "level": 2
+        },
+        {
+          "title": "每个数据集的能力记录",
+          "line": 44,
+          "level": 2
+        },
+        {
+          "title": "共同退出规则",
+          "line": 48,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-EXEC-README.md",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/README.md",
+      "title": "当前任务目录",
+      "role": "第二批执行导航/镜像",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "tasks.json与阶段MD由本次整理同步生成，保留原48项NEW编号及硬依赖。它是导航镜像，不用作可变进度或另一套调度权威。实际开发只更新根EXECUTION_LOG.md。",
+      "bytes": 778,
+      "headings": [
+        {
+          "title": "当前任务目录",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-EXEC-acceptance_map.json",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/acceptance_map.json",
+      "title": "acceptance_map.json",
+      "role": "第二批执行导航/镜像",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 18820,
+      "headings": []
+    },
+    {
+      "id": "P00",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P00_repository_binding.md",
+      "title": "P00｜绑定当前仓库与已归档资料，建立测试和权限基线",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 16794,
+      "headings": [
+        {
+          "title": "P00｜绑定当前仓库与已归档资料，建立测试和权限基线",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 36,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 46,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 52,
+          "level": 2
+        },
+        {
+          "title": "NEW-001｜锁定本次工作区和能力范围",
+          "line": 55,
+          "level": 3
+        },
+        {
+          "title": "NEW-002｜登记启用来源的用途与运行条件",
+          "line": 85,
+          "level": 3
+        },
+        {
+          "title": "NEW-003｜把审查反例接到现有测试入口",
+          "line": 115,
+          "level": 3
+        },
+        {
+          "title": "NEW-047｜对手方资料和公共源复核登记",
+          "line": 145,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 174,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P01",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P01_data_contracts.md",
+      "title": "P01｜建立供当前页面使用的最小数据、时间和方法边界",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 14805,
+      "headings": [
+        {
+          "title": "P01｜建立供当前页面使用的最小数据、时间和方法边界",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 36,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 46,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 52,
+          "level": 2
+        },
+        {
+          "title": "NEW-004｜建立最小typed observation与quality适配",
+          "line": 55,
+          "level": 3
+        },
+        {
+          "title": "NEW-005｜能力状态与真实新鲜度读取",
+          "line": 85,
+          "level": 3
+        },
+        {
+          "title": "NEW-006｜有界as-of与窗口选择",
+          "line": 115,
+          "level": 3
+        },
+        {
+          "title": "NEW-007｜纯方法注册与跨消费者映射",
+          "line": 145,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 174,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P02_chart_workbench.md",
+      "title": "P02｜完成行情工作台的产品身份、确认状态、VWAP和结构修正",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 17541,
+      "headings": [
+        {
+          "title": "P02｜完成行情工作台的产品身份、确认状态、VWAP和结构修正",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 38,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 48,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "NEW-008｜主图接入规范同产品K线",
+          "line": 57,
+          "level": 3
+        },
+        {
+          "title": "NEW-009｜主图实时确认和晚到请求保护",
+          "line": 87,
+          "level": 3
+        },
+        {
+          "title": "NEW-010｜新增成交额、主动量与真实VWAP",
+          "line": 117,
+          "level": 3
+        },
+        {
+          "title": "NEW-011｜修正结构价位和近端突破生命周期",
+          "line": 147,
+          "level": 3
+        },
+        {
+          "title": "NEW-012｜主图周期覆盖与默认信息层",
+          "line": 177,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 206,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P03_market_template.md",
+      "title": "P03｜尽早交付固定输入的市场变化模板与报告生命周期",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 12260,
+      "headings": [
+        {
+          "title": "P03｜尽早交付固定输入的市场变化模板与报告生命周期",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 38,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 48,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "NEW-035｜按能力封存输入和结果身份",
+          "line": 57,
+          "level": 3
+        },
+        {
+          "title": "NEW-036｜确定性变化简报与误导规则退出",
+          "line": 87,
+          "level": 3
+        },
+        {
+          "title": "NEW-039｜预览与不可变最终报告",
+          "line": 117,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 146,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P04_derivatives.md",
+      "title": "P04｜统一衍生品单位、窗口、OI和跨消费者方法",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 13863,
+      "headings": [
+        {
+          "title": "P04｜统一衍生品单位、窗口、OI和跨消费者方法",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 45,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "NEW-021｜资金费与基差显式单位",
+          "line": 54,
+          "level": 3
+        },
+        {
+          "title": "NEW-022｜OI窗口、规格与估值分解",
+          "line": 84,
+          "level": 3
+        },
+        {
+          "title": "NEW-023｜Taker和多空比例语义对齐",
+          "line": 114,
+          "level": 3
+        },
+        {
+          "title": "NEW-024｜衍生品页与四页快照同源方法",
+          "line": 144,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 173,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P05_orderflow.md",
+      "title": "P05｜统一足迹分箱、POC、价值区、CVD和SFP时点",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 13736,
+      "headings": [
+        {
+          "title": "P05｜统一足迹分箱、POC、价值区、CVD和SFP时点",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 34,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 44,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 50,
+          "level": 2
+        },
+        {
+          "title": "NEW-013｜分离足迹分析格与显示格",
+          "line": 53,
+          "level": 3
+        },
+        {
+          "title": "NEW-014｜统一POC并列及价值区规则",
+          "line": 83,
+          "level": 3
+        },
+        {
+          "title": "NEW-015｜SFP按已知价位和确认bar评估",
+          "line": 113,
+          "level": 3
+        },
+        {
+          "title": "NEW-016｜足迹新鲜度、CVD与失衡方法",
+          "line": 143,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 172,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P06_liquidations.md",
+      "title": "P06｜修正强平事件语义、统计范围及压力条件",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 14015,
+      "headings": [
+        {
+          "title": "P06｜修正强平事件语义、统计范围及压力条件",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 45,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "NEW-017｜强平类型与unknown方向",
+          "line": 54,
+          "level": 3
+        },
+        {
+          "title": "NEW-018｜强平事件身份与实时/历史互斥",
+          "line": 84,
+          "level": 3
+        },
+        {
+          "title": "NEW-019｜清算窗口和强度的范围化统计",
+          "line": 114,
+          "level": 3
+        },
+        {
+          "title": "NEW-020｜压力页与快照统一条件向量",
+          "line": 144,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 173,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P07_intelligence.md",
+      "title": "P07｜完成有限来源、文档版本、事件去重与低噪音情报链",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 14705,
+      "headings": [
+        {
+          "title": "P07｜完成有限来源、文档版本、事件去重与低噪音情报链",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 38,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 48,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "NEW-031｜有限独立情报来源登记",
+          "line": 57,
+          "level": 3
+        },
+        {
+          "title": "NEW-032｜文档版本与有界提取",
+          "line": 87,
+          "level": 3
+        },
+        {
+          "title": "NEW-033｜事件主张、转载和更正关系",
+          "line": 117,
+          "level": 3
+        },
+        {
+          "title": "NEW-034｜BTC相关性与覆盖不足状态",
+          "line": 147,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 176,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P08_model_workflow.md",
+      "title": "P08｜接入受约束模型综合、根预算与输出核验",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 9100,
+      "headings": [
+        {
+          "title": "P08｜接入受约束模型综合、根预算与输出核验",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 45,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "NEW-037｜根任务预算与模型适配",
+          "line": 54,
+          "level": 3
+        },
+        {
+          "title": "NEW-038｜受约束综合与程序核验",
+          "line": 84,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 113,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P09_workspace_history.md",
+      "title": "P09｜贯通四页证据、研究现场、旧链接与导出",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 8974,
+      "headings": [
+        {
+          "title": "P09｜贯通四页证据、研究现场、旧链接与导出",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 34,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 44,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 50,
+          "level": 2
+        },
+        {
+          "title": "NEW-040｜统一四页证据入口与Research View",
+          "line": 53,
+          "level": 3
+        },
+        {
+          "title": "NEW-041｜旧链接、导出和分层保留",
+          "line": 83,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 112,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P10",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P10_validation_handoff.md",
+      "title": "P10｜完成价值对照、跨页回归、迁移演练与开发收口",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
+      "bytes": 13767,
+      "headings": [
+        {
+          "title": "P10｜完成价值对照、跨页回归、迁移演练与开发收口",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 阶段产物",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 开始条件",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "3. 最小阅读范围",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "4. 本阶段执行链",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "5. 阶段验收与跨页关系",
+          "line": 37,
+          "level": 2
+        },
+        {
+          "title": "6. 阻塞与回退",
+          "line": 47,
+          "level": 2
+        },
+        {
+          "title": "7. 逐任务执行规格",
+          "line": 53,
+          "level": 2
+        },
+        {
+          "title": "NEW-043｜数据增量与模型增量分离评价",
+          "line": 56,
+          "level": 3
+        },
+        {
+          "title": "NEW-044｜逐切片端到端与迁移演练",
+          "line": 86,
+          "level": 3
+        },
+        {
+          "title": "NEW-048｜开发接手与范围闭合",
+          "line": 116,
+          "level": 3
+        },
+        {
+          "title": "8. 阶段检查点与下一步",
+          "line": 145,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/phases/P11_conditional_branches.md",
+      "title": "P11｜九项条件分支：有触发则处理，无触发则保留证据",
+      "role": "第二批阶段任务定义",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "本文件不是默认第十二个“全部必须实现”的阶段，也不是积压清单清零目标。先读唯一总任务。每个分支在标注的检查点判断，可在主线中途触发，不用等四页全部完成。最终P10必须给每个分支一个明确状态。",
+      "bytes": 29646,
+      "headings": [
+        {
+          "title": "P11｜九项条件分支：有触发则处理，无触发则保留证据",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 启用判定",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "C25｜历史回补与覆盖",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "NEW-025｜有界历史回补和周期覆盖",
+          "line": 22,
+          "level": 3
+        },
+        {
+          "title": "C26｜接收版本与存储优化",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "NEW-026｜接收版本写放大与冲突优化",
+          "line": 62,
+          "level": 3
+        },
+        {
+          "title": "C27｜持续采集运行位置",
+          "line": 91,
+          "level": 2
+        },
+        {
+          "title": "NEW-027｜采集运行环境与持续性实验",
+          "line": 102,
+          "level": 3
+        },
+        {
+          "title": "C28｜宏观与跨资产背景",
+          "line": 131,
+          "level": 2
+        },
+        {
+          "title": "NEW-028｜FRED与跨资产时点背景",
+          "line": 142,
+          "level": 3
+        },
+        {
+          "title": "C29｜ETF披露核对",
+          "line": 171,
+          "level": 2
+        },
+        {
+          "title": "NEW-029｜有限ETF披露核对试点",
+          "line": 182,
+          "level": 3
+        },
+        {
+          "title": "C30｜有限期权截面",
+          "line": 211,
+          "level": 2
+        },
+        {
+          "title": "NEW-030｜期权摘要优先复用与有限截面",
+          "line": 222,
+          "level": 3
+        },
+        {
+          "title": "C42｜观点与站内预警",
+          "line": 251,
+          "level": 2
+        },
+        {
+          "title": "NEW-042｜观点记录与条件预警试点",
+          "line": 262,
+          "level": 3
+        },
+        {
+          "title": "C45｜生产切换与观察",
+          "line": 291,
+          "level": 2
+        },
+        {
+          "title": "NEW-045｜生产切换提案与有限观察",
+          "line": 302,
+          "level": 3
+        },
+        {
+          "title": "C46｜批研究或独立数据库",
+          "line": 331,
+          "level": 2
+        },
+        {
+          "title": "NEW-046｜按实测评估批研究或独立数据库",
+          "line": 342,
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "B2-EXEC-tasks.json",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/01_execution/tasks.json",
+      "title": "tasks.json",
+      "role": "第二批执行导航/镜像",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 87316,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/README.md",
+      "title": "设计契约与合成链路",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "本目录是小型语义合同示例，不是生产数据库迁移，不取代finance现有响应。所有example都是合成，example_only=true；scope外部调用和生产写入均false。原旧版本的30表/39API不作为本次必建清单。",
+      "bytes": 825,
+      "headings": [
+        {
+          "title": "设计契约与合成链路",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/api-design.json",
+      "title": "api-design.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 1110,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/design.schema.json",
+      "title": "design.schema.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 7739,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/example_capture.json",
+      "title": "example_capture.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 378,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/example_metric_vwap.json",
+      "title": "example_metric_vwap.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 373,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/example_observation_base.json",
+      "title": "example_observation_base.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 388,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/example_observation_quote.json",
+      "title": "example_observation_quote.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 391,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/example_report.json",
+      "title": "example_report.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 442,
+      "headings": []
+    },
+    {
+      "id": "B2-CONTRACT",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/02_contracts/example_scope.json",
+      "title": "example_scope.json",
+      "role": "第二批拟议契约/合成样例",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 348,
+      "headings": []
+    },
+    {
+      "id": "B2-VALIDATION",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/03_validation/README.md",
+      "title": "原业务验收材料与检查范围",
+      "role": "第二批原验收场景，未在仓库执行",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "原66个针对性场景完整保留在acceptance_cases.json，均不是本轮仓库测试结果。输入为最小问题描述，接入真实函数时需要补齐其参数，不能当生产payload或正常fallback。",
+      "bytes": 806,
+      "headings": [
+        {
+          "title": "原业务验收材料与检查范围",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-VALIDATION",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/03_validation/acceptance_cases.json",
+      "title": "acceptance_cases.json",
+      "role": "第二批原验收场景，未在仓库执行",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 26556,
+      "headings": []
+    },
+    {
+      "id": "B2-VALIDATION",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/03_validation/delivery-summary.json",
+      "title": "delivery-summary.json",
+      "role": "第二批原验收场景，未在仓库执行",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 43902,
+      "headings": []
+    },
+    {
+      "id": "B2-EVIDENCE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/04_evidence/README.md",
+      "title": "本轮直接证据索引",
+      "role": "第二批依据与清单",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "代码固定于a6ef6c8974dcdaace32acf25c3a231ecd279ef37；外部查询日期2026-09-17。源码range为请求范围，短文件返回至实际末尾；只对实际返回内容作判断。文件出现与运行成功分开。",
+      "bytes": 12578,
+      "headings": [
+        {
+          "title": "本轮直接证据索引",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "未取得所需内容",
+          "line": 56,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-EVIDENCE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/04_evidence/content_counts.json",
+      "title": "content_counts.json",
+      "role": "第二批依据与清单",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 1093,
+      "headings": []
+    },
+    {
+      "id": "B2-EVIDENCE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/04_evidence/package_manifest.json",
+      "title": "package_manifest.json",
+      "role": "第二批依据与清单",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 48296,
+      "headings": []
+    },
+    {
+      "id": "B2-EVIDENCE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/04_evidence/sources.json",
+      "title": "sources.json",
+      "role": "第二批依据与清单",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 26038,
+      "headings": []
+    },
+    {
+      "id": "B2-RELEASE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/05_release/CHANGELOG.md",
+      "title": "第二批执行版｜重整范围与保全说明",
+      "role": "第二批重整说明与保全",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "整理日期：2026-09-17。输入是用户已收到的bitcoin_system_upgrade_2026-09-17.zip；这次没有重新调查当前GitHub或改变生产代码。第一批已经归档是本次用户提供的状态，具体路径由开发阶段核对。",
+      "bytes": 2137,
+      "headings": [
+        {
+          "title": "第二批执行版｜重整范围与保全说明",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "保留",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "改动",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "未改动的研究边界",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "历史与检查",
+          "line": 21,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-RELEASE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/05_release/REVIEW_BOUNDARY.md",
+      "title": "本轮证据与设计边界",
+      "role": "第二批重整说明与保全",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "来源：原第二批根README、卷00/15/16/18、01_execution/tasks.json、66项验收场景和技术专项。它们支持当前任务标题、原前置、模块线索、修改范围、验收和回退。第一批事实报告仅用于理解历史工作区边界，不覆盖后来的固定提交。",
+      "bytes": 889,
+      "headings": [
+        {
+          "title": "本轮证据与设计边界",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-RELEASE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/05_release/TASK_COVERAGE.md",
+      "title": "48项原任务覆盖与入口去冲突",
+      "role": "第二批重整说明与保全",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "所有原NEW编号恰好有一份当前任务正文；未重编号，未删除原任务。39项非条件任务全部纳入主线，9项原条件任务保持触发式。硬依赖与原JSON保持一致；默认主线是其有效拓扑顺序。",
+      "bytes": 7125,
+      "headings": [
+        {
+          "title": "48项原任务覆盖与入口去冲突",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-RELEASE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/05_release/content_summary.json",
+      "title": "content_summary.json",
+      "role": "第二批重整说明与保全",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 26621,
+      "headings": []
+    },
+    {
+      "id": "B2-RELEASE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/05_release/delivery-checks.json",
+      "title": "delivery-checks.json",
+      "role": "第二批重整说明与保全",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 251504,
+      "headings": []
+    },
+    {
+      "id": "B2-RELEASE",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/05_release/source-preservation.json",
+      "title": "source-preservation.json",
+      "role": "第二批重整说明与保全",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
+      "bytes": 14172,
+      "headings": []
+    },
+    {
+      "id": "B2-HISTORY",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/99_history/README.md",
+      "title": "本轮改版前的执行入口原件",
+      "role": "被替换的旧入口原件",
+      "batch": "batch2",
+      "authority": "history",
+      "summary": "batch2_original_entry_files.zip仅保存本轮调整过入口或角色的原文件，供追溯，不解压进当前执行目录、不用于安排任务。其余未改材料仍在原相对路径。",
+      "bytes": 505,
+      "headings": [
+        {
+          "title": "本轮改版前的执行入口原件",
+          "line": 1,
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "B2-HISTORY",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/99_history/batch2_original_entry_files.zip",
+      "title": "batch2_original_entry_files.zip",
+      "role": "原始压缩包",
+      "batch": "batch2",
+      "authority": "history",
+      "summary": "原始交付包，供追溯；不递归展开或执行包内内容。",
+      "bytes": 55149,
+      "headings": []
+    },
+    {
+      "id": "EXECUTION-LOG",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/EXECUTION_LOG.md",
+      "title": "执行日志｜由实际开发者填写",
+      "role": "第二批实际进度日志",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "这是本包唯一可变进度记录。初始状态全部待执行；文档生成器没有完成任何仓库开发。不得把本文件初始表、原QA或合成场景数写成业务测试结果。",
+      "bytes": 19172,
+      "headings": [
+        {
+          "title": "执行日志｜由实际开发者填写",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 工作区绑定",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 权限记录",
+          "line": 27,
+          "level": 2
+        },
+        {
+          "title": "3. 当前检查点",
+          "line": 41,
+          "level": 2
+        },
+        {
+          "title": "4. 任务状态",
+          "line": 50,
+          "level": 2
+        },
+        {
+          "title": "5. 每次任务完成记录（按时间追加）",
+          "line": 105,
+          "level": 2
+        },
+        {
+          "title": "6. 条件分支记录（必须填写，不能默认勾选）",
+          "line": 151,
+          "level": 2
+        },
+        {
+          "title": "7. 最终交接",
+          "line": 165,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "EXECUTION-MASTER",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/EXECUTION_MASTER.md",
+      "title": "第二批资料｜唯一执行总任务",
+      "role": "第二批唯一执行总任务",
+      "batch": "batch2",
+      "authority": "high",
+      "summary": "执行版：batch2-execution-1.0-design｜整理日期：2026-09-17。",
+      "bytes": 19127,
+      "headings": [
+        {
+          "title": "第二批资料｜唯一执行总任务",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 当前目标与明确范围",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "2. 哪份材料决定什么",
+          "line": 19,
+          "level": 2
+        },
+        {
+          "title": "3. 一次授权下的执行方式",
+          "line": 34,
+          "level": 2
+        },
+        {
+          "title": "3.1 默认可连续推进的范围",
+          "line": 36,
+          "level": 3
+        },
+        {
+          "title": "3.2 不把测试前置变成全仓工程",
+          "line": 54,
+          "level": 3
+        },
+        {
+          "title": "4. 默认主线与阶段顺序",
+          "line": 62,
+          "level": 2
+        },
+        {
+          "title": "5. 阻塞时怎样继续，而不是停在询问",
+          "line": 84,
+          "level": 2
+        },
+        {
+          "title": "6. 九项条件分支，不是全部必做",
+          "line": 101,
+          "level": 2
+        },
+        {
+          "title": "7. 与第一批资料的衔接",
+          "line": 121,
+          "level": 2
+        },
+        {
+          "title": "8. 共同责任与最小改动原则",
+          "line": 133,
+          "level": 2
+        },
+        {
+          "title": "9. 进度、检查点与恢复",
+          "line": 141,
+          "level": 2
+        },
+        {
+          "title": "10. 最终交付判定",
+          "line": 158,
+          "level": 2
+        },
+        {
+          "title": "11. 本轮整理的核验边界",
+          "line": 168,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "B2-README",
+      "path": "docs/research/bitcoin-upgrade/batch2-execution/README.md",
+      "title": "第二批系统升级资料｜可顺序执行版",
+      "role": "第二批说明与阶段表",
+      "batch": "batch2",
+      "authority": "design",
+      "summary": "唯一入口：EXECUTION_MASTER.md。",
+      "bytes": 3986,
+      "headings": [
+        {
+          "title": "第二批系统升级资料｜可顺序执行版",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "如何启动",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "默认路线",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "文件分工",
+          "line": 31,
+          "level": 2
+        },
+        {
+          "title": "准确边界",
+          "line": 47,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/bitcoin-upgrade/archives/bitcoin_batch2_execution_ready_2026-09-17.zip",
+      "path": "docs/research/bitcoin-upgrade/archives/bitcoin_batch2_execution_ready_2026-09-17.zip",
+      "title": "bitcoin_batch2_execution_ready_2026-09-17.zip",
+      "role": "原始压缩包",
+      "batch": "batch1",
+      "authority": "history",
+      "summary": "原始交付包，供追溯；不递归展开或执行包内内容。",
+      "bytes": 1054265,
+      "headings": []
+    },
+    {
       "id": "docs/research/bitcoin-upgrade/archives/bitcoin_research_final_2026-09-16.zip",
       "path": "docs/research/bitcoin-upgrade/archives/bitcoin_research_final_2026-09-16.zip",
       "title": "bitcoin_research_final_2026-09-16.zip",
       "role": "原始压缩包",
+      "batch": "batch1",
+      "authority": "history",
       "summary": "原始交付包，供追溯；不递归展开或执行包内内容。",
       "bytes": 1956984,
       "headings": []
