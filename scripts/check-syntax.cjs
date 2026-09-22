@@ -42,6 +42,7 @@ for (const file of files) {
   if (rel.replace(/\\/g, "/") === "cloudflare/binance-klines-worker.js") {
     src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
     src = src
+      .replace(/\bexport\s*\{\s*KlineLiveCollector\s*\}\s*;?/, "")
       .replace(/\bexport\s+class\s+LiquidationCollector\b/, "class LiquidationCollector")
       .replace(/\bexport\s+const\s+__footprintTestHooks\s*=/, "const __footprintTestHooks =")
       .replace(/\bexport\s+default\s*\{/, "const __workerDefault = {");

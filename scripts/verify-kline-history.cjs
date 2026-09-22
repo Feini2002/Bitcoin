@@ -17,7 +17,7 @@ const { DatabaseSync } = require('node:sqlite');
         const list = rows.filter(r => Number(r[0]) <= end).slice(-Number(url.searchParams.get('limit'))).reverse();
         return Response.json({retCode:0,result:{list}});
       };
-      const result = await hooks.fetchKlineHistory({}, 'BTCUSDT', interval);
+      const result = await hooks.fetchKlineHistory({ KLINE_ALTERNATE_FAILOVER: '1' }, 'BTCUSDT', interval);
       assert.equal(result.ok, true);
       assert.equal(result.source, 'bybit-failover');
       assert.equal(new Set(result.klines.map(r=>r[0])).size, result.klines.length);
@@ -35,6 +35,15 @@ const { DatabaseSync } = require('node:sqlite');
       assert.ok(primaryCalls===initialPrimaryCalls, 'do not retry failed primary on every page');
       console.log('PASS history '+interval+' bars='+result.klines.length+' pages='+pages);
     }
+    global.fetch = async target => {
+      const url = new URL(target);
+      if (!url.hostname.includes('bybit')) return new Response('restricted', {status:403});
+      return Response.json({retCode:0,result:{list:[['1420070400000','1','1','1','1','1']]}});
+    };
+    const blocked = await hooks.fetchKlineHistory({}, 'BTCUSDT', '15m');
+    assert.equal(blocked.ok, false);
+    assert.notEqual(blocked.source, 'bybit-failover');
+    console.log('PASS analysis path does not failover to Bybit by default');
   } finally { global.fetch=originalFetch; }
   const db = new DatabaseSync(':memory:');
   try {

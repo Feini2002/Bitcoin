@@ -1,20 +1,51 @@
 // 主图请求元数据与多周期面板、WebSocket 分离。
 let chartD1Meta = null;
+let chartDeskPayload = null;
 let chartReadAbort = null;
 async function readChartD1Klines(symbol, interval, limit, opts = {}) {
   const generation = chartLoadGen;
-  return DataEngine.fetchKlinesFromD1(symbol, interval, limit, {
-    ...opts, signal: chartReadAbort ? chartReadAbort.signal : undefined,
+  if (typeof DataEngine === "undefined" || typeof DataEngine.fetchDesk !== "function") {
+    throw new Error("desk 装配层不可用");
+  }
+  const desk = await DataEngine.fetchDesk("chart", {
+    symbol, interval, tail: opts.tail, signal: chartReadAbort ? chartReadAbort.signal : opts.signal,
     onMetadata: meta => {
-      if (generation === chartLoadGen && symbol === CHART_SYMBOL && interval === currentInterval) chartD1Meta = meta;
+      if (generation === chartLoadGen && symbol === CHART_SYMBOL && interval === currentInterval) {
+        chartDeskPayload = meta;
+        chartD1Meta = {
+          symbol, interval,
+          count: meta.coverage && meta.coverage.returned != null ? meta.coverage.returned : 0,
+          latestT: meta.observedAt ? Date.parse(meta.observedAt) : 0,
+          lastSync: meta.storedAt || meta.receivedAt || null,
+          source: "desk",
+          venue: meta.venue || null,
+          backend: typeof getBitDataApiBase === "function" ? new URL(getBitDataApiBase()).host : "",
+          receivedAt: Date.now(),
+          pricePathAvailable: meta.pricePathAvailable === true,
+          gap: meta.gap || null,
+          instrumentId: meta.instrumentId || null,
+        };
+      }
     },
   });
+  chartDeskPayload = desk;
+  window.__bitDeskChartPricePathAvailable = desk.pricePathAvailable === true;
+  if (desk.pricePathAvailable === true && desk.instrumentId) {
+    CHART_PRODUCT.id = desk.instrumentId;
+    CHART_PRODUCT.venue = desk.venue || CHART_PRODUCT.venue;
+  } else {
+    CHART_PRODUCT.id = "unconfirmed";
+  }
+  if (desk.pricePathAvailable !== true) return [];
+  const rows = Array.isArray(desk.series) ? desk.series : [];
+  return rows.slice(-(Number(limit) || rows.length));
 }
 /* =======================================================
    行情工作台
-   - 初始历史数据走 Worker /api/d1/klines（Cloudflare D1 缓存，币安源）
-   - 浏览器每 60s 只读 D1 小窗口；打开后若当前周期明显落后会触发一次当前周期同步，右上角按钮也会同步并重读当前周期。
-   - 实时 K 线由 Binance WebSocket（当前周期的 kline stream）补齐 OHLC。
+   - 初始历史走 /api/desk/chart（live tape 新鲜时读 klines 表）。
+   - 浏览器每 1s 只读 desk 尾部；打开后若当前周期明显落后会触发一次当前周期同步。
+   - 云端 Durable Object 订阅币安 K 线流，约 1 秒合并写入 D1；Cron 每分钟全周期 REST 备份。
+   - 浏览器另连 Binance WebSocket（当前周期 kline stream）补齐未收盘 OHLC。
    - 主图标题栏「最新价」独立推送：优先 Binance aggTrade WebSocket（U 本位/现货线路自动切换 + 解析组合流包装），
      网络/CORS 受阻时用币安公开 REST 最新价与 Worker「BIT_DATA_API_BASE」上的 /api/binance/ticker/price 轮询兜底（非 D1、非 K 线序列）。
    ======================================================= */
@@ -26,7 +57,7 @@ const CHART_HEADLINE_REST_MS = 1000;
 const CHART_HEADLINE_REST_PAUSE_AFTER_WS_MS = 2000;
 /** 已连接但长时间收不到 aggTrade 时切换 spot/futures 线路 */
 const CHART_HEADLINE_WS_STALL_SWITCH_MS = 7000;
-const CHART_D1_POLL_MS = 60 * 1000;
+const CHART_D1_POLL_MS = 1000;
 const CHART_D1_POLL_LIMIT = 20;
 const CHART_D1_SYNC_TIMEOUT_MS = 90 * 1000;
 const CHART_D1_AUTO_SYNC_STALE_BARS = 2;
@@ -199,13 +230,32 @@ const CHART_PRODUCT = {
   market: "USDM",
   symbol: "BTCUSDT",
   contractType: "PERPETUAL",
-  id: "BINANCE:USDM:BTCUSDT:PERPETUAL",
+  id: "unconfirmed",
 };
 const CHART_NATIVE_DATASETS = ["5m", "15m", "1h", "4h", "1d", "1w"];
 let currentInterval = readPersistedInterval();
 let chartLoadGen = 0;
 let chartViewportRangeHandler = null;
 let viewportPersistTimer = null;
+
+function chartPricePathOpen() {
+  return !!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true && Array.isArray(chartOhlcv) && chartOhlcv.length);
+}
+
+function setChartDeskHalt(halted, reason) {
+  const desk = document.querySelector(".chart-desk");
+  const overlay = document.getElementById("chart-empty-desk");
+  if (desk) desk.classList.toggle("halted", !!halted);
+  if (overlay) {
+    overlay.hidden = !halted;
+    const reasonEl = overlay.querySelector(".desk-halt-reason");
+    if (reasonEl) reasonEl.textContent = reason || "币安主源未恢复，主图不可当作行情使用。";
+  }
+  document.querySelectorAll(".tf-btn, .chart-sync-btn, #mtf-toggle, .chart-indicator-panel input, .chart-indicator-panel select, .chart-indicator-panel button").forEach((el) => {
+    if (el) el.disabled = !!halted;
+  });
+  window.__bitDeskChartPricePathAvailable = !halted;
+}
 
 /** 当前图表 OHLCV（毫秒 t），供指标与 WS 增量共用 */
 let chartOhlcv = [];
@@ -637,7 +687,7 @@ async function loadHigherChartStructure(baseAnalysis, requestId, atrPeriod) {
     useHigher(cached.analysis);
     return;
   }
-  if (typeof DataEngine === "undefined" || typeof DataEngine.fetchKlinesFromD1 !== "function") {
+  if (typeof DataEngine === "undefined" || typeof DataEngine.fetchDesk !== "function") {
     useHigher(null);
     return;
   }
@@ -676,7 +726,10 @@ async function loadHigherChartStructure(baseAnalysis, requestId, atrPeriod) {
 function applyChartKeyLevelsFromOhlcv(klines) {
   const requestId = ++chartStructureRequestId;
   clearChartKeyPriceLines();
-  if (!candleSeries || typeof IndicatorMath === "undefined") {
+  const needed = currentInterval === "5m" ? 864 : currentInterval === "15m" ? 480 : 0;
+  const halt = !(chartDeskPayload && chartDeskPayload.pricePathAvailable === true);
+  const short = needed > 0 && (!Array.isArray(klines) || klines.length < needed);
+  if (halt || short || !candleSeries || typeof IndicatorMath === "undefined") {
     updateChartKeyLevelPanel(null);
     return;
   }
@@ -702,7 +755,7 @@ function updateSubchartDomVisibility(s) {
 
 function applyIndicatorsFromOhlcv(klines) {
   if (!lwChart || typeof IndicatorMath === "undefined") return;
-  if (!Array.isArray(klines) || klines.length === 0) {
+  if (!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true) || !Array.isArray(klines) || klines.length === 0) {
     disposeIndicatorOverlays();
     if (typeof IndicatorPanes !== "undefined") {
       if (typeof IndicatorPanes.setTimelineData === "function") {
@@ -1008,6 +1061,10 @@ function applyChartPrimaryHeadline(symbol, price) {
   const el = document.getElementById("chart-primary-title");
   if (!el) return;
   const s = String(symbol || CHART_SYMBOL).toUpperCase();
+  if (!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true)) {
+    el.textContent = `${s} —`;
+    return;
+  }
   const txt = formatChartHeadlinePrice(price);
   el.textContent = txt ? `${s} ${txt}` : `${s} —`;
 }
@@ -1022,6 +1079,7 @@ function chartExtractAggTradePayload(parsed) {
 }
 
 function chartTouchHeadlineFromAgg(inner, wantUpper) {
+  if (!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true)) return false;
   const s = String(wantUpper || CHART_SYMBOL).toUpperCase();
   if (String(inner.s || "").toUpperCase() !== s) return false;
   const p = parseFloat(inner.p);
@@ -1040,6 +1098,7 @@ function stopChartHeadlineRestPoll() {
 }
 
 async function chartPollHeadlinePriceRest() {
+  if (!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true)) return;
   if (typeof document !== "undefined" && document.hidden) return;
   if (Date.now() - chartHeadlineLastWsMsgAt < CHART_HEADLINE_REST_PAUSE_AFTER_WS_MS) return;
   if (chartHeadlineRestInFlight) return;
@@ -1120,6 +1179,13 @@ function pageChart() {
 
   return html`
     <div class="chart-desk">
+      <div id="chart-empty-desk" class="desk-halt-overlay" hidden>
+        <div class="desk-halt-card">
+          <strong>主图停机</strong>
+          <p class="desk-halt-reason">币安主源未恢复，主图不可当作行情使用。</p>
+          <p>周期、指标、多周期和结构线均不可当行情用。WebSocket OPEN 不等于实时。</p>
+        </div>
+      </div>
       <div class="chart-toolbar">
         <div class="chart-tf-group" aria-label="周期切换">
           ${tfButtons}
@@ -1333,9 +1399,6 @@ function initChart() {
   updateSubchartDomVisibility(readIndicatorSettings());
   bindIndicatorControls();
 
-  startChartAggTradeWs(CHART_SYMBOL);
-  startChartHeadlineRestPoll();
-
   const toolbar = document.querySelector(".chart-toolbar");
   if (toolbar && !toolbar.dataset.tfDelegate) {
     toolbar.dataset.tfDelegate = "1";
@@ -1380,7 +1443,7 @@ function chartWsStateShort() {
   if (!chartWs) return "行情 WS 未连";
   switch (chartWs.readyState) {
     case WebSocket.CONNECTING: return "WS 连接中";
-    case WebSocket.OPEN: return "实时";
+    case WebSocket.OPEN: return chartPricePathOpen() ? "WS OPEN（已有确认帧）" : "WS OPEN";
     case WebSocket.CLOSING: return "WS 关闭中";
     case WebSocket.CLOSED: return "行情 WS 已断";
     default: return "WS ?";
@@ -1421,7 +1484,9 @@ function setChartStatusLine(symbol, interval, nBars) {
   const lastSyncText = typeof lastSync === "string"
     ? lastSync
     : (lastSync && lastSync.last_run) ? String(lastSync.last_run) : "";
-  const productLine = `${CHART_PRODUCT.id}`;
+  const productLine = chartDeskPayload && chartDeskPayload.pricePathAvailable === true && chartDeskPayload.instrumentId
+    ? String(chartDeskPayload.instrumentId)
+    : "产品 ID 未确认";
   const requiredBars = interval === "5m" ? 864 : interval === "15m" ? 480 : null;
   const coverage = requiredBars && typeof BitContracts !== "undefined" && BitContracts.coverageForWindow
     ? BitContracts.coverageForWindow(nBars, requiredBars)
@@ -1445,9 +1510,11 @@ function setChartStatusLine(symbol, interval, nBars) {
   const evidenceEl = document.getElementById("chart-research-evidence");
   if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
     evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
-      instrumentId: CHART_PRODUCT.id,
+      instrumentId: (chartDeskPayload && chartDeskPayload.pricePathAvailable === true && chartDeskPayload.instrumentId)
+        ? String(chartDeskPayload.instrumentId)
+        : "unconfirmed",
       interval: interval,
-      source: meta && meta.source === "d1" ? "legacy-d1-klines" : "binance-usdm-klines",
+      source: (chartDeskPayload && chartDeskPayload.pricePathAvailable === true) ? "desk-chart" : "unconfirmed",
       coverage: coverage && coverage.ok === false ? `覆盖 ${coverage.available}/${coverage.required}` : (nBars ? `${nBars} 根` : null),
       recoveryGrade: legacy ? "restricted" : null,
     });
@@ -1462,7 +1529,7 @@ function setChartStatusLine(symbol, interval, nBars) {
     lastSyncText ? `上次写入 D1: ${lastSyncText}` : "",
     lastSync && lastSync.last_ok === 0 && lastSync.last_error ? `上次同步错误: ${lastSync.last_error}` : "",
     `WS 详情: ${chartWsStateText()}`,
-    `浏览器只读 D1 自动刷新间隔: ${Math.round(CHART_D1_POLL_MS / 1000)} 秒；打开后若当前周期明显落后会触发一次当前周期同步。`,
+    `浏览器只读 desk 自动刷新间隔: ${Math.round(CHART_D1_POLL_MS / 1000)} 秒；云端 K 线 live collector 按秒写入，打开后若当前周期明显落后会触发一次当前周期同步。`,
     "右上角按钮会调用 /api/d1/sync 同步当前周期，然后重读 D1 缓存；设置页仍用于全周期手动同步。",
     "说明：时间差 = 当前时间 − D1 最后一根 K 的开盘时间（币安字段 t）。进行中 K 线该差值常在 0～一个周期内；若远大于周期，才可能是 D1/Cron 落后。",
     "历史 K 来自币安 U 本位永续，经 Worker 落 D1；图表实时更新为浏览器直连币安 WS。",
@@ -1481,7 +1548,7 @@ function chartWsStateText() {
   if (!chartWs) return "未连接";
   switch (chartWs.readyState) {
     case WebSocket.CONNECTING: return "连接中";
-    case WebSocket.OPEN: return "已连接(实时)";
+    case WebSocket.OPEN: return chartPricePathOpen() ? "已连接（有市场帧）" : "已连接（无确认帧）";
     case WebSocket.CLOSING: return "关闭中";
     case WebSocket.CLOSED: return "已断开";
     default: return "?";
@@ -1529,6 +1596,7 @@ function closeChartAggTradeWs() {
 function startChartAggTradeWs(symbol) {
   closeChartAggTradeWs();
   if (typeof WebSocket === "undefined") return;
+  if (!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true)) return;
 
   const want = String(symbol || CHART_SYMBOL).toUpperCase();
   const streamSym = want.toLowerCase();
@@ -1592,6 +1660,7 @@ function startChartAggTradeWs(symbol) {
 function startChartWs(symbol, interval) {
   closeChartWs();
   if (typeof WebSocket === "undefined") return;
+  if (!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true)) return;
 
   const stream = `${symbol.toLowerCase()}@kline_${interval}`;
   const url = `wss://fstream.binance.com/market/ws/${stream}`;
@@ -1619,6 +1688,7 @@ function startChartWs(symbol, interval) {
     try { msg = JSON.parse(ev.data); } catch (_) { return; }
     const k = msg && msg.k;
     if (!k) return;
+    if (!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true)) return;
     const t = Number(k.t);
     const o = parseFloat(k.o);
     const h = parseFloat(k.h);
@@ -1682,8 +1752,11 @@ function startChartWs(symbol, interval) {
 
 let lastRenderedCount = 0;
 
-function refreshMtfAfterMainLoad() {
+let lastMtfReloadAt = 0;
+function refreshMtfAfterMainLoad(force = false) {
   if (typeof MtfTiles === "undefined") return;
+  if (!force && Date.now() - lastMtfReloadAt < 15_000) return;
+  lastMtfReloadAt = Date.now();
   try {
     MtfTiles.reloadAllTileData();
     MtfTiles.syncTimeFromMain();
@@ -1801,7 +1874,7 @@ function queueD1Poll(reason) {
   const myGen = chartD1PollGen;
   chartD1PollInFlight = true;
 
-  readChartD1Klines(symbol, interval, CHART_D1_POLL_LIMIT, { sync: "0" })
+  readChartD1Klines(symbol, interval, CHART_D1_POLL_LIMIT, { sync: "0", tail: CHART_D1_POLL_LIMIT })
     .then(async (raw) => {
       if (myGen !== chartD1PollGen || symbol !== CHART_SYMBOL || interval !== currentInterval) return;
       if (!Array.isArray(raw) || raw.length === 0) return;
@@ -1882,6 +1955,7 @@ async function maybeAutoSyncChartD1AfterRead(symbol, interval, loadGen, rows) {
 
 async function loadChartData(symbol, interval, opts = {}) {
   const myGen = ++chartLoadGen;
+  lastMtfReloadAt = 0;
   if (chartReadAbort) chartReadAbort.abort();
   chartReadAbort = new AbortController();
   const statusEl = document.getElementById("chart-status");
@@ -1900,43 +1974,50 @@ async function loadChartData(symbol, interval, opts = {}) {
   applyChartKeyLevelsFromOhlcv([]);
 
   chartD1Meta = null;
-  startChartWs(symbol, interval);
+  chartDeskPayload = null;
+  window.__bitDeskChartPricePathAvailable = false;
 
   try {
     const rawData = await readChartD1Klines(symbol, interval, 6000, { sync: "auto" });
     if (myGen !== chartLoadGen) return;
+    const halt = !(chartDeskPayload && chartDeskPayload.pricePathAvailable === true);
+    const gapReason = chartDeskPayload && chartDeskPayload.gap && chartDeskPayload.gap.reason
+      ? String(chartDeskPayload.gap.reason)
+      : "missing";
+    setChartDeskHalt(halt, halt ? `主源缺口：${gapReason}` : "");
 
-    if (!Array.isArray(rawData) || rawData.length === 0) {
-      if (statusEl) {
-        const base = typeof getBitDataApiBase === "function"
-          ? getBitDataApiBase()
-          : (typeof window !== "undefined" && window.BIT_DATA_API_BASE) ? String(window.BIT_DATA_API_BASE) : "";
-        statusEl.textContent =
-          `D1 暂无 ${interval} 数据，页面会自动重读；若持续为空，请访问 ${base || "https://btc.feiniwork.com"}/api/d1/status 查看状态，或到设置页触发「立即同步 D1」`;
-      }
+    if (halt || !Array.isArray(rawData) || rawData.length === 0) {
+      if (statusEl) statusEl.textContent = halt
+        ? `主图停机 · ${gapReason} · 不以 WebSocket OPEN 或宏观卡片充当行情`
+        : `desk 无合格 ${interval} 序列`;
+      applyChartPrimaryHeadline(symbol, NaN);
       if (candleSeries) candleSeries.setData([]);
       chartOhlcv = [];
       applyIndicatorsFromOhlcv(chartOhlcv);
       applyChartKeyLevelsFromOhlcv(chartOhlcv);
       lastRenderedCount = 0;
-      startChartD1Polling();
-      refreshMtfAfterMainLoad();
-      if (!opts.skipAutoSync) maybeAutoSyncChartD1AfterRead(symbol, interval, myGen, rawData);
+      closeChartWs();
+      closeChartAggTradeWs();
+      stopChartHeadlineRestPoll();
       return;
     }
 
     const count = setChartDataFromRows(mergeD1RowsWithLiveRows(rawData));
-
     writePersistedInterval(interval);
     restoreChartViewport(symbol, interval, myGen);
     setChartStatusLine(symbol, interval, count);
-    startChartD1Polling();
-    refreshMtfAfterMainLoad();
-    if (!opts.skipAutoSync) maybeAutoSyncChartD1AfterRead(symbol, interval, myGen, rawData);
+    startChartWs(symbol, interval);
+    startChartAggTradeWs(symbol);
+    startChartHeadlineRestPoll();
+    refreshMtfAfterMainLoad(true);
   } catch (e) {
     if (myGen !== chartLoadGen) return;
     console.error("加载图表数据失败:", e);
-    if (statusEl) statusEl.textContent = "加载失败: " + (e && e.message ? e.message : e);
-    startChartD1Polling();
+    setChartDeskHalt(true, e && e.message ? e.message : "desk 读取失败");
+    if (statusEl) statusEl.textContent = "主图停机: " + (e && e.message ? e.message : e);
+    applyChartPrimaryHeadline(symbol, NaN);
+    closeChartWs();
+    closeChartAggTradeWs();
+    stopChartHeadlineRestPoll();
   }
 }

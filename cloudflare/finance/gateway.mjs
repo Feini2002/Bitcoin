@@ -2,6 +2,7 @@ import { FINANCE_PROVIDERS, FINANCE_EXCLUSIONS, FINANCE_VERSION } from './regist
 import { financeChannelKey, readFinanceSnapshot, persistFinanceSnapshot, persistFinanceFailure, financeStorageStatus } from './store.mjs';
 import { FINANCE_DATASETS, datasetCatalog, datasetRequest } from './datasets.mjs';
 import { persistDataset, datasetFailure, readDataset, datasetStates } from './dataset-store.mjs';
+import { remapProviderBase, joinEgress, envelopeHost, egressRequestHeaders } from './egress.mjs';
 
 const MAX_BYTES = 4 * 1024 * 1024;
 const TIMEOUT_MS = 12000;
@@ -9,14 +10,13 @@ const reply = (body, status = 200, headers = {}) => Response.json(body, { status
 class ChannelError extends Error {
   constructor(code, status = 400) { super(code); this.code = code; this.status = status; }
 }
-
 export function financeCatalog(env = {}) {
   return {
     version:FINANCE_VERSION,
     mode:env.FINANCE_D1_ENABLED==='true' ? 'on-demand-d1-cache' : 'on-demand-read-only',
     storage:{enabled:env.FINANCE_D1_ENABLED==='true', retention:'latest-success-per-parameter-set', readPath:'/api/finance/stored/{provider}/{operation}', statusPath:'/api/finance/status'},
-    automaticCollection:false,
-    billing:'No subscriptions, upgrades, paid API hosts (except CMC Basic host), or billable background jobs are created. Cloudflare account usage remains subject to its existing plan.',
+    automaticCollection:true,
+    billing:'Upstream free-plan quotas still apply. Cloudflare paid usage is accepted for Workers/D1 background writes.',
     providers:Object.entries(FINANCE_PROVIDERS).map(([id,p]) => ({
       id, name:p.name, category:p.category, market:p.market || 'see-native-payload', cost:p.cost, docs:p.docs,
       notes:p.notes, ttlSeconds:p.ttl, checkedAt:'2026-09-16',
@@ -59,7 +59,8 @@ export function buildFinanceRequest(providerId, operation, search = new URLSearc
     used.add(key);
     return encodeURIComponent(values[key]);
   });
-  const url = new URL(pathname, o.base || p.base);
+  const base = remapProviderBase(providerId, env, o.base || p.base);
+  const url = new URL(joinEgress(base, pathname));
   const headers = { Accept:o.format === 'text' ? 'text/csv, application/xml, text/xml, */*' : 'application/json' };
   const body = o.body ? { ...o.body } : null;
   for (const [key,value] of Object.entries(values)) if (!used.has(key)) {
@@ -77,6 +78,7 @@ export function buildFinanceRequest(providerId, operation, search = new URLSearc
     headers['User-Agent']=agent;
   }
   if (body) headers['Content-Type']='application/json';
+  Object.assign(headers, egressRequestHeaders(env, url.toString()));
   return { provider:p, definition:o, url, values, init:{method:body?'POST':'GET',headers,redirect:'manual',...(body?{body:JSON.stringify(body)}:{})} };
 }
 
@@ -198,7 +200,7 @@ async function handleFinanceUpstream(request, env = {}, ctx = {}, dependencies =
     if(p.secret && raw.includes(String(env[p.secret]))) throw new ChannelError('upstream_sensitive_echo',502);
     const envelope={
       ok:true,version:FINANCE_VERSION,provider:providerId,operation,
-      source:{name:p.name,docs:p.docs,host:url.host,market:p.market || 'see-native-payload',cost:p.cost,notes:p.notes},
+      source:{name:p.name,docs:p.docs,host:envelopeHost(providerId,url.host),market:p.market || 'see-native-payload',cost:p.cost,notes:p.notes},
       parameters:values,requestedAt,receivedAt:new Date().toISOString(),
       timeSemantics:'receivedAt is gateway receipt time, not the market observation/publication time; retain native time fields in data.',
       format:o.format || 'json',normalized:false,cache:{hit:false,ttlSeconds:p.ttl},data,
@@ -238,7 +240,7 @@ export async function handleFinance(request, env = {}, ctx = {}, dependencies = 
   }
   if(!env.DB)return reply({ok:false,error:'finance_storage_unavailable'},503);
   if(status) {
-    try{return reply({ok:true,version:FINANCE_VERSION,automaticCollection:false,...await financeStorageStatus(env.DB)});}
+    try{return reply({ok:true,version:FINANCE_VERSION,automaticCollection:true,...await financeStorageStatus(env.DB)});}
     catch(_){return reply({ok:false,error:'finance_storage_unavailable'},503);}
   }
   if(parts.length!==(stored?6:5))return reply({ok:false,error:'unknown_channel'},404);

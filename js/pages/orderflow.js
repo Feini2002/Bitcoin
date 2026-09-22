@@ -129,8 +129,8 @@ function getOrderflowDeltaBias(bar) {
     return { side: "neutral", tone: "", label: "主动成交接近均衡" };
   }
   return delta > 0
-    ? { side: "buy", tone: "up", label: "买方主动成交相对占优" }
-    : { side: "sell", tone: "down", label: "卖方主动成交相对占优" };
+    ? { side: "buy", tone: "up", label: "aggTrade 主动买量近似偏多" }
+    : { side: "sell", tone: "down", label: "aggTrade 主动卖量近似偏空" };
 }
 
 function orderflowStudyPanelHtml() {
@@ -170,14 +170,21 @@ function pageOrderflow() {
 
   return html`
     <section class="orderflow-desk">
+      <div id="orderflow-empty-desk" class="desk-halt-overlay" hidden>
+        <div class="desk-halt-card">
+          <strong>足迹停机</strong>
+          <p class="desk-halt-reason">desk 足迹未确认，主画布不可当作盘口使用。</p>
+          <p>WebSocket OPEN 不等于实时。Delta 只是 aggTrade 主动量近似，不是 CVD。</p>
+        </div>
+      </div>
       <div class="orderflow-data-strip">
         <div class="orderflow-data-main">
           <span class="orderflow-feed-dot"></span>
           <strong>BTCUSDT 永续</strong>
-          <span>Cloud D1 Footprint · Binance aggTrade 轮询快照 · 东八区时间轴 · 前台约 10 秒刷新</span>
+          <span>Cloud D1 Footprint · 仅 desk 权威路径 · 失败则主画布空 · Delta 为 aggTrade 主动量近似</span>
         </div>
         <div class="orderflow-data-meta">
-          <span class="chip ok" id="of-live-chip">D1 轮询快照</span>
+          <span class="chip warn" id="of-live-chip">等待 desk</span>
           <a class="owner-link orderflow-owner-link" href="#/agent-flow" title="查看 盘口流动性官 的演示原型">
             <span class="owner-dot" style="background:var(--agent-flow)">盘</span>
             <span>盘口流动性官</span>
@@ -276,6 +283,26 @@ function pageOrderflow() {
   `;
 }
 
+function setOrderflowDeskHalt(halted, reason) {
+  const desk = document.querySelector(".orderflow-desk");
+  const overlay = document.getElementById("orderflow-empty-desk");
+  if (desk) desk.classList.toggle("halted", !!halted);
+  if (overlay) {
+    overlay.hidden = !halted;
+    const reasonEl = overlay.querySelector(".desk-halt-reason");
+    if (reasonEl) {
+      const raw = String(reason || "");
+      const clean = /<!DOCTYPE|<html|Access Denied/i.test(raw)
+        ? "主源缺口：upstream_html_error"
+        : raw.replace(/\s+/g, " ").trim().slice(0, 80);
+      reasonEl.textContent = clean || "desk 足迹未确认，主画布不可当作盘口使用。";
+    }
+  }
+  document.querySelectorAll(".of-tf-btn, #of-visible-bars, #of-tick-size, #of-load-bars, #of-imbalance-toggle, #of-vp-toggle, #of-clear-cache").forEach((el) => {
+    if (el) el.disabled = !!halted;
+  });
+}
+
 function updateOrderflowStats(statusText) {
   const latest = orderflowBars.length ? orderflowBars[orderflowBars.length - 1] : null;
   const freshness = getOrderflowFreshness(latest);
@@ -286,24 +313,25 @@ function updateOrderflowStats(statusText) {
     statusEl.textContent = `${statusText || "Cloud D1 polling"} · ${count} bars`;
     statusEl.title = `主路径为 Cloud D1 轮询快照；${freshness.label}`;
   }
+  const halted = !(orderflowMeta && orderflowMeta.authoritative) || !orderflowBars.length;
+  setOrderflowDeskHalt(halted, halted
+    ? ((orderflowMeta && orderflowMeta.gap && orderflowMeta.gap.reason) ? `主源缺口：${orderflowMeta.gap.reason}` : "desk 足迹未确认")
+    : "");
   if (chip) {
     const text = String(statusText || "");
-    const failed = /failed|error|closed|not connected/i.test(text);
-    const cloud = /Cloud D1|polling/i.test(text);
-    chip.className = failed ? "chip warn" : "chip ok";
-    if (freshness.isDegraded || failed) chip.className = "chip warn";
-    chip.textContent = cloud ? freshness.label : "D1 轮询快照";
-    chip.title = `${text || "订单流数据连接状态"}；无浏览器直连 WS 主路径`;
+    chip.className = halted ? "chip warn" : "chip";
+    chip.textContent = halted ? "desk 未确认" : "desk 足迹";
+    chip.title = `${text || "订单流 desk 轮询"}；浏览器 WS 不是权威路径`;
   }
   const evidenceEl = document.getElementById("of-research-evidence");
   if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
     const state = readOrderflowState();
     evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
-      instrumentId: "BINANCE:USDM:BTCUSDT:PERPETUAL",
+      instrumentId: (orderflowMeta && orderflowMeta.instrumentId) || "unconfirmed",
       interval: state.interval,
       windowLabel: `可视 ${state.visibleBars} bars`,
-      source: "d1-footprint",
-      coverage: freshness && freshness.status === "unknown" ? "成交心跳未知，未用 barEnd 充数" : freshness.label,
+      source: "desk-orderflow",
+      coverage: (orderflowMeta && orderflowMeta.authoritative) ? freshness.label : "desk 足迹未确认，主画布空",
     });
   }
 
@@ -728,45 +756,8 @@ function computeOrderflowTechnicalLevelsFromKlines(klines, interval) {
 }
 
 async function refreshOrderflowTechnicalLevels(state) {
-  const s = state || readOrderflowState();
-  const interval = s.interval || "15m";
-  const cacheKey = `${ORDERFLOW_SYMBOL}.${interval}`;
-  const cached = orderflowKlineLevelCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < 60_000) {
-    orderflowTechnicalLevels = cached.levels;
-    orderflowTechnicalStatus = cached.status;
-    updateOrderflowResearch();
-    return;
-  }
-  if (
-    typeof DataEngine === "undefined" ||
-    typeof DataEngine.fetchKlinesFromD1 !== "function" ||
-    typeof IndicatorMath === "undefined" ||
-    (
-      typeof IndicatorMath.computeChartStructureLevels !== "function" &&
-      typeof IndicatorMath.computeKeyLevels !== "function"
-    )
-  ) {
-    orderflowTechnicalLevels = null;
-    orderflowTechnicalStatus = "K线关键位不可用，使用足迹关键位";
-    updateOrderflowResearch();
-    return;
-  }
-  const reqId = ++orderflowKlineRequestId;
-  orderflowTechnicalStatus = "K线关键位加载中...";
-  updateOrderflowResearch();
-  try {
-    const klines = await DataEngine.fetchKlinesFromD1(ORDERFLOW_SYMBOL, interval, 500, { sync: "0" });
-    if (reqId !== orderflowKlineRequestId) return;
-    const levels = normalizeOrderflowTechnicalLevels(computeOrderflowTechnicalLevelsFromKlines(klines, interval));
-    orderflowTechnicalLevels = levels;
-    orderflowTechnicalStatus = levels ? `K线关键位已加载 · ${interval}` : "K线关键位样本不足";
-    orderflowKlineLevelCache.set(cacheKey, { ts: Date.now(), levels, status: orderflowTechnicalStatus });
-  } catch (e) {
-    if (reqId !== orderflowKlineRequestId) return;
-    orderflowTechnicalLevels = null;
-    orderflowTechnicalStatus = `K线关键位不可用，使用足迹关键位${e && e.message ? " · " + String(e.message).slice(0, 80) : ""}`;
-  }
+  orderflowTechnicalLevels = null;
+  orderflowTechnicalStatus = "主源缺失时不计算结构/启发式关键位";
   updateOrderflowResearch();
 }
 

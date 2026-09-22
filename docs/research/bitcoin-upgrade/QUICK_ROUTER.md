@@ -6,7 +6,7 @@
 
 ## 最短使用路径
 
-免费金融平台接入先读 [通道实施与免费边界](../free-financial-api-channels-2026-09-16.md)，再查 `finance-channels` 路由；平台名字出现在研究包中不表示有免费 API。
+基础采集先读 [采集路由](../data-collection-routing-2026-09-22.md)：交易所走东京 VPS，FRED、SOFR、广度、稳定币和费率走 Cloudflare。再读 [限额停采名单](../finance-daily-quota-skip-2026-09-21.md) 与 [刷新频率复核](../data-refresh-cadence-2026-09-21.md)。Alpha、BLS、GDELT 不进时钟。云端三库与四页装配先读 [空桌治理](../cloud-d1-desk-governance-2026-09-21.md)；分析读口是 `/api/desk`，K 线 live tape 新鲜时 desk 可读 `klines` 表，失败仍不回落混源分析文案。过期数据按 LOCAL-CADENCE 硬删除边界直接删，无云端回收站。币安出口**运行现状**先读 [接线现状](../binance-egress-vps-cutover-2026-09-21.md)；约束仍读 [对抗审查](../binance-egress-plan-adversarial-2026-09-21.md)，本机 SSH 读 [本地记录](../binance-egress-vps-local-2026-09-21.md)。Deribit 日采读 [限额停采](../finance-daily-quota-skip-2026-09-21.md)。不要在 Worker 里继续换域名碰直连 403。
 
 1. 描述问题：例如 `node scripts/research-context.cjs K线历史回补`。返回最相关功能、代码起点、最多3份首读资料及章节行号、CodeGraph查询、条件关联和验证入口。
 2. 先看真实代码：执行返回的CodeGraph查询；命令运行仍沿用项目的有界执行约定。索引有代码变化时先 `codegraph sync`，查询可以用 `codegraph query loadChartData --limit 5` 缩小到符号，再用explore查看关系。
@@ -21,12 +21,12 @@
 
 最新专项复核：[行情工作台数据与图表评估（2026-09-16）](../chart-workbench-review-2026-09-16.md)。包含来源混用、未收盘状态、VWAP边界与分阶段优化建议；建议尚未实施。
 
-主图数据读取的现有入口是 `loadChartData → readChartD1Klines → DataEngine.fetchKlinesFromD1`，之后通过HTTP进入行情Worker；实时更新另有WebSocket与D1轮询路径。以下符号和职责来自本轮CodeGraph定位及必要的源码片段，不代表已诊断出任何故障。
+主图数据读取的现有入口是 `loadChartData → readChartD1Klines → DataEngine.fetchDesk("chart")`。云端 live collector 写入 D1 后 desk 可走 `klines` 尾部；浏览器另有 WebSocket。频率与限额见 [刷新频率复核（2026-09-21）](../data-refresh-cadence-2026-09-21.md)。
 
 | 修改点或症状 | 先找代码/符号 | 资料按需读取 | 扩展条件与验证 |
 | --- | --- | --- | --- |
 | 图形样式、缩放、十字线、恢复视口 | [chart.js](../../../js/pages/chart.js)：initChart、readViewportState、persistViewportNow、restoreChartViewport；样式与indicator-panes | V08 §4市场工作区交互、TOOL057 | 查页面卸载与品种/周期状态；UI验收检查交互后的可见状态 |
-| 切周期后旧数据覆盖、新请求取消或标签不一致 | chart.js：loadChartData、readChartD1Klines；[data-engine.js](../../../js/data-engine.js)：fetchKlinesFromD1 | V04 §2通用时间语义、V08 §4.2时间和来源切换 | 主图与多周期都消费请求层；跑market-recovery和UI相关流程 |
+| 切周期后旧数据覆盖、新请求取消或标签不一致 | chart.js：loadChartData、readChartD1Klines；[data-engine.js](../../../js/data-engine.js)：fetchDesk | V04 §2通用时间语义、V08 §4.2时间和来源切换 | 主图与多周期都消费请求层；跑market-recovery和UI相关流程 |
 | 历史不足、左侧无更早数据、保留窗口、回补 | chart.js、data-engine.js、[行情Worker](../../../cloudflare/binance-klines-worker.js)、[schema](../../../cloudflare/schema.sql) | RES07、V04时间/来源；需要购买历史时再查TOOL025 | 对齐读取上限、Worker保留与实际历史，不只改前端数字；跑kline-history |
 | 实时停止、未收盘K线、断线恢复 | chart.js：startChartWs、startChartD1Polling、klineOpenMatchesActiveInterval；共享请求层 | V04 §2.3未完成窗口、RES06 | 核当前周期、D1/实时合并及离页清理；跑market-recovery |
 | EMA、ATR等指标、关键位、多周期不一致 | [indicator-math.js](../../../js/chart/indicator-math.js)、[indicator-panes.js](../../../js/chart/indicator-panes.js)、[mtf-tiles.js](../../../js/chart/mtf-tiles.js)；applyIndicatorsFromOhlcv、applyChartKeyLevelsFromOhlcv | V05 §2方法注册表、V04 §3数字精度 | 涉及数值时追踪快照；跑indicator-math及受影响快照验证 |
@@ -56,8 +56,11 @@
 
 ## 本轮实际核对
 
-- 291个编目资料、17条路由、17个查询场景检查通过；资料路径、代码路径、关联路由、选定章节行号和已有验证命令可解析。
-- 2026-09-19 扩编核对：新增本地核验5份与第二批自有63份后可查询，`--find workbench` 由0命中变为4份；`90_reference` 未被重复编目；`--check` PASS，`npm run lint` 通过94项。
+- 301个编目资料、17条路由、21个查询场景检查通过；资料路径、代码路径、关联路由、选定章节行号和已有验证命令可解析。
+- 2026-09-19 扩编核对：新增本地核验8份与第二批自有63份后可查询，`--find workbench` 由0命中变为4份；`90_reference` 未被重复编目；`--check` PASS，`npm run lint` 通过94项。
+- 2026-09-19 出口封锁调研沉淀为 `docs/research/binance-egress-block-2026-09-19.md`（ID `LOCAL-EGRESS`），方案扩充为 `binance-fixed-ip-proxy-plan-2026-09-19.md`（`LOCAL-PROXYPLAN`），采购清单为 `vps-proxy-purchase-checklist-2026-09-19.md`（`LOCAL-PURCHASE`），均挂入 runtime 路由首读。
+- 2026-09-21 刷新频率复核沉淀为 `docs/research/data-refresh-cadence-2026-09-21.md`（ID `LOCAL-CADENCE`），挂入 runtime / finance-channels / chart-history 首读。同日加固：collector 改 `/market/stream`、官方限额再核、硬删除边界写入同一记录。
+- 2026-09-21 币安云端通路再核沉淀为 `docs/research/binance-egress-workable-fixes-2026-09-21.md`（ID `LOCAL-EGRESSFIX`），挂入 runtime 首读。同日东京 Vultr 已测通，SSH 路标为 `docs/research/binance-egress-vps-local-2026-09-21.md`（ID `LOCAL-EGRESSVPS`）。对抗审查为 `docs/research/binance-egress-plan-adversarial-2026-09-21.md`（ID `LOCAL-EGRESSADV`）。同日傍晚接线现状为 `docs/research/binance-egress-vps-cutover-2026-09-21.md`（ID `LOCAL-EGRESSCUTOVER`）：出口迁移已完毕，不再当待办板；Deribit 日采归 [限额停采](../finance-daily-quota-skip-2026-09-21.md)。开发状态以 [资料总纲](README.md) 为准。
 - 5条实际CLI流程通过：症状查询、章节查询、复用卡查询、资料搜索和未命中反馈；返回功能/章节定位，未输出源码或长报告。
 - 8份入口文档的212处本地文件链接检查通过；未重新访问外部研究来源。
 - `npm run lint`通过80项语法检查；CodeGraph同步后status显示80个文件且索引最新，query和explore已实际执行。

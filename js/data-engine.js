@@ -743,6 +743,42 @@ const DataEngine = {
     return this.parseWorkerJsonResponse(res, "D1 status");
   },
 
+  /**
+   * 分析路径只读 /api/desk/{scope}。失败即缺口，禁止回落 /api/d1。
+   * scope: chart | orderflow | heatmap | context
+   */
+  async fetchDesk(scope, opts = {}) {
+    const allowed = ["chart", "orderflow", "heatmap", "context"];
+    const name = String(scope || "");
+    if (!allowed.includes(name)) throw new Error("未知 desk scope: " + name);
+    const q = new URLSearchParams();
+    if (opts.interval) q.set("interval", String(opts.interval));
+    if (opts.symbol) q.set("symbol", String(opts.symbol));
+    if (opts.range) q.set("range", String(opts.range));
+    if (opts.tail != null && String(opts.tail) !== "") q.set("tail", String(opts.tail));
+    const url = `${this.apiBase()}/api/desk/${encodeURIComponent(name)}${q.toString() ? "?" + q.toString() : ""}`;
+    const ctrl = new AbortController();
+    const unsub = this.attachAbort(opts.signal, ctrl);
+    const timer = setTimeout(() => ctrl.abort(), 30_000);
+    try {
+      const res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
+      const data = await this.parseWorkerJsonResponse(res, "desk " + name);
+      if (!data || typeof data !== "object" || !data.schemaVersion) {
+        throw new Error("desk 载荷缺少 schemaVersion");
+      }
+      if (typeof opts.onMetadata === "function") opts.onMetadata(data);
+      return data;
+    } catch (error) {
+      if (opts.signal && opts.signal.aborted) throw new DOMException("desk 请求已取消", "AbortError");
+      if (ctrl.signal.aborted) throw new Error("desk 请求超时（30 秒）");
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      unsub();
+    }
+  },
+
+
   async fetchLiquidationStatus() {
     const res = await this.workerFetch(`${this.apiBase()}/api/d1/liquidations/status`, { cache: "default" });
     if (!res.ok) throw new Error(`liquidation status ${res.status}`);

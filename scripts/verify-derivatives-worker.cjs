@@ -17,7 +17,11 @@ function assert(name, cond, detail) {
 (async () => {
   const file = path.join(__dirname, "..", "cloudflare", "binance-klines-worker.js");
   let src = fs.readFileSync(file, "utf8");
+  assert("bybit stream keeps official fallback URL", src.includes("wss://stream.bybit.com/v5/public/linear"));
+  assert("bybit stream origin is a separate prefixed env", src.includes("BYBIT_STREAM_ORIGIN") && src.includes("parseCustomOriginBase"));
   src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
+  src = src.replace(/\bexport\s*\{\s*KlineLiveCollector\s*\}\s*;?/, "");
+  src = src.replace(/\bbindKlineLiveHooks\s*\([\s\S]*?\);\s*/, "");
   src = src.replace(/export default\s*\{/, "const __workerDefault = {");
   src += '\nsyncDerivativesOne = async (_env, _symbol, options) => options;';
   const mod = await import(`data:text/javascript;base64,${Buffer.from(src, "utf8").toString("base64")}`);

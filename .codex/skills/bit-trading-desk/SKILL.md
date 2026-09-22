@@ -49,6 +49,7 @@ Prefer stable public/official sources before fragile scraping:
 - Macro/liquidity/credit: FRED API when available.
 - Traditional market tickers such as VIX/MOVE: Yahoo-style endpoints are acceptable but treat them as unofficial and add fallback/error handling.
 - Cloudflare worker paths should stay compatible with `cloudflare/wrangler.toml` and `cloudflare/schema.sql`.
+- Binance cloud egress VPS SSH lives only in gitignored root `.env` keys `VPS_BINANCE_EGRESS_*`, `.codex/ssh/` and `.codex/binance-egress-vps.local.md`. Pointer: `docs/research/binance-egress-vps-local-2026-09-21.md`. Current wiring: `docs/research/binance-egress-vps-cutover-2026-09-21.md`. Constraints: `docs/research/binance-egress-plan-adversarial-2026-09-21.md`. Never copy the password or private key into git, docs, or Worker vars.
 - Search/news should be used for qualitative cross-checking, not as the primary time-series source.
 
 When API behavior, laws, prices, schedules, or current market facts matter, verify current information from primary/official sources.

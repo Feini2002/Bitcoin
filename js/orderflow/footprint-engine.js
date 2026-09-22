@@ -15,7 +15,7 @@ const VALUE_AREA_RATIO = 0.7;
 const DELTA_NEUTRAL_SHARE = 0.05;
 const STORAGE_PREFIX = "bitdesk.orderflow.footprint";
 const WS_RECONNECT_MS = 3000;
-const POLL_MS = 30000;
+const POLL_MS = 5000;
 const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 
   const INTERVAL_MS = {
@@ -764,7 +764,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     return {
       side,
       tone: side === "buy" ? "up" : "down",
-      label: `${readModelSideText(side)}主动成交相对占优`,
+        label: `${readModelSideText(side)}主动量大于对方（aggTrade 近似，非 CVD）`,
       detail: `Delta 占比 ${readModelPctText(share)}`,
       delta,
       volume,
@@ -1360,6 +1360,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       this.seenTradeIds = new Set();
       this.seenTradeQueue = [];
       this.polling = false;
+      this.authoritative = false;
     }
 
     cacheKey() {
@@ -1417,13 +1418,12 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       const nextMaxBars = opts.maxBars || this.maxBars;
       const streamChanged = nextSymbol !== this.symbol;
       const aggregateChanged = nextInterval !== this.interval || nextTickSize !== this.tickSize;
-      const historyChanged = Number(nextMaxBars) !== Number(this.maxBars);
-
-      this.saveCacheNow();
+      const historyChanged = nextMaxBars !== this.maxBars;
       this.symbol = nextSymbol;
       this.interval = nextInterval;
       this.tickSize = nextTickSize;
       this.maxBars = nextMaxBars;
+      this.authoritative = false;
       this.aggregator = new FootprintAggregator({
         symbol: this.symbol,
         interval: this.interval,
@@ -1431,36 +1431,24 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         maxBars: this.maxBars,
       });
       this.resetSeenTrades();
-      const cached = this.loadCache();
-      this.onBars(cached);
+      this.onBars([]);
       if (streamChanged || aggregateChanged || historyChanged) this.pollOnce();
       this.onStatus(this.statusText());
     }
 
     statusText() {
-      if (this.pollTimer) return "Cloud D1 polling";
-      if (!this.ws) return "WS not connected";
-      switch (this.ws.readyState) {
-        case WebSocket.CONNECTING:
-          return "WS connecting";
-        case WebSocket.OPEN:
-          return "Realtime";
-        case WebSocket.CLOSING:
-          return "WS closing";
-        case WebSocket.CLOSED:
-          return "WS closed";
-        default:
-          return "WS unknown";
-      }
+      if (this.pollTimer || this.authoritative === false) return "desk polling";
+      if (!this.ws) return "desk idle";
+      return "desk polling";
     }
 
     start() {
       this.closedByUser = false;
-      this.loadCache();
-      this.onBars(this.aggregator.getBars());
+      this.aggregator.reset();
+      this.onBars([]);
       this.pollOnce();
       this.pollTimer = setInterval(() => this.pollOnce(), POLL_MS);
-      this.onStatus("Cloud D1 polling");
+      this.onStatus("desk polling");
     }
 
     restart() {
@@ -1519,7 +1507,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 
     startPollFallback(reason) {
       if (this.pollTimer || this.closedByUser) return;
-      this.onStatus(reason ? `Cloud D1 polling (${reason})` : "Cloud D1 polling");
+      this.onStatus(reason ? `desk polling (${reason})` : "desk polling");
       this.pollOnce();
       this.pollTimer = setInterval(() => this.pollOnce(), POLL_MS);
     }
@@ -1545,29 +1533,35 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
               this.polling = false;
               return;
             }
-            const res = await fetch(`${base}/api/d1/footprint?${q.toString()}`, {
-              cache: "default",
+            const res = await fetch(`${base}/api/desk/orderflow?${new URLSearchParams({ symbol: this.symbol }).toString()}`, {
+              cache: "no-store",
               credentials: "include",
             });
             if (!res.ok) throw new Error(`${base} HTTP ${res.status}`);
             const parsed = await res.json();
-            if (!parsed || !Array.isArray(parsed.bars)) throw new Error(`${base} bad shape`);
-            bars = parsed.bars;
+            if (!parsed || !parsed.schemaVersion) throw new Error(`${base} desk shape`);
+            if (!Array.isArray(parsed.series) || !parsed.series.length || parsed.quality && parsed.quality.status === "fail") {
+              bars = [];
+              meta = { venue: parsed.venue || null, gap: parsed.gap || null, authoritative: false };
+              this.authoritative = false;
+              this.aggregator.reset();
+              this.lastMeta = meta;
+              this.onBars([], this.lastMeta);
+              this.onStatus(parsed.gap && parsed.gap.reason ? `desk empty: ${parsed.gap.reason}` : "desk empty");
+              source = "desk-empty";
+              break;
+            }
+            bars = parsed.series;
+            this.authoritative = true;
             meta = {
-              symbol: parsed.symbol,
-              interval: parsed.interval,
-              tickSize: parsed.tickSize,
-              effectiveTickSize: parsed.effectiveTickSize,
-              now: Number.isFinite(Number(parsed.now)) ? Number(parsed.now) : undefined,
-              count: parsed.count,
-              latestT: parsed.latestT,
-              baseInterval: parsed.baseInterval,
-              maxBaseBars: parsed.maxBaseBars,
-              availableBaseBars: parsed.availableBaseBars,
-              availableBaseMinT: parsed.availableBaseMinT,
-              availableBaseMaxT: parsed.availableBaseMaxT,
-              lastSync: parsed.lastSync || null,
-              syncResult: parsed.syncResult || null,
+              symbol: this.symbol,
+              interval: this.interval,
+              venue: parsed.venue || "binance-usdm",
+              instrumentId: parsed.instrumentId || null,
+              count: parsed.coverage && parsed.coverage.returned,
+              latestT: parsed.observedAt ? Date.parse(parsed.observedAt) : null,
+              lastSync: parsed.receivedAt || null,
+              authoritative: true,
             };
             source = res.headers.get("X-Data-Source") || base;
             break;
@@ -1579,64 +1573,18 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         this.aggregator.loadBars(bars);
         this.lastMeta = meta;
         this.onBars(this.aggregator.getBars(), this.lastMeta);
-        this.saveCacheSoon();
-        this.onStatus(source ? `Cloud D1 (${source})` : "Cloud D1 polling");
+        if (this.authoritative) this.saveCacheSoon();
+        this.onStatus(source === "desk-empty" ? "desk empty" : (source ? `desk (${source})` : "desk polling"));
       } catch (e) {
-        this.onStatus(`Cloud D1 failed: ${e && e.message ? e.message : e}`);
+        this.onStatus(`desk failed: ${e && e.message ? e.message : e}`);
       } finally {
         this.polling = false;
       }
     }
 
     connect() {
-      if (typeof WebSocket === "undefined") {
-        this.onStatus("WebSocket unavailable");
-        this.startPollFallback("WS unavailable");
-        return;
-      }
-      const stream = `${this.symbol.toLowerCase()}@aggTrade`;
-      const url = `wss://fstream.binance.com/market/ws/${stream}`;
-      try {
-        this.ws = new WebSocket(url);
-      } catch (e) {
-        this.onStatus("WS create failed");
-        this.startPollFallback("WS create failed");
-        return;
-      }
-      const ws = this.ws;
-      this.onStatus(this.statusText());
-
-      ws.onopen = () => {
-        if (ws !== this.ws) return;
-        this.onStatus(this.statusText());
-      };
-      ws.onmessage = (ev) => {
-        if (ws !== this.ws) return;
-        let msg = null;
-        try {
-          msg = JSON.parse(ev.data);
-        } catch (_) {
-          return;
-        }
-        if (this.pollTimer) {
-          clearInterval(this.pollTimer);
-          this.pollTimer = null;
-        }
-        this.ingestAndPublish(msg);
-      };
-      ws.onerror = () => {
-        if (ws === this.ws) this.onStatus("WS error");
-      };
-      ws.onclose = () => {
-        if (ws !== this.ws) return;
-        this.onStatus(this.statusText());
-        if (this.closedByUser) return;
-        this.startPollFallback("WS closed");
-        this.reconnectTimer = setTimeout(() => {
-          this.reconnectTimer = null;
-          this.connect();
-        }, WS_RECONNECT_MS);
-      };
+      this.onStatus("desk polling");
+      this.startPollFallback("WS not an authority path");
     }
 
     stop(markClosed) {
@@ -1665,7 +1613,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         } catch (_) {}
         this.ws = null;
       }
-      this.onStatus("WS not connected");
+      this.onStatus("desk polling stopped");
     }
   }
 

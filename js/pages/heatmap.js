@@ -5,14 +5,14 @@
 const HEATMAP_SYMBOL = "BTCUSDT";
 const HEATMAP_STATE_KEY = "bitdesk.heatmap.settings";
 const HEATMAP_STATE_VERSION = 2;
-const HEATMAP_CLOUD_POLL_MS = 30_000;
+const HEATMAP_CLOUD_POLL_MS = 5_000;
 const HEATMAP_CLOUD_STALE_MS = 2 * 60 * 1000;
 let heatmapStream = null;
 let heatmapRefreshTimer = null;
 let heatmapCloudTimer = null;
 let heatmapCloudStatus = null;
 let heatmapCloudBuckets = null;
-const HEATMAP_PRESSURE_POLL_MS = 60_000;
+const HEATMAP_PRESSURE_POLL_MS = 15_000;
 let heatmapPressurePayload = null;
 let heatmapPressureKlines = null;
 let heatmapPressureStatus = { loading: false, derivError: "", klinesError: "", updatedAt: null };
@@ -162,11 +162,11 @@ function pageHeatmap() {
     <section class="heatmap-status-strip" aria-label="强平雷达状态">
       <div class="heatmap-status-main">
         <span class="heatmap-feed-dot" aria-hidden="true"></span>
-        <strong>${HEATMAP_SYMBOL} 永续</strong>
-        <span>Cloud D1 强平 5m 桶 · Binance / Bybit 强平流 · 东八区时间轴 · 前台 1 秒刷新 · 云端约 12 秒轮询</span>
+        <strong>${HEATMAP_SYMBOL} 已实现强平</strong>
+        <span>desk 分所桶 · 禁止跨所合计 · 未知来源不得写成 Binance</span>
       </div>
       <div class="heatmap-status-actions">
-        <span class="chip ok" id="hm-live-chip">实时爆仓流</span>
+        <span class="chip warn" id="hm-live-chip">分所已实现强平</span>
         <a class="owner-link heatmap-owner-link" href="#/agent-flow" title="查看 盘口流动性官 的演示原型">
           <span class="owner-dot" style="background:var(--agent-flow)">盘</span>
           <span>盘口流动性官</span>
@@ -202,19 +202,21 @@ function pageHeatmap() {
       <span class="heatmap-status" id="hm-status">准备连接...</span>
     </div>
 
-    <div class="heatmap-kpis">
+    <div class="heatmap-kpis" id="hm-venue-kpis">
       <div class="heatmap-kpi">
-        <span>当前窗口强平</span>
-        <strong id="hm-kpi-window-total">--</strong>
-        <em id="hm-kpi-window-note">${heatmapWindowLabel(state.window)} · 等待数据</em>
+        <span>Bybit 已实现强平</span>
+        <strong id="hm-kpi-bybit">--</strong>
+        <em id="hm-kpi-bybit-note">分所名义金额，不可与币安比笔数</em>
       </div>
-      <div class="heatmap-kpi" title="多头仓位被强平的名义金额合计，按成交价格 × 数量计算。"><span>多头被强平</span><strong class="down" id="hm-kpi-long">--</strong></div>
-      <div class="heatmap-kpi" title="空头仓位被强平的名义金额合计，按成交价格 × 数量计算。"><span>空头被强平</span><strong class="up" id="hm-kpi-short">--</strong></div>
-      <div class="heatmap-kpi" title="方向无法识别的强平名义金额，不计入多头或空头。"><span>方向未知</span><strong id="hm-kpi-unknown">--</strong></div>
       <div class="heatmap-kpi">
-        <span>最大单笔 / 来源</span>
-        <strong id="hm-kpi-max">--</strong>
-        <em>活跃来源 <b id="hm-kpi-sources">--</b></em>
+        <span>Binance 已实现强平</span>
+        <strong id="hm-kpi-binance">--</strong>
+        <em id="hm-kpi-binance-note">仅当 desk 标了 binance</em>
+      </div>
+      <div class="heatmap-kpi">
+        <span>未知来源</span>
+        <strong id="hm-kpi-unknown-ex">--</strong>
+        <em>不得默认写成 Binance</em>
       </div>
     </div>
     <div class="heatmap-compat-kpis" aria-hidden="true">
@@ -225,29 +227,29 @@ function pageHeatmap() {
     <section class="heatmap-cloud-window">
       <div class="heatmap-cloud-head">
         <div>
-          <div class="card-title">云端强平窗口</div>
+          <div class="card-title">分所时间窗（禁止跨所合计）</div>
         </div>
       </div>
       <div class="heatmap-cloud-grid">
-        <div class="heatmap-cloud-card" title="该窗口内多头被强平金额 + 空头被强平金额。">
-          <span>过去 5 分钟 · 强平名义金额</span>
-          <strong id="hm-cloud-5m-total">--</strong>
-          <em id="hm-cloud-5m-detail">多头被强平 -- · 空头被强平 -- · 0 笔事件</em>
+        <div class="heatmap-cloud-card">
+          <span>Bybit · 过去 1 小时</span>
+          <strong id="hm-cloud-bybit-1h">--</strong>
+          <em id="hm-cloud-bybit-1h-detail">仅 Bybit 已实现强平</em>
         </div>
-        <div class="heatmap-cloud-card" title="该窗口内多头被强平金额 + 空头被强平金额。">
-          <span>过去 15 分钟 · 强平名义金额</span>
-          <strong id="hm-cloud-15m-total">--</strong>
-          <em id="hm-cloud-15m-detail">多头被强平 -- · 空头被强平 -- · 0 笔事件</em>
+        <div class="heatmap-cloud-card">
+          <span>Bybit · 过去 1 天</span>
+          <strong id="hm-cloud-bybit-1d">--</strong>
+          <em id="hm-cloud-bybit-1d-detail">仅 Bybit 已实现强平</em>
         </div>
-        <div class="heatmap-cloud-card" title="该窗口内多头被强平金额 + 空头被强平金额。">
-          <span>过去 1 小时 · 强平名义金额</span>
-          <strong id="hm-cloud-1h-total">--</strong>
-          <em id="hm-cloud-1h-detail">多头被强平 -- · 空头被强平 -- · 0 笔事件</em>
+        <div class="heatmap-cloud-card">
+          <span>Binance · 过去 1 小时</span>
+          <strong id="hm-cloud-binance-1h">--</strong>
+          <em id="hm-cloud-binance-1h-detail">仅 desk 标注 binance 的桶</em>
         </div>
-        <div class="heatmap-cloud-card" title="该窗口内多头被强平金额 + 空头被强平金额。">
-          <span>过去 1 天 · 强平名义金额</span>
-          <strong id="hm-cloud-1d-total">--</strong>
-          <em id="hm-cloud-1d-detail">多头被强平 -- · 空头被强平 -- · 0 笔事件</em>
+        <div class="heatmap-cloud-card">
+          <span>Binance · 过去 1 天</span>
+          <strong id="hm-cloud-binance-1d">--</strong>
+          <em id="hm-cloud-binance-1d-detail">仅 desk 标注 binance 的桶</em>
         </div>
       </div>
       <details class="heatmap-detail heatmap-cloud-detail">
@@ -265,7 +267,7 @@ function pageHeatmap() {
         <div class="heatmap-panel-head">
           <div>
             <div class="card-title">强平价位聚合</div>
-            <div class="heatmap-panel-sub" id="hm-range-label">等待实时爆仓事件</div>
+            <div class="heatmap-panel-sub" id="hm-range-label">等待 desk 分所桶</div>
           </div>
           <div class="heatmap-legend">
             <span><i class="long"></i>多头被强平</span>
@@ -273,34 +275,17 @@ function pageHeatmap() {
           </div>
         </div>
         <div class="heatmap-buckets" id="hm-buckets">
-          <div class="heatmap-empty">等待 Binance / Bybit 推送爆仓事件...</div>
+          <div class="heatmap-empty">等待 desk 分所强平桶...</div>
         </div>
       </section>
 
       <aside class="heatmap-side-rail">
-        <section class="heatmap-pressure" id="hm-pressure-section" aria-label="估算压力矩阵">
-          <div class="heatmap-pressure-head">
-            <div>
-              <div class="card-title">估算压力矩阵</div>
-              <div class="heatmap-panel-sub" id="hm-pressure-sub">结合 OI / Funding / 价格偏离与窗口内已发生强平；非「潜在清算池」口径。</div>
-            </div>
-            <span class="chip warn" id="hm-pressure-chip">加载中</span>
-          </div>
-          <div class="heatmap-pressure-summary" id="hm-pressure-summary"></div>
-          <details class="heatmap-detail">
-            <summary>查看情景因子</summary>
-            <div class="heatmap-pressure-matrix" id="hm-pressure-matrix"></div>
-            <div class="heatmap-pressure-warnings" id="hm-pressure-warnings"></div>
-          </details>
-          <div class="heatmap-pressure-footnote">仅供风险视角，不作为独立交易触发器；不输出精确清算簇金额。</div>
-        </section>
-
-        <section class="heatmap-health-card ok" id="hm-health-card" aria-label="来源健康摘要">
-          <div class="card-title">来源健康</div>
-          <strong id="hm-health-status">等待连接</strong>
-          <span id="hm-health-note">Cloudflare / 本页实时流状态准备中</span>
+        <section class="heatmap-health-card warn" id="hm-health-card" aria-label="分所说明">
+          <div class="card-title">分所说明</div>
+          <strong id="hm-health-status">压力矩阵本轮不上屏</strong>
+          <span id="hm-health-note">只展示已发生、已标注交易所的名义金额。禁止合计，禁止把未知来源写成 Binance。</span>
           <div class="heatmap-health-grid">
-            <em id="hm-health-market">心跳 --</em>
+            <em id="hm-health-market">asKnownMode=system_observed</em>
             <em id="hm-health-event">强平 --</em>
             <em id="hm-health-buckets">窗口 --</em>
           </div>
@@ -345,76 +330,59 @@ function hmLatestRealLabel(snapshot) {
   return `最近真实事件 ${Math.floor(hours / 24)} 天前`;
 }
 
+function hmDeskByExchange() {
+  return heatmapCloudBuckets && heatmapCloudBuckets.byExchange && typeof heatmapCloudBuckets.byExchange === "object"
+    ? heatmapCloudBuckets.byExchange
+    : null;
+}
+
+function hmVenueNotional(ex) {
+  const g = hmDeskByExchange() && hmDeskByExchange()[ex];
+  if (!g) return 0;
+  return (Number(g.longNotional) || 0) + (Number(g.shortNotional) || 0);
+}
+
 function renderHeatmapKpis(snapshot) {
-  const stats = snapshot.stats || {};
-  const totalWindow = (Number(stats.longNotional) || 0) + (Number(stats.shortNotional) || 0);
-  const state = currentHeatmapStateFromDom();
-  setHmText("hm-kpi-5m", fmtHmMoney(stats.total5m));
-  setHmText("hm-kpi-15m", fmtHmMoney(stats.total15m));
-  setHmText("hm-kpi-window-total", fmtHmMoney(totalWindow));
-  setHmText(
-    "hm-kpi-window-note",
-    `${heatmapWindowLabel(state.window)} · ${snapshot.aggregateSource === "d1" ? "D1 主链路" : "本页实时流"}`
-  );
-  setHmText("hm-kpi-long", fmtHmMoney(stats.longNotional));
-  setHmText("hm-kpi-short", fmtHmMoney(stats.shortNotional));
-  setHmText("hm-kpi-unknown", fmtHmMoney(stats.unknownNotional));
+  const by = heatmapCloudBuckets && heatmapCloudBuckets.byExchange ? heatmapCloudBuckets.byExchange : {};
+  const bybit = by.bybit || { longNotional: 0, shortNotional: 0, buckets: [] };
+  const binance = by.binance || { longNotional: 0, shortNotional: 0, buckets: [] };
+  const unknown = by.unknown || { longNotional: 0, shortNotional: 0, buckets: [] };
+  const bybitTotal = (Number(bybit.longNotional) || 0) + (Number(bybit.shortNotional) || 0);
+  const binanceTotal = (Number(binance.longNotional) || 0) + (Number(binance.shortNotional) || 0);
+  const unknownTotal = (Number(unknown.longNotional) || 0) + (Number(unknown.shortNotional) || 0);
+  setHmText("hm-kpi-bybit", fmtHmMoney(bybitTotal));
+  setHmText("hm-kpi-binance", fmtHmMoney(binanceTotal));
+  setHmText("hm-kpi-unknown-ex", fmtHmMoney(unknownTotal));
+  setHmText("hm-kpi-bybit-note", `多 ${fmtHmMoney(bybit.longNotional)} · 空 ${fmtHmMoney(bybit.shortNotional)}`);
+  setHmText("hm-kpi-binance-note", `多 ${fmtHmMoney(binance.longNotional)} · 空 ${fmtHmMoney(binance.shortNotional)}`);
   const evidenceEl = document.getElementById("hm-research-evidence");
-  if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
-    evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
-      instrumentId: "BINANCE:USDM:BTCUSDT:PERPETUAL",
-      windowLabel: heatmapWindowLabel(state.window),
-      source: snapshot.aggregateSource === "d1" ? "d1-liquidations" : "browser-stream",
-      coverage: Number(stats.unknownNotional) > 0 ? "含未知方向，未并入多头" : null,
-    });
+  if (evidenceEl) {
+    evidenceEl.textContent = "分所已实现强平；禁止跨所合计；未知来源不得写成 Binance。";
   }
-  setHmText("hm-kpi-max", stats.maxEvent ? fmtHmMoney(stats.maxEvent.notional) : "--");
-  setHmText("hm-kpi-sources", `${stats.activeSources || 0}/2`);
   renderHeatmapCloudWindows();
 }
 
 function renderHeatmapHealth(snapshot, displaySnapshot) {
   const card = document.getElementById("hm-health-card");
-  const cloudPrimary = hmCloudAvailable();
-  const cloudFresh = hmCloudIsFresh();
-  const fresh = hmCloudFreshness();
-  const sources = snapshot.sources || {};
-  const anyRealtime = cloudPrimary ? cloudFresh : Object.values(sources).some((src) => src.status === "realtime");
-  const cls = cloudPrimary
-    ? (cloudFresh ? "ok" : "warn")
-    : (anyRealtime ? "warn" : "off");
-  if (card) card.className = `heatmap-health-card ${cls}`;
-  if (cloudPrimary) {
-    const rows = Number(displaySnapshot && displaySnapshot.cloudWindowRows) || 0;
-    const eventCount = Number(displaySnapshot && displaySnapshot.cloudWindowEventCount) || 0;
-    const latestEventAt = Number(fresh.latestEventAt) || 0;
-    setHmText("hm-health-status", cloudFresh ? "Cloudflare 主链路在线" : "Cloudflare 主链路过期");
-    setHmText("hm-health-note", cloudFresh ? "D1 聚合为主，本页实时流补充" : "市场心跳不新鲜，关注实时流兜底");
-    setHmText(
-      "hm-health-market",
-      Number.isFinite(Number(fresh.latestMessageAgeMs)) ? `心跳 ${fmtHmAge(fresh.latestMessageAgeMs)}` : "心跳 --"
-    );
-    setHmText(
-      "hm-health-event",
-      latestEventAt ? `强平 ${fmtHmAge(Date.now() - latestEventAt)}` : "强平 --"
-    );
-    setHmText("hm-health-buckets", `窗口 ${rows} 桶 / ${eventCount} 笔`);
-    return;
-  }
-  const realEvents = hmRealEvents(snapshot);
-  const sourceCount = Object.values(sources).filter((src) => src.status === "realtime").length;
-  setHmText("hm-health-status", anyRealtime ? "本页实时流兜底" : "等待实时连接");
-  setHmText("hm-health-note", hmLatestRealLabel(snapshot));
-  setHmText("hm-health-market", `实时源 ${sourceCount}/2`);
-  setHmText("hm-health-event", realEvents.length ? `${realEvents.length} 笔缓存` : "强平 --");
-  setHmText("hm-health-buckets", `缓存 ${snapshot.totalCached || 0} 笔`);
+  if (card) card.className = "heatmap-health-card warn";
+  const rows = Number(displaySnapshot && displaySnapshot.cloudWindowRows) || 0;
+  const by = hmDeskByExchange() || {};
+  const venues = Object.keys(by).filter((ex) => by[ex] && ((by[ex].buckets && by[ex].buckets.length) || by[ex].longNotional || by[ex].shortNotional));
+  setHmText("hm-health-status", "压力矩阵本轮不上屏");
+  setHmText("hm-health-note", "只展示已发生、已标注交易所的名义金额。禁止合计，禁止把未知来源写成 Binance。浏览器推送不是权威路径。");
+  setHmText("hm-health-market", venues.length ? `desk 分所 ${venues.join(" / ")}` : "等待 desk 分所桶");
+  setHmText("hm-health-event", snapshot && snapshot.error ? String(snapshot.error).slice(0, 80) : "不以浏览器连接充当在线");
+  setHmText("hm-health-buckets", rows ? `${rows} 个 5m 桶` : "窗口 --");
 }
 
-function summarizeCloudBuckets(windowMs) {
+function summarizeCloudBucketsForExchange(exchange, windowMs) {
   const rows = heatmapCloudBuckets && Array.isArray(heatmapCloudBuckets.buckets) ? heatmapCloudBuckets.buckets : [];
   const since = Date.now() - windowMs;
+  const want = String(exchange || "").toLowerCase();
   const out = { longNotional: 0, shortNotional: 0, longCount: 0, shortCount: 0, buckets: 0, latest: 0 };
   for (const row of rows) {
+    const ex = String(row.exchange || "").toLowerCase();
+    if (ex !== want) continue;
     const t = Number(row.bucket_start);
     if (!Number.isFinite(t) || t < since) continue;
     out.longNotional += Number(row.long_notional) || 0;
@@ -428,21 +396,9 @@ function summarizeCloudBuckets(windowMs) {
 }
 
 function summarizeCloudWindowValue(windowValue) {
-  const rows = hmCloudRows();
   const windowMs = heatmapWindowMs(windowValue);
-  if (windowMs > 0) return summarizeCloudBuckets(windowMs);
-  const out = { longNotional: 0, shortNotional: 0, longCount: 0, shortCount: 0, buckets: 0, latest: 0 };
-  for (const row of rows) {
-    const t = Number(row.bucket_start);
-    if (!Number.isFinite(t)) continue;
-    out.longNotional += Number(row.long_notional) || 0;
-    out.shortNotional += Number(row.short_notional) || 0;
-    out.longCount += Number(row.long_count) || 0;
-    out.shortCount += Number(row.short_count) || 0;
-    out.buckets += 1;
-    out.latest = Math.max(out.latest, t);
-  }
-  return out;
+  if (windowMs > 0) return summarizeCloudBucketsForExchange("bybit", windowMs);
+  return summarizeCloudBucketsForExchange("bybit", 30 * 24 * 60 * 60 * 1000);
 }
 
 function maybePromoteHeatmapWindowForCloudHistory() {
@@ -649,20 +605,21 @@ function renderHeatmapCloudWindows() {
       const msgAge = Number.isFinite(Number(fresh.latestMessageAgeMs)) ? ` · 心跳 ${fmtHmAge(fresh.latestMessageAgeMs)}` : "";
       const eventAge = Number.isFinite(Number(fresh.latestEventAgeMs)) ? ` · 最新强平 ${fmtHmAge(fresh.latestEventAgeMs)}` : "";
       const state = currentHeatmapStateFromDom();
-      note.textContent = `Cloudflare 主链路 · 当前 ${heatmapWindowLabel(state.window)} · D1 最新 5m 桶 ${fmtHmTime(latest)}${msgAge}${eventAge}`;
+      note.textContent = `desk 分所桶 · 当前 ${heatmapWindowLabel(state.window)} · 最新 5m 桶 ${fmtHmTime(latest)}${msgAge}${eventAge}`;
     }
   }
   [
-    ["5m", summarizeCloudBuckets(5 * 60 * 1000)],
-    ["15m", summarizeCloudBuckets(15 * 60 * 1000)],
-    ["1h", summarizeCloudBuckets(60 * 60 * 1000)],
-    ["1d", summarizeCloudBuckets(24 * 60 * 60 * 1000)],
-  ].forEach(([id, s]) => {
-    const total = s.longNotional + s.shortNotional;
-    setHmText(`hm-cloud-${id}-total`, fmtHmMoney(total));
+    ["bybit", "1h", 60 * 60 * 1000],
+    ["bybit", "1d", 24 * 60 * 60 * 1000],
+    ["binance", "1h", 60 * 60 * 1000],
+    ["binance", "1d", 24 * 60 * 60 * 1000],
+  ].forEach(([ex, id, ms]) => {
+    const s = summarizeCloudBucketsForExchange(ex, ms);
+    const total = (Number(s.longNotional) || 0) + (Number(s.shortNotional) || 0);
+    setHmText(`hm-cloud-${ex}-${id}`, fmtHmMoney(total));
     setHmText(
-      `hm-cloud-${id}-detail`,
-      `多头被强平 ${fmtHmMoney(s.longNotional)} · 空头被强平 ${fmtHmMoney(s.shortNotional)} · ${s.longCount + s.shortCount} 笔事件`
+      `hm-cloud-${ex}-${id}-detail`,
+      `多 ${fmtHmMoney(s.longNotional)} · 空 ${fmtHmMoney(s.shortNotional)} · ${s.buckets} 桶`
     );
   });
 }
@@ -671,75 +628,31 @@ function renderHeatmapBuckets(snapshot) {
   const wrap = document.getElementById("hm-buckets");
   const label = document.getElementById("hm-range-label");
   if (!wrap) return;
-  const rows = (snapshot.buckets || [])
-    .slice()
-    .sort((a, b) => b.totalNotional - a.totalNotional)
-    .slice(0, 40)
-    .sort((a, b) => b.price - a.price);
-  if (label) {
-    const realInWindow = hmRealEvents(snapshot).length;
-    const state = currentHeatmapStateFromDom();
-    const aggregateText = snapshot.aggregateSource === "d1"
-      ? `D1 聚合 ${snapshot.cloudWindowRows || 0} 个 5m 桶 / ${snapshot.cloudWindowEventCount || 0} 笔`
-      : `窗口内真实 ${realInWindow} 笔`;
-    const day = hmCloudAvailable() ? summarizeCloudWindowValue("24h") : null;
-    const dayEvents = day ? (Number(day.longCount) || 0) + (Number(day.shortCount) || 0) : 0;
-    const historyHint =
-      hmCloudAvailable() &&
-      state.window !== "24h" &&
-      state.window !== "all" &&
-      dayEvents > Number(snapshot.cloudWindowEventCount || 0)
-        ? ` · 24小时 ${dayEvents} 笔`
-        : "";
-    label.textContent = rows.length
-      ? `${rows.length} 个价位桶 · 当前 ${heatmapWindowLabel(state.window)} · ${aggregateText}${historyHint}`
-      : `窗口内暂无真实事件`;
-  }
-  if (!rows.length) {
-    const state = currentHeatmapStateFromDom();
-    const day = hmCloudAvailable() ? summarizeCloudWindowValue("24h") : null;
-    const dayEvents = day ? (Number(day.longCount) || 0) + (Number(day.shortCount) || 0) : 0;
-    const hint = dayEvents && state.window !== "24h" && state.window !== "all"
-      ? `当前 ${heatmapWindowLabel(state.window)} 暂无符合条件的强平；24小时 D1 仍有 ${dayEvents} 笔。`
-      : "等待符合当前过滤条件的爆仓事件...";
-    wrap.innerHTML = `<div class="heatmap-empty">${hint}</div>`;
+  const by = hmDeskByExchange();
+  if (!by) {
+    if (label) label.textContent = "等待 desk 分所桶";
+    wrap.innerHTML = `<div class="heatmap-empty">主画布空：尚无 desk 分所强平。</div>`;
     return;
   }
-  const maxSide = Math.max(
-    1,
-    ...rows.map((row) => Math.max(Number(row.longNotional) || 0, Number(row.shortNotional) || 0))
-  );
-  wrap.innerHTML = rows.map((row) => {
-    const longPct = Math.max(2, Math.round((row.longNotional / maxSide) * 100));
-    const shortPct = Math.max(2, Math.round((row.shortNotional / maxSide) * 100));
-    const binance = row.exchanges.binance || { longNotional: 0, shortNotional: 0, count: 0 };
-    const bybit = row.exchanges.bybit || { longNotional: 0, shortNotional: 0, count: 0 };
-    const title = [
-      `价位 ${fmtHmPrice(row.price)}`,
-      `多头被强平 ${fmtHmMoney(row.longNotional)}`,
-      `空头被强平 ${fmtHmMoney(row.shortNotional)}`,
-      `Binance ${fmtHmMoney(binance.longNotional + binance.shortNotional)} / ${binance.count}笔`,
-      `Bybit ${fmtHmMoney(bybit.longNotional + bybit.shortNotional)} / ${bybit.count}笔`,
-    ].join(" | ");
-    return `
-      <div class="heatmap-price-row" title="${title}">
-        <div class="heatmap-bar-cell left">
-          <span class="heatmap-bar long" style="width:${longPct}%"></span>
-          <em>${row.longNotional ? fmtHmMoney(row.longNotional) : ""}</em>
-        </div>
-        <div class="heatmap-price">${fmtHmPrice(row.price)}</div>
-        <div class="heatmap-bar-cell right">
-          <span class="heatmap-bar short" style="width:${shortPct}%"></span>
-          <em>${row.shortNotional ? fmtHmMoney(row.shortNotional) : ""}</em>
-        </div>
-      </div>
-    `;
+  const venues = ["bybit", "binance", "unknown"].filter((ex) => by[ex] && ((by[ex].buckets && by[ex].buckets.length) || by[ex].longNotional || by[ex].shortNotional));
+  if (label) label.textContent = venues.length ? `分所：${venues.join(" / ")}` : "desk 无分所桶";
+  if (!venues.length) {
+    wrap.innerHTML = `<div class="heatmap-empty">当前窗口无已标注交易所的已实现强平。</div>`;
+    return;
+  }
+  wrap.innerHTML = venues.map((ex) => {
+    const g = by[ex];
+    const title = ex === "unknown" ? "未知来源（不得写成 Binance）" : ex;
+    return `<div class="heatmap-venue-block"><h3>${hmEsc(title)}</h3>
+      <p>多 ${fmtHmMoney(g.longNotional)} · 空 ${fmtHmMoney(g.shortNotional)} · ${Array.isArray(g.buckets) ? g.buckets.length : 0} 个 5m 桶</p></div>`;
   }).join("");
 }
 
 function hmSourceLabel(exchange) {
   if (exchange === "cloudflare") return "Cloudflare";
-  return exchange === "bybit" ? "Bybit" : "Binance";
+  if (exchange === "bybit") return "Bybit";
+  if (exchange === "binance") return "Binance";
+  return "未知来源";
 }
 
 function hmStatusText(status) {
@@ -793,7 +706,7 @@ function hmCloudCollectorCard() {
   const fresh = hmCloudFreshness();
   const ok = (!!payload.ok || hmCloudAvailable()) && !payload.error && hmCloudIsFresh();
   const cls = payload.loading ? "warn" : (ok ? "ok" : "off");
-  const status = payload.loading ? "查询中" : (ok ? "主链路在线" : "主链路过期");
+  const status = payload.loading ? "查询中" : (ok ? "desk 分所可读" : "desk 过期或缺失");
   const note = payload.error
     ? String(payload.error).slice(0, 120)
     : (ok
@@ -841,20 +754,17 @@ function renderHeatmapDiagnostics(snapshot) {
   if (hmCloudAvailable()) {
     const state = currentHeatmapStateFromDom();
     const cloudRows = hmFilteredCloudRows(state);
-    const cloudTotal = cloudRows.reduce((sum, row) => sum + hmCloudRowTotal(row), 0);
-    const liveTotal = hmRealEvents(snapshot).reduce((sum, ev) => sum + (Number(ev.notional) || 0), 0);
-    const eventCount = cloudRows.reduce((sum, row) => sum + (Number(row.long_count) || 0) + (Number(row.short_count) || 0), 0);
     extras.push({
       ts: Date.now(),
       exchange: "cloudflare",
-      kind: "primary",
-      detail: `Cloudflare 主链路 ${cloudRows.length} 桶 / ${eventCount} 笔 / ${fmtHmMoney(cloudTotal)}；本页实时补充 ${hmRealEvents(snapshot).length} 笔 / ${fmtHmMoney(liveTotal)}`,
+      kind: "desk",
+      detail: `desk 分所桶 ${cloudRows.length} 个；禁止跨所合计；浏览器推送不是权威路径`,
       level: hmCloudIsFresh() ? "info" : "warn",
     });
   }
   const allRows = extras.concat(rows).slice(0, 10);
   if (!allRows.length) {
-    wrap.innerHTML = `<div class="heatmap-diagnostic-empty">等待实时源诊断信号...</div>`;
+    wrap.innerHTML = `<div class="heatmap-diagnostic-empty">等待 desk 分所诊断...</div>`;
     return;
   }
   wrap.innerHTML = allRows.map((row) => {
@@ -893,130 +803,12 @@ function heatmapPressureLiquidationInput(displaySnapshot, state) {
   return hmLiveBucketsToLiquidationRows(displaySnapshot.buckets || [], state);
 }
 
-function renderHeatmapPressureMatrix(displaySnapshot) {
-  const sub = document.getElementById("hm-pressure-sub");
-  const chip = document.getElementById("hm-pressure-chip");
-  const summaryEl = document.getElementById("hm-pressure-summary");
-  const matrixEl = document.getElementById("hm-pressure-matrix");
-  const warnEl = document.getElementById("hm-pressure-warnings");
-  if (!summaryEl || !matrixEl || !warnEl) return;
-
-  if (typeof HeatmapPressureMatrix === "undefined" || typeof HeatmapPressureMatrix.build !== "function") {
-    if (sub) sub.textContent = "压力模块脚本未加载。";
-    if (chip) {
-      chip.className = "chip danger";
-      chip.textContent = "不可用";
-    }
-    summaryEl.innerHTML = `<div class="heatmap-pressure-empty">HeatmapPressureMatrix 未定义</div>`;
-    matrixEl.innerHTML = "";
-    warnEl.innerHTML = "";
-    return;
-  }
-
-  if (heatmapPressureStatus.loading && !heatmapPressurePayload && !heatmapPressureKlines) {
-    if (sub) sub.textContent = "正在拉取衍生品与 1h K 线…";
-    if (chip) {
-      chip.className = "chip warn";
-      chip.textContent = "加载中";
-    }
-    summaryEl.innerHTML = `<div class="heatmap-pressure-empty">等待 OI / Funding / K 线…</div>`;
-    matrixEl.innerHTML = "";
-    warnEl.innerHTML = "";
-    return;
-  }
-
-  const state = currentHeatmapStateFromDom();
-  const liqRows = heatmapPressureLiquidationInput(displaySnapshot, state);
-  const aggregateSource = displaySnapshot.aggregateSource === "d1" ? "d1" : "live";
-  const pressure = HeatmapPressureMatrix.build({
-    symbol: HEATMAP_SYMBOL,
-    generatedAt: new Date().toISOString(),
-    heatmapState: state,
-    liquidationRows: liqRows,
-    derivativesPayload: heatmapPressurePayload,
-    klines1h: heatmapPressureKlines,
-    aggregateSource,
-    derivativesError: heatmapPressureStatus.derivError || "",
-    klinesError: heatmapPressureStatus.klinesError || "",
-  });
-
-  const s = pressure.summary;
-  if (sub) {
-    const updated = heatmapPressureStatus.updatedAt ? fmtHmTime(heatmapPressureStatus.updatedAt) : "--";
-    sub.textContent = `主情景 ${s.primaryLabel} · 矩阵数据 ${updated} · 强平样本 ${aggregateSource === "d1" ? "D1" : "本页缓存"}`;
-  }
-  if (chip) {
-    const conf = s.confidence;
-    chip.className = conf >= 50 ? "chip ok" : (conf >= 30 ? "chip warn" : "chip danger");
-    chip.textContent = `置信 ${conf}%`;
-  }
-
-  summaryEl.innerHTML = `
-    <div class="heatmap-pressure-summary-grid">
-      <div><span>主情景</span><strong>${hmEsc(s.primaryLabel)}</strong></div>
-      <div><span>情景分</span><strong>${s.primaryScore}</strong></div>
-      <div><span>置信度</span><strong>${s.confidence}%</strong></div>
-      <div><span>输入覆盖</span><strong>${s.dataCompleteness}%</strong></div>
-    </div>
-  `;
-
-  const maxScore = Math.max(1, ...pressure.rows.map((r) => r.score));
-  matrixEl.innerHTML = pressure.rows.map((row) => {
-    const pct = Math.max(8, Math.round((row.score / maxScore) * 100));
-    const factors = (row.factors || []).slice(0, 5).map((f) =>
-      `<li><em>+${Math.round(Number(f.contribution) || 0)}</em> ${hmEsc(f.label)}：${hmEsc(f.detail)}</li>`
-    ).join("");
-    return `
-      <div class="heatmap-pressure-row" data-id="${hmEsc(row.id)}">
-        <div class="heatmap-pressure-row-top">
-          <strong>${hmEsc(row.label)}</strong>
-          <span>${row.score}</span>
-        </div>
-        <div class="heatmap-pressure-bar-track">
-          <span class="heatmap-pressure-bar" style="width:${pct}%"></span>
-        </div>
-        ${factors ? `<ul class="heatmap-pressure-factors">${factors}</ul>` : ""}
-      </div>
-    `;
-  }).join("");
-
-  if (pressure.warnings.length) {
-    warnEl.innerHTML = `<div class="heatmap-pressure-warn-title">提示</div><ul>${pressure.warnings.map((w) => `<li>${hmEsc(w)}</li>`).join("")}</ul>`;
-  } else {
-    warnEl.innerHTML = "";
-  }
+function renderHeatmapPressureMatrix(_displaySnapshot) {
+  return;
 }
 
-async function refreshHeatmapPressureInputs(force) {
-  if (typeof DataEngine === "undefined") return;
-  if (heatmapPressureInFlight && !force) return;
-  heatmapPressureInFlight = true;
-  heatmapPressureStatus = {
-    ...heatmapPressureStatus,
-    loading: true,
-    derivError: heatmapPressureStatus.derivError || "",
-    klinesError: heatmapPressureStatus.klinesError || "",
-  };
-  refreshHeatmapView();
-  const derivP = DataEngine.fetchDerivatives(HEATMAP_SYMBOL, "30d", { sync: "0" }).then(
-    (data) => ({ ok: true, data }),
-    (e) => ({ ok: false, error: e && e.message ? e.message : String(e) })
-  );
-  const kP = DataEngine.fetchKlinesFromD1(HEATMAP_SYMBOL, "1h", 200, { sync: "0" }).then(
-    (data) => ({ ok: true, data }),
-    (e) => ({ ok: false, error: e && e.message ? e.message : String(e) })
-  );
-  const [dr, kr] = await Promise.all([derivP, kP]);
-  heatmapPressurePayload = dr.ok ? dr.data : heatmapPressurePayload;
-  heatmapPressureKlines = kr.ok ? kr.data : heatmapPressureKlines;
-  heatmapPressureStatus = {
-    loading: false,
-    derivError: dr.ok ? "" : String(dr.error || "").slice(0, 200),
-    klinesError: kr.ok ? "" : String(kr.error || "").slice(0, 200),
-    updatedAt: Date.now(),
-  };
-  heatmapPressureInFlight = false;
-  refreshHeatmapView();
+async function refreshHeatmapPressureInputs(_force) {
+  return;
 }
 
 function refreshHeatmapView(statusText) {
@@ -1024,33 +816,21 @@ function refreshHeatmapView(statusText) {
   const displaySnapshot = hmDisplaySnapshot(snapshot);
   renderHeatmapKpis(displaySnapshot);
   renderHeatmapBuckets(displaySnapshot);
-  renderHeatmapPressureMatrix(displaySnapshot);
   renderHeatmapHealth(snapshot, displaySnapshot);
   renderHeatmapSources(snapshot);
   renderHeatmapDiagnostics(snapshot);
   const chip = document.getElementById("hm-live-chip");
-  const cloudPrimary = hmCloudAvailable();
-  const cloudFresh = hmCloudIsFresh();
-  const anyRealtime = cloudPrimary ? cloudFresh : Object.values(snapshot.sources || {}).some((src) => src.status === "realtime");
   if (chip) {
-    chip.className = anyRealtime ? "chip ok" : "chip warn";
-    chip.textContent = cloudPrimary ? (cloudFresh ? "Cloudflare 主链路" : "主链路过期") : (anyRealtime ? "本页实时流" : "等待连接");
+    chip.className = hmDeskByExchange() ? "chip warn" : "chip";
+    chip.textContent = hmDeskByExchange() ? "分所已实现强平" : "等待 desk";
   }
   if (statusText) {
     setHmText("hm-status", statusText);
-  } else if (cloudPrimary) {
-    const fresh = hmCloudFreshness();
-    const latestEventAt = Number(fresh.latestEventAt) || 0;
-    const latestMessageAge = Number(fresh.latestMessageAgeMs);
-    const rows = hmFilteredCloudRows(currentHeatmapStateFromDom());
-    const events = rows.reduce((sum, row) => sum + (Number(row.long_count) || 0) + (Number(row.short_count) || 0), 0);
-    const healthText = cloudFresh ? "检测正常" : "主链路无新鲜心跳";
-    const eventText = latestEventAt ? `最新强平 ${fmtHmTime(latestEventAt)}` : "等待首笔强平";
-    const idleText = rows.length ? `${events} 笔强平` : "当前窗口暂无强平";
-    const heartbeatText = Number.isFinite(latestMessageAge) ? `心跳 ${fmtHmAge(latestMessageAge)}` : "心跳 --";
-    setHmText("hm-status", `${healthText} · ${idleText} · ${eventText} · ${heartbeatText}`);
+  } else if (hmDeskByExchange()) {
+    const keys = Object.keys(hmDeskByExchange());
+    setHmText("hm-status", keys.length ? `desk 分所：${keys.join(" / ")}` : "desk 无强平桶");
   } else {
-    setHmText("hm-status", `Cloudflare 暂不可用，降级为本页实时流 · ${hmLatestRealLabel(snapshot)}`);
+    setHmText("hm-status", "等待 /api/desk/heatmap");
   }
 }
 
@@ -1079,15 +859,25 @@ async function refreshHeatmapCloudStatus(wake) {
   if (!heatmapCloudStatus) heatmapCloudStatus = { loading: true };
   refreshHeatmapView();
   try {
-    const data = wake && typeof DataEngine.wakeLiquidationCollector === "function"
-      ? await DataEngine.wakeLiquidationCollector()
-      : await DataEngine.fetchLiquidationStatus();
-    heatmapCloudStatus = { ok: true, ...(data || {}) };
-    if (typeof DataEngine.fetchLiquidationBuckets === "function") {
-      const state = currentHeatmapStateFromDom();
-      heatmapCloudBuckets = await DataEngine.fetchLiquidationBuckets(HEATMAP_SYMBOL, heatmapD1RangeForWindow(state.window), { includeActive: true });
-      maybePromoteHeatmapWindowForCloudHistory();
-    }
+    if (typeof DataEngine.fetchDesk !== "function") throw new Error("desk 装配层不可用");
+    const state = currentHeatmapStateFromDom();
+    const desk = await DataEngine.fetchDesk("heatmap", {
+      symbol: HEATMAP_SYMBOL,
+      range: heatmapD1RangeForWindow(state.window),
+    });
+    heatmapCloudStatus = { ok: true, desk: true, asKnownMode: desk.asKnownMode };
+    const buckets = [];
+    const byExchange = desk.byExchange || {};
+    Object.keys(byExchange).forEach((ex) => {
+      const g = byExchange[ex] || {};
+      (g.buckets || []).forEach((row) => buckets.push({ ...row, exchange: g.exchange || ex }));
+    });
+    heatmapCloudBuckets = {
+      ...desk,
+      buckets,
+      byExchange,
+      combinedTotalsForbidden: true,
+    };
   } catch (e) {
     heatmapCloudStatus = {
       ok: false,
@@ -1096,6 +886,7 @@ async function refreshHeatmapCloudStatus(wake) {
     heatmapCloudBuckets = {
       error: e && e.message ? e.message : String(e),
       buckets: [],
+      byExchange: {},
     };
   }
   refreshHeatmapView();
@@ -1109,56 +900,16 @@ function startHeatmapCloudPolling() {
 
 function initHeatmap() {
   disposeHeatmap();
-  if (typeof LiquidationEngine === "undefined") {
-    bindHeatmapControls();
-    refreshHeatmapPressureInputs(true);
-    heatmapPressureTimer = setInterval(() => refreshHeatmapPressureInputs(false), HEATMAP_PRESSURE_POLL_MS);
-    refreshHeatmapView("LiquidationEngine 未加载");
-    return;
-  }
-  const state = readHeatmapState();
+  bindHeatmapControls();
+  heatmapStream = null;
   heatmapPressurePayload = null;
   heatmapPressureKlines = null;
-  heatmapAutoWindowPromoted = false;
-  heatmapPressureStatus = { loading: false, derivError: "", klinesError: "", updatedAt: null };
-  heatmapPressureInFlight = false;
   if (heatmapPressureTimer) {
     clearInterval(heatmapPressureTimer);
     heatmapPressureTimer = null;
   }
-  heatmapStream = new LiquidationEngine.LiquidationStream({
-    symbol: HEATMAP_SYMBOL,
-    bucketSize: state.bucketSize,
-    maxEvents: LiquidationEngine.DEFAULT_MAX_EVENTS,
-    cacheRetentionMs: LiquidationEngine.DEFAULT_CACHE_RETENTION_MS,
-    onUpdate: () => refreshHeatmapView(),
-    onStatus: () => refreshHeatmapView(),
-  });
-  bindHeatmapControls();
-  heatmapStream.start();
-  heatmapRefreshTimer = setInterval(() => refreshHeatmapView(), 1000);
   startHeatmapCloudPolling();
-  refreshHeatmapPressureInputs(true);
-  heatmapPressureTimer = setInterval(() => refreshHeatmapPressureInputs(false), HEATMAP_PRESSURE_POLL_MS);
-  window.__bitDeskHeatmapDebugIngest = (event) => {
-    if (!heatmapStream) return;
-    const now = Date.now();
-    heatmapStream.ingest({
-      id: event && event.id ? String(event.id) : `debug:${now}:${Math.random()}`,
-      exchange: event && event.exchange ? String(event.exchange) : "binance",
-      symbol: HEATMAP_SYMBOL,
-      ts: Number(event && event.ts) || now,
-      positionSide: event && event.positionSide === "short" ? "short" : "long",
-      rawSide: event && event.rawSide ? String(event.rawSide) : "DEBUG",
-      price: Number(event && event.price) || 65000,
-      qty: Number(event && event.qty) || 0.25,
-      notional: (Number(event && event.notional) || 0) || ((Number(event && event.price) || 65000) * (Number(event && event.qty) || 0.25)),
-      bucketPrice: null,
-      receivedAt: now,
-      raw: event || {},
-      isTest: !!(event && event.isTest),
-    });
-  };
+  heatmapRefreshTimer = setInterval(() => refreshHeatmapView(), 5_000);
 }
 
 function disposeHeatmap() {

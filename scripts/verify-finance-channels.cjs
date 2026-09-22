@@ -20,10 +20,13 @@ function pass(name){passed++;console.log('PASS FIN-'+String(passed).padStart(2,'
     count++;
   }
   pass(`all ${Object.keys(P).length} providers / ${count} operations build bounded public-data requests`);
+  const proxied=buildFinanceRequest('binance-usdm','klines',new URLSearchParams(),{...fixtureEnv,BINANCE_FAPI_ORIGIN:'https://proxy.example.com'});
+  assert.equal(proxied.url.origin,'https://proxy.example.com');
+  pass('usdm channels can use BINANCE_FAPI_ORIGIN without changing the recorded venue host later');
   const catalog=financeCatalog(fixtureEnv);
   assert.ok(!JSON.stringify(catalog).includes('fixture-secret-do-not-use'));
   assert.ok(catalog.providers.every(p=>p.configuration.endsWith('not-probed')));
-  assert.equal(catalog.automaticCollection,false);pass('catalog exposes capabilities, never secrets or fabricated health');
+  assert.equal(catalog.automaticCollection,true);pass('catalog exposes capabilities, never secrets or fabricated health');
   const request=(path,method='GET')=>new Request('https://fixture.test/api/finance/'+path,{method});
   const noFetch=()=>{throw Error('unexpected upstream call');};
   for(const suffix of ['binance-spot/ticker?url=https://evil.test','binance-spot/klines?limit=501','binance-spot/ticker?symbol=BTCUSDT&symbol=ETHUSDT','coinbase/product?product=..','fred/observations?realtime_start=2026-02-30']){

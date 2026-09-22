@@ -3,21 +3,21 @@
   "routes": [
     {
       "id":"workbench-data", "title":"币安主源工作台数据底座与整体方案",
-      "keywords":["行情工作台","工作台方案","数据集","币安主源","聚合数据","金融审查","卡点"],
-      "summary":"先读 docs/research/workbench-binance-data-plan-2026-09-16.md 与 free-financial-platform-limits-2026-09-16.md；本轮只实施来源明确的数据集/D1，页面与分析输入切换留待下一轮。",
+      "keywords":["行情工作台","工作台方案","数据集","币安主源","聚合数据","金融审查","卡点","空桌","装配","desk","治理"],
+      "summary":"先读工作台方案与 2026-09-21 空桌治理记录；分析输入走 /api/desk，不把混源表或过期 bootstrap 当币安主带。",
       "code":["cloudflare/finance/datasets.mjs","cloudflare/finance/dataset-store.mjs","cloudflare/finance/dataset-schema.sql","cloudflare/finance/gateway.mjs","scripts/collect-finance-datasets.cjs","scripts/verify-finance-datasets.cjs","scripts/verify-finance-datasets-live.cjs"],
-      "primary":[{"id":"V04","section":"通用时间语义"},{"id":"V06"},{"id":"V08","section":"市场工作区交互"},{"id":"RES12"}],
+      "primary":[{"id":"LOCAL-DESK"},{"id":"LOCAL-WORKBENCH"},{"id":"V04","section":"通用时间语义"},{"id":"V08","section":"市场工作区交互"}],
       "expand":[], "graph":"normalizeDataset readDataset handleDatasets",
-      "related":[{"id":"finance-channels","when":"查免费边界和原生通道"},{"id":"chart-history","when":"主图来源或历史迁移"},{"id":"snapshot","when":"切换聚合和分析输入"}],
+      "related":[{"id":"finance-channels","when":"查免费边界和原生通道"},{"id":"chart-history","when":"主图来源或历史迁移"},{"id":"runtime","when":"币安出口或 VPS 反代"},{"id":"snapshot","when":"切换聚合和分析输入"}],
       "checks":["npm run verify:finance","npm run build"],
       "acceptance":"固定官方来源 → 按需采集/标记本机首次导入 → D1只读核对；来源、时点、单位、版本和覆盖均明确，不把已有样本冒充持续采集。"
     },
     {
       "id":"finance-channels", "title":"免费金融平台 API 通道",
-      "keywords":["免费API","金融平台","免费通道","finance","API接入","平台接入"],
-      "summary":"先读 docs/research/free-financial-api-channels-2026-09-16.md 的官方来源、免费边界和实测记录；渠道准备不等于已接入分析输入。",
-      "code":["cloudflare/finance/registry.mjs","cloudflare/finance/gateway.mjs","cloudflare/finance/store.mjs","cloudflare/finance/schema.sql","cloudflare/binance-klines-worker.js","scripts/verify-finance-channels.cjs","scripts/verify-finance-storage.cjs"],
-      "primary":[{"id":"V04","section":"通用时间语义"}],
+      "keywords":["免费API","金融平台","免费通道","finance","API接入","平台接入","限额","额度","每日采集","刷新频率","采集频率"],
+      "summary":"当前每条基础数据走 VPS 还是 Cloudflare，先读 2026-09-22 采集路由。再读限额停采和刷新频率。有额度不能当时钟的项不反复探测。",
+      "code":["cloudflare/finance/registry.mjs","cloudflare/finance/gateway.mjs","cloudflare/finance/store.mjs","cloudflare/finance/schema.sql","cloudflare/finance/scheduler.mjs","cloudflare/kline-live-collector.mjs","cloudflare/binance-klines-worker.js","scripts/verify-finance-channels.cjs","scripts/verify-finance-storage.cjs"],
+      "primary":[{"id":"LOCAL-COLLECT"},{"id":"LOCAL-DESK"},{"id":"LOCAL-QUOTA"},{"id":"LOCAL-CADENCE"},{"id":"LOCAL-CHANNELS"},{"id":"V04","section":"通用时间语义"}],
       "expand":[], "graph":"handleFinance buildFinanceRequest",
       "related":[{"id":"collection","when":"新增采集或持久化时另行追踪"}],
       "checks":["npm run verify:finance","npm run build"],
@@ -37,13 +37,13 @@
     },
     {
       "id": "chart-history", "title": "K线历史、切周期、来源与恢复",
-      "keywords": ["K线历史", "历史K线", "K线加载", "K线不更新", "切周期", "周期切换", "回补", "断线", "6000", "缺口", "D1 K线", "历史数据", "更早数据", "历史"],
-      "summary": "主图读取D1并合并实时数据；排查请求代次、取消、symbol/interval、元数据、保留窗口和断线恢复。",
-      "code": ["js/pages/chart.js", "js/data-engine.js", "js/chart/mtf-tiles.js", "cloudflare/binance-klines-worker.js", "cloudflare/schema.sql", "js/pages/settings.js"],
-      "primary": [{"id":"V04","section":"通用时间语义"},{"id":"RES07"},{"id":"V08","section":"时间和来源切换"}],
+      "keywords": ["K线历史", "历史K线", "K线加载", "K线不更新", "切周期", "周期切换", "回补", "断线", "6000", "缺口", "D1 K线", "历史数据", "更早数据", "历史", "刷新频率", "直连", "K线直连", "轮询"],
+      "summary": "主图读取desk/live tape并合并浏览器WS；排查请求代次、取消、symbol/interval、未收盘秒级写入和断线恢复。",
+      "code": ["js/pages/chart.js", "js/data-engine.js", "js/chart/mtf-tiles.js", "cloudflare/binance-klines-worker.js", "cloudflare/kline-live-collector.mjs", "cloudflare/schema.sql", "js/pages/settings.js"],
+      "primary": [{"id":"LOCAL-COLLECT"},{"id":"LOCAL-CADENCE"},{"id":"LOCAL-EGRESSCUTOVER"},{"id":"V04","section":"通用时间语义"},{"id":"RES07"},{"id":"V08","section":"时间和来源切换"}],
       "expand": ["RES06", "TOOL024", "TOOL025"],
-      "graph": "readChartD1Klines",
-      "graphNote": "本机CodeGraph未将DataEngine.fetchKlinesFromD1单独检出；继续在js/data-engine.js定向查该方法和HTTP端点，再核对Worker，不能停在图上的缺边。",
+      "graph": "readChartD1Klines fetchDesk readLiveKlineTape",
+      "graphNote": "主图权威读口是 DataEngine.fetchDesk(\"chart\")；live tape 新鲜时 Worker 读 klines 表。HTTP /api/d1/klines 仍是运维/兼容读口，不能停在图上的缺边。",
       "related": [{"id":"chart","when":"核对页面、视口与卸载表现"},{"id":"snapshot","when":"改动OHLCV窗口、来源或历史口径"},{"id":"runtime","when":"涉及D1同步、保留或线上配置"}],
       "checks": ["node scripts/verify-kline-history.cjs", "node scripts/verify-market-recovery.cjs", "node scripts/verify-indicator-math.cjs", "npm run verify:ui"],
       "acceptance": "#chart → 连续切周期/旧请求迟到/断线恢复 → 数据和来源标签对应当前周期，旧请求不覆盖新选择。"
@@ -171,13 +171,13 @@
     },
     {
       "id": "runtime", "title": "架构、存储、调度与发布",
-      "keywords": ["架构", "存储", "数据库", "D1", "调度", "Cron", "Worker", "部署", "迁移", "回退", "服务"],
-      "summary": "按实际生命周期和计算需求定位模块；研究SQL和完整服务方案不自动变为生产迁移。",
-      "code": ["cloudflare/wrangler.toml", "cloudflare/wrangler.yuqing.toml", "cloudflare/snapshot/wrangler.snapshot.toml", "config/pages-assets.json", "scripts/build-pages.cjs", "scripts/README.md"],
-      "primary": [{"id":"V09"},{"id":"V12"},{"id":"RES20"}],
-      "expand": ["V10", "RES21", "RES22"], "graph": "build-pages.cjs",
+      "keywords": ["架构", "存储", "数据库", "D1", "调度", "Cron", "Worker", "部署", "迁移", "回退", "服务", "403", "出口", "封锁", "地域", "反代", "采集位置", "持续采集", "刷新频率", "采集频率", "秒级", "分钟级", "日限额", "VPS", "Vultr", "SSH", "Caddy", "灰云", "egress", "sslip", "出口现状"],
+      "summary": "基础采集走 VPS 还是 Cloudflare，先读 LOCAL-COLLECT。刷新频率读 LOCAL-CADENCE。出口接线读 LOCAL-EGRESSCUTOVER；约束读 LOCAL-EGRESSADV；SSH 读 LOCAL-EGRESSVPS。Deribit 期权摘要走 VPS、6 小时一次。Alpha、BLS、GDELT 仍不进时钟，见 LOCAL-QUOTA。",
+      "code": ["cloudflare/wrangler.toml", "cloudflare/wrangler.yuqing.toml", "cloudflare/snapshot/wrangler.snapshot.toml", "cloudflare/kline-live-collector.mjs", "cloudflare/egress/Caddyfile", "cloudflare/finance/egress.mjs", "config/pages-assets.json", "scripts/build-pages.cjs", "scripts/README.md", "scripts/collect-market-local.cjs"],
+      "primary": [{"id":"LOCAL-COLLECT"},{"id":"LOCAL-CADENCE"},{"id":"LOCAL-EGRESSCUTOVER"},{"id":"LOCAL-EGRESSADV"},{"id":"LOCAL-EGRESSVPS"},{"id":"LOCAL-EGRESSFIX"},{"id":"LOCAL-EGRESS"},{"id":"LOCAL-PROXYPLAN"}],
+      "expand": ["LOCAL-PURCHASE", "LOCAL-QUOTA", "V09", "RES20", "RES21", "RES22"], "graph": "build-pages.cjs",
       "related": [{"id":"snapshot","when":"数据结构及保留变化"},{"id":"llm","when":"模型任务运行方式变化"}],
-      "checks": ["npm run verify:pages", "npm run verify:shell", "npm run build"],
+      "checks": ["npm run verify:pages", "npm run verify:shell", "npm run verify:egress", "npm run build"],
       "acceptance": "明确影响面 → 本地验证/产物检查 → 只包含预期内容；远程操作依当次授权另核实时状态。"
     },
     {
@@ -194,6 +194,8 @@
   ],
   "examples": [
     {"query":"修改K线图缩放", "expected":"chart"},
+    {"query":"币安403出口封锁", "expected":"runtime"},
+    {"query":"Worker采集持续性问题", "expected":"runtime"},
     {"query":"K线历史回补", "expected":"chart-history"},
     {"query":"快速切周期后K线不更新", "expected":"chart-history"},
     {"query":"K线图拖到左侧没有更早数据", "expected":"chart-history"},
@@ -208,7 +210,9 @@
     {"query":"Gemini模型流式", "expected":"llm"},
     {"query":"导航PLANNED", "expected":"workspace"},
     {"query":"期权ETF", "expected":"extensions"},
-    {"query":"D1迁移部署", "expected":"runtime"},
+    {"query":"秒级刷新频率", "expected":"runtime"},
+    {"query":"VPS出口收口", "expected":"runtime"},
+    {"query":"K线直连", "expected":"chart-history"},
     {"query":"模型价值对照评估", "expected":"evaluation"}
   ]
 }

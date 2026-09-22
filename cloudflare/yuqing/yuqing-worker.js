@@ -917,58 +917,93 @@ async function fetchJsonOptional(url, timeoutMs = 12_000, headers = {}) {
 function compactMarketEndpoint(key, result) {
   if (!result || !result.ok) return result;
   const data = result.data || {};
+  if (key === "chart") {
+    return {
+      url: result.url,
+      ok: true,
+      status: result.status,
+      data: {
+        schemaVersion: data.schemaVersion || null,
+        asKnownMode: data.asKnownMode || "system_observed",
+        pricePathAvailable: data.pricePathAvailable === true,
+        tradingNarrative: data.tradingNarrative === true,
+        venue: data.venue || null,
+        instrumentId: data.instrumentId || null,
+        observedAt: data.observedAt || null,
+        coverage: data.coverage || null,
+        gap: data.gap || null,
+        quality: data.quality || null,
+      },
+    };
+  }
   if (key === "klines") {
-    const rows = Array.isArray(data.klines) ? data.klines : [];
-    const first = rows[0] || null;
-    const last = rows.length ? rows[rows.length - 1] : null;
-    const firstClose = first && first.c != null ? Number(first.c) : null;
-    const lastClose = last && last.c != null ? Number(last.c) : null;
-    const changePct =
-      firstClose && lastClose && Number.isFinite(firstClose) && Number.isFinite(lastClose)
-        ? Number((((lastClose - firstClose) / firstClose) * 100).toFixed(4))
-        : null;
+    if (data.schemaVersion && data.scope === "chart") {
+      return compactMarketEndpoint("chart", result);
+    }
     return {
       url: result.url,
       ok: true,
       status: result.status,
       data: {
-        symbol: data.symbol,
-        interval: data.interval,
-        count: data.count || rows.length,
-        latestT: data.latestT || (last && last.t) || null,
-        lastSync: data.lastSync || null,
-        firstClose,
-        lastClose,
-        changePct,
+        omitted: true,
+        pricePathAvailable: false,
+        reason: "legacy klines compact refused; use desk chart",
       },
     };
   }
-  if (key === "liquidations") {
-    const rows = Array.isArray(data.rows) ? data.rows : Array.isArray(data.buckets) ? data.buckets : [];
-    const totalLong = rows.reduce((sum, r) => sum + (Number(r.long_notional || r.longNotional) || 0), 0);
-    const totalShort = rows.reduce((sum, r) => sum + (Number(r.short_notional || r.shortNotional) || 0), 0);
+  if (key === "heatmap" || key === "liquidations") {
+    if (data.byExchange && typeof data.byExchange === "object") {
+      const exchanges = Object.keys(data.byExchange);
+      const byExchange = {};
+      for (const ex of exchanges) {
+        const g = data.byExchange[ex] || {};
+        byExchange[ex] = {
+          exchange: g.exchange || ex,
+          longNotional: Number(g.longNotional) || 0,
+          shortNotional: Number(g.shortNotional) || 0,
+          buckets: Array.isArray(g.buckets) ? g.buckets.length : 0,
+        };
+      }
+      return {
+        url: result.url,
+        ok: true,
+        status: result.status,
+        data: {
+          schemaVersion: data.schemaVersion || null,
+          combinedTotalsForbidden: true,
+          exchanges,
+          byExchange,
+          note: data.note || null,
+        },
+      };
+    }
     return {
       url: result.url,
       ok: true,
       status: result.status,
       data: {
-        symbol: data.symbol || "BTCUSDT",
-        range: data.range || "30d",
-        count: data.count || rows.length,
-        latestEventAt: data.latestEventAt || data.freshness?.latestEventAt || null,
-        totalLongNotional: Number(totalLong.toFixed(2)),
-        totalShortNotional: Number(totalShort.toFixed(2)),
-        collector: data.collector
-          ? {
-              status: data.collector.status,
-              latestEventAt: data.collector.latestEventAt,
-              latestEventAgeMs: data.collector.latestEventAgeMs,
-            }
-          : null,
+        schemaVersion: data.schemaVersion || null,
+        combinedTotalsForbidden: true,
+        omittedCombinedTotals: true,
+        reason: "legacy mixed liquidation rows refused; desk heatmap must split by exchange",
       },
     };
   }
-  if (key === "derivatives") {
+  if (key === "context" || key === "derivatives") {
+    if (data.scope === "context" || data.groups) {
+      return {
+        url: result.url,
+        ok: true,
+        status: result.status,
+        data: {
+          schemaVersion: data.schemaVersion || null,
+          asKnownMode: data.asKnownMode || "system_observed",
+          tradingNarrative: false,
+          contractUnavailable: !!(data.contract && data.contract.unavailable),
+          groups: data.groups ? Object.keys(data.groups) : [],
+        },
+      };
+    }
     return {
       url: result.url,
       ok: true,
@@ -983,19 +1018,32 @@ function compactMarketEndpoint(key, result) {
       },
     };
   }
+  if (key === "orderflow") {
+    return {
+      url: result.url,
+      ok: true,
+      status: result.status,
+      data: {
+        schemaVersion: data.schemaVersion || null,
+        venue: data.venue || null,
+        instrumentId: data.instrumentId || null,
+        coverage: data.coverage || null,
+        gap: data.gap || null,
+        quality: data.quality || null,
+        seriesCount: Array.isArray(data.series) ? data.series.length : 0,
+      },
+    };
+  }
   if (key === "derivativesSnapshot") {
     return {
       url: result.url,
       ok: true,
       status: result.status,
       data: {
-        scope: data.scope,
-        generatedAt: data.generatedAt,
-        snapshotVersion: data.snapshotVersion,
-        profile: data.profile,
-        summary: data.summary || data.llmSummary || null,
-        matrix: data.matrix || data.analysisMatrix || null,
-        dataFreshness: data.dataFreshness || null,
+        omitted: true,
+        legacy: true,
+        authority: "/api/desk/context",
+        reason: "legacy compact snapshot omitted from analysis input",
       },
     };
   }
@@ -1005,10 +1053,11 @@ function compactMarketEndpoint(key, result) {
 async function fetchMarketContext(env) {
   const base = marketApiBase(env);
   const endpoints = {
-    klines: `${base}/api/d1/klines?symbol=BTCUSDT&interval=1h&limit=192&sync=0`,
-    derivatives: `${base}/api/d1/derivatives?symbol=BTCUSDT&range=30d&sync=0`,
-    liquidations: `${base}/api/d1/liquidations?symbol=BTCUSDT&range=30d&includeActive=1`,
-    derivativesSnapshot: `${base}/api/ai/derivatives-snapshot?profile=brief`,
+    chart: `${base}/api/desk/chart?interval=1h`,
+    context: `${base}/api/desk/context`,
+    heatmap: `${base}/api/desk/heatmap?range=24h`,
+    orderflow: `${base}/api/desk/orderflow?symbol=BTCUSDT`,
+    derivatives: `${base}/api/desk/context`,
   };
   const entries = await Promise.all(
     Object.entries(endpoints).map(async ([key, url]) => [
@@ -1020,6 +1069,8 @@ async function fetchMarketContext(env) {
   const errors = Object.entries(byKey)
     .filter(([, v]) => !v.ok)
     .map(([key, v]) => ({ source: key, message: v.error || `HTTP ${v.status}` }));
+  const chart = (byKey.chart && byKey.chart.data) || {};
+  const pricePathAvailable = chart.pricePathAvailable === true;
   return {
     ok: errors.length === 0,
     base,
@@ -1027,6 +1078,8 @@ async function fetchMarketContext(env) {
     endpoints,
     data: byKey,
     errors,
+    pricePathAvailable,
+    tradingNarrativeForbidden: !pricePathAvailable,
   };
 }
 
@@ -1288,13 +1341,14 @@ async function fetchYahooAssetMove(row) {
 }
 
 async function fetchBtcD1AssetMove(env) {
-  const url = `${marketApiBase(env)}/api/d1/klines?symbol=BTCUSDT&interval=1h&limit=192&sync=0`;
+  const url = `${marketApiBase(env)}/api/desk/chart?interval=1h`;
   const res = await fetchWithTimeout(url, {
     headers: { Accept: "application/json", "User-Agent": "yuqing-worker/1.4 (+cf)" },
   }, FETCH_TIMEOUT_SOURCES_MS);
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(`BTC D1 klines HTTP ${res.status}`);
-  const rows = data && Array.isArray(data.klines) ? data.klines : [];
+  if (!res.ok) throw new Error(`BTC desk chart HTTP ${res.status}`);
+  if (!data || data.pricePathAvailable !== true) throw new Error("BTC desk has no authoritative price path");
+  const rows = data && Array.isArray(data.series) ? data.series : [];
   const points = rows
     .map((row) => ({ t: finiteNumber(row.t), close: finiteNumber(row.c) }))
     .filter((row) => row.t != null && row.close != null)
@@ -3295,7 +3349,9 @@ async function buildSentimentAnalysisReport(env, opts) {
     quality: {
       factCount: factRows.length,
       sourceCoverage: Math.min(100, Math.max(20, factRows.length + (marketSnapshot.ok ? 35 : 10))),
-      marketSnapshotOk: !!marketSnapshot.ok,
+      marketSnapshotOk: !!(marketSnapshot.ok && marketSnapshot.pricePathAvailable === true),
+      pricePathAvailable: marketSnapshot.pricePathAvailable === true,
+      tradingNarrativeForbidden: marketSnapshot.tradingNarrativeForbidden !== false,
       usedSearch: useIncrementalSearch,
       caveat: "本页是二次舆情研判，不构成投资建议。",
     },

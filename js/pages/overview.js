@@ -3,8 +3,9 @@ function pageOverview() {
     '<a class="card feature-card" href="#/' + item.id + '"><strong>' + item.label + '</strong><span class="chip">' + featureInfo(item.id).label + '</span><p>' + featureInfo(item.id).note + '</p></a>'
   ).join('');
   return '<header class="page-header"><div><h1 class="page-title">功能清单</h1><p class="page-sub">按实际实现区分数据入口、演示原型和规划内容。</p></div></header>' +
-    '<aside class="feature-notice"><strong>运行说明</strong><span>已接入表示功能已连接数据或报告接口。当前连通性、数据时效和报告生成时间请在对应页面核验；此清单不执行联网检查。</span></aside>' +
+    '<aside class="feature-notice"><strong>运行说明</strong><span>已接入只表示该页连上了接口，不等于币安主源已恢复，也不等于可交易。工作台四页当前按空桌处理。此清单不执行联网检查。</span></aside>' +
     '<h2>数据与报告入口</h2><div class="feature-grid">' + cards(['connected', 'local']) + '</div>' +
+    '<h2>主源未恢复</h2><p>工作台、足迹、强平和环境背景在币安云端路径恢复前按空桌处理，宏观卡片不能证明交易桌已活。</p><div class="feature-grid">' + cards(['halted']) + '</div>' +
     '<h2>规划与演示</h2><p>原型保留供后续实现，尚不能用于实际分析、计算或执行。</p><div class="feature-grid">' + cards(['demo', 'planned']) + '</div>' +
     renderDemoPreview(pageOverviewDemo());
 }

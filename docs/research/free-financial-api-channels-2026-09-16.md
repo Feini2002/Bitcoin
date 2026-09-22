@@ -1,6 +1,6 @@
 # 免费金融数据通道（2026-09-16）
 
-最新扩展：现为40个平台/产品、93个公开操作。新增9项Binance规则/统计通道，以及独立的32项规范观察数据集；完整现状见[币安主源数据与改版方案](workbench-binance-data-plan-2026-09-16.md)，逐平台限制见[限制矩阵](free-financial-platform-limits-2026-09-16.md)。下文各时间节点的84项统计是当时实测记录，保留原样，不冒充93项已全量重测。
+最新扩展：现为40个平台/产品、93个公开操作。新增9项Binance规则/统计通道，以及独立的32项规范观察数据集；完整现状见[币安主源数据与改版方案](workbench-binance-data-plan-2026-09-16.md)，逐平台限制见[限制矩阵](free-financial-platform-limits-2026-09-16.md)。2026-09-21 起，Deribit、Alpha Vantage、GDELT、BLS 以及不稳定的 CoinPaprika 额度不作为每日长期采集，见[限额停采名单](finance-daily-quota-skip-2026-09-21.md)。下文各时间节点的84项统计是当时实测记录，保留原样，不冒充93项已全量重测。
 
 ## 需求与研究依据
 

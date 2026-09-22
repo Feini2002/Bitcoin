@@ -7,6 +7,21 @@ export function marketStateFromLegacy(legacy, marketSnapshot) {
   const src = marketSnapshot && marketSnapshot.data && marketSnapshot.data.derivativesSnapshot && marketSnapshot.data.derivativesSnapshot.data;
   const hasDash = !!(dash && dash.sentimentSummary);
   const hasMarket = !!(marketSnapshot && marketSnapshot.ok);
+  const noPrice = !!(marketSnapshot && (marketSnapshot.tradingNarrativeForbidden || marketSnapshot.pricePathAvailable === false));
+  if (noPrice) {
+    return {
+      regime: "无价格路径 / 仅宏观背景",
+      score: null,
+      bias: "未评分",
+      confidence: null,
+      scoreNote: "主行情不可用，不得输出交易向段落",
+      summary: "无价格路径 / 仅宏观背景。不得把宏观背景或过期期权写成交易确认。",
+      keyAssets: [
+        { name: "BTC", change: "", stance: "无价格路径", driver: "desk chart 未提供权威币安序列。" },
+        { name: "环境背景", change: "", stance: "可看宏观卡片", driver: "FRED/SOFR/稳定币仅作 system_observed 背景。" },
+      ],
+    };
+  }
   return {
     regime: dash && dash.marketRegime ? dash.marketRegime : hasMarket ? "市场数据可用，等待二次确认" : "市场快照存在缺口",
     score: null,
@@ -68,14 +83,17 @@ export function riskRadarFromInputs(daily, marketSnapshot, facts) {
 
 export function opportunitiesFromInputs(daily, marketSnapshot) {
   const hasMarket = !!(marketSnapshot && marketSnapshot.ok);
+  const noPrice = !!(marketSnapshot && (marketSnapshot.tradingNarrativeForbidden || marketSnapshot.pricePathAvailable === false));
   return [
     {
       label: "顺势确认",
       direction: "BTC 方向确认",
-      setup: hasMarket ? "仅当事件、价格与衍生品同向时再提高权重；数据可用不等于证据同向。" : "先恢复市场快照，再判断方向。",
-      invalidation: "价格反应与事件叙事背离，或资金费率/OI 出现拥挤。",
+      setup: noPrice
+        ? "无价格路径时不得提高方向权重；宏观背景不能证明交易桌已活。"
+        : hasMarket ? "仅当事件、价格与衍生品同向时再提高权重；数据可用不等于证据同向。" : "先恢复市场快照，再判断方向。",
+      invalidation: "价格反应与事件叙事背离，或资金费率/OI 与价格路径不同步。",
       priority: null,
-      enabled: hasMarket,
+      enabled: hasMarket && !noPrice,
       aligned: false,
     },
     {

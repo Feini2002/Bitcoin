@@ -138,8 +138,8 @@ function derivChange(rows, ms) {
 function derivRatioState(value, high = DERIV_RATIO_BAND_HIGH, low = DERIV_RATIO_BAND_LOW) {
   const n = derivNumber(value);
   if (!Number.isFinite(n)) return "样本不足";
-  if (n >= high) return "多头占优";
-  if (n <= low) return "空头占优";
+  if (n >= high) return "多头比值偏高";
+  if (n <= low) return "空头比值偏低";
   return "均衡";
 }
 
@@ -201,7 +201,7 @@ function derivAnalyze(payload) {
   let divergence = "样本不足";
   if (priceSampleOk && oi24hPctOk) {
     if (priceChange > 1 && oi24h.changePct < -1) divergence = "价格上涨但 OI 下降，偏空仓减压/现货驱动";
-    else if (priceChange < -1 && oi24h.changePct > 1) divergence = "价格下跌但 OI 上升，偏新增空头拥挤";
+    else if (priceChange < -1 && oi24h.changePct > 1) divergence = "价格下跌但 OI 上升，空头数量增加（非流入）";
     else if (priceChange < 0 && oi24h.changePct < -1) divergence = "价格小跌且 OI 下降，偏去杠杆/减仓";
     else if (Math.abs(priceChange) < 1 && Math.abs(oi24h.changePct) > 3) divergence = "价格横盘但 OI 快速变化，警惕杠杆蓄力";
     else divergence = "价格与 OI 暂无明显背离";
@@ -337,98 +337,32 @@ function derivAgentLinkHtml(agentId) {
 function pageDerivatives() {
   return html`
     <section class="deriv-desk">
-      <section class="deriv-status-strip" aria-label="衍生品数据状态">
+      <section class="deriv-status-strip" aria-label="环境背景状态">
         <div class="deriv-status-main">
           <span class="deriv-feed-dot" aria-hidden="true"></span>
-          <strong>BTCUSDT 永续</strong>
-          <span>Cloud D1 衍生品 30d · Binance USD-M 主源 · Bybit Funding/OI 兜底 · Yahoo 宏观旁路 · 东八区时间轴 · 前台 60 秒刷新</span>
+          <strong>环境背景</strong>
+          <span>仅 FRED / SOFR / 稳定币等官方背景 · 分频展示 · 合约状态在币安未恢复前整组空</span>
         </div>
         <div class="deriv-status-actions">
-          <span class="chip ok" id="deriv-live-chip">D1 衍生品</span>
-          ${derivAgentLinkHtml("deriv")}
-          ${derivAgentLinkHtml("env")}
+          <span class="chip warn" id="deriv-live-chip">system_observed</span>
         </div>
       </section>
-
-      <p class="muted" id="deriv-research-evidence"></p>
-
+      <p class="muted" id="deriv-research-evidence">宏观不能证明交易桌已活。asKnownMode 只能是 system_observed。</p>
       <div class="deriv-toolbar">
-        <label class="deriv-field">
-          <span>交易对</span>
-          <strong>${DERIV_SYMBOL}</strong>
-        </label>
-        <label class="deriv-field">
-          <span>窗口</span>
-          <strong>${DERIV_RANGE}</strong>
-        </label>
         <div class="deriv-action-cluster">
           <button type="button" class="btn" id="deriv-refresh"><i class="ph ph-arrow-clockwise"></i>刷新</button>
-          <button type="button" class="btn" id="deriv-source-status"><i class="ph ph-activity"></i>源状态</button>
-          <span class="deriv-status" id="deriv-status">准备读取 Cloudflare D1...</span>
+          <span class="deriv-status" id="deriv-status">准备读取 /api/desk/context...</span>
         </div>
       </div>
-
       <div class="deriv-kpis" id="deriv-kpis">
-        ${["Funding 拥挤", "OI 24h", "主动买卖比", "数据可信度"].map((label) => `
-          <div class="deriv-kpi"><span>${label}</span><strong>--</strong><em>等待数据</em></div>
-        `).join("")}
+        <div class="deriv-kpi"><span>合约状态</span><strong>空</strong><em>币安云端路径未恢复</em></div>
+        <div class="deriv-kpi"><span>asKnownMode</span><strong>system_observed</strong><em>不是 publicly_available</em></div>
       </div>
-
-      <div class="deriv-layout">
-        <section class="deriv-main">
-          <div class="deriv-section-title">衍生品六项矩阵</div>
-          <div class="deriv-grid" id="deriv-panels">
-            <div class="deriv-empty">正在加载衍生品数据...</div>
-          </div>
-        </section>
-        <aside class="deriv-side">
-          <section class="deriv-side-panel">
-            <div class="deriv-side-panel-head">
-              <div>
-                <div class="card-title">衍生品观察栏</div>
-                <div class="deriv-sub">可信度 / 宏观旁路 / 低权重背景</div>
-              </div>
-              <span class="chip" id="deriv-side-summary">等待数据</span>
-            </div>
-
-            <div class="deriv-side-section">
-              <div class="deriv-side-section-head">
-                <div>
-                  <span class="card-title">数据可信度</span>
-                  <span class="deriv-sub">D1 / 主链路 / 上游状态</span>
-                </div>
-              </div>
-              <div class="deriv-freshness" id="deriv-freshness">等待数据...</div>
-            </div>
-
-            <details class="deriv-detail-card">
-              <summary>
-                <div>
-                  <span class="card-title">宏观旁路</span>
-                  <span class="deriv-sub">VIX / VIX3M / MOVE，仅作跨市场风险提示</span>
-                </div>
-                <span class="chip" id="deriv-macro-summary">等待数据</span>
-              </summary>
-              <div class="deriv-freshness" id="deriv-macro">等待数据...</div>
-            </details>
-
-            <details class="deriv-detail-card">
-              <summary>
-                <div>
-                  <span class="card-title">稳定币背景</span>
-                  <span class="deriv-sub">USDT / USDC · 低权重，只作流动性背景</span>
-                </div>
-                <span class="chip warn" id="deriv-stablecoin-summary">low</span>
-              </summary>
-              <div class="deriv-stablecoin" id="deriv-stablecoin">等待数据...</div>
-            </details>
-          </section>
-        </aside>
-      </div>
+      <div id="deriv-contract-empty" class="desk-halt-card">合约状态（premium / 已结算 funding / 基差）整组空。不用宏观把版面填满成交易台。</div>
+      <div class="desk-freq-groups" id="deriv-freq-groups">等待 desk context...</div>
     </section>
   `;
 }
-
 function humanizeDerivativesReadError(message) {
   const s = String(message || "");
   if (/Failed to fetch|NetworkError|NETWORK_ERROR|Load failed|ECONNREFUSED/i.test(s)) {
@@ -626,16 +560,16 @@ function buildDerivPanelDefinitions(payload, a, ctx) {
       label: "Funding",
       title: "资金费率",
       value: fmtDerivFunding(a.fundingBinance.latest),
-      state: !Number.isFinite(fv) ? "样本不足" : fundingCrowded ? "拥挤" : "中性",
+      state: !Number.isFinite(fv) ? "样本不足" : fundingCrowded ? "偏高" : "中性",
       chip: fundingCrowded ? "chip warn" : "chip ok",
-      note: `${fundingCrowded ? "费率进入拥挤区" : "费率暂未拥挤"} · ${ctx.fundingSrcLabel}`,
+      note: `${fundingCrowded ? "费率进入偏高区" : "费率暂未偏高"} · ${ctx.fundingSrcLabel}`,
       metrics: [
         { label: "当前", value: fmtDerivFunding(a.fundingBinance.latest) },
         { label: "24h变化", value: fmtDerivFunding(a.fundingBinance.change) },
         { label: "来源", value: ctx.fundingSrcLabel },
       ],
       chart: derivChartSvg(derivSeries(payload, "funding_binance"), "deriv-path-funding", "资金费率"),
-      evidence: `Binance 永续 Funding；阈值 ${fmtDerivFunding(DERIV_FUNDING_CROWD_ABS)}，只用于拥挤提示。`,
+      evidence: `Binance 永续 Funding；阈值 ${fmtDerivFunding(DERIV_FUNDING_CROWD_ABS)}，只用于偏高提示。`,
     },
     {
       key: "oi",
@@ -753,240 +687,48 @@ function renderDerivActivePanel(panel) {
   `;
 }
 
-function renderDerivativesPayload(payload, syncReport = null) {
-  derivativesPayload = payload;
-  derivativesLastSyncReport = syncReport || null;
-  const a = derivAnalyze(payload);
-  const oiChip = derivOiChipMeta(a);
-  const fundingSrcLabel = deriveFundingSourceLabel(payload, a);
-  const binMode = String((a.syncHints && a.syncHints.binanceOriginMode) || "--");
-  const topAccMh = mhFind(a, "top_account_long_short");
-  const topPosMh = mhFind(a, "top_position_long_short");
-  const basisQMh = mhFind(a, "basis_quarter");
-  const topAccSub = derivMetricStaleSubtitle(topAccMh);
-  const topPosSub = derivMetricStaleSubtitle(topPosMh);
-  const basisQSub = derivMetricStaleSubtitle(basisQMh);
-  const status = $("#deriv-status");
-  if (status) {
-    const latest = payload && payload.dataFreshness ? payload.dataFreshness.latestT : null;
-    const roll = a.freshnessRollup;
-    const coreBit = roll && roll.core ? `核心 ${roll.core.okCount}/${roll.core.totalKeys}` : "";
-    const macroBit = roll && roll.macro ? `宏观 ${roll.macro.okCount}/${roll.macro.totalKeys}` : "";
-    const worst =
-      typeof a.worstCoreStaleMinutes === "number" && Number.isFinite(a.worstCoreStaleMinutes)
-        ? `核心最旧 ${a.worstCoreStaleMinutes}m`
-        : "";
-    const syncBrief = summarizeDerivSyncReport(syncReport, payload);
-    const autoRepairBrief =
-      payload && payload.syncHints && payload.syncHints.autoRepairQueued
-        ? `后台修复 ${payload.syncHints.autoRepairGroup || "core"}`
-        : "";
-    const shortSyncBrief = clipDerivText(syncBrief || autoRepairBrief, 72);
-    if (latest) {
-      status.textContent = [
-        `D1 任一更新 ${fmtDerivTime(latest)}`,
-        coreBit,
-        macroBit,
-        worst,
-        a.sourceOkCore ? "主链路达标" : `留意 ${a.warnings.length} 项`,
-        shortSyncBrief,
-      ]
-        .filter(Boolean)
-        .join(" · ");
-    } else {
-      status.textContent = syncBrief || "D1 暂无衍生品数据，请检查 Worker Cron / 源状态";
-    }
-  }
-  const liveChip = $("#deriv-live-chip");
-  if (liveChip) {
-    liveChip.className = a.sourceOkCore ? "chip ok" : "chip warn";
-    liveChip.textContent = a.sourceOkCore ? "D1 主链路达标" : "D1 需留意";
-  }
-  const evidenceEl = document.getElementById("deriv-research-evidence");
-  if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
-    evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
-      instrumentId: "BINANCE:USDM:BTCUSDT:PERPETUAL",
-      windowLabel: "30d",
-      source: fundingSrcLabel,
-      coverage: a.sourceOkCore ? "主链路达标" : "核心依赖不足",
-    });
-  }
-  const sideSummary = $("#deriv-side-summary");
-  if (sideSummary) {
-    const confidence = derivDataConfidenceLabel(a);
-    sideSummary.className = confidence.chip;
-    sideSummary.textContent = confidence.note.split(" · ")[0] || "等待数据";
-  }
-  const kpis = $("#deriv-kpis");
-  if (kpis) {
-    const fv = derivNumber(a.fundingBinance.latest);
-    const fs = Number.isFinite(fv) && Math.abs(fv) >= DERIV_FUNDING_CROWD_ABS ? "拥挤 · 留意" : "中性";
-    const tr = a.taker && a.taker.value;
-    const tNote = `${derivRatioState(tr)}${Number.isFinite(derivNumber(tr)) && Math.abs(derivNumber(tr) - 1) >= DERIV_TAKER_IMBALANCE_TOL ? " · 失衡" : ""}`;
-    const confidence = derivDataConfidenceLabel(a);
-    kpis.innerHTML = [
-      ["Funding 拥挤", fmtDerivFunding(a.fundingBinance.latest), `${fs} · ${fundingSrcLabel}`],
-      ["OI 24h", fmtDerivPct(a.oi24h.changePct), a.divergence],
-      ["主动买卖比", fmtDerivValue(tr, 3), tNote],
-      ["数据可信度", confidence.value, `${confidence.note} · ${binMode}`],
-    ].map(([label, value, note]) => `
-      <div class="deriv-kpi">
-        <span>${escapeDerivHtml(label)}</span>
-        <strong>${escapeDerivHtml(value)}</strong>
-        <em>${escapeDerivHtml(note || "--")}</em>
-      </div>
-    `).join("");
-  }
-  const panels = $("#deriv-panels");
-  if (panels) {
-    const definitions = buildDerivPanelDefinitions(payload, a, {
-      fundingSrcLabel,
-      oiChip,
-      basisQSub,
-      topAccSub,
-      topPosSub,
-    });
-    let activePanel = definitions.find((panel) => panel.key === derivActivePanel);
-    if (!activePanel) {
-      derivActivePanel = "oi";
-      activePanel = definitions.find((panel) => panel.key === derivActivePanel) || definitions[0];
-    }
-    panels.innerHTML = `${definitions.map(renderDerivPanelCard).join("")}${renderDerivActivePanel(activePanel)}`;
-  }
-  const macro = $("#deriv-macro");
-  if (macro) {
-    const macroFw = a.warnings.filter((w) => typeof w === "string" && (/宏观旁路|\[宏观旁路\]/.test(w) || /^\[宏观旁路\]/.test(w)));
-    const macroSummary = $("#deriv-macro-summary");
-    if (macroSummary) {
-      macroSummary.textContent = macroFw.length ? `留意 ${macroFw.length} 项` : (a.vixTerm && a.vixTerm > 1 ? "VIX 倒挂" : "低权重背景");
-      macroSummary.className = macroFw.length || (a.vixTerm && a.vixTerm > 1) ? "chip warn" : "chip";
-    }
-    const macroExtra = macroFw.length
-      ? `<div class="deriv-warnings">${macroFw.slice(0, 4).map((w) => `<span class="deriv-warning">${escapeDerivHtml(w)}</span>`).join("")}</div>`
-      : `<div class="deriv-note">宏观仅作背景提示，不参与核心主链路 sourceOk 判定。</div>`;
-    macro.innerHTML = `
-      <div class="deriv-data-row"><strong>VIX</strong><span>${escapeDerivHtml(fmtDerivValue(a.vix24h.latest, 2))} / 24h ${escapeDerivHtml(fmtDerivValue(a.vix24h.change, 2))}</span></div>
-      <div class="deriv-data-row"><strong>MOVE</strong><span>${escapeDerivHtml(fmtDerivValue(a.move24h.latest, 1))} / 24h ${escapeDerivHtml(fmtDerivValue(a.move24h.change, 1))}</span></div>
-      <div class="deriv-data-row"><strong>VIX/VIX3M</strong><span>${escapeDerivHtml(fmtDerivValue(a.vixTerm, 3))}${a.vixTerm && a.vixTerm > 1 ? " · 倒挂" : ""}</span></div>
-      ${macroExtra}
-    `;
-  }
-  const stable = $("#deriv-stablecoin");
-  if (stable) {
-    const s = derivStablecoinRows(payload);
-    const usdt7d = derivChange(s.usdt, 7 * 24 * 60 * 60 * 1000);
-    const usdc7d = derivChange(s.usdc, 7 * 24 * 60 * 60 * 1000);
-    const stableWarnings = s.freshness && Array.isArray(s.freshness.warnings) ? s.freshness.warnings : [];
-    const stableSummary = $("#deriv-stablecoin-summary");
-    if (stableSummary) {
-      stableSummary.textContent = stableWarnings.length ? "背景告警" : (s.hasRows ? "low · 正常" : "low · 暂无D1");
-      stableSummary.className = stableWarnings.length || !s.hasRows ? "chip warn" : "chip";
-    }
-    const warningHtml = s.freshness && Array.isArray(s.freshness.warnings) && s.freshness.warnings.length
-      ? s.freshness.warnings.map((w) => `<span class="deriv-warning">${escapeDerivHtml(w)}</span>`).join("")
-      : s.hasRows
-        ? `<span class="deriv-ok">稳定币背景 D1 正常</span>`
-        : `<span class="deriv-warning">稳定币背景暂无 D1 数据</span>`;
-    stable.innerHTML = `
-      <div class="deriv-stablecoin-grid">
-        <span><b>USDT</b><strong>${escapeDerivHtml(fmtDerivCompact(usdt7d.latest, 2))}</strong><em>7日 ${escapeDerivHtml(fmtDerivPct(usdt7d.changePct))}</em></span>
-        <span><b>USDC</b><strong>${escapeDerivHtml(fmtDerivCompact(usdc7d.latest, 2))}</strong><em>7日 ${escapeDerivHtml(fmtDerivPct(usdc7d.changePct))}</em></span>
-      </div>
-      <div class="deriv-stablecoin-legend">
-        <span><i style="background:#2563eb"></i>USDT</span>
-        <span><i style="background:#0d9488"></i>USDC</span>
-      </div>
-      ${derivDualChartSvg(s.usdt, s.usdc, "deriv-path-stable-usdt", "deriv-path-stable-usdc", "稳定币背景")}
-      <div class="deriv-note">LLM 权重 ${escapeDerivHtml(s.llmGuidance.weight || s.reliability.weight || "low")}：仅作为稳定币流动性背景，不作为独立交易触发器。</div>
-      <div class="deriv-warnings">${warningHtml}</div>
-    `;
-  }
-  const freshness = $("#deriv-freshness");
-  if (freshness) {
-    const fresh = payload && payload.dataFreshness ? payload.dataFreshness : {};
-    const warningHtmlCore = a.warnings
-      .filter((w) => typeof w === "string" && !/^\[宏观旁路\]|\[宏观旁路\]|宏观旁路/.test(w))
-      .filter((w) => !/^\[按指标观测\]|^核心 .+ 偏旧/.test(w))
-      .filter((w) => !derivNoiseBinanceGeoRestrictedCooldown(a.sourceOkCore, w))
-      .slice(0, 8);
-    const warningHtml = warningHtmlCore.length
-      ? warningHtmlCore.map((w) => `<span class="deriv-warning">${escapeDerivHtml(w)}</span>`).join("")
-      : `<span class="deriv-ok">无核心附加告警</span>`;
-    const roll = fresh.rollup || {};
-    const c = roll.core;
-    const m = roll.macro;
-    const coreTxt = c ? `正常 ${c.okCount}/${c.totalKeys} · 缺 ${c.missingCount} · 旧 ${c.staleCount}` : "--";
-    const macroTxt = m ? `可用 ${m.okCount}/${m.totalKeys} · 缺 ${m.missingCount} · 旧 ${m.staleCount}` : "--";
-    const mix =
-      (a.fundingMixed24h ? `<span class="deriv-warning">Funding 24h 混合数据源</span>` : "") +
-      (a.oiMixed24h ? `<span class="deriv-warning">OI 24h 混合数据源</span>` : "");
-    const syncBrief = summarizeDerivSyncReport(syncReport, payload);
-    const stuckLines =
-      (a.stalenessReasons && a.stalenessReasons.length
-        ? a.stalenessReasons
-        : a.metricHealth
-            .filter((row) => row && (row.level === "stale" || row.level === "missing"))
-            .map((row) => `${row.metricLabelZh || row.metric || ""}：${row.reasonZh || ""}`)
-      ).slice(0, 8);
-    const stuckHtml = stuckLines.length
-      ? `<ul class="deriv-fresh-list">${stuckLines.map((ln) => `<li>${escapeDerivHtml(ln)}</li>`).join("")}</ul>`
-      : `<div class="deriv-ok">暂无严重卡住的旧指标（宏观旧见右上角「宏观旁路」卡片）。</div>`;
-    const upstreamOne = summarizeDerivUpstreamBrief(a.sourceHealth, binMode, a.sourceOkCore);
-    const mhSig =
-      typeof a.syncHints.metricHealthStaleSignals === "number" ? a.syncHints.metricHealthStaleSignals : stuckLines.length;
-    const autoRepairText =
-      a.syncHints && a.syncHints.autoRepairQueued
-        ? `刷新已后台修复旧指标：${(Array.isArray(a.syncHints.staleCoreMetrics) ? a.syncHints.staleCoreMetrics : []).slice(0, 4).join(",") || "core"} · ${a.syncHints.autoRepairGroup || "core"}`
-        : "";
-    const syncText =
-      syncBrief || autoRepairText || "刷新=只读 D1；旧指标由 Worker Cron 后台维护，持续卡住时检查源状态 / Worker 出口";
+function renderDerivativesPayload(_payload, _syncReport = null) {
+  return;
+}
+function fmtDeskClock(iso) {
+  if (!iso) return "未知";
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return "未知";
+  return d.toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
 
-    freshness.innerHTML = `
-      <div class="deriv-fresh-block"><strong>概览</strong>
-        <span>核心 ${escapeDerivHtml(coreTxt)} · 主链路 ${a.sourceOkCore ? "达标" : "未达标"} · 结构化陈旧信号 ${escapeDerivHtml(mhSig)} · 云端模式 ${escapeDerivHtml(binMode)}</span></div>
-      <div class="deriv-fresh-block"><strong>核心最旧</strong><span>${fresh.worstCoreStaleMinutes != null ? `${escapeDerivHtml(fresh.worstCoreStaleMinutes)} 分钟` : "--"} · Latest ${escapeDerivHtml(fmtDerivTime(fresh.latestT))}</span></div>
-      <div class="deriv-fresh-block"><strong>上游与出口</strong><span>${escapeDerivHtml(clipDerivText(upstreamOne, 120))}</span></div>
-      <div class="deriv-fresh-block"><strong>下一步</strong><span>${escapeDerivHtml(clipDerivText(syncText, 120))}</span></div>
-      <div class="deriv-warnings">${mix}${warningHtml}</div>
-      <details class="deriv-inline-details">
-        <summary>查看指标健康与同步详情</summary>
-        <div class="deriv-fresh-block"><strong>卡住 / 偏旧（按指标）</strong>${stuckHtml}</div>
-        <div class="deriv-fresh-block muted"><strong>宏观旁路（独立）</strong><span>${escapeDerivHtml(macroTxt)} · 不改变核心 sourceOk</span></div>
-        <div class="deriv-fresh-block"><strong>Stale(乐观)</strong><span>${Number.isFinite(derivNumber(fresh.staleMs)) ? `${Math.round(derivNumber(fresh.staleMs) / 60000)} 分钟` : "--"}</span></div>
-        <div class="deriv-fresh-block"><strong>同步详情</strong><span>${escapeDerivHtml(syncText)}</span></div>
-      </details>
-    `;
-  }
+function renderContextDesk(desk) {
+  derivativesPayload = desk;
+  const status = document.getElementById("deriv-status");
+  const groupsEl = document.getElementById("deriv-freq-groups");
+  const chip = document.getElementById("deriv-live-chip");
+  if (chip) chip.textContent = desk.asKnownMode || "system_observed";
+  if (status) status.textContent = desk.contract && desk.contract.unavailable ? "合约组空 · 仅宏观背景" : "desk context 已返回";
+  const groups = desk.groups || {};
+  const order = ["dailyRates", "weeklyDollarH41", "monthlyCpi", "cryptoBackground", "unofficialVol"];
+  if (!groupsEl) return;
+  groupsEl.innerHTML = order.map((key) => {
+    const g = groups[key];
+    if (!g) return "";
+    const cards = (g.cards || []).map((c) => {
+      const val = c.value != null && c.value !== "" ? escapeDerivHtml(String(c.value)) : "—";
+      return `<article class="desk-clock-card"><h4>${escapeDerivHtml(c.label || c.id)}</h4><strong>${val}</strong><ul><li>参考期：${escapeDerivHtml(fmtDeskClock(c.referencePeriod))}</li><li>公开日：${c.publicAvailableAt ? escapeDerivHtml(fmtDeskClock(c.publicAvailableAt)) : "未知"}</li><li>系统接收：${escapeDerivHtml(fmtDeskClock(c.receivedAt))}</li></ul>${c.note ? `<p class="muted">${escapeDerivHtml(c.note)}</p>` : ""}</article>`;
+    }).join("");
+    return `<section class="desk-freq-group"><h3>${escapeDerivHtml(g.title || key)}</h3>${g.planned ? "<p>PLANNED · 非官方波动率本轮不上屏</p>" : ""}${g.residualForbidden ? "<p>禁止 WALCL−TGA−RRP 残差</p>" : ""}<div class="desk-clock-grid">${cards || "<p>无观测</p>"}</div></section>`;
+  }).join("");
 }
 
 async function loadDerivativesPage() {
-  const status = $("#deriv-status");
-  const sourceBtn = $("#deriv-source-status");
+  const status = document.getElementById("deriv-status");
   try {
-    if (sourceBtn) sourceBtn.disabled = true;
-    if (status) status.textContent = "正在读取 Cloudflare D1...";
-    const payload = await DataEngine.fetchDerivatives(DERIV_SYMBOL, DERIV_RANGE, { sync: "0" });
-    renderDerivativesPayload(payload, null);
+    if (status) status.textContent = "正在读取 /api/desk/context...";
+    const desk = await DataEngine.fetchDesk("context");
+    renderContextDesk(desk);
   } catch (e) {
     const message = humanizeDerivativesReadError(e && e.message ? e.message : String(e));
-    renderDerivativesPayload({
-      symbol: DERIV_SYMBOL,
-      range: DERIV_RANGE,
-      generatedAt: new Date().toISOString(),
-      series: {},
-      optionSurface: [],
-      priceChange24hPct: null,
-      priceChange24hMeta: null,
-      dataFreshness: {
-        latestT: null,
-        staleMs: null,
-        sourceOk: false,
-        warnings: [`读取失败：${message}`],
-      },
-    });
-    if (status) status.textContent = `读取失败：${message}`;
-  } finally {
-    if (sourceBtn) sourceBtn.disabled = false;
+    if (status) status.textContent = `desk 读取失败：${message}`;
+    const groupsEl = document.getElementById("deriv-freq-groups");
+    if (groupsEl) groupsEl.innerHTML = `<div class="desk-halt-card">环境背景不可用：${escapeDerivHtml(message)}</div>`;
   }
 }
 
@@ -1031,18 +773,10 @@ async function loadDerivativesSourceStatus() {
 }
 
 function initDerivatives() {
-  $("#deriv-refresh")?.addEventListener("click", () => loadDerivativesPage());
-  $("#deriv-source-status")?.addEventListener("click", () => loadDerivativesSourceStatus());
-  $("#deriv-panels")?.addEventListener("click", (event) => {
-    const btn = event.target && event.target.closest ? event.target.closest("[data-deriv-panel]") : null;
-    if (!btn) return;
-    const next = btn.getAttribute("data-deriv-panel") || "oi";
-    if (next === derivActivePanel) return;
-    derivActivePanel = next;
-    if (derivativesPayload) renderDerivativesPayload(derivativesPayload, derivativesLastSyncReport);
-  });
+  const refresh = document.getElementById("deriv-refresh");
+  if (refresh) refresh.addEventListener("click", () => loadDerivativesPage());
   loadDerivativesPage();
-  derivativesTimer = setInterval(() => loadDerivativesPage(), 60_000);
+  derivativesTimer = setInterval(() => loadDerivativesPage(), 15_000);
 }
 
 function disposeDerivatives() {

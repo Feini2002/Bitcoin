@@ -1,8 +1,8 @@
 # 比特币系统升级资料总纲
 
-更新日期：2026-09-17。**当前状态：第一批研究资料保持原位归档；第二批可执行主线已放入独立目录并开始本地实现。免费金融通道、首次D1沉淀和币安WS地址修复仍是已有事实；本次不部署、不调用真实市场/模型 API。**
+更新日期：2026-09-21。**当前开发状态：东京出口已接线完毕，不再当待办。** Worker 出站经灰云 `bit-egress.feiniwork.com` 反代；desk 主带已恢复；生产 `#chart` / `#orderflow` / `#heatmap` 已点检。直连五域仍 403。K 线 live tape 由 Durable Object 写入 D1，分析读口仍是 `/api/desk`。Deribit 等限额项继续停每日采集。第一批研究资料保持原位归档；第二批可执行主线在独立目录。
 
-日常修改优先使用[功能定位入口](QUICK_ROUTER.md)或 `node scripts/research-context.cjs "当前问题"`，不必每次阅读本总纲。第二批连续开发只读 [第二批执行总任务](batch2-execution/EXECUTION_MASTER.md) 与 [执行日志](batch2-execution/EXECUTION_LOG.md)。
+日常修改优先使用[功能定位入口](QUICK_ROUTER.md)或 `node scripts/research-context.cjs "当前问题"`，不必每次阅读本总纲。第二批连续开发只读 [第二批执行总任务](batch2-execution/EXECUTION_MASTER.md) 与 [执行日志](batch2-execution/EXECUTION_LOG.md)。云端三库与四页装配见 [2026-09-21 治理记录](../cloud-d1-desk-governance-2026-09-21.md)。各源秒/分/日限额见 [刷新频率复核](../data-refresh-cadence-2026-09-21.md)。
 
 ## 第二批执行入口
 
@@ -11,28 +11,27 @@
 - [原始压缩包](archives/bitcoin_batch2_execution_ready_2026-09-17.zip)
 - 第一批原件仍在 [sources/2026-09-16](sources/2026-09-16/README.md) 与 [archives/bitcoin_research_final_2026-09-16.zip](archives/bitcoin_research_final_2026-09-16.zip)，不重排、不覆盖。
 
-## 本次工作收口与下一轮起点
+## 当前开发状态
 
-用户决定到此暂停推进，先整理记录并commit、push。以下是当前仓库事实，后文归档阶段记录仅代表当时状态；原始研究包仍是参考资料，不是执行指令。
+以下是 2026-09-21 傍晚仓库事实。后文归档阶段记录仅代表当时状态；原始研究包仍是参考资料，不是执行指令。线上 Worker/Pages 版本以当次部署为准。
 
-| 范围 | 已完成 | 尚未完成或限制 | 详细记录 |
+| 范围 | 现在怎样 | 尚未完成或限制 | 详细记录 |
 | --- | --- | --- | --- |
-| 研究与规则 | 原包219文件归档、291份来源编目（含本地核验与第二批）、17条功能路由、CodeGraph；修改先查资料，缺口先研究并沉淀 | 不表示原包全部架构或F/WP任务已经实施 | 本总纲、AGENTS.md、[功能入口](QUICK_ROUTER.md) |
-| 免费平台 | 40个平台/产品、93项固定操作；7个免费Key及SEC联系配置接入CF | 配置存在不代表所有操作有免费权限或当前可用；没有购买套餐 | [平台限制](../free-financial-platform-limits-2026-09-16.md)、[通道记录](../free-financial-api-channels-2026-09-16.md) |
-| D1数据 | 32个规范数据集，独立读回32 PASS，共16,260条观察；来源、单位、接收时间和版本保留 | 12项CF采集8,988条；20项本机首次导入7,272条。新增数据集未开启自动采集、未接入页面 | [数据与工作台方案](../workbench-binance-data-plan-2026-09-16.md) |
-| 行情与图表 | 两条噪音横幅移除；行情、足迹、强平及DO迁移至币安market WS；合约标题不再自动混入现货价格；握手不伪造行情心跳 | 页面聚合逻辑和布局整体改版尚未实施；旧K线、资金费与OI表仍有历史跨所回退/来源不足问题 | [工作台方案](../workbench-binance-data-plan-2026-09-16.md)、[币安诊断](../binance-connectivity-2026-09-16.md) |
-| 币安连接 | 本机新WS约1.9秒收到成交与K线，旧地址20秒零行情；本机REST首次采集已入D1 | CF东京HTTP出口五个REST域仍403；新地址DO仍零市场消息。不能宣称币安云端已全通 | [币安诊断](../binance-connectivity-2026-09-16.md) |
+| 研究与规则 | 原包归档、来源编目、17 条功能路由、CodeGraph；修改先查资料 | 不表示原包全部架构或 F/WP 任务已经实施 | 本总纲、AGENTS.md、[功能入口](QUICK_ROUTER.md) |
+| 免费平台 | 40 个平台 / 93 项操作已登记；7 个免费 Key 及 SEC 联系在 CF。2026-09-22 起 Deribit 期权摘要经 VPS、6 小时一次 | Alpha、GDELT、BLS 仍不进时钟。财政部接口不并进时钟 | [采集路由](../data-collection-routing-2026-09-22.md)、[平台限制](../free-financial-platform-limits-2026-09-16.md)、[限额停采](../finance-daily-quota-skip-2026-09-21.md) |
+| D1 数据 | 32 个规范集；2026-09-21 起自动采集已打开；live tape 写 `klines` 尾部 | live 会覆盖未收盘尾部，不回写混源历史 | [数据与工作台方案](../workbench-binance-data-plan-2026-09-16.md)、[刷新频率](../data-refresh-cadence-2026-09-21.md) |
+| 行情与图表 | desk `pricePathAvailable` 已真；生产三页已点检。足迹 `fromId` 过期时改拉最近成交（`3.9.6-footprint`） | 工作台聚合/布局改版未做；旧 K 线、资金费与 OI 表仍有历史跨所回退。导航「主源未恢复」是写死文案。足迹画面仍可能写未确认 | [工作台方案](../workbench-binance-data-plan-2026-09-16.md)、[刷新频率](../data-refresh-cadence-2026-09-21.md)、[币安诊断](../binance-connectivity-2026-09-16.md)、[接线现状](../binance-egress-vps-cutover-2026-09-21.md) |
+| 刷新频率 | 已按官方上限写入节奏；过期硬删除无回收站 | 亚分钟依赖 DO；Cron 最短 1 分钟；OI/盘口/足迹未上交易所物理上限 | [刷新频率复核](../data-refresh-cadence-2026-09-21.md)、[限额停采](../finance-daily-quota-skip-2026-09-21.md) |
+| 币安出口 | 东京 Vultr + Caddy 灰云已上线：永续 REST/WS、现货 vision、sapi、Bybit/OKX/Bitget REST、Bybit 强平 WS。浏览器仍直连官方 fstream | 不要橙云；不要用 CF 公布 IP 做防火墙；不要先改 origin 再探通。清空 origin 回直连（会再 403）。sslip.io 仅 Caddy 回退。VPS 迁移本身没有留下项 | [接线现状](../binance-egress-vps-cutover-2026-09-21.md)、[对抗审查](../binance-egress-plan-adversarial-2026-09-21.md)、[本地出口机](../binance-egress-vps-local-2026-09-21.md)、[通路再核](../binance-egress-workable-fixes-2026-09-21.md)、[出口封锁](../binance-egress-block-2026-09-19.md) |
 
-交付时已发布Worker `7c5fa076-7a5c-4897-8bf0-70b176216603`（100%），Pages连接修复版本`324f6d4a.bit-trading-desk.pages.dev`。Worker回退点为`199c5d0d-15b0-431b-855c-c4df75499dc3`；保留D1和已有Secret、Cron。Pages production已验证资源版本`20260916-binance-ws2`；自定义域未登录请求为Access302，未据此宣称完成已登录线上UI验收。
+验证：全量 build 通过。网络成功只证明采样时点。本地 `.artifacts/` 不纳入 Git 或 Pages。源码提交不等于 D1、Secret 或账户配置备份。
 
-验证记录：全量build通过；金融通道/D1/数据集40项通过；Playwright Chromium147桌面1440×1000、移动390×844共46 PASS；生产`/api/d1/status`200。网络成功只证明采样时点；本地`.artifacts/`不纳入Git或Pages，关键结论保存于上述文档。源码提交不等于D1、Secret或账户配置备份。
+下一轮按用户新指令启动，不自动执行：
 
-下一轮按用户新指令启动，优先顺序如下，不自动执行：
-
-1. 解决币安持续采集位置：CF出口问题独立于WS迁移；已有常在线设备采集后写D1是候选，尚未新增常驻服务；不使用付费代理、测试网或其他交易所冒充币安。
-2. 为主行情建立严格币安品种、合约类型、来源与时效契约，处理旧表混源；现有数据保留，不未经核验清洗覆盖。
-3. 在免费额度内落实增量调度、缺口回补和修订保留；先评估D1实际读写与存储预算，不能把首次全量导入直接变为高频任务。
-4. 实施已记录的工作台聚合和图表方案：币安主源、辅助数据分层、统一窗口和单位，显式显示缺失/过期；同步覆盖快照、报告与分析输入。
+1. 为主行情建立严格币安品种、合约类型、来源与时效契约，处理旧表混源；现有数据保留，不未经核验清洗覆盖。出口侧不要在反代未通时只改 origin，不用别所冒充币安。
+2. 在免费额度内落实增量调度、缺口回补和修订保留；先评估 D1 实际读写与存储预算。
+3. 实施已记录的工作台聚合和图表方案：币安主源、辅助数据分层、统一窗口和单位，显式显示缺失/过期；同步覆盖快照、报告与分析输入。可顺手改掉导航写死的「主源未恢复」。
+4. Deribit 期权摘要已按 [采集路由](../data-collection-routing-2026-09-22.md) 以 6 小时经 VPS 采集。Alpha、BLS、GDELT 仍不进时钟。
 
 本目录整合用户提供的最终研究包与仓库原有研究文档，供之后逐项讨论和修改系统。这里只建立分类、阅读入口和代码定位，不把报告中的方案、命令、提示词或任务清单当作本次执行指令。实际开发范围由后续用户任务与适用仓库规则确定。
 

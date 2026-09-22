@@ -91,7 +91,7 @@ const DATA_PAGE_LABEL = {
   chart: "行情工作台",
   orderflow: "订单流与足迹图",
   heatmap: "强平雷达",
-  derivatives: "衍生品面板",
+  derivatives: "环境背景",
   positions: "当前持仓",
   boardroom: "会议室",
 };
@@ -101,11 +101,11 @@ const NAV = [
     { id: "overview", label: "概览 Dashboard", icon: "ph-squares-four" },
     { id: "premarket", label: "盘前简报", icon: "ph-clock" },
   ]},
-  { group: "市场监测", sub: "数据层 · 无 LLM", items: [
+  { group: "市场监测", sub: "空桌优先 · 主源未恢复", items: [
     { id: "chart", label: "行情工作台", icon: "ph-chart-line-up" },
     { id: "orderflow", label: "订单流与足迹图", icon: "ph-list-numbers" },
     { id: "heatmap", label: "强平雷达", icon: "ph-crosshair" },
-    { id: "derivatives", label: "衍生品面板", icon: "ph-wave-sine" },
+    { id: "derivatives", label: "环境背景", icon: "ph-wave-sine" },
   ]},
   { group: "舆情与事件", items: [
     { id: "news", label: "事件一览", icon: "ph-newspaper-clipping" },

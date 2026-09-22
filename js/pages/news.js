@@ -402,12 +402,19 @@ function analysisStatusLabel(tone) {
   return "待验证";
 }
 
+function analysisPricePathOk(row) {
+  const snap = analysisMarketSnapshot(row);
+  if (snap && snap.pricePathAvailable === true) return true;
+  const chart = analysisMarketEndpoint(row, "chart") || analysisMarketEndpoint(row, "klines");
+  return !!(chart && chart.ok && chart.data && chart.data.pricePathAvailable === true);
+}
+
 function analysisRegimeMeta(row) {
   const report = analysisReportBody(row);
   const state = report.marketState || {};
   const q = analysisQuality(row);
   const hasReport = !!(row && row.report);
-  const marketOk = q.marketSnapshotOk === true || analysisMarketSnapshot(row).ok === true;
+  const marketOk = analysisPricePathOk(row) && (q.marketSnapshotOk === true || analysisMarketSnapshot(row).ok === true);
   const rawScore = Number(state.score);
   const score = Number.isFinite(rawScore) ? Math.max(0, Math.min(100, Math.round(rawScore))) : null;
   let code = "PENDING";
@@ -441,45 +448,55 @@ function analysisRegimeMeta(row) {
 
 function analysisHardDataRows(row) {
   const hasReport = !!(row && row.report);
-  const klines = analysisMarketEndpoint(row, "klines");
-  const derivatives = analysisMarketEndpoint(row, "derivatives");
-  const liquidations = analysisMarketEndpoint(row, "liquidations");
-  const derivSnapshot = analysisMarketEndpoint(row, "derivativesSnapshot");
+  const klines = analysisMarketEndpoint(row, "chart") || analysisMarketEndpoint(row, "klines");
+  const derivatives = analysisMarketEndpoint(row, "context") || analysisMarketEndpoint(row, "derivatives");
+  const liquidations = analysisMarketEndpoint(row, "heatmap") || analysisMarketEndpoint(row, "liquidations");
   const kData = klines.data || {};
   const dData = derivatives.data || {};
   const lData = liquidations.data || {};
-  const sData = derivSnapshot.data || {};
   return [
     {
       key: "price_action",
       label: "BTC 1h 价格行为",
-      value: klines.ok ? analysisSignedPct(kData.changePct) : "--",
-      sub: klines.ok ? `${Number(kData.count) || "--"} 根K线 · 最新 ${analysisEscapeHtml(kData.latestT || kData.lastSync || "--")}` : "等待 /api/d1/klines",
+      value: klines.ok && kData.pricePathAvailable === true ? analysisSignedPct(kData.changePct) : "无价格路径",
+      sub: klines.ok
+        ? (kData.pricePathAvailable === true
+          ? `${Number(kData.coverage && kData.coverage.returned) || "--"} 根 · ${analysisEscapeHtml(kData.observedAt || "--")}`
+          : "desk 主带缺失，禁止交易向段落")
+        : "等待 /api/desk/chart",
       tone: hasReport ? analysisStatusTone(!!klines.ok) : "pending",
       route: "#/chart",
     },
     {
       key: "derivatives",
-      label: "资金费率 / OI / 基差",
-      value: derivatives.ok ? "快照可用" : "--",
-      sub: derivatives.ok ? analysisEscapeHtml(analysisBriefText(dData.sourceHealthSummary || dData.generatedAt, "衍生品矩阵已读取")) : "等待 /api/d1/derivatives",
+      label: "环境背景",
+      value: derivatives.ok ? (dData.contractUnavailable ? "仅宏观背景" : "desk 可读") : "--",
+      sub: derivatives.ok ? "合约组在币安未恢复前为空" : "等待 /api/desk/context",
       tone: hasReport ? analysisStatusTone(!!derivatives.ok) : "pending",
       route: "#/derivatives",
     },
     {
       key: "liquidations",
       label: "强平与清算分布",
-      value: liquidations.ok ? `L ${analysisCompactNumber(lData.totalLongNotional)} / S ${analysisCompactNumber(lData.totalShortNotional)}` : "--",
-      sub: liquidations.ok ? `${Number(lData.count) || 0} 条 · ${analysisEscapeHtml(lData.latestEventAt || "等待最新事件")}` : "等待 /api/d1/liquidations",
+      value: liquidations.ok
+        ? (lData.combinedTotalsForbidden
+          ? `分所 ${Array.isArray(lData.exchanges) ? lData.exchanges.join("/") : "--"}`
+          : "分所未拆，合计禁读")
+        : "--",
+      sub: liquidations.ok
+        ? (lData.combinedTotalsForbidden
+          ? `分所 ${Array.isArray(lData.exchanges) ? lData.exchanges.join("/") : "--"}`
+          : `${Number(lData.count) || 0} 条`)
+        : "等待 /api/desk/heatmap",
       tone: hasReport ? analysisStatusTone(!!liquidations.ok) : "pending",
       route: "#/heatmap",
     },
     {
       key: "deriv_snapshot",
-      label: "衍生品 AI 快照",
-      value: derivSnapshot.ok ? analysisEscapeHtml(sData.profile || "brief") : "--",
-      sub: derivSnapshot.ok ? analysisEscapeHtml(analysisBriefText(sData.summary || sData.generatedAt, "摘要已生成")) : "等待 /api/ai/derivatives-snapshot",
-      tone: hasReport ? analysisStatusTone(!!derivSnapshot.ok) : "pending",
+      label: "环境背景（desk）",
+      value: derivatives.ok ? (dData.contractUnavailable ? "仅宏观背景" : "desk 可读") : "--",
+      sub: "不再读取 /api/ai/derivatives-snapshot 作为分析输入",
+      tone: hasReport ? analysisStatusTone(!!derivatives.ok) : "pending",
       route: "#/derivatives",
     },
     {
@@ -612,7 +629,6 @@ function renderAnalysisHardDataMatrix(row) {
 function analysisNarrativeItems(row) {
   const report = analysisReportBody(row);
   const hasReport = !!(row && row.report);
-  const q = analysisQuality(row);
   const upstream = report.upstreamDaily || {};
   const risks = analysisArray(report.riskRadar);
   const opportunities = analysisArray(report.opportunityScanner);
@@ -635,10 +651,10 @@ function analysisNarrativeItems(row) {
       category: "上游日报",
       title: upstream.title || "事件一览日报",
       fact: upstream.generatedAt ? `引用事件日报 ${analysisFormatTime(upstream.generatedAt)}。` : "已引用上游事件日报。",
-      pricing: q.marketSnapshotOk ? "市场快照已接入，可继续判断资金是否跟随。" : "市场快照缺口存在，不能升级为交易确认。",
-      downgrade: q.marketSnapshotOk ? "若价格与资金项背离，结论仍需降级。" : "仅见事件，未见资金跟随确认。",
-      watch: "观察同一叙事是否被价格、资金费率/OI 与清算分布共同确认。",
-      status: q.marketSnapshotOk ? "可复核" : "降级",
+      pricing: analysisPricePathOk(row) ? "价格路径可读，仍须核对资金项是否同向。" : "无价格路径，不能升级为交易确认。",
+      downgrade: analysisPricePathOk(row) ? "若价格与资金项背离，结论仍需降级。" : "仅见事件，未见资金跟随确认。",
+      watch: "观察同一叙事是否被价格、资金费率/OI 与分所强平共同确认。",
+      status: analysisPricePathOk(row) ? "可复核" : "降级",
     });
   }
   risks.slice(0, 2).forEach((risk) => {
@@ -787,7 +803,6 @@ function renderAnalysisRiskThresholds(row) {
 function analysisAgentFlags(row) {
   const report = analysisReportBody(row);
   const meta = analysisRegimeMeta(row);
-  const q = analysisQuality(row);
   const inc = report.incrementalSearch || {};
   const sourceErrors = analysisSourceErrors(row);
   const preciseCatalysts = analysisArray(report.eventCalendar).filter((x) => x && x.precision === "time" && x.startsAtUtc).length;
@@ -796,9 +811,9 @@ function analysisAgentFlags(row) {
     { key: "macro_regime", value: meta.code, tone: meta.code === "DATA_GAP" ? "warn" : meta.code === "PENDING" ? "pending" : "ok" },
     { key: "verified_catalyst", value: preciseCatalysts > 0 ? "true" : hasReport ? "false" : "pending", tone: preciseCatalysts > 0 ? "ok" : "pending" },
     { key: "data_divergence", value: sourceErrors.length ? "true" : hasReport ? "false" : "pending", tone: sourceErrors.length ? "warn" : hasReport ? "ok" : "pending" },
-    { key: "market_snapshot_ok", value: q.marketSnapshotOk === true ? "true" : hasReport ? "false" : "pending", tone: hasReport ? (q.marketSnapshotOk ? "ok" : "warn") : "pending" },
+    { key: "market_snapshot_ok", value: analysisPricePathOk(row) ? "true" : hasReport ? "false" : "pending", tone: hasReport ? (analysisPricePathOk(row) ? "ok" : "warn") : "pending" },
     { key: "incremental_search_used", value: inc.used === true ? "true" : hasReport ? "false" : "pending", tone: inc.used ? "warn" : "pending" },
-    { key: "llm_downgrade_required", value: q.marketSnapshotOk ? "false" : hasReport ? "true" : "pending", tone: hasReport ? (q.marketSnapshotOk ? "ok" : "warn") : "pending" },
+    { key: "llm_downgrade_required", value: analysisPricePathOk(row) ? "false" : hasReport ? "true" : "pending", tone: hasReport ? (analysisPricePathOk(row) ? "ok" : "warn") : "pending" },
   ];
 }
 

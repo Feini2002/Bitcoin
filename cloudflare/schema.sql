@@ -1,5 +1,5 @@
 -- K 线云端存储（Cloudflare D1 / SQLite 语法）
--- 每个 (symbol, interval) 仅保留最新 2000 根（由 Worker 写入后自动 prune）
+-- 每个 (symbol, interval) 仅保留最新 6000 根（Worker 写入后硬删除，无回收站）
 CREATE TABLE IF NOT EXISTS klines (
   symbol    TEXT    NOT NULL,
   interval  TEXT    NOT NULL,

@@ -403,9 +403,10 @@ function pageSettings() {
           </div>
         </div>
         <ul class="settings-fact-list">
-          <li><strong>读取</strong>行情页默认读取 <code>/api/d1/klines?sync=0</code>；若当前周期明显落后，工作台会触发一次当前周期同步，实时跳动由 Binance WS 补齐。</li>
-          <li><strong>同步</strong>「立即同步 D1」调用 Worker 的 <code>/api/d1/sync</code> 全周期写库；工作台右上角按钮只同步当前周期。</li>
-          <li><strong>保留策略</strong>各周期至多约 6000 根 K 线；Footprint 以 5m 为基底至多 8640 根，高周期由 Worker 聚合。</li>
+          <li><strong>分析读取</strong>四页只读 <code>/api/desk/{chart|orderflow|heatmap|context}</code>；失败即缺口，不回落 <code>/api/d1</code>。</li>
+          <li><strong>已接入</strong>设置页与舆情通道的「已接入」只表示 LLM/报告接口，不是行情权威灯。</li>
+          <li><strong>遗留对照</strong><code>/api/d1/klines</code> 与手动同步仍是运维入口，写的是无 venue 遗留表，不是币安权威带。</li>
+          <li><strong>分区</strong>P1 规范观察、P2 足迹、P3 强平桶可进 desk；P5 klines/derivative_timeseries 分析禁读。</li>
           <li><strong>排障</strong>如果出现异常，优先复制下方「异常摘要」发给 Codex；完整 JSON 只用于核对 Worker/D1 原始返回。</li>
         </ul>
         <div class="settings-actions">
@@ -415,6 +416,7 @@ function pageSettings() {
           <span class="settings-actions-msg" id="settings-cloud-msg"></span>
         </div>
         <div id="settings-cloud-summary" class="cloud-status-summary"></div>
+        <div id="settings-desk-health" class="cloud-status-summary"></div>
         <div class="cloud-diagnostics-actions" id="settings-cloud-tools" hidden>
           <button type="button" class="btn" data-copy-cloud="diagnostic"><i class="ph ph-copy"></i><span>复制异常摘要</span></button>
           <button type="button" class="btn" data-copy-cloud="raw"><i class="ph ph-brackets-curly"></i><span>复制完整 JSON</span></button>
@@ -1087,6 +1089,21 @@ function initSettingsPage() {
     const data = await DataEngine.fetchCloudStatus({ timeoutMs: 25_000, detail });
     if (syncPayload) data._manualSync = syncPayload;
     showOutput(data);
+    const deskBox = document.getElementById("settings-desk-health");
+    if (deskBox && DataEngine.fetchDesk) {
+      try {
+        const scopes = ["chart", "orderflow", "heatmap", "context"];
+        const rows = await Promise.all(scopes.map(async (scope) => {
+          try {
+            const desk = await DataEngine.fetchDesk(scope, { interval: scope === "chart" ? "15m" : undefined, range: scope === "heatmap" ? "24h" : undefined });
+            return `${scope}: quality=${desk.quality && desk.quality.status} pricePath=${desk.pricePathAvailable === true} asKnownMode=${desk.asKnownMode}`;
+          } catch (e) {
+            return `${scope}: 缺口 ${e && e.message ? e.message : e}`;
+          }
+        }));
+        deskBox.innerHTML = `<div class="cloud-sync-result warn"><strong>desk 分区健康（不是行情事实）</strong><span>${rows.map((x) => String(x).replace(/</g, "&lt;")).join(" · ")}</span></div>`;
+      } catch (_) {}
+    }
     return data;
   };
 

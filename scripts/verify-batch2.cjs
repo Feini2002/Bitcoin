@@ -233,7 +233,9 @@ check("CHECK-033", () => {
   });
   assert.equal(built.methodId, "heatmap-weighted-v1");
   const snap = fs.readFileSync(path.join(ROOT, "cloudflare/snapshot/marketSnapshotProgram.mjs"), "utf8");
-  assert.match(snap, /heatmap-log10-v1/);
+  assert.match(snap, /omitted: true/);
+  assert.match(snap, /cross-venue heuristic scores are not an authoritative liquidation map/);
+  assert.doesNotMatch(snap, /heatmap-log10-v1/);
   assert.notEqual("heatmap-weighted-v1", "heatmap-log10-v1");
 });
 

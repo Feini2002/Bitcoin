@@ -1,13 +1,14 @@
 /* 功能成熟度来自实现盘点，不表示远程服务在线。 */
 const FEATURE_STATES = {
-  connected: { label: "已接入", note: "已接入数据或报告接口，服务状态和数据时效以页面实际响应为准。" },
+  connected: { label: "已接入", note: "已接入表示该页连上了数据或报告接口，不等于币安主源已恢复，也不等于可交易。" },
   local: { label: "本地功能", note: "在浏览器中运行。" },
+  halted: { label: "主源未恢复", note: "币安云端路径未恢复前，这四页是停机空桌，不是半活交易台。宏观背景不能证明桌已活。" },
   demo: { label: "演示", note: "以下保留原型示例。价格、账户、结论、置信度和图形均为演示内容；尚未接入该功能的实际计算或分析，提交控件不可用。" },
   planned: { label: "PLANNED", note: "仅有规划与预留结构，尚未实现。" },
 };
 const FEATURE_STATE_BY_ROUTE = {
   overview: "local", settings: "connected",
-  chart: "connected", orderflow: "connected", heatmap: "connected", derivatives: "connected",
+  chart: "halted", orderflow: "halted", heatmap: "halted", derivatives: "halted",
   news: "connected", "news-analysis": "connected",
   boardroom: "demo", calc: "demo", "agent-chief": "demo", "agent-env": "demo",
   "agent-flow": "demo", "agent-deriv": "demo", "agent-risk": "demo",

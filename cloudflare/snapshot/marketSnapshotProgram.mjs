@@ -330,7 +330,7 @@ function summarizeOrderflowBars(bars, now) {
       pocPrice: top ? round(top.pocPrice, 2) : null,
     },
     dashboard: {
-      primary: bias === "buy" ? "主动买方占优" : bias === "sell" ? "主动卖方占优" : bias === "neutral" ? "买卖均衡" : "样本不足",
+      primary: bias === "buy" ? "aggTrade 主动买量大于卖量（近似，非 CVD）" : bias === "sell" ? "aggTrade 主动卖量大于买量（近似，非 CVD）" : bias === "neutral" ? "主动买卖量接近" : "样本不足",
       activeKey: bias === "neutral" ? "volumeProfile" : "imbalance",
       cards: [
         { key: "imbalance", label: "买卖失衡", state: bias, value: deltaPct },
@@ -350,43 +350,39 @@ function sumLiquidations(rows, since) {
     bucketCount: filtered.length,
     longNotional: round(longNotional, 2),
     shortNotional: round(shortNotional, 2),
-    totalNotional: round(longNotional + shortNotional, 2),
-    longSharePct: longNotional + shortNotional > 0 ? round((longNotional / (longNotional + shortNotional)) * 100, 1) : null,
     maxNotional: max ? round(max.maxNotional, 2) : null,
     maxSide: max ? max.maxSide || null : null,
     maxPrice: max ? round(max.vwapPrice || max.maxPrice || max.minPrice, 2) : null,
   };
 }
 
+function groupLiquidationsByExchange(rows) {
+  const out = {};
+  for (const row of rows || []) {
+    const ex = String(row.exchange || "unknown").toLowerCase() || "unknown";
+    if (!out[ex]) out[ex] = [];
+    out[ex].push(row);
+  }
+  return out;
+}
+
 function summarizeLiquidations(rows, now) {
   const latest = latestByTime(rows, "bucketStart");
-  const windows = {
-    "15m": sumLiquidations(rows, now - 15 * MS_MIN),
-    "1h": sumLiquidations(rows, now - MS_HOUR),
-    "24h": sumLiquidations(rows, now - MS_DAY),
-  };
-  const w1h = windows["1h"];
-  const bias =
-    w1h.longSharePct == null
-      ? "missing"
-      : w1h.longSharePct >= 60
-        ? "long_liquidations_dominant"
-        : w1h.longSharePct <= 40
-          ? "short_liquidations_dominant"
-          : "balanced";
+  const grouped = groupLiquidationsByExchange(rows);
+  const byExchange = {};
+  for (const [ex, exRows] of Object.entries(grouped)) {
+    byExchange[ex] = {
+      "1h": sumLiquidations(exRows, now - MS_HOUR),
+      "24h": sumLiquidations(exRows, now - MS_DAY),
+    };
+  }
   return {
     sampleSize: rows.length,
-    windows,
+    combinedTotalsForbidden: true,
+    byExchange,
     pressure: {
-      primary: bias,
-      note:
-        bias === "long_liquidations_dominant"
-          ? "多头被强平占优，短线下行挤压已发生"
-          : bias === "short_liquidations_dominant"
-            ? "空头被强平占优，短线向上挤压已发生"
-            : bias === "balanced"
-              ? "多空强平较均衡"
-              : "样本不足",
+      omitted: true,
+      reason: "cross-venue heuristic scores are not an authoritative liquidation map",
     },
     freshness: freshnessFromLatest(latest ? latest.updatedAt || latest.bucketStart : null, now, 2 * MS_HOUR, "liquidations"),
   };
@@ -499,103 +495,62 @@ export async function buildChartSnapshot(env, options = {}) {
   const intervals = options.intervals || CHART_INTERVALS;
   const rowsByInterval = {};
   for (const interval of intervals) {
-    rowsByInterval[interval] = await readKlines(db, symbol, interval, chartReadLimitForInterval(interval));
+    rowsByInterval[interval] = [];
   }
-  const summaries = intervals.map((interval) => summarizeKlines(rowsByInterval[interval], interval, now));
+  const summaries = intervals.map((interval) => summarizeKlines([], interval, now));
   const activeInterval = String(options.activeInterval || "1h").toLowerCase();
-  const current = summaries.find((row) => row.interval === activeInterval) || summaries[0];
-
-  const atrPeriod = Number.isFinite(Number(options.chartAtrPeriod))
-    ? Number(options.chartAtrPeriod)
-    : CHART_STRUCTURE_DEFAULT_PARAMS.atrPeriod;
-  let structureAnalysis = computeSnapshotChartStructureLevels(rowsByInterval[activeInterval] || [], {
+  const current = {
     interval: activeInterval,
-    atrPeriod,
-    limit: CHART_STRUCTURE_DEFAULT_PARAMS.limit,
-    breakoutAtrMult: CHART_STRUCTURE_DEFAULT_PARAMS.breakoutAtrMult,
-    minBufferPct: CHART_STRUCTURE_DEFAULT_PARAMS.minBufferPct,
-    swingWing: CHART_STRUCTURE_DEFAULT_PARAMS.swingWing,
-  });
-  const higherIv = resolveChartHigherInterval(activeInterval);
-  if (higherIv && rowsByInterval[higherIv] && intervals.includes(higherIv)) {
-    structureAnalysis = mergeChartHigherFromRows(structureAnalysis, rowsByInterval[higherIv], higherIv);
-  }
-  const windowExtremaForStructure = {
-    interval: current.interval,
-    sampleSize: current.sampleSize,
-    windowHigh: current.high,
-    windowLow: current.low,
-    rangePositionPct: current.rangePositionPct,
-    trend: current.trend,
+    latestClose: null,
+    trend: null,
+    rangePositionPct: null,
+    sampleSize: 0,
+    high: null,
+    low: null,
+    latestT: 0,
+    freshness: { sourceOk: false, staleMs: null, warnings: ["authoritative Binance klines unavailable; P5 klines are analysis-forbidden"] },
   };
-  const chartStructureForLlm = buildChartStructureLlmPayload(structureAnalysis, windowExtremaForStructure, {
-    atrPeriod,
-  });
-
-  const required = summaries.filter((row) => row.interval === current.interval);
-  const sourceOk = required.length ? required.every((row) => row.freshness && row.freshness.sourceOk) : false;
-  const warnings = summaries.flatMap((row) => row.freshness.warnings || []).slice(0, 8);
-  if (summaries.some((row) => row.freshness && row.freshness.sourceOk) && !sourceOk) {
-    warnings.unshift("其他周期新鲜不能掩盖当前周期过期");
-  }
-  const trendRows = summaries.filter((row) => row.trend === "up" || row.trend === "down");
-  const trendBias = trendRows.length
-    ? trendRows.filter((row) => row.trend === "up").length >= trendRows.filter((row) => row.trend === "down").length
-      ? "up"
-      : "down"
-    : "range";
+  const chartStructureForLlm = { omitted: true, reason: "no_authoritative_binance_klines" };
   return {
     page: "行情工作台",
     scope: "chart",
     symbol,
-    snapshotVersion: "chart-unified-1.1.0",
+    snapshotVersion: "chart-unified-1.2.0-desk",
     generatedAt,
-    dataSource: { primary: "BTC_DB.klines", tables: ["klines"] },
+    asKnownMode: "system_observed",
+    pricePathAvailable: false,
+    tradingNarrative: false,
+    dataSource: { primary: "finance_dataset_observations", refused: ["BTC_DB.klines"] },
     chartStructureForLlm,
     currentView: {
       tier: "raw_fact",
       symbol,
       interval: current.interval,
-      latestClose: current.latestClose,
-      trend: current.trend,
-      rangePositionPct: current.rangePositionPct,
-      note:
-        "trend/rangePositionPct/high/low 由当前样本窗口首尾涨跌与 OHLC 极值得到，与 chartStructureForLlm 内的摆动结构区间（derived_heuristic）定义不同；禁止混为一种区间。最新一根未收盘时需弱化结论。",
+      latestClose: null,
+      trend: null,
+      rangePositionPct: null,
+      note: "无权威币安 K 线；遗留 klines 表禁读。不得输出交易向段落。",
     },
     currentViewTabs: {
       price: { ...current, tier: "raw_fact" },
-      structure: {
-        tier: "mixed",
-        bias: trendBias,
-        biasNote:
-          "bias 为多周期 summarizeKlines 的首尾涨跌粗略多数票（up/down/range），与摆动结构 state's 语义可能不一致。",
-        higherIntervalSummary: summaries.find((row) => row.interval === "4h") || null,
-        chartStructureForLlm,
-      },
+      structure: { omitted: true, reason: "no_authoritative_binance_klines" },
     },
     multiTimeframeSummary: summaries,
     analysisMatrix: {
-      description: "行情多周期压缩矩阵",
-      rows: summaries.map((row) => ({
-        interval: row.interval,
-        close: row.latestClose,
-        changePct: row.changePct,
-        trend: row.trend,
-        rangePositionPct: row.rangePositionPct,
-        sourceOk: row.freshness.sourceOk,
-      })),
+      description: "主带缺失，不提供多周期倾向",
+      rows: [],
     },
     dataFreshness: {
-      latestT: Math.max(...summaries.map((row) => num(row.latestT, 0))),
-      latestTime: iso(Math.max(...summaries.map((row) => num(row.latestT, 0)))),
-      staleMs: Math.min(...summaries.map((row) => num(row.freshness.staleMs, Number.MAX_SAFE_INTEGER))),
-      sourceOk,
-      status: sourceOk ? "fresh" : "degraded",
-      warnings,
+      latestT: null,
+      latestTime: null,
+      staleMs: null,
+      sourceOk: false,
+      status: "missing",
+      warnings: current.freshness.warnings,
     },
     notableConflicts: [],
-    llmBrief: `行情工作台快照：${symbol} 当前 ${current.interval} 收盘 ${current.latestClose ?? "--"}，多周期粗倾向 ${trendBias}。结构启发式参见 chartStructureForLlm（含 rawFactEnvelope 与 integrityFlags）；勿与窗口极值区间混写。`,
-    sourceFingerprint: `chart:${symbol}:${summaries.map((row) => `${row.interval}:${row.latestT || 0}`).join("|")}`,
+    llmBrief: "pricePathAvailable=false; asKnownMode=system_observed; no trading narrative.",
+    sourceFingerprint: `chart:${symbol}:missing`,
   };
 }
 
@@ -604,30 +559,29 @@ export async function buildOrderflowSnapshot(env, options = {}) {
   const symbol = String(options.symbol || DEFAULT_SYMBOL).toUpperCase();
   const now = nowMs(options);
   const generatedAt = iso(now);
-  const [bars, klines] = await Promise.all([
-    readFootprintBars(db, symbol, 288),
-    readKlines(db, symbol, "1h", 120).catch(() => []),
-  ]);
+  const bars = await readFootprintBars(db, symbol, 288);
+  const klines = [];
   const summary = summarizeOrderflowBars(bars, now);
-  const chartContext = summarizeKlines(klines, "1h", now);
-  const warnings = [...summary.freshness.warnings, ...(chartContext.freshness.warnings || [])].slice(0, 8);
+  const warnings = [...summary.freshness.warnings].slice(0, 8);
   return {
     page: "订单流与足迹图",
     scope: "orderflow",
     symbol,
-    snapshotVersion: "orderflow-unified-1.0.0",
+    snapshotVersion: "orderflow-unified-1.0.1-desk",
     generatedAt,
-    dataSource: { primary: "BTC_DB.footprint_bars", tables: ["footprint_bars", "klines"] },
+    tradingNarrative: false,
+    dataSource: { primary: "BTC_DB.footprint_bars", tables: ["footprint_bars"], refused: ["klines"] },
     currentView: {
       symbol,
       interval: "5m",
       visibleBars: summary.visibleBars,
       tickSize: "compact",
+      note: "delta is aggTrade taker-volume approximation, not CVD",
     },
     currentViewTabs: {
       imbalance: summary.dashboard.cards.find((row) => row.key === "imbalance"),
       volumeProfile: summary.dashboard.cards.find((row) => row.key === "volumeProfile"),
-      keyLevels: { chartContext: chartContext.currentView || chartContext },
+      keyLevels: { omitted: true, reason: "no_authoritative_binance_klines" },
       sfp: { status: "not_evaluated", reason: "unified compact snapshot" },
     },
     currentDashboard: summary.dashboard,
@@ -638,7 +592,6 @@ export async function buildOrderflowSnapshot(env, options = {}) {
     },
     multiTimeframeSummary: [
       { interval: "5m", dashboard: summary.dashboard, sourceOk: summary.freshness.sourceOk },
-      { interval: "1h-chart-context", trend: chartContext.trend, sourceOk: chartContext.freshness.sourceOk },
     ],
     dataFreshness: {
       ...summary.freshness,
@@ -646,8 +599,8 @@ export async function buildOrderflowSnapshot(env, options = {}) {
       warnings,
     },
     notableConflicts: [],
-    llmBrief: `订单流快照：${symbol} 近 ${summary.visibleBars} 根足迹 ${summary.dashboard.primary}，POC ${summary.window.pocPrice ?? "--"}。`,
-    sourceFingerprint: `orderflow:${symbol}:${summary.latestBar ? summary.latestBar.t : 0}:${chartContext.latestT || 0}`,
+    llmBrief: `orderflow ${symbol}: ${summary.visibleBars} footprint bars; delta is aggTrade taker-volume approximation, not CVD.`,
+    sourceFingerprint: `orderflow:${symbol}:${summary.latestBar ? summary.latestBar.t : 0}`,
   };
 }
 
@@ -656,51 +609,39 @@ export async function buildHeatmapSnapshot(env, options = {}) {
   const symbol = String(options.symbol || DEFAULT_SYMBOL).toUpperCase();
   const now = nowMs(options);
   const generatedAt = iso(now);
-  const [rows, series] = await Promise.all([
-    readLiquidationBuckets(db, symbol, 864),
-    readDerivativeSeries(db, symbol, 7 * MS_DAY, now).catch(() => ({})),
-  ]);
+  const rows = await readLiquidationBuckets(db, symbol, 864);
   const summary = summarizeLiquidations(rows, now);
-  const funding = seriesLatest(series, "funding_binance");
-  const oi24h = changeOver(series, "oi_binance", MS_DAY, now);
-  const pressureScore =
-    (summary.windows["1h"].totalNotional || 0) > 0
-      ? Math.min(100, Math.round(Math.log10(summary.windows["1h"].totalNotional + 1) * 12))
-      : 0;
   return {
     page: "强平雷达",
     scope: "heatmap",
     symbol,
-    snapshotVersion: "heatmap-unified-1.0.0",
+    snapshotVersion: "heatmap-unified-1.1.1-desk",
     generatedAt,
-    dataSource: { primary: "BTC_DB.liquidation_5m_buckets", tables: ["liquidation_5m_buckets", "derivative_timeseries"] },
+    tradingNarrative: false,
+    combinedTotalsForbidden: true,
+    dataSource: { primary: "BTC_DB.liquidation_5m_buckets", tables: ["liquidation_5m_buckets"], refused: ["derivative_timeseries"] },
     currentView: {
       symbol,
       window: "24h",
       bucketSize: "5m-d1",
+      note: "realized notional split by exchange; combined totals forbidden",
     },
     currentViewTabs: {
-      realtimeRadar: summary.windows["1h"],
+      realtimeRadar: { omitted: true, reason: "browser live stream is not the authority path" },
       pressureMatrix: {
-        methodId: "heatmap-log10-v1",
-        distinctFromPageMethod: "heatmap-weighted-v1",
-        primaryLabel: summary.pressure.primary,
-        primaryScore: pressureScore,
-        quality: summary.freshness.sourceOk ? "source_ok" : "source_degraded",
-        factors: [
-          { key: "liquidations_1h", value: summary.windows["1h"].totalNotional },
-          { key: "funding", value: funding ? round(funding.value, 8) : null },
-          { key: "oi24h", value: oi24h ? oi24h.changePct : null },
-        ],
+        omitted: true,
+        reason: "cross-venue heuristic scores are not an authoritative liquidation map",
       },
     },
     analysisMatrix: {
-      description: "强平窗口压缩矩阵",
-      rows: Object.entries(summary.windows).map(([window, row]) => ({ window, ...row })),
+      description: "分所已实现强平；禁止跨所合计",
+      rows: Object.entries(summary.byExchange || {}).flatMap(([exchange, windows]) =>
+        Object.entries(windows || {}).map(([window, row]) => ({ exchange, window, ...row }))
+      ),
     },
     dataFreshness: summary.freshness,
     notableConflicts: [],
-    llmBrief: `强平雷达快照：${symbol} 1h 强平 ${summary.windows["1h"].totalNotional ?? 0}，主情景 ${summary.pressure.primary}。`,
+    llmBrief: `liquidations byExchange=${Object.keys(summary.byExchange || {}).join(",") || "none"}; combinedTotalsForbidden; no pressure scenario.`,
     sourceFingerprint: `heatmap:${symbol}:${summary.freshness.latestT || 0}:${rows.length}`,
   };
 }
@@ -710,48 +651,45 @@ export async function buildDerivativesSnapshot(env, options = {}) {
   const symbol = String(options.symbol || DEFAULT_SYMBOL).toUpperCase();
   const now = nowMs(options);
   const generatedAt = iso(now);
-  const [series, health] = await Promise.all([
-    readDerivativeSeries(db, symbol, 30 * MS_DAY, now),
-    readDerivativeHealth(db, symbol),
-  ]);
-  const summary = summarizeDerivatives(series, health, now);
+  void db;
   return {
-    page: "衍生品面板",
+    page: "环境背景",
     scope: "derivatives",
     symbol,
-    snapshotVersion: "derivatives-unified-1.0.0",
+    snapshotVersion: "derivatives-unified-1.1.1-desk",
     generatedAt,
-    dataSource: { primary: "BTC_DB.derivative_timeseries", tables: ["derivative_timeseries", "derivative_metric_health", "derivative_source_health"] },
+    tradingNarrative: false,
+    dataSource: { primary: "finance_dataset_observations", refused: ["BTC_DB.derivative_timeseries"] },
     currentView: {
       symbol,
       range: "30d",
       usedPayloadFreshness: false,
+      note: "contract group empty until Binance cloud path recovers",
     },
     currentViewTabs: {
-      funding: summary.matrix.find((row) => row.metric === "funding"),
-      openInterest: summary.matrix.find((row) => row.metric === "oi"),
-      taker: summary.matrix.find((row) => row.metric === "taker"),
-      basis: summary.matrix.find((row) => row.metric === "basis"),
-      topTrader: summary.matrix.find((row) => row.metric === "top_trader"),
-      longShort: summary.matrix.find((row) => row.metric === "long_short"),
-      macro: summary.macro,
+      funding: { omitted: true, reason: "binance_cloud_path_missing" },
+      openInterest: { omitted: true, reason: "binance_cloud_path_missing" },
+      taker: { omitted: true, reason: "binance_cloud_path_missing" },
+      basis: { omitted: true, reason: "binance_cloud_path_missing" },
+      topTrader: { omitted: true, reason: "binance_cloud_path_missing" },
+      longShort: { omitted: true, reason: "binance_cloud_path_missing" },
+      macro: { omitted: true, reason: "use /api/desk/context frequency groups" },
     },
     analysisMatrix: {
-      description: "衍生品六项矩阵",
-      rows: summary.matrix,
+      description: "合约状态在币安云端路径缺失时整组空",
+      rows: [],
     },
     dataFreshness: {
-      ...summary.freshness,
-      warnings: [...summary.freshness.warnings, ...summary.health.metricWarnings].slice(0, 10),
-    },
-    workerIngestHints: {
-      metricHealthWarnings: summary.health.metricWarnings,
-      sourceHealthCount: summary.health.sourceHealthCount,
-      metricHealthCount: summary.health.metricHealthCount,
+      latestT: null,
+      latestTime: null,
+      staleMs: null,
+      sourceOk: false,
+      status: "missing",
+      warnings: ["P5 derivative_timeseries is analysis-forbidden"],
     },
     notableConflicts: [],
-    llmBrief: `衍生品快照：${symbol} Funding ${summary.matrix[0].state}，OI 24h ${summary.changes.oi24h ? summary.changes.oi24h.changePct : "--"}%，Taker ${summary.matrix[2].state}。`,
-    sourceFingerprint: `derivatives:${symbol}:${summary.freshness.latestT || 0}:${summary.matrix.map((row) => `${row.metric}:${row.value ?? ""}`).join("|")}`,
+    llmBrief: "contract group empty until Binance cloud path recovers; no crowding or dominance labels.",
+    sourceFingerprint: `derivatives:${symbol}:omitted`,
   };
 }
 
@@ -778,14 +716,10 @@ function detectConflicts(pages) {
     chartDerived && chartDerived.structureRange && chartDerived.structureRange.intervalState ? chartDerived.structureRange.intervalState : "";
   const ofBias = pages.orderflow && pages.orderflow.readModel && pages.orderflow.readModel.window ? pages.orderflow.readModel.window.bias : "";
   const derivFunding = pages.derivatives && pages.derivatives.analysisMatrix ? pages.derivatives.analysisMatrix.rows.find((row) => row.metric === "funding") : null;
-  if (chartTrend === "up" && ofBias === "sell") {
-    conflicts.push({ key: "chart_vs_orderflow", severity: "medium", detail: "行情窗口粗倾向偏上（首尾涨跌），但订单流主动卖方占优。" });
-  }
-  if (chartTrend === "down" && ofBias === "buy") {
-    conflicts.push({ key: "chart_vs_orderflow", severity: "medium", detail: "行情窗口粗倾向偏下（首尾涨跌），但订单流主动买方占优。" });
-  }
-  if (derivFunding && derivFunding.state === "crowded") {
-    conflicts.push({ key: "derivatives_crowding", severity: "low", detail: "Funding 已进入拥挤区，首席汇总需下调追涨权重。" });
+  void ofBias;
+  void derivFunding;
+  if (pages.chart && pages.chart.pricePathAvailable !== true) {
+    conflicts.push({ key: "price_path_missing", severity: "high", detail: "无权威币安价格路径；禁止交易向段落。" });
   }
   if (chartTrend === "up" && typeof structuralState === "string" && (structuralState.indexOf("跌") >= 0 || structuralState.indexOf("下") >= 0)) {
     conflicts.push({
@@ -808,6 +742,8 @@ const LLM_AGENT_INPUT_CONTRACT = Object.freeze({
   version: "1.0.0",
   tiers: ["raw_fact", "derived_heuristic"],
   usageRulesZh: [
+    "若 pricePathAvailable 为 false，报告头必须是无价格路径/仅宏观背景，不得输出交易向段落。",
+    "禁止使用拥挤、占优、挤压、情景分或置信百分比作为结论。",
     "不得将 chart 页的 chartStructureForLlm.derivedStructureHeuristic 中价位当成已验证的交易信号或交易所口径；仅能作启发式上下文。",
     "不得合并叙述 rawFactEnvelope（窗口 OHLC 极值）与 structureRange（摆动聚类）；二者定义不同，数值可能显著偏离。",
     "若 derivedStructureHeuristic.integrityFlags 非空，须在分析中先复述这些标记再给观点。",
@@ -838,7 +774,7 @@ export function buildAgentInputs(deskSnapshot, options = {}) {
         const text = JSON.stringify(row);
         return pageKeys.some((key) => text.includes(key)) || agentId === "chief";
       }),
-      llmBrief: `${agentId} 输入：${pageKeys.join(" + ")}；${freshness.sourceOk ? "数据整体新鲜" : "存在降级数据"}。严格遵守 llmDataContract.usageRulesZh。`,
+      llmBrief: `${agentId} 输入：${pageKeys.join(" + ")}；pricePathAvailable=${pages.chart && pages.chart.pricePathAvailable === true}；无交易向补洞。`,
     };
   }
   return out;
@@ -874,7 +810,7 @@ export async function buildMarketDeskSnapshot(env, options = {}) {
     pages,
     dataFreshness,
     notableConflicts,
-    llmBrief: `市场监测总快照：${symbol}，四页数据${dataFreshness.sourceOk ? "整体可用" : "存在降级"}，冲突 ${notableConflicts.length} 条。`,
+    llmBrief: `market-desk ${symbol}; pricePathAvailable=${pages.chart && pages.chart.pricePathAvailable === true}; no trading narrative.`,
     sourceFingerprint: Object.values(pages).map((page) => page.sourceFingerprint || `${page.scope}:error`).join("||"),
   };
   desk.agentInputs = buildAgentInputs(desk, { runId, nowMs: now });

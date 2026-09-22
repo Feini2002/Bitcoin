@@ -2,35 +2,35 @@
 const dataset = (provider, operation, parameters, role, kind, refreshSeconds, fields, limitations) =>
   ({provider,operation,parameters,role,kind,refreshSeconds,fields,limitations});
 const perp = (operation, parameters, kind, seconds, fields, limitations) => dataset('binance-usdm',operation,parameters,'primary',kind,seconds,fields,limitations);
-const macro = (series, units) => dataset('fred','observations',{series_id:series,limit:'1000'},'context','fred',43200,
+const macro = (series, units) => dataset('fred','observations',{series_id:series,limit:'1000'},'context','fred',3600,
   {value:units},'最新可得版本；观察日期不是发布日期。缺值保留 null，首次导入不提供当时已知的历史回放证据。');
 export const FINANCE_DATASETS = {
   ...Object.fromEntries(['5m','15m','1h','4h','1d','1w'].map(interval => [`binance-perp-klines-${interval}`,
-    perp('klines',{symbol:'BTCUSDT',interval,limit:'500'},'klines',interval==='5m'?300:900,
+    perp('klines',{symbol:'BTCUSDT',interval,limit:'500'},'klines',15,
       {open:'USDT/BTC',high:'USDT/BTC',low:'USDT/BTC',close:'USDT/BTC',baseVolume:'BTC',quoteVolume:'USDT',takerBuyBase:'BTC',takerBuyQuote:'USDT',trades:'count'},
       'Binance USDⓈ-M BTCUSDT 独立序列；仅最新500根初始覆盖，缺口不填补，未收盘记录不能当确认信号。') ])),
-  'binance-perp-premium':perp('premium',{symbol:'BTCUSDT'},'premium',300,
+  'binance-perp-premium':perp('premium',{symbol:'BTCUSDT'},'premium',5,
     {markPrice:'USDT/BTC',indexPrice:'USDT/BTC',lastFundingRate:'decimal',interestRate:'decimal',nextFundingTime:'ISO-8601'},
     '接口当前报告费率，不是新的资金费结算记录；不按分钟相加。'),
-  'binance-perp-funding':perp('funding',{symbol:'BTCUSDT',limit:'500'},'funding',3600,
+  'binance-perp-funding':perp('funding',{symbol:'BTCUSDT',limit:'500'},'funding',300,
     {fundingRate:'decimal-per-settlement',markPrice:'USDT/BTC'},'每次已结算费率；间隔须结合 funding-info，不能默认恒为8小时。'),
-  'binance-perp-oi':perp('open-interest',{symbol:'BTCUSDT'},'oi',300,{openInterest:'BTC'},'持仓数量不是多头量、资金净流入或美元市值。'),
-  'binance-perp-oi-history':perp('oi-history',{symbol:'BTCUSDT',period:'1h',limit:'500'},'oi-history',3600,
+  'binance-perp-oi':perp('open-interest',{symbol:'BTCUSDT'},'oi',5,{openInterest:'BTC'},'持仓数量不是多头量、资金净流入或美元市值。'),
+  'binance-perp-oi-history':perp('oi-history',{symbol:'BTCUSDT',period:'1h',limit:'500'},'oi-history',1800,
     {sumOpenInterest:'BTC',sumOpenInterestValue:'USDT'},'官方仅最近一个月；初次最多500小时；不与其他交易所拼接。'),
-  'binance-perp-taker':perp('taker-volume',{symbol:'BTCUSDT',period:'1h',limit:'500'},'taker',3600,
+  'binance-perp-taker':perp('taker-volume',{symbol:'BTCUSDT',period:'1h',limit:'500'},'taker',1800,
     {buyVol:'BTC',sellVol:'BTC',buySellRatio:'ratio'},'主动成交量统计；不是完整逐笔CVD或所有挂单。'),
-  'binance-perp-accounts':perp('account-ratio',{symbol:'BTCUSDT',period:'1h',limit:'500'},'ratio',3600,
+  'binance-perp-accounts':perp('account-ratio',{symbol:'BTCUSDT',period:'1h',limit:'500'},'ratio',1800,
     {longAccount:'fraction',shortAccount:'fraction',longShortRatio:'ratio'},'净多/净空账户比例，不是仓位金额或全市场资金方向。'),
-  'binance-perp-top-positions':perp('top-position-ratio',{symbol:'BTCUSDT',period:'1h',limit:'500'},'ratio',3600,
-    {longAccount:'fraction',shortAccount:'fraction',longShortRatio:'ratio'},'来源定义的头部交易者持仓样本；不可解释为所有机构真实持仓。'),
-  'binance-perp-basis':perp('basis',{pair:'BTCUSDT',contractType:'PERPETUAL',period:'1h',limit:'500'},'basis',3600,
+  'binance-perp-top-positions':perp('top-position-ratio',{symbol:'BTCUSDT',period:'1h',limit:'500'},'ratio',1800,
+    {longPosition:'fraction',shortPosition:'fraction',longShortRatio:'ratio'},'来源定义的头部交易者持仓样本；官方字段是 longPosition/shortPosition，不是账户比。'),
+  'binance-perp-basis':perp('basis',{pair:'BTCUSDT',contractType:'PERPETUAL',period:'1h',limit:'500'},'basis',300,
     {basis:'USDT/BTC',basisRate:'decimal',annualizedBasisRate:'decimal-per-year',indexPrice:'USDT/BTC',futuresPrice:'USDT/BTC'},
     '绝对基差、基差率、年化基差率独立；空年化字段为null，不用其他单位兜底。'),
-  'binance-perp-book':perp('depth',{symbol:'BTCUSDT',limit:'20'},'book',300,
+  'binance-perp-book':perp('depth',{symbol:'BTCUSDT',limit:'20'},'book',5,
     {bids:'[USDT/BTC,BTC][]',asks:'[USDT/BTC,BTC][]'},'单时点20档快照，不能称连续盘口或真实未来清算池；不含不可见订单。'),
   'binance-perp-instrument':perp('instruments',{},'instrument',86400,{},'保存BTCUSDT交易规则原字段；禁止按pricePrecision猜最小tick。'),
   'binance-perp-funding-info':perp('funding-info',{},'funding-info',86400,{},'只报告调整记录；BTCUSDT不在列表时标记未报告调整，不凭空补值。'),
-  'binance-spot-klines-1h':dataset('binance-spot','klines',{symbol:'BTCUSDT',interval:'1h',limit:'500'},'context','klines',3600,
+  'binance-spot-klines-1h':dataset('binance-spot','klines',{symbol:'BTCUSDT',interval:'1h',limit:'500'},'context','klines',60,
     {open:'USDT/BTC',high:'USDT/BTC',low:'USDT/BTC',close:'USDT/BTC',baseVolume:'BTC',quoteVolume:'USDT',takerBuyBase:'BTC',takerBuyQuote:'USDT',trades:'count'},
     'Binance现货独立背景；不能替代永续主图最后价。'),
   'fred-dgs2':macro('DGS2','percent-per-year'),
@@ -42,11 +42,11 @@ export const FINANCE_DATASETS = {
   'fred-fed-assets':macro('WALCL','million-USD'),
   'fred-tga':macro('WTREGEN','million-USD'),
   'fred-rrp':macro('RRPONTSYD','billion-USD'),
-  'nyfed-sofr':dataset('nyfed','sofr',{count:'30'},'context','sofr',43200,{percentRate:'percent-per-year'},'工作日参考利率；周末沿用旧值不算新报价。'),
-  'stablecoin-supply':dataset('defillama','stablecoins',{},'context','stablecoins',21600,{circulating:'USD-pegged-supply',price:'USD'},'USDT/USDC供应和价格分开，不把供应变化直接当BTC买盘或资金净流入。'),
-  'crypto-breadth':dataset('coingecko','global',{},'context','global',3600,{marketCap:'USD',volume24h:'USD',btcDominance:'percent'},'CoinGecko聚合口径，非Binance成交量；需来源署名。'),
-  'btc-fees':dataset('mempool','fees',{},'context','fees',3600,{fastestFee:'sat/vB',halfHourFee:'sat/vB',hourFee:'sat/vB',minimumFee:'sat/vB'},'网络拥堵和费用背景，不能据此推断交易所净流入。'),
-  'deribit-btc-options':dataset('deribit','summary',{currency:'BTC',kind:'option'},'context','options',3600,
+  'nyfed-sofr':dataset('nyfed','sofr',{count:'30'},'context','sofr',3600,{percentRate:'percent-per-year'},'工作日参考利率；周末沿用旧值不算新报价。'),
+  'stablecoin-supply':dataset('defillama','stablecoins',{},'context','stablecoins',3600,{circulating:'USD-pegged-supply',price:'USD'},'USDT/USDC供应和价格分开，不把供应变化直接当BTC买盘或资金净流入。'),
+  'crypto-breadth':dataset('coingecko','global',{},'context','global',300,{marketCap:'USD',volume24h:'USD',btcDominance:'percent'},'CoinGecko聚合口径，非Binance成交量；需来源署名。'),
+  'btc-fees':dataset('mempool','fees',{},'context','fees',60,{fastestFee:'sat/vB',halfHourFee:'sat/vB',hourFee:'sat/vB',minimumFee:'sat/vB'},'网络拥堵和费用背景，不能据此推断交易所净流入。'),
+  'deribit-btc-options':dataset('deribit','summary',{currency:'BTC',kind:'option'},'context','options',21600,
     {mark_iv:'percent',open_interest:'native-contract-units'},'保存原生期权摘要；mark IV不是可成交报价，不伪造25delta偏斜、庄家GEX或方向概率。'),
 };
 
@@ -59,8 +59,8 @@ export function datasetRequest(id, origin='https://finance.internal') {
 }
 
 export function datasetCatalog() {
-  return {version:'2026-09-16.1',primaryVenue:'Binance',primaryInstrument:'BTCUSDT',primaryMarket:'USDⓈ-M perpetual',
-    automaticCollection:false,frontendConnected:false,
+  return {version:'2026-09-21.1',primaryVenue:'Binance',primaryInstrument:'BTCUSDT',primaryMarket:'USDⓈ-M perpetual',
+    automaticCollection:true,frontendConnected:true,
     datasets:Object.entries(FINANCE_DATASETS).map(([id,d])=>({id,...d,
       readPath:`/api/finance/datasets/${id}`,refreshPath:`/api/finance/datasets/${id}/refresh`,refreshMethod:'POST'})),
   };
@@ -102,7 +102,10 @@ export function normalizeDataset(id,envelope) {
     case 'oi': add(data.time,at(data.time),numeric(data,['openInterest'])); break;
     case 'oi-history': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['sumOpenInterest','sumOpenInterestValue'])); break;
     case 'taker': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['buyVol','sellVol','buySellRatio'])); break;
-    case 'ratio': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['longAccount','shortAccount','longShortRatio'])); break;
+    case 'ratio': {
+      const keys = d.fields && d.fields.longPosition ? ['longPosition','shortPosition','longShortRatio'] : ['longAccount','shortAccount','longShortRatio'];
+      for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,keys));
+    } break;
     case 'basis': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['basis','basisRate','annualizedBasisRate','indexPrice','futuresPrice'])); break;
     case 'book': if(!Array.isArray(data.bids)||!Array.isArray(data.asks))throw new Error('dataset_invalid_book');
       if(data.bids[0] && data.asks[0] && Number(data.asks[0][0])<Number(data.bids[0][0]))throw new Error('dataset_crossed_book');

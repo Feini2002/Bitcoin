@@ -18,6 +18,8 @@ function assert(name, cond, detail) {
   const file = path.join(__dirname, "..", "cloudflare", "binance-klines-worker.js");
   let src = fs.readFileSync(file, "utf8");
   src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
+  src = src.replace(/\bexport\s*\{\s*KlineLiveCollector\s*\}\s*;?/, "");
+  src = src.replace(/\bbindKlineLiveHooks\s*\([\s\S]*?\);\s*/, "");
   src = src.replace(/export default\s*\{/, "const __workerDefault = {");
   const mod = await import(`data:text/javascript;base64,${Buffer.from(src, "utf8").toString("base64")}`);
   const hooks = mod.__footprintTestHooks;
@@ -28,6 +30,7 @@ function assert(name, cond, detail) {
   assert("API read limit supports loaded history", hooks.FOOTPRINT_API_MAX_LIMIT === 240);
   assert("manual backfill is bounded", hooks.FOOTPRINT_BACKFILL_MAX_WINDOWS === 40);
   assert("footprint fetch pages sized for backlog drain", hooks.FOOTPRINT_MAX_FETCH_PAGES === 14);
+  assert("fromId max age stays inside Binance 2-day window", hooks.FOOTPRINT_FROMID_MAX_AGE_MS === 46 * 60 * 60 * 1000);
   assert("footprint read auto sync is rate limited", hooks.FOOTPRINT_READ_AUTO_SYNC_MIN_MS === 45 * 1000);
   assert("auto tick resolves to base server tick", hooks.resolveFootprintTickSize("auto") === 10);
   assert("explicit tick is honored", hooks.resolveFootprintTickSize("50") === 50);
@@ -43,6 +46,26 @@ function assert(name, cond, detail) {
   assert(
     "recent footprint sync attempt is gated",
     hooks.recentlyTriedFootprintSync({ last_run: now - 10 * 1000 }, now) === true
+  );
+  assert(
+    "fromId inside 2 days is not stale",
+    hooks.isFootprintFromIdStale(now - 12 * 60 * 60 * 1000, now) === false
+  );
+  assert(
+    "fromId older than 46h is stale",
+    hooks.isFootprintFromIdStale(now - 47 * 60 * 60 * 1000, now) === true
+  );
+  assert(
+    "missing last_trade_time is not assumed stale",
+    hooks.isFootprintFromIdStale(0, now) === false
+  );
+  assert(
+    "parses Binance -4166 JSON as window restricted",
+    hooks.isFootprintAggTradesWindowRestricted('{"code":-4166,"msg":"Search window is restricted to recent 2 days only."}') === true
+  );
+  assert(
+    "ordinary aggTrades errors are not window restricted",
+    hooks.isFootprintAggTradesWindowRestricted('{"code":-1121,"msg":"Invalid symbol."}') === false
   );
 
   const t0 = Date.UTC(2026, 3, 28, 8, 0, 0);

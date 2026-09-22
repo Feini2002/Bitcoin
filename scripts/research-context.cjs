@@ -113,7 +113,18 @@ function localMeta(repoPath) {
     'chart-workbench-review-2026-09-16.md': 'LOCAL-CHART',
     'free-financial-api-channels-2026-09-16.md': 'LOCAL-CHANNELS',
     'free-financial-platform-limits-2026-09-16.md': 'LOCAL-LIMITS',
-    'workbench-binance-data-plan-2026-09-16.md': 'LOCAL-WORKBENCH'
+    'workbench-binance-data-plan-2026-09-16.md': 'LOCAL-WORKBENCH',
+    'binance-egress-block-2026-09-19.md': 'LOCAL-EGRESS',
+    'binance-fixed-ip-proxy-plan-2026-09-19.md': 'LOCAL-PROXYPLAN',
+    'vps-proxy-purchase-checklist-2026-09-19.md': 'LOCAL-PURCHASE',
+    'finance-daily-quota-skip-2026-09-21.md': 'LOCAL-QUOTA',
+    'cloud-d1-desk-governance-2026-09-21.md': 'LOCAL-DESK',
+    'data-refresh-cadence-2026-09-21.md': 'LOCAL-CADENCE',
+    'binance-egress-workable-fixes-2026-09-21.md': 'LOCAL-EGRESSFIX',
+    'binance-egress-vps-local-2026-09-21.md': 'LOCAL-EGRESSVPS',
+    'binance-egress-plan-adversarial-2026-09-21.md': 'LOCAL-EGRESSADV',
+    'binance-egress-vps-cutover-2026-09-21.md': 'LOCAL-EGRESSCUTOVER',
+    'data-collection-routing-2026-09-22.md': 'LOCAL-COLLECT'
   };
   return ids[name] ? { id: ids[name], role: '本仓库本地核验记录（权威最高，但仅代表核验当时）' } : null;
 }

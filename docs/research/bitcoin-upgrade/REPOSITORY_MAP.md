@@ -4,7 +4,7 @@
 
 具体症状先用[功能定位入口](QUICK_ROUTER.md)或 `node scripts/research-context.cjs "问题"`；本页保留跨模块总览。K线专项表与CodeGraph使用边界见功能定位入口。
 
-定位日期：2026-09-16。本轮只核对现有文件、路由注册、功能标签与相关入口；下表列出未来修改时要追踪的关联链路，不是完整功能审计或上线证明。旧调查中的行号可能过期，优先按文件职责定位。
+定位日期：2026-09-21。本轮只核对现有文件、路由注册、功能标签与相关入口；下表列出未来修改时要追踪的关联链路，不是完整功能审计或上线证明。旧调查中的行号可能过期，优先按文件职责定位。
 
 ## 页面入口与状态
 
@@ -56,7 +56,7 @@
 ### 行情、足迹、强平、衍生品与快照
 
 - 页面与计算：[chart.js](../../../js/pages/chart.js)、[chart/](../../../js/chart/)、[orderflow/](../../../js/orderflow/)、[heatmap/](../../../js/heatmap/)、[derivatives.js](../../../js/pages/derivatives.js) → [共享请求层](../../../js/data-engine.js)。
-- 后端：[行情Worker](../../../cloudflare/binance-klines-worker.js)、[行情schema](../../../cloudflare/schema.sql)；独立快照在 [cloudflare/snapshot/](../../../cloudflare/snapshot/)，其[快照程序](../../../cloudflare/snapshot/marketSnapshotProgram.mjs)与[结构计算](../../../cloudflare/snapshot/chartStructureSnapshot.mjs)需一起定位。
+- 后端：[行情Worker](../../../cloudflare/binance-klines-worker.js)、[K线 live collector](../../../cloudflare/kline-live-collector.mjs)、[行情schema](../../../cloudflare/schema.sql)；独立快照在 [cloudflare/snapshot/](../../../cloudflare/snapshot/)，其[快照程序](../../../cloudflare/snapshot/marketSnapshotProgram.mjs)与[结构计算](../../../cloudflare/snapshot/chartStructureSnapshot.mjs)需一起定位。刷新频率见 [LOCAL-CADENCE](../data-refresh-cadence-2026-09-21.md)。币安出口**运行现状**见 [LOCAL-EGRESSCUTOVER](../binance-egress-vps-cutover-2026-09-21.md)；接线约束见 [LOCAL-EGRESSADV](../binance-egress-plan-adversarial-2026-09-21.md)；SSH 路标见 [LOCAL-EGRESSVPS](../binance-egress-vps-local-2026-09-21.md)。直连仍 403 的归因见 [LOCAL-EGRESSFIX](../binance-egress-workable-fixes-2026-09-21.md)。
 - 关联：来源/周期/时间、前端缓存和计算、Worker聚合、D1、快照导出、员工及舆情输入。独立快照程序与行情Worker的摘要路径不能仅凭名称视为同一条链路。
 - 对应资料：卷04/10、RES06～09、F-02；已有验证 `npm test`、`npm run verify:footprint`、`npm run verify:derivatives`、`npm run verify:market-snapshot`，按影响面选取。
 
@@ -96,8 +96,8 @@
 
 ### 运行、存储与发布
 
-- 定位：[行情配置](../../../cloudflare/wrangler.toml)、[舆情配置](../../../cloudflare/wrangler.yuqing.toml)、[独立快照配置](../../../cloudflare/snapshot/wrangler.snapshot.toml)、[Pages资产清单](../../../config/pages-assets.json)、[构建器](../../../scripts/build-pages.cjs)。
-- 关联：调度生命周期、存储和保留、迁移兼容、前端资源版本、部署面、回退；真实服务启停状态需在相关操作前核对，本次未访问生产。
+- 定位：[行情配置](../../../cloudflare/wrangler.toml)、[舆情配置](../../../cloudflare/wrangler.yuqing.toml)、[独立快照配置](../../../cloudflare/snapshot/wrangler.snapshot.toml)、[出口 Caddy](../../../cloudflare/egress/Caddyfile)、[Pages资产清单](../../../config/pages-assets.json)、[构建器](../../../scripts/build-pages.cjs)。
+- 关联：调度生命周期、存储和保留、迁移兼容、前端资源版本、部署面、回退；币安出站现经东京反代，运行现状以 [接线现状](../binance-egress-vps-cutover-2026-09-21.md) 为准。
 - 对应资料：卷09/10/12、RES20/21；现有说明见[仓库布局](../../architecture/repository-layout.md)、[脚本索引](../../../scripts/README.md)。
 
 <a id="validation"></a>

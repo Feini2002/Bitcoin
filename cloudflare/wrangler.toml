@@ -34,9 +34,17 @@ database_id = "de758bb8-c7f5-41c7-a6ea-32c0ddf74d57"
 name = "LIQUIDATION_COLLECTOR"
 class_name = "LiquidationCollector"
 
+[[durable_objects.bindings]]
+name = "KLINE_LIVE_COLLECTOR"
+class_name = "KlineLiveCollector"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["LiquidationCollector"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["KlineLiveCollector"]
 
 # 已恢复：每分钟调度行情、足迹、强平与衍生品增量同步。
 
@@ -49,7 +57,15 @@ crons = ["* * * * *"]
 [vars]
 FINANCE_D1_ENABLED = "true"
 BTC_LLM_PROVIDER = "auto"
-BINANCE_FAPI_ORIGIN = ""
+BINANCE_FAPI_ORIGIN = "https://bit-egress.feiniwork.com"
+BINANCE_FSTREAM_ORIGIN = "https://bit-egress.feiniwork.com"
+BINANCE_SPOT_ORIGIN = "https://bit-egress.feiniwork.com/x/spot"
+BINANCE_SAPI_ORIGIN = "https://bit-egress.feiniwork.com/x/sapi"
+BYBIT_API_ORIGIN = "https://bit-egress.feiniwork.com/x/bybit"
+BYBIT_STREAM_ORIGIN = "https://bit-egress.feiniwork.com/x/bybit-stream"
+OKX_API_ORIGIN = "https://bit-egress.feiniwork.com/x/okx"
+BITGET_API_ORIGIN = "https://bit-egress.feiniwork.com/x/bitget"
+DERIBIT_API_ORIGIN = "https://bit-egress.feiniwork.com/x/deribit"
 ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com,http://localhost:5173,http://127.0.0.1:5173"
 # Cloudflare Access JWT defense-in-depth:
 # 1) Create an Access self-hosted app for btc.feiniwork.com/*.
@@ -61,10 +77,13 @@ ACCESS_ALLOWED_ORIGINS = "https://bitcoin.feiniwork.com,http://localhost:5173,ht
 # ACCESS_ALLOWED_EMAILS = "you@example.com"
 # ACCESS_JWT_REQUIRED = "true"
 
-# 可选的反代基址（仅当 Cloudflare 直连 fapi 被 451 时使用）。
-# 对应代码里的 BINANCE_FAPI_ORIGIN。
-# [vars]
-# BINANCE_FAPI_ORIGIN = "https://你的反代.example.com"
+# 出口反代：灰云 bit-egress.feiniwork.com。先机外带密钥探测 200，再把 BINANCE_FAPI_ORIGIN
+# 写成 https://bit-egress.feiniwork.com ；A2 再写 BINANCE_FSTREAM_ORIGIN。密钥用
+# wrangler secret put EGRESS_PROXY_SECRET，不要写进本文件。
+# 阶段 B REST：灰云前缀 + joinEgress。Deribit 期权摘要走 /x/deribit，6 小时一次。
+# Bybit 强平 WS：Caddy /x/bybit-stream 机外 101 之后才写 BYBIT_STREAM_ORIGIN；清空则回官方 wss://stream.bybit.com。
+# sslip.io 仍在 Caddy 上作为回退；回退时把 BINANCE_FAPI/FSTREAM 改回 https://45.32.40.84.sslip.io 再部署。
+# 不要橙云。不要在反代未通时只改 origin。
 # SYMBOLS：默认 BTCUSDT。本系统行情数据以比特币为主，一般不配置多交易对。
 #
 # 静态前端（Cloudflare Pages）：在仓库根目录执行 npm run deploy:pages（project-name=bit-trading-desk）。

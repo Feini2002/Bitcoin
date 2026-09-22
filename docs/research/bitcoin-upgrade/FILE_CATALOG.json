@@ -13288,8 +13288,8 @@
       "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
       "batch": "local",
       "authority": "high",
-      "summary": "币安连接诊断与修复（2026-09-16）",
-      "bytes": 5110,
+      "summary": "2026-09-21：旧 WS 入口退役的修复仍有效；当时「迁 /market 不解 CF 403」也被后来直连五域持续 403 证实。永续 REST/fstream 现经东京反代，见 接线现状。下文采样与「不购买服务器」是 09-16 边界。",
+      "bytes": 5414,
       "headings": [
         {
           "title": "币安连接诊断与修复（2026-09-16）",
@@ -13298,22 +13298,434 @@
         },
         {
           "title": "可复核证据与边界",
-          "line": 3,
+          "line": 5,
           "level": 2
         },
         {
           "title": "网络调研与可行路径",
-          "line": 11,
+          "line": 13,
           "level": 2
         },
         {
           "title": "验收与恢复",
-          "line": 20,
+          "line": 22,
           "level": 2
         },
         {
           "title": "修复后结果",
-          "line": 25,
+          "line": 27,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-EGRESS",
+      "path": "docs/research/binance-egress-block-2026-09-19.md",
+      "title": "币安出口封锁：归因、现状与社区解法调研",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "调研日期：2026-09-19（Asia/Singapore，UTC+8）。对象：btc 行情 Worker（cloudflare/binance-klines-worker.js）与线上 D1。",
+      "bytes": 14967,
+      "headings": [
+        {
+          "title": "币安出口封锁：归因、现状与社区解法调研",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 要回答的问题",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "2.1 线上状态（2026-09-19 约 09:20–09:35 UTC 两次采样，间隔 81 秒，结果一致）",
+          "line": 15,
+          "level": 3
+        },
+        {
+          "title": "2.2 数据滞后（同次采样，滞后 = 距采样时刻）",
+          "line": 26,
+          "level": 3
+        },
+        {
+          "title": "2.3 一个容易误读的字段",
+          "line": 41,
+          "level": 3
+        },
+        {
+          "title": "3. 归因",
+          "line": 56,
+          "level": 2
+        },
+        {
+          "title": "4. 社区同类做法",
+          "line": 72,
+          "level": 2
+        },
+        {
+          "title": "4.1 Worker 保留 + 出口交给固定 IP（多案例，样本有限）",
+          "line": 78,
+          "level": 3
+        },
+        {
+          "title": "4.2 采集逻辑整体搬到固定 IP 主机",
+          "line": 88,
+          "level": 3
+        },
+        {
+          "title": "4.3 换掉边缘平台",
+          "line": 92,
+          "level": 3
+        },
+        {
+          "title": "4.4 失败案例（反面证据）",
+          "line": 96,
+          "level": 3
+        },
+        {
+          "title": "4.5 与 Access 相关的伪 403",
+          "line": 104,
+          "level": 3
+        },
+        {
+          "title": "4.6 官方能力现状",
+          "line": 108,
+          "level": 3
+        },
+        {
+          "title": "5. 与本仓库的对应",
+          "line": 113,
+          "level": 2
+        },
+        {
+          "title": "6. 建议方向（待决策，未实施）",
+          "line": 120,
+          "level": 2
+        },
+        {
+          "title": "7. 限制与未验证项",
+          "line": 130,
+          "level": 2
+        },
+        {
+          "title": "8. 来源",
+          "line": 138,
+          "level": 2
+        },
+        {
+          "title": "9. 关联代码与验证入口",
+          "line": 156,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-EGRESSADV",
+      "path": "docs/research/binance-egress-plan-adversarial-2026-09-21.md",
+      "title": "出口转发方案对抗审查（2026-09-21）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "状态：约束仍有效。东京出口已接线完毕。 当前怎么接、怎么回退见 接线现状。清空 BYBIT_STREAM_ORIGIN 即回官方 WS。Deribit 日采见 限额停采，不重开。sslip.io 只作 Caddy 回退，不是橙云。",
+      "bytes": 6895,
+      "headings": [
+        {
+          "title": "出口转发方案对抗审查（2026-09-21）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "问题",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "适用版本与核验",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "核验事实（会否决原稿的条目）",
+          "line": 21,
+          "level": 2
+        },
+        {
+          "title": "推断与建议（实施必须遵守）",
+          "line": 31,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 40,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 47,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-EGRESSCUTOVER",
+      "path": "docs/research/binance-egress-vps-cutover-2026-09-21.md",
+      "title": "东京出口机接线现状（2026-09-21）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "不是把网站或 D1 搬到 VPS。Worker 仍是调度、D1、desk、密钥；小机器只做带密钥的薄反代。浏览器继续直连官方 fstream，不对网页开放这台机。SSH 与共享密钥只在 gitignore 的根 .env 和 .codex/，本文不含口令。",
+      "bytes": 5363,
+      "headings": [
+        {
+          "title": "东京出口机接线现状（2026-09-21）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "这篇怎么读",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "当前接线",
+          "line": 20,
+          "level": 2
+        },
+        {
+          "title": "怎么确认还活着",
+          "line": 32,
+          "level": 2
+        },
+        {
+          "title": "改配置时记住的坑",
+          "line": 45,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "关联代码",
+          "line": 60,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-EGRESSVPS",
+      "path": "docs/research/binance-egress-vps-local-2026-09-21.md",
+      "title": "币安出口机：本机 SSH 记录位置（2026-09-21）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "前置：采购清单、通路再核、固定 IP 反代方案。",
+      "bytes": 3764,
+      "headings": [
+        {
+          "title": "币安出口机：本机 SSH 记录位置（2026-09-21）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "问题",
+          "line": 7,
+          "level": 2
+        },
+        {
+          "title": "适用版本与核验",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "核验事实：口令放哪",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "运维边界（未授权不要做）",
+          "line": 29,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 40,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-EGRESSFIX",
+      "path": "docs/research/binance-egress-workable-fixes-2026-09-21.md",
+      "title": "币安云端通路：2026-09-21 全网再核，哪些办法真能用",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "前置：出口封锁归因、固定 IP 反代方案、VPS 采购清单、09-16 连接诊断、刷新频率。仓库规则 NEW-027：不得用别所冒充币安，商业代理绕过地域限制需单独授权。",
+      "bytes": 16713,
+      "headings": [
+        {
+          "title": "币安云端通路：2026-09-21 全网再核，哪些办法真能用",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "问题",
+          "line": 7,
+          "level": 2
+        },
+        {
+          "title": "适用版本与核验方法",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "核验事实：什么路已经死了",
+          "line": 18,
+          "level": 2
+        },
+        {
+          "title": "核验事实：2026 年还能看见的活路",
+          "line": 36,
+          "level": 2
+        },
+        {
+          "title": "对本仓库真正能用的办法（按推荐顺序）",
+          "line": 42,
+          "level": 2
+        },
+        {
+          "title": "1. 按小时买一台新加坡/东京小 VPS，先试通再常开（最像能成）",
+          "line": 44,
+          "level": 3
+        },
+        {
+          "title": "2. 家里或办公室已有常开电脑 + Cloudflare Tunnel（零买机器，但不稳）",
+          "line": 68,
+          "level": 3
+        },
+        {
+          "title": "3. 用 Vercel / Fly / Railway 当薄反代（下午再核：多数会 451，不要先买这个）",
+          "line": 76,
+          "level": 3
+        },
+        {
+          "title": "4. 浏览器开着页面时，用你自己的电脑去连币安（不能当云端）",
+          "line": 80,
+          "level": 3
+        },
+        {
+          "title": "5. 买 Cloudflare 企业专用出口 IP（下午再核：产品要对号，仍不推荐当首选）",
+          "line": 84,
+          "level": 3
+        },
+        {
+          "title": "6. 住宅代理（Bright Data 等）",
+          "line": 93,
+          "level": 3
+        },
+        {
+          "title": "对主图的最低完整集",
+          "line": 97,
+          "level": 2
+        },
+        {
+          "title": "推断与建议（待你拍板）",
+          "line": 107,
+          "level": 2
+        },
+        {
+          "title": "2026-09-21 下午再核：没有第三条「纯云免费」活路",
+          "line": 118,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 130,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 139,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-PROXYPLAN",
+      "path": "docs/research/binance-fixed-ip-proxy-plan-2026-09-19.md",
+      "title": "方案扩充：CF Worker + 固定 IP 小反代",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "日期：2026-09-19。对象：btc 行情 Worker 的币安上游接入。",
+      "bytes": 10725,
+      "headings": [
+        {
+          "title": "方案扩充：CF Worker + 固定 IP 小反代",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 为什么这条路可行",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "3. 覆盖范围（重要）",
+          "line": 37,
+          "level": 2
+        },
+        {
+          "title": "3.1 走 REST、能被反代修复",
+          "line": 41,
+          "level": 3
+        },
+        {
+          "title": "3.2 不走 REST、需要单独处理",
+          "line": 55,
+          "level": 3
+        },
+        {
+          "title": "4. 反代主机要求",
+          "line": 77,
+          "level": 2
+        },
+        {
+          "title": "5. 分步实施与验证（未执行）",
+          "line": 90,
+          "level": 2
+        },
+        {
+          "title": "5.1 实施顺序建议",
+          "line": 92,
+          "level": 3
+        },
+        {
+          "title": "5.2 验证入口",
+          "line": 101,
+          "level": 3
+        },
+        {
+          "title": "6. 成本与运维代价（需要决策）",
+          "line": 113,
+          "level": 2
+        },
+        {
+          "title": "7. 主要风险与限制",
+          "line": 120,
+          "level": 2
+        },
+        {
+          "title": "8. 关联代码与资料",
+          "line": 132,
           "level": 2
         }
       ]
@@ -13366,14 +13778,272 @@
       ]
     },
     {
+      "id": "LOCAL-DESK",
+      "path": "docs/research/cloud-d1-desk-governance-2026-09-21.md",
+      "title": "云端库治理与空桌装配（2026-09-21）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "出口状态：下文「18 项币安规范集停在 local-bootstrap」「frontendConnected=false / 主带仍缺」是当日上午装配快照。傍晚东京 A1 后 desk pricePathAvailable 已真，目录代码后来也把 frontendConnected 打开。连通读 接线现状；混源禁则仍以…",
+      "bytes": 4432,
+      "headings": [
+        {
+          "title": "云端库治理与空桌装配（2026-09-21）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "问题",
+          "line": 7,
+          "level": 2
+        },
+        {
+          "title": "适用版本与核验",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "核验事实",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "推断与本轮处理",
+          "line": 25,
+          "level": 2
+        },
+        {
+          "title": "对抗审查加固（同日）",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 46,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 52,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-COLLECT",
+      "path": "docs/research/data-collection-routing-2026-09-22.md",
+      "title": "基础采集路由：VPS 或 Cloudflare",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "已有东京出口机之后，每条能持续采集的数据应该走 VPS 反代，还是由 Cloudflare Worker 直连？怎样让这些数据保持在跑，而不是只登记在目录里。",
+      "bytes": 4725,
+      "headings": [
+        {
+          "title": "基础采集路由：VPS 或 Cloudflare",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "问题",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "适用版本与核验",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "分工",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "不放进时钟",
+          "line": 35,
+          "level": 2
+        },
+        {
+          "title": "调度",
+          "line": 44,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 48,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 54,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-CADENCE",
+      "path": "docs/research/data-refresh-cadence-2026-09-21.md",
+      "title": "系统数据刷新频率复核与拉满采集",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "用户要求：先把各源是秒级、分钟级还是日限额级写清楚；再按来源最大可承受频率写入云端 D1；K 线要接近直连。云端已付费，不以 Cloudflare 免费额度为采集上限。上游官方限额与出口封锁仍须遵守。",
+      "bytes": 20723,
+      "headings": [
+        {
+          "title": "系统数据刷新频率复核与拉满采集",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "问题",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "适用版本与核验方法",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "核验事实：复核当时（改前）",
+          "line": 21,
+          "level": 2
+        },
+        {
+          "title": "调度层",
+          "line": 23,
+          "level": 3
+        },
+        {
+          "title": "前端读",
+          "line": 39,
+          "level": 3
+        },
+        {
+          "title": "规范集建议刷新（改前，且未自动执行）",
+          "line": 49,
+          "level": 3
+        },
+        {
+          "title": "主图权威断裂（改前）",
+          "line": 65,
+          "level": 3
+        },
+        {
+          "title": "官方与出口边界",
+          "line": 71,
+          "level": 3
+        },
+        {
+          "title": "推断与本轮处理",
+          "line": 80,
+          "level": 2
+        },
+        {
+          "title": "本轮目标节奏（实施后）",
+          "line": 91,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 108,
+          "level": 2
+        },
+        {
+          "title": "加固审查（2026-09-21 续）",
+          "line": 116,
+          "level": 2
+        },
+        {
+          "title": "官方限额是否真的最大化（2026-09-21 再核）",
+          "line": 130,
+          "level": 2
+        },
+        {
+          "title": "硬删除边界（无回收站）",
+          "line": 149,
+          "level": 2
+        },
+        {
+          "title": "主图 K 线现在用什么数据，能否实时",
+          "line": 176,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 188,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-QUOTA",
+      "path": "docs/research/finance-daily-quota-skip-2026-09-21.md",
+      "title": "免费通道：不纳入每日长期采集的限额项",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "用户决定：目前有限额、无法作为每日长期来源的数据先不管；通道保留，不再为它们安排每日采集或反复探测。",
+      "bytes": 5159,
+      "headings": [
+        {
+          "title": "免费通道：不纳入每日长期采集的限额项",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "问题",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "适用版本与核验方法",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "核验事实：先不管（不作为每日长期源）",
+          "line": 20,
+          "level": 2
+        },
+        {
+          "title": "有限额、但仍可按日偶发取数（本次不放弃）",
+          "line": 32,
+          "level": 2
+        },
+        {
+          "title": "不是额度问题（本文不展开、也不改处理）",
+          "line": 42,
+          "level": 2
+        },
+        {
+          "title": "推断与建议",
+          "line": 48,
+          "level": 2
+        },
+        {
+          "title": "限制",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 60,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-CHANNELS",
       "path": "docs/research/free-financial-api-channels-2026-09-16.md",
       "title": "免费金融数据通道（2026-09-16）",
       "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
       "batch": "local",
       "authority": "high",
-      "summary": "最新扩展：现为40个平台/产品、93个公开操作。新增9项Binance规则/统计通道，以及独立的32项规范观察数据集；完整现状见币安主源数据与改版方案，逐平台限制见限制矩阵。下文各时间节点的84项统计是当时实测记录，保留原样，不冒充93项已全量重测。",
-      "bytes": 19152,
+      "summary": "最新扩展：现为40个平台/产品、93个公开操作。新增9项Binance规则/统计通道，以及独立的32项规范观察数据集；完整现状见币安主源数据与改版方案，逐平台限制见限制矩阵。2026-09-21 起，Deribit、Alpha Vantage、GDELT、BLS 以及不稳定的 CoinPaprika 额度不作为每日长期…",
+      "bytes": 19340,
       "headings": [
         {
           "title": "免费金融数据通道（2026-09-16）",
@@ -13440,7 +14110,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "本页列出全部40个平台/产品、93个操作的用途与边界。来源为仓库已核验的官方资料及当前注册表；历史全量实测时间为 2026-09-16T07:32:35.912Z，当时84个操作、61通过、23失败。下表历史状态不等于本轮全部93项已重新验证；新增9项均为Binance公开数据。32个规范数据集的最新接入、D1和工作台…",
-      "bytes": 13482,
+      "bytes": 13660,
       "headings": [
         {
           "title": "免费金融平台限制与连接记录（2026-09-16）",
@@ -13460,14 +14130,146 @@
       ]
     },
     {
+      "id": "LOCAL-PURCHASE",
+      "path": "docs/research/vps-proxy-purchase-checklist-2026-09-19.md",
+      "title": "购买固定 IP 小服务器：白话决策与采购清单",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "日期：2026-09-19。用途：给 BINANCE_FAPI_ORIGIN 反代方案准备外部主机。",
+      "bytes": 14961,
+      "headings": [
+        {
+          "title": "购买固定 IP 小服务器：白话决策与采购清单",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "0. 结论先行",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "1. 这台机器要干什么",
+          "line": 18,
+          "level": 2
+        },
+        {
+          "title": "2. 买之前必须懂的三个认知（重要）",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "2.1 最大的不确定性：币安可能不是按「具体 IP」，而是按「这是机房 IP」来封",
+          "line": 26,
+          "level": 3
+        },
+        {
+          "title": "2.2 币安对「不在白名单的 IP」和「地域封锁」返回的 403 长得一样",
+          "line": 43,
+          "level": 3
+        },
+        {
+          "title": "2.3 这件事没有「一劳永逸」",
+          "line": 49,
+          "level": 3
+        },
+        {
+          "title": "3. 选商家：看这 7 个指标",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "4. 当前可核对到的商家信息（2026-09-19，购买前请重核）",
+          "line": 64,
+          "level": 2
+        },
+        {
+          "title": "5. 下单时具体怎么选",
+          "line": 81,
+          "level": 2
+        },
+        {
+          "title": "6. 下单前勾选清单",
+          "line": 91,
+          "level": 2
+        },
+        {
+          "title": "7. 买完之后要交付什么",
+          "line": 101,
+          "level": 2
+        },
+        {
+          "title": "8. 费用与安全护栏",
+          "line": 114,
+          "level": 2
+        },
+        {
+          "title": "9. 如果试不通，退路是什么",
+          "line": 121,
+          "level": 2
+        },
+        {
+          "title": "10. 常见疑问",
+          "line": 132,
+          "level": 2
+        },
+        {
+          "title": "11. 附：Vultr 东京逐步下单（2026-09-19 核实）",
+          "line": 142,
+          "level": 2
+        },
+        {
+          "title": "第 1 步：注册账号",
+          "line": 146,
+          "level": 3
+        },
+        {
+          "title": "第 2 步：绑定支付方式并充值",
+          "line": 152,
+          "level": 3
+        },
+        {
+          "title": "第 3 步：部署服务器",
+          "line": 157,
+          "level": 3
+        },
+        {
+          "title": "第 4 步（最关键，关系到扣钱）",
+          "line": 167,
+          "level": 3
+        },
+        {
+          "title": "第 5 步：省钱三条",
+          "line": 179,
+          "level": 3
+        },
+        {
+          "title": "第 6 步：买完给我这四样",
+          "line": 185,
+          "level": 3
+        },
+        {
+          "title": "第 7 步：注意流量",
+          "line": 194,
+          "level": 3
+        },
+        {
+          "title": "12. 来源与时效",
+          "line": 199,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-WORKBENCH",
       "path": "docs/research/workbench-binance-data-plan-2026-09-16.md",
       "title": "币安主源行情工作台：数据接入与改版依据",
       "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
       "batch": "local",
       "authority": "high",
-      "summary": "研究/实施日期：2026-09-16。用户确认本轮完成数据接入、D1 沉淀、对抗审查与详细方案，页面下一轮改。本文区分事实、已实施内容和后续方案，不把 API 可调用当作数据可用于交易决策。",
-      "bytes": 26669,
+      "summary": "研究/实施日期：2026-09-16。用户确认本轮完成数据接入、D1 沉淀、对抗审查与详细方案，页面下一轮改。本文区分事实、已实施内容和后续方案，不把 API 可调用当作数据可用于交易决策。2026-09-21 空桌治理与 /api/desk 装配见 cloud-d1-desk-governance-2026-09-2…",
+      "bytes": 27351,
       "headings": [
         {
           "title": "币安主源行情工作台：数据接入与改版依据",
@@ -13546,12 +14348,12 @@
         },
         {
           "title": "代码、操作与恢复",
-          "line": 154,
+          "line": 156,
           "level": 2
         },
         {
           "title": "本轮实际交付与验收（2026-09-16 北京时间）",
-          "line": 160,
+          "line": 162,
           "level": 2
         }
       ]

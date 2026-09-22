@@ -1,0 +1,180 @@
+# Bit Desk exchange egress. Secret comes from systemd EnvironmentFile.
+# Do not put the shared secret in this file.
+
+{
+	admin off
+}
+
+(egress) {
+	@authed header X-Bitdesk-Egress-Secret {$EGRESS_PROXY_SECRET}
+
+	handle @authed {
+		handle /fapi/* {
+			reverse_proxy https://fapi.binance.com {
+				header_up Host fapi.binance.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name fapi.binance.com
+				}
+				stream_close_delay 5m
+			}
+		}
+
+		handle /futures/data/* {
+			reverse_proxy https://fapi.binance.com {
+				header_up Host fapi.binance.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name fapi.binance.com
+				}
+				stream_close_delay 5m
+			}
+		}
+
+		handle /market/* {
+			reverse_proxy https://fstream.binance.com {
+				header_up Host fstream.binance.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name fstream.binance.com
+				}
+				stream_close_delay 5m
+			}
+		}
+
+		handle_path /x/spot/* {
+			reverse_proxy https://data-api.binance.vision {
+				header_up Host data-api.binance.vision
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name data-api.binance.vision
+				}
+			}
+		}
+
+		handle_path /x/sapi/* {
+			reverse_proxy https://api.binance.com {
+				header_up Host api.binance.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name api.binance.com
+				}
+			}
+		}
+
+		handle_path /x/bybit/* {
+			reverse_proxy https://api.bybit.com {
+				header_up Host api.bybit.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name api.bybit.com
+				}
+			}
+		}
+
+		handle_path /x/bybit-stream/* {
+			reverse_proxy https://stream.bybit.com {
+				header_up Host stream.bybit.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name stream.bybit.com
+				}
+				stream_close_delay 5m
+			}
+		}
+
+		handle_path /x/okx/* {
+			reverse_proxy https://www.okx.com {
+				header_up Host www.okx.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name www.okx.com
+				}
+			}
+		}
+
+		handle_path /x/bitget/* {
+			reverse_proxy https://api.bitget.com {
+				header_up Host api.bitget.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name api.bitget.com
+				}
+			}
+		}
+
+		handle_path /x/deribit/* {
+			reverse_proxy https://www.deribit.com {
+				header_up Host www.deribit.com
+				header_up -X-Forwarded-*
+				header_up -Via
+				header_up -X-Real-IP
+				header_up -CF-Connecting-IP
+				header_up -CF-RAY
+				header_up -CDN-Loop
+				transport http {
+					tls_server_name www.deribit.com
+				}
+			}
+		}
+
+		respond "not found" 404
+	}
+
+	handle {
+		respond "forbidden" 403
+	}
+}
+
+bit-egress.feiniwork.com {
+	import egress
+}
+
+45.32.40.84.sslip.io {
+	import egress
+}

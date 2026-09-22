@@ -312,15 +312,24 @@
       }
 
       this._setTileHint(i, "加载中…");
-      if (typeof DataEngine === "undefined" || !DataEngine.fetchKlinesFromD1) {
-        errEl("DataEngine 未就绪");
+      if (typeof DataEngine === "undefined" || !DataEngine.fetchDesk) {
+        errEl("desk 装配层未就绪");
+        return;
+      }
+      if (window.__bitDeskChartPricePathAvailable === false) {
+        errEl("主源缺失，子图不画混源 K 线");
         return;
       }
       try {
-        const raw = await DataEngine.fetchKlinesFromD1(sym, interval, 6000, { sync: "0" });
+        const desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval });
         if (g !== t.loadGen) return;
+        if (!desk || desk.pricePathAvailable !== true) {
+          errEl("子图无权威币安序列");
+          return;
+        }
+        const raw = Array.isArray(desk.series) ? desk.series : [];
         if (!Array.isArray(raw) || !raw.length) {
-          errEl("无 K 线，请检查 Worker Cron / D1 状态，或在设置页手动同步");
+          errEl("无合格 K 线");
           return;
         }
         const data = raw.map((d) => ({

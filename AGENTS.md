@@ -5,6 +5,7 @@
 ## Context First
 
 - 先读 `AGENTS.md`、`package.json`、`index.html` 与相关 `js/` 页面入口，再改代码。
+- 币安出口 VPS 的 SSH 只存在仓库根 `.env` 的 `VPS_BINANCE_EGRESS_*`（已被 gitignore）以及本机 `.codex/binance-egress-vps.local.md` 与 `.codex/ssh/` 私钥。换 Codex 时先读这些键和 [本地出口机记录](docs/research/binance-egress-vps-local-2026-09-21.md)。当前接线见 [出口现状](docs/research/binance-egress-vps-cutover-2026-09-21.md)；约束见 [对抗审查](docs/research/binance-egress-plan-adversarial-2026-09-21.md)。禁止把口令或私钥写入 git、docs 正文、Worker 配置或对外回复。
 - 保留未被明确要求实现的 `PLANNED`、占位 UI、预留注释和示意结构。
 - 路径包含空格和中文，PowerShell 命令优先使用 `-LiteralPath`，文件编辑优先用 `apply_patch`。
 

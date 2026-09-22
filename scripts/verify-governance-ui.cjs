@@ -37,7 +37,7 @@ async function main(){
     await page.goto(origin+'/#/overview');
     await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
     await expect(page.getByRole('heading',{name:'功能清单',exact:true})).toBeVisible();
-    await expect(page.getByText('已接入表示功能已连接数据或报告接口',{exact:false})).toBeVisible();
+    await expect(page.getByText('已接入只表示该页连上了接口',{exact:false})).toBeVisible();
     await expect(page.getByText('谨慎做多 · 试仓 30%',{exact:true})).not.toBeVisible();
     if(viewport.width<681)await page.getByRole('button',{name:'导航',exact:true}).click();
     const planning=page.getByRole('button',{name:'规划与演示',exact:false});
@@ -100,13 +100,18 @@ async function main(){
     if(url.origin===origin)return route.continue();
     if(url.href.includes('lightweight-charts'))return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(libraryPath,'utf8')});
     if(route.request().resourceType()==='script')return route.fulfill({contentType:'text/javascript',body:''});
+    if(url.pathname==='/api/desk/chart' || url.pathname.startsWith('/api/desk/')){
+      if(failKlines)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'fixture service paused'})});
+      return route.fulfill({contentType:'application/json',body:JSON.stringify({
+        schemaVersion:'2026-09-21.1', asKnownMode:'system_observed', scope:'chart',
+        pricePathAvailable:false, tradingNarrative:false, series:[], coverage:{available:0,returned:0,truncated:false,needed:480},
+        gap:{reason:'stale_bootstrap'}, quality:{status:'fail',reason:'stale_bootstrap'},
+        collectionStale:true, sourceStale:true, instrumentId:null, venue:null
+      })});
+    }
     if(url.pathname==='/api/d1/klines'){
       if(failKlines)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'fixture service paused'})});
-      const interval=url.searchParams.get('interval');
-      const step={'5m':300000,'15m':900000,'1h':3600000,'4h':14400000,'1d':86400000,'3d':259200000,'1w':604800000}[interval]||300000;
-      const latestT=Math.floor(NOW/step)*step;
-      const klines=Array.from({length:200},(_,n)=>({t:latestT-(199-n)*step,o:64000+n*2,h:64020+n*2,l:63980+n*2,c:64010+n*2,v:100+n}));
-      return route.fulfill({contentType:'application/json',headers:{'X-Data-Source':'cloudflare-d1','Access-Control-Expose-Headers':'X-Data-Source'},body:JSON.stringify({symbol:'BTCUSDT',interval,latestT,count:klines.length,klines})});
+      return route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({error:'analysis path must use /api/desk'})});
     }
     return route.fulfill({contentType:'application/json',body:JSON.stringify({price:'64408',ok:true})});
   });
@@ -116,57 +121,21 @@ async function main(){
   await page.clock.install({time:NOW});
   await page.goto(origin+'/#/chart');
   await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
-  await expect(page.locator('#chart-status')).toContainText('D1 末根开盘');
-  await expect.poll(()=>page.evaluate(()=>chartOhlcv.length)).toBe(200);
+  await expect(page.locator('#chart-status')).toContainText('主图停机');
+  await expect(page.locator('#chart-empty-desk')).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>chartOhlcv.length)).toBe(0);
   await expect(page.locator('#breadcrumb')).toContainText('行情工作台');
-  await expect(page.getByTestId('feature-notice')).toHaveCount(0);
-  await expect(page.getByRole('region',{name:'行情数据状态'})).toHaveCount(0);
+  await expect(page.locator('#chart-primary-title')).toContainText('—');
   await expect(page.locator('#outlet').getByRole('link',{name:'环境评估员',exact:false})).toHaveCount(0);
-  await expect(page.locator('#outlet').getByRole('link',{name:'盘口流动性官',exact:false})).toHaveCount(0);
-  await expect(page.getByRole('button',{name:'同步D1',exact:true})).toBeVisible();
-  await expect(page.locator('#chart-container canvas').first()).toBeVisible();
-  await expect(page.locator('vite-error-overlay')).toHaveCount(0);
   const socketUrls=await page.evaluate(()=>window.__fixtureSockets.map(socket=>socket.url));
-  if(!socketUrls.some(url=>url.includes('/market/ws/btcusdt@aggTrade'))||!socketUrls.some(url=>url.includes('/market/ws/btcusdt@kline_')))throw Error('migrated futures streams missing');
-  if(socketUrls.some(url=>url.includes('fstream.binance.com/ws/')||url.includes('stream.binance.com:9443')))throw Error('legacy or spot stream used by futures chart');
-  results.push({id:'UI-BINANCE-WS-01',status:'PASS',flow:'行情启动 → 新market成交与K线订阅 → 不使用旧地址或现货推送'});
-  results.push({id:'UI-CHART-CLEAN-DESKTOP',status:'PASS',flow:'行情 → 首屏 → 两条噪音横幅移除，图表、周期和动态状态保留'});
-  await page.getByRole('button',{name:'15m',exact:true}).click();
-  await expect(page.locator('#chart-status')).toContainText('BTCUSDT · 15m');
-  await expect.poll(()=>page.evaluate(()=>chartD1Meta.interval)).toBe('15m');
-  results.push({id:'UI-CHART-01',status:'PASS',flow:'行情 → 切换周期 → 主图与 D1 元数据一致'});
-  const d1Before=await page.evaluate(()=>chartD1Meta.latestT);
-  await page.evaluate(()=>{
-    const socket=window.__fixtureSockets.findLast(x=>x.url.includes('kline_15m')&&x.readyState===1);
-    if(!socket)throw Error('fixture socket absent');
-    socket.onmessage({data:JSON.stringify({k:{t:chartD1Meta.latestT+900000,o:'64408',h:'64430',l:'64400',c:'64420',v:'2'}})});
-  });
-  await expect.poll(()=>page.evaluate(()=>chartOhlcv.length)).toBe(201);
-  if(await page.evaluate(()=>chartD1Meta.latestT)!==d1Before)throw Error('WS overwrote D1 timestamp');
-  await page.screenshot({path:path.join(OUT,'chart-1440.png'),fullPage:true});
-  if(chartErrors.length||consoleErrors.length)throw Error('normal chart errors '+[...chartErrors,...consoleErrors].join(';'));
-  results.push({id:'UI-CHART-02',status:'PASS',flow:'WS 新 K 线 → 图表增长 → D1 时效不被改写'});
-  await page.setViewportSize({width:390,height:844});
-  await expect(page.getByTestId('feature-notice')).toHaveCount(0);
-  await expect(page.getByRole('region',{name:'行情数据状态'})).toHaveCount(0);
-  await page.getByRole('button',{name:'5m',exact:true}).click();
-  await expect(page.locator('#chart-status')).toContainText('BTCUSDT · 5m');
-  await expect.poll(()=>page.evaluate(()=>chartD1Meta.interval)).toBe('5m');
-  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error('chart mobile horizontal overflow');
-  await page.screenshot({path:path.join(OUT,'chart-390.png'),fullPage:true});
-  results.push({id:'UI-CHART-CLEAN-MOBILE',status:'PASS',flow:'390×844 行情 → 切换5m → 周期状态一致、无横向溢出'});
-  await page.setViewportSize({width:1440,height:1000});
+  if(socketUrls.some(url=>url.includes('@kline_')||url.includes('@aggTrade')))throw Error('halted desk must not open live market sockets');
+  results.push({id:'UI-CHART-HALT',status:'PASS',flow:'主源缺失 → 全屏停机 → 不把 WS 当实时、不画 P5 混源'});
   failKlines=true;
-  await page.getByRole('button',{name:'1h',exact:true}).click();
-  await expect(page.locator('#chart-status')).toContainText('加载失败:');
-  await expect(page.locator('#chart-status')).toContainText('503');
-  if(consoleErrors.some(message=>!message.includes('503')&&!message.includes('加载图表数据失败')))throw Error('unexpected failure console '+consoleErrors.join(';'));
-  results.push({id:'UI-CHART-03',status:'PASS',flow:'服务 503 → 页面显示失败，未伪造历史行情'});
-  failKlines=false;
-  await page.getByRole('button',{name:'4h',exact:true}).click();
-  await expect(page.locator('#chart-status')).toContainText('BTCUSDT · 4h');
-  await expect.poll(()=>page.evaluate(()=>chartD1Meta && chartD1Meta.interval)).toBe('4h');
-  results.push({id:'UI-CHART-04',status:'PASS',flow:'服务恢复 → 切换周期 → 重新显示行情'});
+  await page.reload();
+  await expect(page.locator('#chart-status')).toContainText('主图停机');
+  results.push({id:'UI-CHART-03',status:'PASS',flow:'desk 失败 → 页面停机，未伪造历史行情'});
+  await page.screenshot({path:path.join(OUT,'chart-1440.png'),fullPage:true});
+  if(chartErrors.length||consoleErrors.some(message=>!message.includes('503')&&!message.includes('加载图表数据失败')&&!message.includes('主图停机')))throw Error('normal chart errors '+[...chartErrors,...consoleErrors].join(';'));
   await page.locator('#nav').getByRole('link',{name:'概览 Dashboard',exact:true}).click();
   await expect(page.getByRole('heading',{name:'功能清单',exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.__fixtureSockets.filter(s=>s.readyState!==3).length)).toBe(0);

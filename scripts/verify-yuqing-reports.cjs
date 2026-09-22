@@ -190,7 +190,8 @@ assertOk(streamingPlaceholder.status === "streaming" && streamingPlaceholder.kin
 assertOk(worker.includes("await insertYuqingReport(env.YUQING_DB, progressPayload)") && worker.includes("reportId: progressPayload.id"), "worker persists streaming placeholder before final daily report");
 assertOk(worker.includes("kind: SENTIMENT_ANALYSIS_KIND"), "legacy report endpoint maps to sentiment_analysis");
 assertOk(worker.includes("assetMoves") && worker.includes("fetchAssetMoveRows(env, finQuotes, btc)"), "worker builds multi-window asset moves");
-assertOk(worker.includes("/api/d1/klines?symbol=BTCUSDT&interval=1h&limit=192&sync=0"), "worker uses enough BTC 1h D1 klines for 7d window");
+assertOk(worker.includes("/api/desk/chart?interval=1h"), "worker reads BTC 1h from desk chart, not P5 klines");
+assertOk(!worker.includes("/api/ai/derivatives-snapshot"), "worker does not fetch legacy derivatives snapshot for analysis");
 assertOk(temperature.includes("24h=短线冲击") && temperature.includes("3d=短线延续") && temperature.includes("7d=背景趋势"), "temperature prompt defines multi-window semantics");
 assertOk(temperature.includes("assets") && temperature.includes("normalizeTemperatureAssets"), "temperature payload exposes asset move rows");
 assertOk(shijianIndex.includes("buildDailyGithubToolsPrompt") && shijianIndex.includes("./github-tools.js"), "shijian exports github tools module");

@@ -1,5 +1,7 @@
 # 币安连接诊断与修复（2026-09-16）
 
+**2026-09-21**：旧 WS 入口退役的修复仍有效；当时「迁 `/market` 不解 CF 403」也被后来直连五域持续 403 证实。永续 REST/fstream 现经东京反代，见 [接线现状](binance-egress-vps-cutover-2026-09-21.md)。下文采样与「不购买服务器」是 09-16 边界。
+
 ## 可复核证据与边界
 
 - 官方[迁移公告](https://www.binance.com/en/support/announcement/detail/ebf9b0aa9eca4ff3804eef6fb09ba32a)说明旧USDⓈ-M WebSocket入口于2026-04-23退役。新入口按public、market、private区分。

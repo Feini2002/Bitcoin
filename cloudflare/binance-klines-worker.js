@@ -1,25 +1,31 @@
 import { accessCorsHeaders, requireCloudflareAccess } from "./access-auth.js";
 import { handleFinance } from "./finance/gateway.mjs";
+import { handleDesk } from "./finance/desk.mjs";
+import { persistLiveKlineBar, persistLiveSnapshot, pruneExpiredDatasets } from "./finance/dataset-store.mjs";
+import { syncFinanceDatasetsIfDue } from "./finance/scheduler.mjs";
+import { KlineLiveCollector, bindKlineLiveHooks } from "./kline-live-collector.mjs";
+import { egressRequestHeaders, parseOriginOnly, toWebSocketUrl, openEgressWebSocket, parseOriginBase, joinEgress } from "./finance/egress.mjs";
+
+export { KlineLiveCollector };
 
 /**
  * Cloudflare Worker：币安 U 本位永续 K 线的云端数据层
  *
  * 三件事：
- *   1) Cron（每 5 分钟）按需增量拉取 5m/15m/1h/4h/1d/3d/1w 的 K 线，入库 D1；
+ *   1) Durable Object 订阅币安 K 线流，未收盘/收盘秒级写入 D1；Cron 每分钟全周期 REST 尾部备份；
  *      每个 (symbol, interval) 只保留最新 6000 根。
  *   2) 提供读接口：GET /api/d1/klines?symbol=&interval=&limit=   → 从 D1 读并返回 JSON
  *   3) 提供设置页/运维手动同步接口：POST/GET /api/d1/sync?symbol=&interval=(all|5m,15m,...)
- *      图表页只读 /api/d1/klines?sync=0；以及向后兼容的 fapi 代理：
+ *      图表页读 /api/desk/chart；以及向后兼容的 fapi 代理：
  *      /api/binance/klines | /fapi/v1/klines | /api/binance/ticker/price
  *   4) 低权重稳定币背景：内部同步 USDT/USDC 到 D1，并合并进衍生品 payload / AI snapshot。
+ *   5) 规范数据集按来源限额自动采集（跳过停采项）。
  *
  * 重要：
  *   - K 线优先用币安数据。直连 5 个 fapi 入口重试；若全部失败，可由 env.BINANCE_FAPI_ORIGIN
  *     指向一个你自有 HTTPS 反代（仅把 /fapi/* 转发到 fapi.binance.com）。
- *   - 若币安在当前 Worker 边缘地域不可用，K 线可回退 Bybit linear 同形数据（可用
- *     KLINE_ALTERNATE_FAILOVER=0 禁用）。不返回任何演示/假数据。
- *   - 免费版 Workers Cron Triggers + D1 Free 足够使用；写入为增量（每次 2~3 行），
- *     不会超免费额度。
+ *   - 若币安在当前 Worker 边缘地域不可用，K 线分析路径默认失败，不再回退 Bybit/OKX。
+ *     运维可用 KLINE_ALTERNATE_FAILOVER=1 打开遗留对照写入，但不能当作币安主带。
  */
 
 const BINANCE_HOSTS = [
@@ -50,9 +56,12 @@ const FOOTPRINT_BACKFILL_MAX_WINDOWS = 40;
 const FOOTPRINT_FETCH_LIMIT = 1000;
 /** Cron / 手动 footprint 单次最多拉取的 aggTrades 页数（每页 FOOTPRINT_FETCH_LIMIT）；增大以追上 last_trade_id 积压，避免前台「延迟/503」误判。*/
 const FOOTPRINT_MAX_FETCH_PAGES = 14;
+/** USDⓈ-M aggTrades fromId 只能落在近 2 天。留 2 小时余量，过期则改拉最近成交，不把旧游标一直打成 -4166。*/
+const FOOTPRINT_FROMID_MAX_AGE_MS = 46 * 60 * 60 * 1000;
 const FOOTPRINT_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
-const FOOTPRINT_READ_CACHE_SECONDS = 20;
+const FOOTPRINT_READ_CACHE_SECONDS = 4;
 const MAX_KLINES_PER_INTERVAL = 6000;
+const LIVE_TAPE_FRESH_MS = 90 * 1000;
 const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
 const FETCH_TIMEOUT_MS = 8000;
@@ -60,11 +69,12 @@ const FETCH_TIMEOUT_MS = 8000;
 const FETCH_TIMEOUT_LLM_MS = 118_000;
 const GEMINI_ORIGIN = "https://generativelanguage.googleapis.com";
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
-const WORKER_BUILD = "btc-worker/3.7.11-klines6000";
+const WORKER_BUILD = "btc-worker/3.9.7-collect";
+const KLINE_HISTORY_FLOOR_MS = 1567382400000;
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
-const KLINE_READ_CACHE_SECONDS = 8;
-const DERIVATIVE_READ_CACHE_SECONDS = 30;
-const LIQUIDATION_READ_CACHE_SECONDS = 20;
+const KLINE_READ_CACHE_SECONDS = 1;
+const DERIVATIVE_READ_CACHE_SECONDS = 8;
+const LIQUIDATION_READ_CACHE_SECONDS = 4;
 const STATUS_READ_CACHE_SECONDS = 30;
 const LIQUIDATION_SYMBOL = DEFAULT_SYMBOL;
 const LIQUIDATION_BUCKET_MS = 5 * 60 * 1000;
@@ -76,7 +86,7 @@ const LIQUIDATION_RECONNECT_MS = 3500;
 const LIQUIDATION_ALARM_MS = 60_000;
 const LIQUIDATION_HEALTH_FRESH_MS = 2 * 60 * 1000;
 const DERIVATIVE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
-const DERIVATIVE_FAST_SYNC_MIN_MS = 15 * 60 * 1000;
+const DERIVATIVE_FAST_SYNC_MIN_MS = 60 * 1000;
 const DERIVATIVE_SLOW_SYNC_MIN_MS = 60 * 60 * 1000;
 const DERIVATIVE_STALE_RETRY_GRACE_MS = 10 * 60 * 1000;
 const DERIVATIVE_STALE_RETRY_MIN_ATTEMPT_GAP_MS = 12 * 60 * 1000;
@@ -211,11 +221,87 @@ function parseCustomFapiOrigin(raw) {
   }
 }
 
+function binanceFstreamWsUrl(env, pathAndQuery) {
+  const origin = parseCustomFapiOrigin(env && env.BINANCE_FSTREAM_ORIGIN);
+  const path = String(pathAndQuery || "");
+  const p = path.startsWith("/") ? path : `/${path}`;
+  if (!origin) return `wss://fstream.binance.com${p}`;
+  return origin.replace(/^https:/i, "wss:").replace(/^http:/i, "ws:") + p;
+}
+
+async function openBinanceCollectorSocket(env, url) {
+  const origin = parseCustomFapiOrigin(env && env.BINANCE_FSTREAM_ORIGIN);
+  if (!origin) return new WebSocket(url);
+  const httpsUrl = String(url).replace(/^wss:/i, "https:").replace(/^ws:/i, "http:");
+  const headers = { Upgrade: "websocket" };
+  const secret = env && env.EGRESS_PROXY_SECRET;
+  if (secret) headers["X-Bitdesk-Egress-Secret"] = String(secret);
+  const resp = await fetch(httpsUrl, { headers });
+  const ws = resp.webSocket;
+  if (!ws) {
+    const err = new Error(`websocket handshake ${resp.status}`);
+    err.status = resp.status;
+    throw err;
+  }
+  ws.accept();
+  return ws;
+}
+
+function parseCustomOriginBase(raw) {
+  if (raw == null || String(raw).trim() === "") return null;
+  try {
+    const u = new URL(String(raw).trim());
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    if (u.username || u.password) return null;
+    u.hash = "";
+    u.search = "";
+    const path = u.pathname === "/" ? "" : u.pathname.replace(/\/$/, "");
+    return u.origin + path;
+  } catch {
+    return null;
+  }
+}
+
+function bybitStreamWsUrl(env) {
+  const base = parseCustomOriginBase(env && env.BYBIT_STREAM_ORIGIN);
+  if (!base) return "wss://stream.bybit.com/v5/public/linear";
+  const httpsBase = String(base).replace(/^ws/i, "http");
+  const joined = httpsBase.replace(/\/$/, "") + "/v5/public/linear";
+  return joined.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+}
+
+async function openBybitCollectorSocket(env, url) {
+  const origin = parseCustomOriginBase(env && env.BYBIT_STREAM_ORIGIN);
+  if (!origin) return new WebSocket(url);
+  const httpsUrl = String(url).replace(/^wss:/i, "https:").replace(/^ws:/i, "http:");
+  const headers = { Upgrade: "websocket" };
+  const secret = env && env.EGRESS_PROXY_SECRET;
+  if (secret) headers["X-Bitdesk-Egress-Secret"] = String(secret);
+  const resp = await fetch(httpsUrl, { headers });
+  const ws = resp.webSocket;
+  if (!ws) {
+    const err = new Error(`websocket handshake ${resp.status}`);
+    err.status = resp.status;
+    throw err;
+  }
+  ws.accept();
+  return ws;
+}
+
 async function fetchWithTimeout(u, opts, timeoutMs = FETCH_TIMEOUT_MS) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    return await fetch(u, { ...(opts || {}), signal: ctrl.signal });
+    const rest = { ...(opts || {}) };
+    const env = rest.env;
+    delete rest.env;
+    const headers = new Headers(rest.headers || undefined);
+    if (env) {
+      const extra = egressRequestHeaders(env, String(u));
+      for (const [key, value] of Object.entries(extra)) headers.set(key, value);
+    }
+    rest.headers = headers;
+    return await fetch(u, { ...rest, signal: ctrl.signal });
   } finally {
     clearTimeout(t);
   }
@@ -330,8 +416,8 @@ function roundToTick(price, tick) {
 }
 
 function klineAlternateFailoverEnabled(env) {
-  const raw = env && env.KLINE_ALTERNATE_FAILOVER != null ? String(env.KLINE_ALTERNATE_FAILOVER).trim() : "1";
-  return !/^0|false$/i.test(raw);
+  const raw = env && env.KLINE_ALTERNATE_FAILOVER != null ? String(env.KLINE_ALTERNATE_FAILOVER).trim() : "0";
+  return /^(1|true|yes)$/i.test(raw);
 }
 
 function mapIntervalToBybit(interval) {
@@ -500,6 +586,7 @@ async function fetchKlinesFromBinance(env, { symbol, interval, limit, startTime,
     try { host = new URL(origin).host; } catch (_) {}
     try {
       const r = await fetchWithTimeout(target, {
+        env,
         headers: {
           "User-Agent": "BitDesk-CF-Worker/3.0 (KlinesSync)",
           Accept: "application/json",
@@ -536,7 +623,7 @@ async function fetchKlinesFromBinance(env, { symbol, interval, limit, startTime,
   return { ok: false, chain, error: firstErr.error || "all failed", status: firstErr.status };
 }
 
-async function fetchKlinesFromBybit(_env, { symbol, interval, limit, startTime, endTime }) {
+async function fetchKlinesFromBybit(env, { symbol, interval, limit, startTime, endTime }) {
   const p = new URLSearchParams();
   p.set("category", "linear");
   p.set("symbol", symbol);
@@ -545,9 +632,11 @@ async function fetchKlinesFromBybit(_env, { symbol, interval, limit, startTime, 
   if (startTime != null) p.set("start", String(startTime));
   if (endTime != null) p.set("end", String(endTime));
 
-  const target = "https://api.bybit.com/v5/market/kline?" + p.toString();
+  const base = parseOriginBase(env && env.BYBIT_API_ORIGIN) || "https://api.bybit.com";
+  const target = joinEgress(base, "/v5/market/kline?" + p.toString());
   try {
     const r = await fetchWithTimeout(target, {
+      env,
       headers: {
         "User-Agent": "BitDesk-CF-Worker/3.0 (KlinesBybitFailover)",
         Accept: "application/json",
@@ -581,7 +670,7 @@ async function fetchKlinesFromBybit(_env, { symbol, interval, limit, startTime, 
   }
 }
 
-async function fetchKlinesFromOkx(_env, { symbol, interval, limit, startTime, endTime }) {
+async function fetchKlinesFromOkx(env, { symbol, interval, limit, startTime, endTime }) {
   const instId = mapSymbolToOkxSwap(symbol);
   if (!instId) {
     return { ok: false, chain: ["okx:unsupported-symbol"], error: `unsupported OKX symbol ${symbol}`, status: 0 };
@@ -592,9 +681,11 @@ async function fetchKlinesFromOkx(_env, { symbol, interval, limit, startTime, en
   p.set("limit", String(Math.min(300, Math.max(1, Number(limit) || 300))));
 
   if (endTime != null) p.set("after", String(Number(endTime) + 1));
-  const target = "https://www.okx.com/api/v5/market/" + (endTime != null ? "history-candles?" : "candles?") + p.toString();
+  const base = parseOriginBase(env && env.OKX_API_ORIGIN) || "https://www.okx.com";
+  const target = joinEgress(base, "/api/v5/market/" + (endTime != null ? "history-candles?" : "candles?") + p.toString());
   try {
     const r = await fetchWithTimeout(target, {
+      env,
       headers: {
         "User-Agent": "BitDesk-CF-Worker/3.7 (KlinesOkxFailover)",
         Accept: "application/json",
@@ -691,6 +782,7 @@ async function fetchAggTradesFromBinance(env, { symbol, limit, fromId, startTime
     try { host = new URL(origin).host; } catch (_) {}
     try {
       const r = await fetchWithTimeout(target, {
+        env,
         headers: {
           "User-Agent": "BitDesk-CF-Worker/3.0 (FootprintSync)",
           Accept: "application/json",
@@ -726,17 +818,19 @@ async function d1QueryLatestMeta(env, symbol, interval) {
     "SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1"
   ).bind(symbol, interval).first();
   const status = await env.DB.prepare(
-    "SELECT last_t, last_count FROM sync_status WHERE symbol = ?1 AND interval = ?2"
+    "SELECT last_t, last_count, last_run, last_ok FROM sync_status WHERE symbol = ?1 AND interval = ?2"
   ).bind(symbol, interval).first();
   return {
     maxT: Number(latest?.t || status?.last_t || 0),
     count: Number(status?.last_count || (latest ? 1 : 0)),
     hasRows: !!latest,
+    lastRun: Number(status?.last_run || 0),
+    lastOk: Number(status?.last_ok || 0) === 1,
   };
 }
 
 /** 批量 INSERT OR REPLACE 后按 6000 根上限 prune */
-async function persistKlines(env, symbol, interval, rawKlines) {
+async function persistKlines(env, symbol, interval, rawKlines, options = {}) {
   if (!Array.isArray(rawKlines) || rawKlines.length === 0) return { inserted: 0, pruned: 0 };
 
   const insertSql =
@@ -761,16 +855,37 @@ async function persistKlines(env, symbol, interval, rawKlines) {
     await env.DB.batch(stmts.slice(i, i + CHUNK));
   }
 
-  const latestT = rawKlines.reduce((max, row) => Math.max(max, Number(row && row[0]) || 0), 0);
-  let pruned = 0;
-  if (latestT > 0) {
-    const res = await env.DB.prepare(
-      "DELETE FROM klines WHERE symbol = ?1 AND interval = ?2 AND t < (SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1 OFFSET ?3)"
-    ).bind(symbol, interval, MAX_KLINES_PER_INTERVAL - 1).run();
-    pruned = res?.meta?.changes || 0;
-  }
-
+  const pruned = options.skipPrune ? 0 : await pruneKlinesCap(env, symbol, interval);
   return { inserted: stmts.length, pruned };
+}
+
+async function pruneKlinesCap(env, symbol, interval) {
+  const res = await env.DB.prepare(
+    "DELETE FROM klines WHERE symbol = ?1 AND interval = ?2 AND t < (SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1 OFFSET ?3)"
+  ).bind(symbol, interval, MAX_KLINES_PER_INTERVAL - 1).run();
+  return Number(res?.meta?.changes) || 0;
+}
+
+async function pruneExpiredStorage(env) {
+  const out = { klines: 0, datasets: 0 };
+  if (!env || !env.DB) return out;
+  for (const symbol of getConfiguredSymbols(env)) {
+    for (const interval of SUPPORTED_INTERVALS) {
+      try {
+        out.klines += await pruneKlinesCap(env, symbol, interval);
+      } catch (_) {}
+    }
+  }
+  try {
+    out.datasets = await pruneExpiredDatasets(env.DB);
+  } catch (_) {}
+  return out;
+}
+
+function shouldPreserveLiveTapeStatus(meta, interval, now = Date.now()) {
+  const liveFresh = !!(meta && meta.lastOk && Number(meta.lastRun) > 0 && now - Number(meta.lastRun) < LIVE_TAPE_FRESH_MS);
+  const tailFresh = !isKlineTailStaleForRead(meta && meta.maxT, interval, now);
+  return { liveFresh, tailFresh, preserve: liveFresh || tailFresh };
 }
 
 async function updateSyncStatus(env, symbol, interval, { ok, inserted, latestT, error }) {
@@ -852,13 +967,16 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
       got.error || "fetch failed",
       got.chain && got.chain.length ? `chain=${got.chain.join(" > ")}` : "",
     ].filter(Boolean).join(" | ");
-    if (!bulkFill && !isKlineTailStaleForRead(meta.maxT, interval)) {
-      await updateSyncStatus(env, symbol, interval, { ok: true, inserted: 0, latestT: meta.maxT });
+    const preserve = shouldPreserveLiveTapeStatus(meta, interval);
+    if (!bulkFill && preserve.preserve) {
+      if (!preserve.liveFresh) {
+        await updateSyncStatus(env, symbol, interval, { ok: true, inserted: 0, latestT: meta.maxT });
+      }
       return {
         ok: true,
         symbol,
         interval,
-        skippedBecause: "d1_tail_fresh_upstream_unavailable",
+        skippedBecause: preserve.liveFresh ? "live_tape_fresh_upstream_unavailable" : "d1_tail_fresh_upstream_unavailable",
         latestT: meta.maxT,
         warning: detail,
         chain: got.chain,
@@ -899,6 +1017,35 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
     source: got.source || "binance-fapi",
     primaryStatus: got.primaryStatus || null,
   };
+}
+
+/** One older page for daily/3d while the 6000 cap and listing floor still have room. */
+async function extendKlineHistoryOnePage(env, symbol, interval) {
+  if (interval !== "1d" && interval !== "3d") return { ok: true, skipped: true, reason: "interval" };
+  const oldest = await env.DB.prepare(
+    "SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t ASC LIMIT 1"
+  ).bind(symbol, interval).first();
+  const counted = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM klines WHERE symbol = ?1 AND interval = ?2"
+  ).bind(symbol, interval).first();
+  const minT = Number(oldest && oldest.t);
+  const count = Number(counted && counted.n) || 0;
+  if (!Number.isFinite(minT) || minT <= 0 || count >= MAX_KLINES_PER_INTERVAL || minT <= KLINE_HISTORY_FLOOR_MS) {
+    return { ok: true, skipped: true, reason: count >= MAX_KLINES_PER_INTERVAL ? "cap" : "floor", minT, count };
+  }
+  const got = await fetchKlinesFromBinance(env, {
+    symbol,
+    interval: "1d",
+    limit: 1000,
+    endTime: minT - 1,
+  });
+  if (!got.ok) return { ok: false, symbol, interval, error: got.error || "history extend failed" };
+  const older = (got.klines || []).filter((row) => Number(row[0]) < minT);
+  if (!older.length) return { ok: true, skipped: true, reason: "exchange_start", minT, count };
+  const rows = interval === "3d" ? bybitListToBinanceKlines(older, "3d").filter((row) => Number(row[0]) < minT) : older;
+  if (!rows.length) return { ok: true, skipped: true, reason: "exchange_start", minT, count };
+  const persist = await persistKlines(env, symbol, interval, rows);
+  return { ok: true, symbol, interval, inserted: persist.inserted, pruned: persist.pruned, minT, count };
 }
 
 function emptyFootprintBar(t, price) {
@@ -1012,6 +1159,18 @@ async function readFootprintStatus(env, symbol) {
     lastTradeId: Number(row?.last_trade_id || 0),
     lastTradeTime: Number(row?.last_trade_time || 0),
   };
+}
+
+function isFootprintFromIdStale(lastTradeTime, now = Date.now()) {
+  const t = Number(lastTradeTime || 0);
+  if (!Number.isFinite(t) || t <= 0) return false;
+  return now - t > FOOTPRINT_FROMID_MAX_AGE_MS;
+}
+
+function isFootprintAggTradesWindowRestricted(error) {
+  const parsed = parseBinanceApiBody(error);
+  if (Number(parsed.code) === -4166) return true;
+  return /restricted to recent 2 days/i.test(`${parsed.msg || ""} ${parsed.condensed || ""}`);
 }
 
 function footprintReadReferenceTime(status, latestT, now = Date.now()) {
@@ -1137,6 +1296,8 @@ async function syncFootprintOne(env, symbol) {
   let lastTradeId = status.lastTradeId;
   let lastTradeTime = status.lastTradeTime;
   let host = "";
+  let recoveredStaleCursor = isFootprintFromIdStale(lastTradeTime);
+  if (recoveredStaleCursor) nextFromId = null;
 
   for (let page = 0; page < FOOTPRINT_MAX_FETCH_PAGES; page++) {
     const got = await fetchAggTradesFromBinance(env, {
@@ -1144,10 +1305,16 @@ async function syncFootprintOne(env, symbol) {
       limit: FOOTPRINT_FETCH_LIMIT,
       fromId: nextFromId,
     });
+    if (!got.ok && nextFromId != null && isFootprintAggTradesWindowRestricted(got.error)) {
+      nextFromId = null;
+      recoveredStaleCursor = true;
+      page -= 1;
+      continue;
+    }
     if (!got.ok) {
       const err = got.error || "aggTrades fetch failed";
       await updateFootprintStatus(env, symbol, { ok: false, lastTradeId, lastTradeTime, count: allTrades.length, error: err });
-      return { ok: false, symbol, error: err, chain: got.chain };
+      return { ok: false, symbol, error: err, chain: got.chain, recoveredStaleCursor };
     }
     host = got.host || host;
     const fresh = got.trades
@@ -1164,10 +1331,11 @@ async function syncFootprintOne(env, symbol) {
 
   if (!allTrades.length) {
     await updateFootprintStatus(env, symbol, { ok: true, lastTradeId, lastTradeTime, count: 0 });
-    const out = { ok: true, symbol, fetched: 0, written: 0, pruned: 0, lastTradeId, host };
-    if (Number(before?.cnt || 0) === 0) {
+    const out = { ok: true, symbol, fetched: 0, written: 0, pruned: 0, lastTradeId, host, recoveredStaleCursor };
+    if (Number(before?.cnt || 0) === 0 || recoveredStaleCursor) {
       out.bootstrapBackfill = await syncFootprintBackfill(env, symbol, {
         windows: FOOTPRINT_BACKFILL_DEFAULT_WINDOWS,
+        endTime: Date.now(),
       });
     }
     return out;
@@ -1192,10 +1360,12 @@ async function syncFootprintOne(env, symbol) {
     lastTradeId,
     lastTradeTime,
     host,
+    recoveredStaleCursor,
   };
-  if (Number(before?.cnt || 0) === 0) {
+  if (Number(before?.cnt || 0) === 0 || recoveredStaleCursor) {
     out.bootstrapBackfill = await syncFootprintBackfill(env, symbol, {
       windows: FOOTPRINT_BACKFILL_DEFAULT_WINDOWS,
+      endTime: Date.now(),
     });
   }
   return out;
@@ -1321,30 +1491,10 @@ function mergeFootprintRows(rows, interval, tickSize) {
  * ============================================================= */
 
 /**
- * 判断当前 UTC 时间应同步哪些周期。
- * - 5m: 每 5 分钟
- * - 15m: 每 15 分钟
- * - 1h: 每小时整点
- * - 4h: 每 4 小时整点 (UTC 0/4/8/12/16/20)
- * - 1d: 每天 UTC 00:00
- * - 3d: 每天 UTC 00:00（相对 3 日 K 线的增量极小，多拉一次无伤大雅，确保不会错过关闭时点）
- * - 1w: 每周一 UTC 00:00（Binance 周线在此时关闭）
+ * Cron 每分钟同步全部周期尾部（含未收盘）。亚分钟由 KlineLiveCollector 负责。
  */
-function intervalsDueAt(date) {
-  const min = date.getUTCMinutes();
-  const hour = date.getUTCHours();
-  const dayOfWeek = date.getUTCDay();
-  const due = [];
-  if (min % 5 === 0) due.push("5m");
-  if (min % 15 === 0) due.push("15m");
-  if (min === 0) due.push("1h");
-  if (min === 0 && hour % 4 === 0) due.push("4h");
-  if (min === 0 && hour === 0) {
-    due.push("1d");
-    due.push("3d");
-    if (dayOfWeek === 1) due.push("1w");
-  }
-  return due;
+function intervalsDueAt(_date) {
+  return SUPPORTED_INTERVALS.slice();
 }
 
 function isKlineTailStaleForRead(latestT, interval, now = Date.now()) {
@@ -1518,6 +1668,9 @@ function classifyBinanceFapiFailure(httpStatus, bodyText) {
       return { kind: "blacklisted_ip", banUntilMs: p.banUntilMs, binanceCode: p.code };
     }
     if (st === 429 || st === 418) return { kind: "rate_limited", banUntilMs: p.banUntilMs, binanceCode: p.code };
+  }
+  if (Number(p.code) === -4166 || /restricted to recent 2 days/i.test(msgAll)) {
+    return { kind: "search_window_restricted", banUntilMs: null, binanceCode: p.code };
   }
   if (st === 451) return { kind: "geo_restricted", banUntilMs: null, binanceCode: p.code };
   if (st === 429) return { kind: "rate_limited", banUntilMs: p.banUntilMs, binanceCode: p.code };
@@ -1906,7 +2059,7 @@ async function derivativeWarmBinanceCustomPing(env) {
   const target = `${String(customOrigin).replace(/\/$/, "")}/fapi/v1/ping`;
   const hk = "binance_custom_origin";
   try {
-    const r = await fetchWithTimeout(target, { headers: { Accept: "*/*", "User-Agent": "BitDesk-CF-Worker/3.7 (DerivativePing)" } });
+    const r = await fetchWithTimeout(target, { env, headers: { Accept: "*/*", "User-Agent": "BitDesk-CF-Worker/3.7 (DerivativePing)" } });
     if (!r.ok) {
       const msg = `${r.status}:${(await r.text().catch(() => "")).slice(0, 120)}`;
       await finalizeDerivativeUpstreamHealth(env, hk, {
@@ -1936,7 +2089,7 @@ async function pingBinanceFapiEndpoints(env, label) {
     const target = `${String(origin).replace(/\/$/, "")}/fapi/v1/ping`;
     const t = Date.now();
     try {
-      const r = await fetchWithTimeout(target, { headers: { Accept: "*/*", "User-Agent": `BitDesk-CF-Worker/3.7 (${label || "DerivedPing"}-${tag})` } });
+      const r = await fetchWithTimeout(target, { env, headers: { Accept: "*/*", "User-Agent": `BitDesk-CF-Worker/3.7 (${label || "DerivedPing"}-${tag})` } });
       const ok = !!r.ok;
       return { origin: origin, tag, ms: Date.now() - t, ok, status: r.status };
     } catch (e) {
@@ -2034,6 +2187,7 @@ async function fetchBinanceFapiJson(env, pathname, params, label, derivativeSync
     try { host = new URL(origin).host; } catch (_) {}
     try {
       const r = await fetchWithTimeout(target, {
+        env,
         headers: {
           "User-Agent": `BitDesk-CF-Worker/3.0 (${label || "DerivativesSync"})`,
           Accept: "application/json",
@@ -2120,9 +2274,11 @@ async function fetchBinanceFapiJson(env, pathname, params, label, derivativeSync
 const YAHOO_DERIV_SOURCE_KEY = "yahoo_side_channel";
 
 /** Bybit Linear 公开市场 ticker：仅语义接近的 snapshot 回填（Funding 当前值 + Open Interest）。 */
-async function fetchBybitLinearTickerSnapshot(normalizedSymbol) {
-  const u = `https://api.bybit.com/v5/market/tickers?category=linear&symbol=${encodeURIComponent(normalizedSymbol)}`;
+async function fetchBybitLinearTickerSnapshot(env, normalizedSymbol) {
+  const base = parseOriginBase(env && env.BYBIT_API_ORIGIN) || "https://api.bybit.com";
+  const u = joinEgress(base, `/v5/market/tickers?category=linear&symbol=${encodeURIComponent(normalizedSymbol)}`);
   const r = await fetchWithTimeout(u, {
+    env,
     headers: {
       "User-Agent": "BitDesk-CF-Worker/3.0 (BybitDerivFallback)",
       Accept: "application/json",
@@ -2973,12 +3129,12 @@ async function syncDerivativesOne(env, symbol, opts = {}) {
     }
   }
 
-  /** Bybit Funding/OI 兜底 */
-  if (fg.includeFast && !opts.disableBybitLinearFallback && (!fastFundingSnapOk || !fastOiSnapOk)) {
+  /** Bybit Funding/OI 仅在显式打开时写入同名 metric；分析路径默认失败。 */
+  if (fg.includeFast && opts.enableBybitLinearFallback === true && (!fastFundingSnapOk || !fastOiSnapOk)) {
     const restrictive = shouldUseBybitDerivativeFallback(metricUpstreamKindByMetric.values(), firstErrorByMetric.values());
     if (restrictive) {
       try {
-        const wb = await fetchBybitLinearTickerSnapshot(normalizedSymbol);
+        const wb = await fetchBybitLinearTickerSnapshot(env, normalizedSymbol);
         if (wb.ok) {
           if (fg.includeHourly) {
             for (const task of [
@@ -2986,7 +3142,7 @@ async function syncDerivativesOne(env, symbol, opts = {}) {
               { metric: "funding_binance", path: "funding/history", query: "limit=100", time: "fundingRateTimestamp", value: "fundingRate" },
             ]) {
               try {
-                const response = await fetchWithTimeout("https://api.bybit.com/v5/market/" + task.path + "?category=linear&symbol=" + normalizedSymbol + "&" + task.query, { headers: { Accept: "application/json" } });
+                const response = await fetchWithTimeout(joinEgress(parseOriginBase(env && env.BYBIT_API_ORIGIN) || "https://api.bybit.com", "/v5/market/" + task.path + "?category=linear&symbol=" + normalizedSymbol + "&" + task.query), { env, headers: { Accept: "application/json" } });
                 const data = await response.json();
                 if (!response.ok || Number(data.retCode) !== 0 || !Array.isArray(data.result?.list)) throw new Error("Bybit history unavailable");
                 for (const row of data.result.list) points.push(derivativePoint(normalizedSymbol, task.metric, Number(row[task.time]), Number(row[task.value]), "bybit-" + task.path.replace("/", "-"), {}));
@@ -3878,108 +4034,32 @@ async function handleDerivativesStatus(_request, env, url) {
   }, 200, { "Cache-Control": "no-store" });
 }
 
-async function handleDerivativesSnapshot(_request, env, url) {
-  if (!env.DB) return json({ error: "D1 binding missing" }, 500);
-  const symbol = String(url.searchParams.get("symbol") || DEFAULT_SYMBOL).toUpperCase();
-  const profile = String(url.searchParams.get("profile") || "current");
-  const range = String(url.searchParams.get("range") || "30d");
-  const payload = await readDerivativesPayload(env, symbol, range);
-  /** @type {any} */
-  const compact = buildCompactDerivativesSnapshot(payload, profile);
-  const wantGeminiSummary = String(url.searchParams.get("geminiSummary") || "").trim() === "1";
-  if (wantGeminiSummary && resolveBtcLlmProvider(env) === "gemini" && getGeminiApiKey(env)) {
-    try {
-      const brief = compact.llmBrief || "";
-      const prompt =
-        "你是衍生品与市场微观结构的简报助手。基于下列结构化要点（中文），输出一段不超过 120 字的 Markdown：" +
-        "提炼杠杆情绪与宏观波动的组合含义，标注不确定性；禁止编造要点中未出现的数字。\n\n" +
-        brief;
-      compact.llmSummary = await btcGeminiGenerateText(env, prompt, { temperature: 0.12 });
-      compact.llmSummaryProvider = "gemini";
-    } catch (e) {
-      compact.llmSummaryError = String(e && e.message ? e.message : e).slice(0, 260);
-    }
-  }
-  return json(compact, 200, { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-ai-derivatives-snapshot" });
+async function handleDerivativesSnapshot(_request, _env, _url) {
+  return json({
+    legacy: true,
+    authority: "/api/desk/context",
+    schemaVersion: "2026-09-21.1",
+    asKnownMode: "system_observed",
+    pricePathAvailable: false,
+    tradingNarrative: false,
+    omitted: true,
+    reason: "legacy compact snapshot; analysis must use GET /api/desk/context",
+    llmBrief: "legacy endpoint; no crowding or dominance labels",
+  }, 200, { "Cache-Control": "no-store", "X-Data-Source": "legacy-derivatives-snapshot" });
 }
 
-async function handleAnalysisSnapshot(_request, env, url) {
-  if (!env.DB) return json({ error: "D1 binding missing" }, 500);
-  const symbol = String(url.searchParams.get("symbol") || DEFAULT_SYMBOL).toUpperCase();
-  const profile = String(url.searchParams.get("profile") || "brief").toLowerCase();
-  const klineLimit = profile === "wide" ? 240 : 120;
-  const footprintLimit = profile === "wide" ? 144 : 72;
-  const now = Date.now();
-  const since24h = now - 24 * 60 * 60 * 1000;
-
-  const { results: klineRaw } = await env.DB.prepare(
-    "SELECT t, o, h, l, c, v FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT ?3"
-  ).bind(symbol, "1h", klineLimit).all();
-  const { results: footprintRaw } = await env.DB.prepare(
-    `SELECT t, o, h, l, c, buy_vol, sell_vol, delta, volume, poc_price, last_trade_id
-       FROM footprint_bars
-      WHERE symbol = ?1 AND interval = ?2
-      ORDER BY t DESC LIMIT ?3`
-  ).bind(symbol, FOOTPRINT_BASE_INTERVAL, footprintLimit).all();
-  const { results: liquidationRaw } = await env.DB.prepare(
-    `SELECT exchange,
-            SUM(long_notional) AS longNotional,
-            SUM(short_notional) AS shortNotional,
-            SUM(long_count) AS longCount,
-            SUM(short_count) AS shortCount,
-            MAX(bucket_start) AS latestBucketStart
-       FROM liquidation_5m_buckets
-      WHERE symbol = ?1 AND bucket_start >= ?2
-      GROUP BY exchange`
-  ).bind(symbol, since24h).all();
-  const derivativeLatestTs = await readDerivativeGroupedMaxTsForSymbol(env, symbol);
-  const { results: derivativeStatusRaw } = await env.DB.prepare(
-    "SELECT symbol, metric, last_run, last_count, last_ok, last_error FROM derivative_sync_status WHERE symbol = ?1 ORDER BY metric"
-  ).bind(symbol).all();
-
-  const klines = (klineRaw || []).slice().reverse().map((r) => ({
-    t: Number(r.t), o: Number(r.o), h: Number(r.h), l: Number(r.l), c: Number(r.c), v: Number(r.v),
-  }));
-  const footprint = (footprintRaw || []).slice().reverse().map((r) => ({
-    t: Number(r.t),
-    o: Number(r.o),
-    h: Number(r.h),
-    l: Number(r.l),
-    c: Number(r.c),
-    delta: Number(r.delta || 0),
-    volume: Number(r.volume || 0),
-    buyVol: Number(r.buy_vol || 0),
-    sellVol: Number(r.sell_vol || 0),
-    pocPrice: r.poc_price == null ? null : Number(r.poc_price),
-    lastTradeId: Number(r.last_trade_id || 0),
-  }));
-
-  return json(
-    {
-      ok: true,
-      profile,
-      symbol,
-      generatedAt: now,
-      purpose: "llm-brief-input",
-      limits: { klineInterval: "1h", klineLimit, footprintInterval: FOOTPRINT_BASE_INTERVAL, footprintLimit },
-      klines,
-      footprint,
-      liquidations24h: (liquidationRaw || []).map((r) => ({
-        exchange: r.exchange,
-        longNotional: Number(r.longNotional || 0),
-        shortNotional: Number(r.shortNotional || 0),
-        longCount: Number(r.longCount || 0),
-        shortCount: Number(r.shortCount || 0),
-        latestBucketStart: Number(r.latestBucketStart || 0),
-      })),
-      derivatives: {
-        latestTsByMetric: derivativeLatestTs,
-        status: derivativeStatusRaw || [],
-      },
-    },
-    200,
-    { "Cache-Control": "no-store", "X-Data-Source": "cloudflare-d1-analysis-snapshot" }
-  );
+async function handleAnalysisSnapshot(_request, _env, _url) {
+  return json({
+    legacy: true,
+    authority: "/api/desk/chart",
+    schemaVersion: "2026-09-21.1",
+    asKnownMode: "system_observed",
+    pricePathAvailable: false,
+    tradingNarrative: false,
+    omitted: true,
+    reason: "legacy analysis snapshot; analysis must use GET /api/desk/*",
+    llmBrief: "legacy endpoint; no P5 klines, no crowding or dominance labels",
+  }, 200, { "Cache-Control": "no-store", "X-Data-Source": "legacy-analysis-snapshot" });
 }
 
 async function handleReadOnchain(_request, env, url) {
@@ -3994,7 +4074,6 @@ async function syncDerivativesIfDue(env, symbol, time) {
   if (!env.DB) return { ok: false, error: "D1 binding missing" };
   const min = time.getUTCMinutes();
   const hour = time.getUTCHours();
-  if (min % 15 !== 0) return { ok: true, skipped: true };
 
   if (min === 0) {
     const includeMacro = hour % 6 === 0;
@@ -4258,8 +4337,7 @@ async function syncOnchainOne(env, opts = {}) {
 async function syncOnchainIfDue(env, time) {
   if (!env.DB) return { ok: false, error: "D1 binding missing" };
   const m = time.getUTCMinutes();
-  const h = time.getUTCHours();
-  if (m !== 12 || h % 2 !== 0) return { ok: true, skipped: true };
+  if (m !== 0) return { ok: true, skipped: true };
   return syncOnchainOne(env, { background: true });
 }
 
@@ -4552,6 +4630,24 @@ async function handleLiquidationCollectorStatus(env) {
   return stub.fetch("https://liquidation-collector.local/status");
 }
 
+function getKlineLiveStub(env) {
+  if (!env || !env.KLINE_LIVE_COLLECTOR) return null;
+  const id = env.KLINE_LIVE_COLLECTOR.idFromName(DEFAULT_SYMBOL);
+  return env.KLINE_LIVE_COLLECTOR.get(id);
+}
+
+async function handleKlineLiveWake(env) {
+  const stub = getKlineLiveStub(env);
+  if (!stub) return json({ ok: false, error: "Durable Object binding KLINE_LIVE_COLLECTOR missing" }, 501);
+  return stub.fetch("https://kline-live.local/wake", { method: "POST" });
+}
+
+async function handleKlineLiveStatus(env) {
+  const stub = getKlineLiveStub(env);
+  if (!stub) return json({ ok: false, error: "Durable Object binding KLINE_LIVE_COLLECTOR missing" }, 501);
+  return stub.fetch("https://kline-live.local/status");
+}
+
 async function getLiquidationCollectorSnapshot(env) {
   const stub = getLiquidationCollectorStub(env);
   if (!stub) return null;
@@ -4832,6 +4928,9 @@ async function handleReadFootprint(_request, env, url, ctx) {
       availableBaseMaxT,
       lastSync: status || null,
       syncResult,
+      venue: Number(status && status.last_ok) === 1 ? "binance-usdm" : "unknown",
+      venueNote: "footprint_bars has no venue column; collector is Binance aggTrade only",
+      authoritative: Number(status && status.last_ok) === 1 && bars.length > 0,
       bars,
     }),
     {
@@ -4888,6 +4987,7 @@ async function handleProxyKlines(_request, env, url) {
     try { host = new URL(origin).host; } catch (_) {}
     try {
       const r = await fetchWithTimeout(target, {
+        env,
         headers: {
           "User-Agent": "BitDesk-CF-Worker/3.0 (KlinesProxy)",
           Accept: "application/json",
@@ -4981,6 +5081,7 @@ async function handleProxyAggTrades(_request, env, url) {
     try { host = new URL(origin).host; } catch (_) {}
     try {
       const r = await fetchWithTimeout(target, {
+        env,
         headers: {
           "User-Agent": "BitDesk-CF-Worker/3.0 (AggTradesProxy)",
           Accept: "application/json",
@@ -5049,6 +5150,7 @@ async function handleProxyTickerPrice(_request, env, url) {
     } catch (_) {}
     try {
       const r = await fetchWithTimeout(target, {
+        env,
         headers: {
           "User-Agent": "BitDesk-CF-Worker/3.0 (TickerPriceProxy)",
           Accept: "application/json",
@@ -5084,9 +5186,11 @@ async function handleProxyTickerPrice(_request, env, url) {
     }
   }
 
-  const spotUrl = `https://api.binance.com/api/v3/ticker/price?${qs}`;
+  const spotBase = parseOriginBase(env && env.BINANCE_SAPI_ORIGIN) || "https://api.binance.com";
+  const spotUrl = joinEgress(spotBase, `/api/v3/ticker/price?${qs}`);
   try {
     const r = await fetchWithTimeout(spotUrl, {
+      env,
       headers: {
         "User-Agent": "BitDesk-CF-Worker/3.0 (TickerPriceProxy)",
         Accept: "application/json",
@@ -5325,7 +5429,10 @@ export class LiquidationCollector {
     this.startedAt = 0;
     this.binanceWs = null;
     this.binanceProbeWs = null;
+    this.binanceConnecting = false;
+    this.binanceProbeConnecting = false;
     this.bybitWs = null;
+    this.bybitConnecting = false;
     this.bybitPingTimer = null;
     this.seenEventIds = new Set();
     this.seenEventQueue = [];
@@ -5380,9 +5487,9 @@ export class LiquidationCollector {
 
   async ensureStarted() {
     if (!this.startedAt) this.startedAt = Date.now();
-    if (!this.binanceWs) this.connectBinance();
-    if (!this.binanceProbeWs) this.connectBinanceProbe();
-    if (!this.bybitWs) this.connectBybit();
+    if (!this.binanceWs && !this.binanceConnecting) await this.connectBinance();
+    if (!this.binanceProbeWs && !this.binanceProbeConnecting) await this.connectBinanceProbe();
+    if (!this.bybitWs && !this.bybitConnecting) await this.connectBybit();
     this.checkStaleSources();
     await this.scheduleAlarm();
   }
@@ -5459,26 +5566,15 @@ export class LiquidationCollector {
     };
   }
 
-  connectBinance() {
-    if (typeof WebSocket === "undefined") {
-      this.sourceStatus("binance", { status: "unavailable", lastError: "WebSocket unavailable" });
-      return;
-    }
-    const url = "wss://fstream.binance.com/market/ws/!forceOrder@arr";
-    this.sourceStatus("binance", { status: "connecting", lastError: "" });
-    let ws;
-    try {
-      ws = new WebSocket(url);
-      this.binanceWs = ws;
-    } catch (e) {
-      this.sourceStatus("binance", { status: "error", lastError: e?.message || String(e) });
-      this.scheduleReconnect("binance");
-      return;
-    }
-    ws.onopen = () => {
+  bindBinanceForceOrder(ws) {
+    const origin = parseCustomFapiOrigin(this.env && this.env.BINANCE_FSTREAM_ORIGIN);
+    const markOpen = () => {
       if (ws !== this.binanceWs) return;
+      this.binanceConnecting = false;
       this.sourceStatus("binance", { status: "realtime", connectedAt: Date.now(), lastError: "" });
     };
+    if (origin) markOpen();
+    ws.onopen = markOpen;
     ws.onmessage = (ev) => {
       if (ws !== this.binanceWs) return;
       try {
@@ -5507,28 +5603,59 @@ export class LiquidationCollector {
     };
     ws.onclose = () => {
       if (ws !== this.binanceWs) return;
+      this.binanceConnecting = false;
       this.binanceWs = null;
       this.scheduleReconnect("binance");
     };
   }
 
-  connectBinanceProbe() {
-    if (typeof WebSocket === "undefined") return;
-    const sym = this.symbol.toLowerCase();
-    const url = `wss://fstream.binance.com/market/stream?streams=${sym}@aggTrade/${sym}@forceOrder`;
-    let ws;
-    try {
-      ws = new WebSocket(url);
-      this.binanceProbeWs = ws;
-    } catch (e) {
-      this.sourceStatus("binance", { status: "error", lastError: e?.message || String(e) });
-      this.scheduleReconnect("binance-probe");
-      return;
+  connectBinance() {
+    if (this.binanceWs || this.binanceConnecting) return Promise.resolve();
+    if (typeof WebSocket === "undefined") {
+      this.sourceStatus("binance", { status: "unavailable", lastError: "WebSocket unavailable" });
+      return Promise.resolve();
     }
-    ws.onopen = () => {
+    const origin = parseCustomFapiOrigin(this.env && this.env.BINANCE_FSTREAM_ORIGIN);
+    const url = binanceFstreamWsUrl(this.env, "/market/ws/!forceOrder@arr");
+    this.sourceStatus("binance", { status: "connecting", lastError: "" });
+    this.binanceConnecting = true;
+    if (!origin) {
+      try {
+        const ws = new WebSocket(url);
+        this.binanceWs = ws;
+        this.bindBinanceForceOrder(ws);
+      } catch (e) {
+        this.binanceConnecting = false;
+        this.sourceStatus("binance", { status: "error", lastError: e?.message || String(e) });
+        this.scheduleReconnect("binance");
+      }
+      return Promise.resolve();
+    }
+    return this.openBinanceForceOrderEgress(url);
+  }
+
+  async openBinanceForceOrderEgress(url) {
+    try {
+      const ws = await openBinanceCollectorSocket(this.env, url);
+      this.binanceWs = ws;
+      this.bindBinanceForceOrder(ws);
+    } catch (e) {
+      this.binanceConnecting = false;
+      this.binanceWs = null;
+      this.sourceStatus("binance", { status: "error", lastError: e?.message || String(e) });
+      this.scheduleReconnect("binance");
+    }
+  }
+
+  bindBinanceProbe(ws) {
+    const origin = parseCustomFapiOrigin(this.env && this.env.BINANCE_FSTREAM_ORIGIN);
+    const markOpen = () => {
       if (ws !== this.binanceProbeWs) return;
+      this.binanceProbeConnecting = false;
       this.touchTransport("binance", "probe-open");
     };
+    if (origin) markOpen();
+    ws.onopen = markOpen;
     ws.onmessage = (ev) => {
       if (ws !== this.binanceProbeWs) return;
       try {
@@ -5561,29 +5688,52 @@ export class LiquidationCollector {
     };
     ws.onclose = () => {
       if (ws !== this.binanceProbeWs) return;
+      this.binanceProbeConnecting = false;
       this.binanceProbeWs = null;
       this.scheduleReconnect("binance-probe");
     };
   }
 
-  connectBybit() {
-    if (typeof WebSocket === "undefined") {
-      this.sourceStatus("bybit", { status: "unavailable", lastError: "WebSocket unavailable" });
-      return;
+  connectBinanceProbe() {
+    if (this.binanceProbeWs || this.binanceProbeConnecting) return Promise.resolve();
+    if (typeof WebSocket === "undefined") return Promise.resolve();
+    const origin = parseCustomFapiOrigin(this.env && this.env.BINANCE_FSTREAM_ORIGIN);
+    const sym = this.symbol.toLowerCase();
+    const url = binanceFstreamWsUrl(this.env, `/market/stream?streams=${sym}@aggTrade/${sym}@forceOrder`);
+    this.binanceProbeConnecting = true;
+    if (!origin) {
+      try {
+        const ws = new WebSocket(url);
+        this.binanceProbeWs = ws;
+        this.bindBinanceProbe(ws);
+      } catch (e) {
+        this.binanceProbeConnecting = false;
+        this.sourceStatus("binance", { status: "error", lastError: e?.message || String(e) });
+        this.scheduleReconnect("binance-probe");
+      }
+      return Promise.resolve();
     }
-    const url = "wss://stream.bybit.com/v5/public/linear";
-    this.sourceStatus("bybit", { status: "connecting", lastError: "" });
-    let ws;
+    return this.openBinanceProbeEgress(url);
+  }
+
+  async openBinanceProbeEgress(url) {
     try {
-      ws = new WebSocket(url);
-      this.bybitWs = ws;
+      const ws = await openBinanceCollectorSocket(this.env, url);
+      this.binanceProbeWs = ws;
+      this.bindBinanceProbe(ws);
     } catch (e) {
-      this.sourceStatus("bybit", { status: "error", lastError: e?.message || String(e) });
-      this.scheduleReconnect("bybit");
-      return;
+      this.binanceProbeConnecting = false;
+      this.binanceProbeWs = null;
+      this.sourceStatus("binance", { status: "error", lastError: e?.message || String(e) });
+      this.scheduleReconnect("binance-probe");
     }
-    ws.onopen = () => {
+  }
+
+  bindBybit(ws) {
+    const origin = parseCustomOriginBase(this.env && this.env.BYBIT_STREAM_ORIGIN);
+    const markOpen = () => {
       if (ws !== this.bybitWs) return;
+      this.bybitConnecting = false;
       this.sourceStatus("bybit", { status: "realtime", connectedAt: Date.now(), lastError: "" });
       try {
         ws.send(JSON.stringify({ op: "subscribe", req_id: "liq-all", args: [`allLiquidation.${this.symbol}`] }));
@@ -5596,6 +5746,8 @@ export class LiquidationCollector {
         try { ws.send(JSON.stringify({ op: "ping" })); } catch (_) {}
       }, 20_000);
     };
+    if (origin) markOpen();
+    ws.onopen = markOpen;
     ws.onmessage = (ev) => {
       if (ws !== this.bybitWs) return;
       try {
@@ -5648,11 +5800,50 @@ export class LiquidationCollector {
     };
     ws.onclose = () => {
       if (ws !== this.bybitWs) return;
+      this.bybitConnecting = false;
       if (this.bybitPingTimer) clearInterval(this.bybitPingTimer);
       this.bybitPingTimer = null;
       this.bybitWs = null;
       this.scheduleReconnect("bybit");
     };
+  }
+
+  connectBybit() {
+    if (this.bybitWs || this.bybitConnecting) return Promise.resolve();
+    if (typeof WebSocket === "undefined") {
+      this.sourceStatus("bybit", { status: "unavailable", lastError: "WebSocket unavailable" });
+      return Promise.resolve();
+    }
+    const origin = parseCustomOriginBase(this.env && this.env.BYBIT_STREAM_ORIGIN);
+    const url = bybitStreamWsUrl(this.env);
+    this.sourceStatus("bybit", { status: "connecting", lastError: "" });
+    this.bybitConnecting = true;
+    if (!origin) {
+      try {
+        const ws = new WebSocket(url);
+        this.bybitWs = ws;
+        this.bindBybit(ws);
+      } catch (e) {
+        this.bybitConnecting = false;
+        this.sourceStatus("bybit", { status: "error", lastError: e?.message || String(e) });
+        this.scheduleReconnect("bybit");
+      }
+      return Promise.resolve();
+    }
+    return this.openBybitEgress(url);
+  }
+
+  async openBybitEgress(url) {
+    try {
+      const ws = await openBybitCollectorSocket(this.env, url);
+      this.bybitWs = ws;
+      this.bindBybit(ws);
+    } catch (e) {
+      this.bybitConnecting = false;
+      this.bybitWs = null;
+      this.sourceStatus("bybit", { status: "error", lastError: e?.message || String(e) });
+      this.scheduleReconnect("bybit");
+    }
   }
 
   scheduleReconnect(exchange) {
@@ -5665,9 +5856,9 @@ export class LiquidationCollector {
       reconnectCount: (Number(current.reconnectCount) || 0) + 1,
     });
     setTimeout(() => {
-      if (exchange === "binance" && !this.binanceWs) this.connectBinance();
-      if (exchange === "binance-probe" && !this.binanceProbeWs) this.connectBinanceProbe();
-      if (exchange === "bybit" && !this.bybitWs) this.connectBybit();
+      if (exchange === "binance" && !this.binanceWs && !this.binanceConnecting) void this.connectBinance();
+      if (exchange === "binance-probe" && !this.binanceProbeWs && !this.binanceProbeConnecting) void this.connectBinanceProbe();
+      if (exchange === "bybit" && !this.bybitWs && !this.bybitConnecting) void this.connectBybit();
     }, LIQUIDATION_RECONNECT_MS);
   }
 
@@ -5758,15 +5949,24 @@ export const __footprintTestHooks = {
   syncFootprintBackfill,
   fetchKlineHistory,
   persistKlines,
+  pruneKlinesCap,
+  pruneExpiredStorage,
+  shouldPreserveLiveTapeStatus,
+  LIVE_TAPE_FRESH_MS,
+  MAX_KLINES_PER_INTERVAL,
+  intervalsDueAt,
   FOOTPRINT_BASE_INTERVAL,
   FOOTPRINT_MAX_BARS,
   FOOTPRINT_API_MAX_LIMIT,
   FOOTPRINT_MAX_FETCH_PAGES,
+  FOOTPRINT_FROMID_MAX_AGE_MS,
   FOOTPRINT_BACKFILL_MAX_WINDOWS,
   FOOTPRINT_READ_AUTO_SYNC_MIN_MS,
   LIQUIDATION_BUCKET_MS,
   LIQUIDATION_RETENTION_MS,
   isFootprintTailStaleForRead,
+  isFootprintFromIdStale,
+  isFootprintAggTradesWindowRestricted,
   recentlyTriedFootprintSync,
   resolveFootprintTickSize,
   mergeFootprintRows,
@@ -5795,6 +5995,15 @@ export const __footprintTestHooks = {
   derivativeSyncGroupForStaleCoreKeys,
 };
 
+bindKlineLiveHooks({
+  persistKlines,
+  updateSyncStatus,
+  persistLiveKlineBar,
+  persistLiveSnapshot,
+  fetchKlinesFromBinance,
+  fetchBinanceFapiJson,
+});
+
 export default {
   /**
    * @param {Request} request
@@ -5819,10 +6028,13 @@ export default {
     if (accessDenied) return accessDenied;
 
     if (path === "/api/finance" || path.startsWith("/api/finance/")) return handleFinance(request, env, ctx);
+    if (path === "/api/desk" || path.startsWith("/api/desk/")) return handleDesk(request, env);
 
     if (path === "/api/d1/klines") return handleReadKlines(request, env, url);
     if (path === "/api/d1/sync") return handleManualSync(request, env, url, ctx);
     if (path === "/api/d1/status") return handleStatus(request, env, url);
+    if (path === "/api/d1/klines/live") return handleKlineLiveStatus(env);
+    if (path === "/api/d1/klines/wake") return handleKlineLiveWake(env);
     if (path === "/api/d1/footprint") return handleReadFootprint(request, env, url, ctx);
     if (path === "/api/d1/footprint/sync") return handleManualFootprintSync(request, env, url, ctx);
     if (path === "/api/d1/liquidations") return handleReadLiquidations(request, env, url);
@@ -5870,7 +6082,7 @@ export default {
   },
 
   /**
-   * Cron 触发：每分钟一次。按当前 UTC 时间决定需要同步的 K 线周期。
+   * Cron 触发：每分钟一次。唤醒 live collector、规范集调度，并对全部周期做 REST 尾部备份与 prune。
    * @param {{scheduledTime: number, cron: string}} event
    * @param {object} env
    * @param {ExecutionContext} ctx
@@ -5889,6 +6101,16 @@ export default {
           ? `liquidation:collector ok prune=${liqPruned}`
           : `liquidation:collector fail ${liq.error || ""} prune=${liqPruned}`
       );
+      const live = await handleKlineLiveWake(env).then((r) => r.json()).catch((e) => ({ ok: false, error: e?.message || String(e) }));
+      summary.push(live.ok ? "kline-live:ok" : `kline-live:fail ${live.error || ""}`);
+      const finance = await syncFinanceDatasetsIfDue(env, time.getTime()).catch((e) => ({ ok: false, error: e?.message || String(e) }));
+      if (!finance.skipped) {
+        summary.push(
+          finance.ok
+            ? `finance:due=${finance.due || 0} attempted=${finance.attempted || 0}`
+            : `finance:fail ${finance.error || ""}`
+        );
+      }
       for (const symbol of symbols) {
         const der = await syncDerivativesIfDue(env, symbol, time);
         if (!der.skipped) {
@@ -5913,6 +6135,19 @@ export default {
           );
         }
       }
+      if (time.getUTCMinutes() % 10 === 0) {
+        for (const symbol of symbols) {
+          for (const interval of ["1d", "3d"]) {
+            const extended = await extendKlineHistoryOnePage(env, symbol, interval);
+            if (extended.skipped && (extended.reason === "floor" || extended.reason === "cap")) continue;
+            summary.push(
+              extended.ok
+                ? `${symbol}/${interval}:history ${extended.skipped ? extended.reason || "skip" : `ins=${extended.inserted || 0}`}`
+                : `${symbol}/${interval}:history fail ${extended.error || ""}`
+            );
+          }
+        }
+      }
       const oc = await syncOnchainIfDue(env, time);
       if (!oc.skipped) {
         summary.push(
@@ -5921,6 +6156,8 @@ export default {
             : `onchain:fail ${((oc.errors && oc.errors.join(";")) || oc.error || "unknown").slice(0, 120)}`
         );
       }
+      const retention = await pruneExpiredStorage(env);
+      summary.push(`retention:klines=${retention.klines} datasets=${retention.datasets}`);
       console.log(`[cron ${time.toISOString()}] due=${due.join(",")} → ${summary.join(" | ")}`);
     };
 
