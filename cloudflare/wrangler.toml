@@ -51,12 +51,8 @@ new_sqlite_classes = ["KlineLiveCollector"]
 [triggers]
 crons = ["* * * * *"]
 
-# 可选：Gemini（与 yuqing 共用 Secret 名 GEMINI_API_KEY / GOOGLE_API_KEY）
-#   npx wrangler secret put GEMINI_API_KEY
-# LLM：`BTC_LLM_PROVIDER=none|gemini|auto`（默认 auto，有密钥则视为可用；亦可在控制台设置）
 [vars]
 FINANCE_D1_ENABLED = "true"
-BTC_LLM_PROVIDER = "auto"
 BINANCE_FAPI_ORIGIN = "https://bit-egress.feiniwork.com"
 BINANCE_FSTREAM_ORIGIN = "https://bit-egress.feiniwork.com"
 BINANCE_SPOT_ORIGIN = "https://bit-egress.feiniwork.com/x/spot"

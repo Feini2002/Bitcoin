@@ -1042,30 +1042,10 @@ function renderAnalysisSettingsBody() {
       <section class="daily-settings-section">
         <div class="daily-settings-section-head">
           <h4>仪表盘可见度</h4>
-          <p>只影响当前页面显示，不改变云端生成内容。</p>
+          <p>只影响当前页面的历史报告展示。</p>
         </div>
         <div class="daily-settings-group">
           ${analysisModuleRegistry.map((item) => mkToggle(item, settings.visibility[item.key], "visibility")).join("")}
-        </div>
-      </section>
-
-      <section class="daily-settings-section">
-        <div class="daily-settings-section-head">
-          <h4>二次分析覆盖</h4>
-          <p>决定手动二次分析或定点任务时 Worker 会纳入哪些模块。</p>
-        </div>
-        <div class="daily-settings-group">
-          ${analysisModuleRegistry.map((item) => mkToggle(item, settings.analysisCoverage[item.key], "analysis")).join("")}
-        </div>
-      </section>
-
-      <section class="daily-settings-section">
-        <div class="daily-settings-section-head">
-          <h4>搜索覆盖范围</h4>
-          <p>只控制增量搜索与定向验证搜索；行情、衍生品和强平数据不走搜索开关。</p>
-        </div>
-        <div class="daily-settings-group">
-          ${analysisSearchScopes.map((item) => mkToggle(item, settings.searchCoverage[item.key], "search")).join("")}
         </div>
       </section>
 
@@ -1089,7 +1069,6 @@ function renderYuqingReport(row) {
   const upstreamLabel = upstream
     ? `<a href="${analysisEscapeHtml(upstream.href || "#/news")}">上游日报 ${analysisEscapeHtml(upstream.slot || "")}</a>`
     : `<a href="#/news">上游日报待选择</a>`;
-  const analysisButtonClass = analysisState.loading ? "btn primary is-scanning" : "btn primary";
 
   const commandShell = `
     <div class="news-command daily-event-command analysis-command">
@@ -1111,13 +1090,10 @@ function renderYuqingReport(row) {
         </div>
       </div>
       <div class="news-command-actions">
-        <button type="button" class="${analysisButtonClass}" id="news-generate-preview" ${analysisState.loading ? "disabled" : ""} title="触发 sentiment_analysis 二次研判并写入 D1">
-          <i class="ph ${analysisState.loading ? "ph-spinner-gap spin" : "ph-arrows-clockwise"}"></i><span>${analysisState.loading ? "分析中" : "手动二次分析"}</span>
-        </button>
         <button type="button" class="btn primary" id="news-open-archive" title="打开最近 7 天历史报告与费用">
           <i class="ph ph-clock-counter-clockwise"></i><span>历史报告与费用</span>
         </button>
-        <button type="button" class="btn secondary" id="analysis-open-settings" title="配置舆情分析模块可见度、二次分析覆盖与搜索范围">
+        <button type="button" class="btn secondary" id="analysis-open-settings" title="配置历史舆情分析展示模块">
           <i class="ph ph-gear"></i><span>设置</span>
         </button>
       </div>
@@ -1129,7 +1105,7 @@ function renderYuqingReport(row) {
       <span><i class="ph ph-database"></i> ${statusText}</span>
       <span><i class="ph ph-newspaper-clipping"></i> ${upstreamLabel}</span>
       <span><i class="ph ph-chart-line-up"></i> macro_regime=${analysisEscapeHtml(meta.code)}</span>
-      <span><i class="ph ph-calendar-check"></i> 09 / 14 / 22 · 定点二次分析</span>
+      <span><i class="ph ph-clock-counter-clockwise"></i> 自动分析已停用 · 历史可查</span>
       ${analysisState.recovery && analysisState.recovery.action && analysisState.recovery.action !== "exact" ? `<span><i class="ph ph-warning"></i> 恢复 ${analysisEscapeHtml(analysisState.recovery.action)}，未改用最新</span>` : ""}
     </div>
 
@@ -1440,53 +1416,7 @@ async function loadAnalysisReport(reportId = "") {
   renderNewsIntoDom();
 }
 
-async function generateAnalysisReport() {
-  if (typeof DataEngine === "undefined" || typeof DataEngine.generateYuqingStructuredReport !== "function") return;
-  analysisState.loading = true;
-  analysisState.status = "正在触发二次舆情分析...";
-  renderNewsIntoDom();
-  try {
-    const settings = normalizeAnalysisSettings(__yuqingAnalysisSettings);
-    const data = await DataEngine.generateYuqingStructuredReport(
-      SENTIMENT_ANALYSIS_KIND,
-      {
-        mode: "deep",
-        forceSearch: Object.values(settings.searchCoverage || {}).some(Boolean),
-        analysisSettings: settings,
-        modules: {
-          dashboard: settings.analysisCoverage.riskRegime || settings.analysisCoverage.hardDataMatrix || settings.analysisCoverage.agentContext,
-          news: settings.analysisCoverage.narrativeValidation || settings.analysisCoverage.riskThresholds,
-          timeline: settings.analysisCoverage.catalystCalendar,
-          ai: settings.analysisCoverage.techPremium,
-          trends: settings.analysisCoverage.distortionAudit || settings.analysisCoverage.narrativeValidation,
-        },
-      },
-      { timeoutMs: 190_000 }
-    );
-    if (data && data.report) {
-      analysisState.report = data.report;
-      analysisState.source = "cloud";
-      analysisState.status = "手动分析已写入 D1";
-      try {
-        history.replaceState(null, "", `#/news-analysis?reportId=${encodeURIComponent(data.report.id)}`);
-      } catch (_) {}
-    }
-    await loadAnalysisHistory();
-  } catch (e) {
-    analysisState.source = "error";
-    analysisState.status = e && e.message ? e.message : String(e);
-  } finally {
-    analysisState.loading = false;
-    renderNewsIntoDom();
-  }
-}
-
 function bindNewsInnerEvents() {
-  const gen = document.getElementById("news-generate-preview");
-  if (gen && !gen.dataset.bound) {
-    gen.dataset.bound = "1";
-    gen.addEventListener("click", generateAnalysisReport);
-  }
   const open = document.getElementById("news-open-archive");
   if (open && !open.dataset.bound) {
     open.dataset.bound = "1";

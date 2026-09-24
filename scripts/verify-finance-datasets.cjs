@@ -80,8 +80,9 @@ function database(){
   await persistDataset(reorder,'binance-perp-oi',envelope('binance-perp-oi',{time:t,openInterest:'100'},oiReceivedAt),'cloud-readthrough');
   const stale=await readDataset(reorder,'binance-perp-oi',{knownAt:oiReceivedAt});
   assert.equal(stale.collectionStale,false);assert.equal(stale.sourceStale,true);assert.equal(stale.stale,true);
-  for(const hour of ['07','08'])await persistDataset(reorder,'deribit-btc-options',envelope('deribit-btc-options',{result:[{instrument_name:'BTC-25SEP26-80000-C',creation_timestamp:t,open_interest:100}]},`2026-09-16T${hour}:00:00.000Z`),'cloud-readthrough');
-  const options=await readDataset(reorder,'deribit-btc-options',{knownAt:'2026-09-16T09:00:00Z'});
+  const optionNow=Date.now();
+  for(const minutesAgo of [60,30])await persistDataset(reorder,'deribit-btc-options',envelope('deribit-btc-options',{result:[{instrument_name:'BTC-25SEP26-80000-C',creation_timestamp:t,open_interest:100}]},new Date(optionNow-minutesAgo*60000).toISOString()),'cloud-readthrough');
+  const options=await readDataset(reorder,'deribit-btc-options',{knownAt:new Date(optionNow).toISOString()});
   assert.equal(options.observations.length,1);assert.equal(options.selection,'latest-received-snapshot');
   pass('stale source observations remain stale and latest options snapshots cannot double-count OI');
   reorder.sqlite.close();

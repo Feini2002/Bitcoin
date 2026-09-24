@@ -2,7 +2,7 @@
  * Yuqing Worker：事实池（D1 + 定时抓取）辅助模块。
  * 由同级 `yuqing-worker.js` 引用；勿单独作为主入口部署。
  *
- * 事件一览「今日头条 / 动态速览 / AI 情报站」内容由 Gemini + Google Search 生成，
+ * 事件一览「今日头条 / 动态速览 / AI 情报站」的既有报告内容，
  * 此处 ingest **不再写入 Finnhub 新闻与经济日历**（Finnhub 仍可由 Worker 用于行情 quote）。
  */
 

@@ -11,17 +11,13 @@ async function main(){
  browser=await chromium.launch({headless:true,...(process.env.BITDESK_TEST_BROWSER ? {channel:process.env.BITDESK_TEST_BROWSER} : {})});console.log(JSON.stringify({pid:process.pid,origin,browser:browser.version()}));
  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   const context=await browser.newContext({viewport,deviceScaleFactor:1,locale:'zh-CN',timezoneId:'Asia/Shanghai',colorScheme:'light',reducedMotion:'reduce'});context.setDefaultTimeout(8000);
-  let settings={version:1,assignments:{'daily_event.trends':'gemini-3.1-pro-preview'},codex:{modules:{'daily_event.trends':{model:'gpt-5.5'}}},updatedAt:NOW};let modelPuts=0,generations=0,streams=0;const forbidden=[],errors=[];
+  let modelPuts=0,generations=0,streams=0;const forbidden=[],errors=[];
   await context.route('**/*',async route=>{
    const req=route.request(),url=new URL(req.url());if(req.url().startsWith(origin+'/'))return route.continue();
    if(/execution-channels|\/codex\//.test(url.pathname))forbidden.push(url.pathname);
    if(req.resourceType()==='script')return route.fulfill({contentType:'text/javascript',body:''});
    let body={ok:true,d1Ready:true};
-   if(url.pathname.endsWith('/settings/model-channels')){
-    if(req.method()==='PUT'){settings={...req.postDataJSON(),updatedAt:NOW};modelPuts++}body={...body,source:'d1',settings,effective:settings.assignments};
-   }else if(url.pathname.endsWith('/reports/generate-stream')){
-    streams++;const row={...report('daily_event'),id:'generated-daily_event'};return route.fulfill({contentType:'application/x-ndjson',body:[{type:'start',report:{...row,status:'streaming'}},{type:'partial',module:'temperature',data:row.report.marketTemperature},{type:'done',ok:true,report:row}].map(JSON.stringify).join('\n')+'\n'});
-   }else if(url.pathname.endsWith('/reports/generate')){generations++;body.report=report(req.postDataJSON().kind);body.report.id='generated-analysis';body.report.report.title='本轮云端分析验收';
+   if(url.pathname.endsWith('/settings/model-channels')||url.pathname.endsWith('/reports/generate')||url.pathname.endsWith('/reports/generate-stream')){forbidden.push(url.pathname);return route.fulfill({status:410,contentType:'application/json',body:JSON.stringify({ok:false})});
    }else if(url.pathname.endsWith('/reports/latest')||url.pathname.endsWith('/reports/item')){body.report=report(url.searchParams.get('kind')||'daily_event');if(body.report.kind==='sentiment_analysis'&&generations){body.report.id='generated-analysis';body.report.report.title='本轮云端分析验收'}
    }else if(url.pathname.endsWith('/reports/history')){const row=report(url.searchParams.get('kind')||'daily_event');body.items=[{...row,title:row.report.title}];
    }else if(url.pathname.includes('/settings/')){body.settings={};
@@ -29,18 +25,10 @@ async function main(){
    return route.fulfill({contentType:'application/json',body:JSON.stringify(body)});
   });
   page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});await page.clock.install({time:new Date(NOW)});
-  await page.goto(origin+'/index.html#/settings');await expect(page.getByRole('heading',{name:'云端分析设置',exact:true})).toBeVisible();await expect(page.locator('#settings-model-msg')).toContainText('已读取');
-  await expect(page.getByText('Codex CLI 隧道',{exact:false})).toHaveCount(0);await expect(page.getByRole('button',{name:'保存执行路线'})).toHaveCount(0);
-  await page.getByText('事件一览',{exact:true}).last().click();
-  const model=page.getByRole('combobox',{name:'趋势线索模型',exact:true});await model.selectOption('gemini-3-flash-preview');await page.getByRole('button',{name:'保存模型设置',exact:true}).click();await expect(page.locator('#settings-model-msg')).toContainText('已保存');expect(modelPuts).toBe(1);expect(settings.codex).toBeUndefined();
-  const toggle=page.getByRole('checkbox',{name:'显示浏览器下一档预估'}).first();await toggle.check();await expect(page.locator('[data-yuqing-next="daily_event"]')).not.toHaveText('未启用');
-  await page.reload();await expect(page.locator('#settings-model-msg')).toContainText('已读取');await page.getByText('事件一览',{exact:true}).last().click();await expect(model).toHaveValue('gemini-3-flash-preview');await expect(page.getByRole('checkbox',{name:'显示浏览器下一档预估'}).first()).toBeChecked();
-  await page.screenshot({path:path.join(OUT,'settings-'+viewport.width+'.png'),fullPage:true});results.push({id:'UI-CLOUD-01',viewport,status:'PASS'});
-  await page.goto(origin+'/index.html#/news');await expect(page.getByRole('button',{name:'实时扫描',exact:true})).toBeVisible();await page.getByRole('button',{name:'实时扫描',exact:true}).click();await expect(page.getByRole('button',{name:'实时扫描',exact:true})).toBeEnabled();await expect.poll(()=>streams).toBe(1);await expect.poll(()=>page.evaluate(()=>dailyEventState.reportRow?.id||dailyEventState.row?.id||dailyEventState.report?.id)).toBe('generated-daily_event');
-  results.push({id:'UI-CLOUD-02',viewport,status:'PASS'});
-  await page.goto(origin+'/index.html#/news-analysis');await expect(page.getByRole('button',{name:'手动二次分析',exact:true})).toBeVisible();await page.getByRole('button',{name:'手动二次分析',exact:true}).click();await expect.poll(()=>generations).toBe(1);await expect(page.getByText('本轮云端分析验收',{exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'历史报告与费用',exact:false}).click();await expect(page.getByText('云端分析验收',{exact:true}).last()).toBeVisible();
-  results.push({id:'UI-CLOUD-03',viewport,status:'PASS'});
+  await page.goto(origin+'/index.html#/settings');await expect(page.getByRole('heading',{name:'K 线与云端 D1',exact:true})).toBeVisible();await expect(page.locator('#settings-model-panel')).toHaveCount(0);await expect(page.locator('#settings-schedule-panel')).toHaveCount(0);await page.screenshot({path:path.join(OUT,'settings-'+viewport.width+'.png'),fullPage:true});results.push({id:'UI-RETIRE-01',viewport,status:'PASS'});
+  await page.goto(origin+'/index.html#/news');await expect(page.locator('#daily-report-content')).toBeVisible();await expect(page.locator('#daily-scan-preview')).toHaveCount(0);await page.getByRole('button',{name:'历史报告与费用',exact:false}).first().click();await expect(page.locator('#daily-archive-drawer')).toBeVisible();results.push({id:'UI-RETIRE-02',viewport,status:'PASS'});
+  await page.goto(origin+'/index.html#/news-analysis');await expect(page.locator('#news-generate-preview')).toHaveCount(0);await page.getByRole('button',{name:'历史报告与费用',exact:false}).first().click();await expect(page.getByText('云端分析验收',{exact:true}).last()).toBeVisible();results.push({id:'UI-RETIRE-03',viewport,status:'PASS'});
+  expect(modelPuts+generations+streams).toBe(0);
   expect(forbidden).toEqual([]);expect(errors).toEqual([]);await expect(page.locator('vite-error-overlay')).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   console.log('PASS cloud UI '+viewport.width);await context.close();
  }

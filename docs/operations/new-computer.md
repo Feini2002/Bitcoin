@@ -15,8 +15,8 @@
 - 仓库根目录 `.env` 是业务密钥的主存放处。旧电脑已有该文件时直接单独拷贝到新克隆的仓库根目录，不要用模板覆盖它。
 - 出口机 SSH 私钥不写进 `.env` 正文，而在 gitignore 的 `.codex/ssh/bitdesk_egress_ed25519`。换电脑时与 `.env` 一起拷贝，否则连不上东京出口机。
 - 没有旧文件时，复制 `.env.example` 为 `.env`，再填入实际需要的值。模板只记录名称，不含真实密钥。
-- 本次整理时本地仅发现 GEMINI_API_KEY。其他名称是可选配置说明，空白或未填不表示已从云端备份。
-- 本次只读查询舆情 Worker Secrets 名称包含 GEMINI_API_KEY、FINNHUB_API_KEY、CODEX_BRIDGE_TOKEN。后两项未在本地发现原值；CODEX_BRIDGE_TOKEN 属于已退役通道，不是新电脑开发必需项。本次未删除、轮换或导出云端 Secrets，也未验证本地 Gemini 值与云端值是否相同。
+- 历史整理曾发现 Gemini Key；该接入现已退役，新电脑无需迁移。
+- 历史查询记录仅供追溯；当前 Gemini Secret 已从 Worker 删除。FINNHUB_API_KEY 如需继续使用，应单独按当前云端配置核对。
 - `.env`、环境变体、.dev.vars、私钥、本地数据库、日志、浏览器产物均被 Git 忽略。Pages 只发布 dist/pages/ 中的明确资产清单，不会上传这些开发文件。
 - 不把密钥改名为 VITE_ 开头的变量；该前缀用于暴露给浏览器的配置。
 - GitHub 与 Wrangler 的登录由各自工具保管，新电脑重新登录；不把 OAuth 缓存、SSH 私钥或 Codex 登录资料拼入 .env。

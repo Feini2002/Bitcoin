@@ -973,7 +973,7 @@ function renderDailyGithubTools(row) {
     return renderDailyPlaceholderCard({
       category: "GitHub 工具雷达",
       title: "等待工具雷达结果",
-      fact: "GitHub 工具雷达暂无结果。请确认本模块在扫描范围中已开启，并等待 Worker 完成本轮 Gemini + Google Search 检索。",
+      fact: "GitHub 工具雷达暂无历史结果。",
       note: "这里会保留适合 Vibecoding 新人的 skill、plugin、MCP 或工具仓库。",
       extraClass: "daily-github-placeholder",
     });
@@ -1376,10 +1376,9 @@ function renderDailyArchiveChrome() {
 
 function renderDailySettingsChrome() {
   const v = __yuqingSettings.visibility;
-  const s = __yuqingSettings.scanCoverage;
   
   const mkToggle = (key, label, checked, type) => {
-    const hint = type === "scan" ? "纳入实时扫描" : "本页显示";
+    const hint = "本页显示";
     return `
       <label class="daily-setting-row ${checked ? "is-on" : "is-off"}">
         <span class="daily-setting-copy">
@@ -1409,7 +1408,7 @@ function renderDailySettingsChrome() {
         <section class="daily-settings-section">
           <div class="daily-settings-section-head">
             <h4>仪表盘可见度</h4>
-            <p>只影响当前页面，不改变后台生成内容。</p>
+            <p>只影响当前页面的历史报告展示。</p>
           </div>
           <div class="daily-settings-group">
             ${mkToggle("dashboard", "信息温度", v.dashboard, "visibility")}
@@ -1418,21 +1417,6 @@ function renderDailySettingsChrome() {
             ${mkToggle("ai", "AI 情报站", v.ai, "visibility")}
             ${mkToggle("githubTools", "GitHub 工具雷达", v.githubTools, "visibility")}
             ${mkToggle("trends", "趋势线索", v.trends, "visibility")}
-          </div>
-        </section>
-
-        <section class="daily-settings-section">
-          <div class="daily-settings-section-head">
-            <h4>实时扫描覆盖</h4>
-            <p>决定点击「实时扫描」时 Worker 与模型会跑哪些模块；趋势线索会等上游完成后再做外部搜索校准。</p>
-          </div>
-          <div class="daily-settings-group">
-            ${mkToggle("dashboard", "信息温度", s.dashboard, "scan")}
-            ${mkToggle("news", "今日头条", s.news, "scan")}
-            ${mkToggle("timeline", "动态速览", s.timeline, "scan")}
-            ${mkToggle("ai", "AI 情报站", s.ai, "scan")}
-            ${mkToggle("githubTools", "GitHub 工具雷达", s.githubTools, "scan")}
-            ${mkToggle("trends", "趋势线索（外部校准）", s.trends, "scan")}
           </div>
         </section>
 
@@ -1452,7 +1436,6 @@ function renderDailyReportHeader(r) {
       ? `<div class="daily-report-meta daily-report-meta--title"><span>${dailyEscapeHtml(badge)}</span></div>`
       : "";
   const scanStatusHtml = renderDailyScanStatusPanel();
-  const scanButtonClass = dailyEventState.loading ? "btn primary is-scanning" : "btn primary";
   return `
     <div class="news-command daily-event-command" style="view-transition-name: daily-command-bar;">
       <div class="news-command-main daily-command-main">
@@ -1468,13 +1451,10 @@ function renderDailyReportHeader(r) {
         </div>
       </div>
       <div class="news-command-actions">
-        <button type="button" class="${scanButtonClass}" id="daily-scan-preview" ${dailyEventState.loading ? "disabled" : ""} title="单次请求 Worker：NDJSON 流式返回，模块就绪即显示；温度/头条/速览/AI 并行检索（头条可双路），趋势最后归纳；完成后写入 D1（约 1～5 分钟）">
-          <i class="ph ${dailyEventState.loading ? "ph-spinner-gap spin" : "ph-rocket-launch"}"></i><span>${dailyEventState.loading ? "扫描中" : "实时扫描"}</span>
-        </button>
         <button type="button" class="btn primary" id="daily-open-archive">
           <i class="ph ph-clock-counter-clockwise"></i><span>历史报告与费用</span>
         </button>
-        <button type="button" class="btn secondary" id="daily-open-settings" title="配置仪表盘模块可见度与实时扫描覆盖范围">
+        <button type="button" class="btn secondary" id="daily-open-settings" title="配置仪表盘模块可见度">
           <i class="ph ph-gear"></i><span>设置</span>
         </button>
       </div>
@@ -1492,7 +1472,7 @@ function renderDailyReportGrid(r) {
     return `
     <div class="daily-event-empty daily-dashboard-grid-empty">
       <p class="muted-text">${st}</p>
-      <p class="muted-text">可用「实时扫描」写入一条至 D1，或打开 7 日报告库从历史记录中选择。</p>
+      <p class="muted-text">自动报告已停用。可打开 7 日报告库查看已有记录。</p>
     </div>`;
   }
 
@@ -1867,194 +1847,6 @@ async function loadDailyReport(reportId = "", options = {}) {
   renderYuqingDailyDrawersIntoDom();
 }
 
-async function generateDailyReport() {
-  if (__dailyScanPromise || dailyEventState.loading) return __dailyScanPromise;
-  if (typeof DataEngine === "undefined") return;
-  const canStream = typeof DataEngine.streamYuqingDailyEventReport === "function";
-  const canGen = typeof DataEngine.generateYuqingStructuredReport === "function";
-  if (!canStream && !canGen) return;
-  if (__yuqingDailyLoadAbort) {
-    __yuqingDailyLoadAbort.abort();
-    __yuqingDailyLoadAbort = null;
-  }
-  __yuqingDailyScanAbort = new AbortController();
-  const scanSignal = __yuqingDailyScanAbort.signal;
-  const reportIdBefore = dailyCurrentReportId();
-  const tScanStart = Date.now();
-  if (__dailyScanTick) {
-    clearInterval(__dailyScanTick);
-    __dailyScanTick = null;
-  }
-  dailyEventState.streamPreviewRow = null;
-  dailyResetStreamBuffers();
-  dailyResetScanProgress();
-  dailyEnsureStreamPreviewShell();
-  __dailyFirstStreamEventAt = 0;
-  __dailyLastStreamEventAt = Date.now();
-  dailyEventState.loading = true;
-  dailyEventState.scanStartedAt = tScanStart;
-  dailyEventState.scanStage = canStream ? "实时扫描已启动" : "云端扫描已启动";
-  dailyEventState.status = canStream
-    ? "正在连接流式通道：切换到其他页面不会中断，本页回来后会继续显示进度。"
-    : "正在触发单次全流程日报：切换到其他页面不会中断，完成后会自动回填本页。";
-  renderYuqingDailyIntoDom({ skipViewTransition: true });
-  dailyWritePendingPreview();
-  __dailyScanTick = setInterval(() => {
-    if (!dailyEventState.loading) return;
-    const sec = Math.floor((Date.now() - tScanStart) / 1000);
-    const silentSec = Math.floor((Date.now() - (__dailyLastStreamEventAt || tScanStart)) / 1000);
-    const pendingNames = dailyPendingScanLabels();
-    dailyEventState.scanStage = canStream ? "实时扫描运行中" : "云端扫描运行中";
-    if (canStream && !__dailyFirstStreamEventAt && sec >= 35) {
-      dailyEventState.scanStage = "等待 Worker 首包";
-      dailyEventState.status = `已等待 ${sec}s，仍未收到流式首包；如果继续无响应，会自动转入 D1 回读兜底。`;
-    } else if (canStream && __dailyFirstStreamEventAt && silentSec >= 45) {
-      dailyEventState.scanStage = "等待新进度";
-      dailyEventState.status = `已有 ${silentSec}s 没有新模块输出，仍在等待 ${pendingNames.join("、") || "剩余模块"}；超时后会自动回读 D1。`;
-    } else {
-      dailyEventState.status = canStream
-        ? `流式生成中（已等待 ${sec}s）… ${pendingNames.length ? `等待 ${pendingNames.join("、")}。` : "趋势线索会等上游模块完成后再做外部搜索校准。"}`
-        : `云端分析进行中（已等待 ${sec}s）… 完成后会自动刷新；若超过约 3 分钟仍无结果，多为上游检索偏慢或网络中断。`;
-    }
-    renderYuqingDailyIntoDom({ skipViewTransition: true });
-  }, 8000);
-  const s = __yuqingSettings.scanCoverage;
-  // 上游模块先完成个性化检索；趋势线索再追加一次外部校准收束。
-  const payload = { 
-    mode: "deep", 
-    forceSearch: true, 
-    trendsUseSearch: true,
-    dualHeadlineLanes: true,
-    modules: {
-      dashboard: !!s.dashboard,
-      news: !!s.news,
-      timeline: !!s.timeline,
-      ai: !!s.ai,
-      githubTools: !!s.githubTools,
-      trends: !!s.trends
-    }
-  };
-  
-  __dailyScanPromise = (async () => {
-  try {
-    let data = null;
-    if (canStream) {
-      data = await DataEngine.streamYuqingDailyEventReport(payload, {
-        timeoutMs: 900_000,
-        signal: scanSignal,
-        firstEventTimeoutMs: 45_000,
-        idleTimeoutMs: 90_000,
-        onEvent: async (evt) => {
-          __dailyLastStreamEventAt = Date.now();
-          if (!__dailyFirstStreamEventAt) __dailyFirstStreamEventAt = __dailyLastStreamEventAt;
-          if (evt.type === "start") {
-            if (evt.report && typeof evt.report === "object") {
-              dailyEventState.streamPreviewRow = evt.report;
-            }
-            dailyEventState.scanStage = "流式通道已建立";
-            dailyEventState.status = "流式通道已建立，等待各模块…";
-            dailyWritePendingPreview();
-            renderYuqingDailyIntoDom({ skipViewTransition: true });
-            return;
-          }
-          if (evt.type === "chunk") {
-            const visualChanged = mergeDailyStreamChunk(evt);
-            dailyEventState.scanStage = "模块正在输出";
-            dailyEventState.source = "cloud";
-            dailyEventState.status = `正在输出：${dailyStreamModuleLabel(evt.module, evt.streamKey)}`;
-            dailyWritePendingPreview();
-            if (visualChanged) dailyScheduleStreamRender();
-            return;
-          }
-          if (evt.type === "partial") {
-            mergeDailyStreamEvent(evt);
-            dailyEventState.scanStage = "模块结果已更新";
-            dailyEventState.source = "cloud";
-            dailyEventState.status = `已更新：${evt.module || "模块"}`;
-            dailyWritePendingPreview();
-            renderYuqingDailyIntoDom({ skipViewTransition: true });
-          }
-        },
-      });
-    } else {
-      data = await DataEngine.generateYuqingStructuredReport(DAILY_EVENT_KIND, payload, { timeoutMs: 480_000, signal: scanSignal });
-    }
-    dailyEventState.streamPreviewRow = null;
-    if (data && data.report) {
-      dailyClearPendingPreview();
-      Object.keys(dailyEventState.scanProgress || {}).forEach((key) => {
-        if (dailyEventState.scanProgress[key] !== "skip") dailyEventState.scanProgress[key] = "done";
-      });
-      dailyEventState.report = data.report;
-      dailyEventState.source = "cloud";
-      dailyEventState.scanStage = "实时扫描已完成";
-      dailyEventState.status = canStream
-        ? "流式扫描已完成，已写入 D1（趋势线索已追加外部搜索校准）。"
-        : "单次扫描已完成，已写入 D1 并拉回本条（趋势线索已基于上游模块和外部搜索收束）。";
-      if (dailyIsEventsRoute()) {
-        try {
-          history.replaceState(null, "", `#/news?reportId=${encodeURIComponent(data.report.id)}`);
-        } catch (_) {}
-      }
-      await loadDailyHistory();
-      dailyEventState.archiveFilter = "recent7";
-    }
-  } catch (e) {
-    const msg = e && e.message ? e.message : String(e);
-    const maybeTimeout = /超时|AbortError|aborted|network/i.test(msg);
-    if (!maybeTimeout) {
-      dailyEventState.streamPreviewRow = null;
-      dailyClearPendingPreview();
-    }
-    if (maybeTimeout) {
-      dailyEventState.scanStage = "正在回读 D1";
-      dailyEventState.status = "请求中断或超时，正在尝试从 D1 读取最新一条事件日报…";
-      dailyEventState.source = "loading";
-      renderYuqingDailyIntoDom({ skipViewTransition: true });
-      try {
-        await loadDailyReport("", { force: true, preservePending: true });
-        const row = dailyEventState.report;
-        const pendingRow = dailyEventState.streamPreviewRow;
-        if (pendingRow && !dailyReportIsReady(pendingRow)) {
-          dailyEventState.source = "cloud";
-          dailyEventState.status =
-            "浏览器等待已结束，D1 暂未返回完整新日报：已保留本轮实时扫描预览。完整报告生成后会以同一条记录覆盖。";
-        } else if (row && row.id && row.id !== reportIdBefore && row.report) {
-          dailyEventState.source = "cloud";
-          dailyEventState.status =
-            "浏览器等待已结束，但云端可能已生成新报告：已从 D1 拉回最新一条。若内容不完整或仍是旧版，请稍后再点「实时扫描」。";
-        } else {
-          dailyEventState.source = "error";
-          dailyEventState.status = msg;
-        }
-      } catch (_) {
-        dailyEventState.source = "error";
-        dailyEventState.status = msg;
-      }
-    } else {
-      dailyEventState.source = "error";
-      dailyEventState.scanStage = "实时扫描失败";
-      dailyEventState.status = msg;
-    }
-  } finally {
-    if (__dailyScanTick) {
-      clearInterval(__dailyScanTick);
-      __dailyScanTick = null;
-    }
-    dailyEventState.loading = false;
-    dailyEventState.scanStartedAt = 0;
-    __dailyFirstStreamEventAt = 0;
-    __dailyLastStreamEventAt = 0;
-    __yuqingDailyScanAbort = null;
-    __dailyScanPromise = null;
-    dailyClearScheduledStreamRender();
-    renderYuqingDailyIntoDom({ skipViewTransition: true });
-    renderYuqingDailyDrawersIntoDom();
-  }
-  })();
-  return __dailyScanPromise;
-}
-
 function openDailyArchive() {
   const drawer = document.getElementById("daily-archive-drawer");
   const backdrop = document.getElementById("daily-archive-backdrop");
@@ -2131,11 +1923,6 @@ async function saveDailySettings() {
 }
 
 function bindYuqingDailyEvents() {
-  const scan = document.getElementById("daily-scan-preview");
-  if (scan && !scan.dataset.bound) {
-    scan.dataset.bound = "1";
-    scan.addEventListener("click", generateDailyReport);
-  }
   const open = document.getElementById("daily-open-archive");
   if (open && !open.dataset.bound) {
     open.dataset.bound = "1";

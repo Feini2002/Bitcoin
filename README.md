@@ -1,6 +1,6 @@
 # Bit 交易决策平台（数据监测分模块）
 
-面向个人期货交易台的 **静态 Web 控制台 + Cloudflare Workers + D1**。系统把行情、订单流、强平热力、衍生品、舆情日报和员工 Agent 的结构化输入收拢到同一套导航里，目标是把“看盘、研判、复盘、自动化报告”放进一个可验证、可部署、可回档的工作区。
+面向个人期货交易台的 **静态 Web 控制台 + Cloudflare Workers + D1**。系统把行情、订单流、强平热力、衍生品、历史舆情日报和员工 Agent 的结构化输入收拢到同一套导航里，目标是把“看盘、研判、复盘、自动化报告”放进一个可验证、可部署、可回档的工作区。
 
 ## 治理状态
 
@@ -14,7 +14,7 @@
 | --- | --- |
 | <https://bitcoin.feiniwork.com/> | Cloudflare Pages 自定义域名前端 |
 | <https://btc.feiniwork.com> | 行情 / D1 / 快照 Worker 默认 API 根域 |
-| <https://yuqing.feiniwork.com> | 舆情日报、舆情分析与云端模型设置 Worker |
+| <https://yuqing.feiniwork.com> | 历史舆情日报、舆情分析与事实数据 Worker |
 
 前端也支持通过 `window.BIT_DATA_API_BASE`、`window.BIT_YUQING_API_BASE` 覆盖默认 API 根域，便于本地或备用环境联调。
 
@@ -26,14 +26,13 @@ flowchart LR
   pages --> dataEngine["DataEngine<br/>统一请求层"]
 
   dataEngine --> btcWorker["btc Worker<br/>行情、足迹、强平、衍生品、快照"]
-  dataEngine --> yuqingWorker["yuqing Worker<br/>事件日报、舆情分析、LLM 路由"]
+  dataEngine --> yuqingWorker["yuqing Worker<br/>历史报告、事实数据"]
 
   btcWorker --> btcD1[("D1: btc<br/>K线 / 足迹 / 强平 / 衍生品 / 快照")]
-  yuqingWorker --> yuqingD1[("D1: yuqing<br/>报告 / 设置")]
+  yuqingWorker --> yuqingD1[("D1: yuqing<br/>历史报告 / 设置")]
 
   btcWorker --> marketApis["Binance / Bybit / OKX / Yahoo 类 / FRED"]
-  yuqingWorker --> facts["CoinGecko / Finnhub / FNG / Google Search"]
-  yuqingWorker --> gemini["Gemini Worker 通道"]
+  yuqingWorker --> facts["CoinGecko / Finnhub / FNG"]
 ```
 
 ## 文件导航
@@ -52,12 +51,12 @@ flowchart LR
 | --- | --- | --- |
 | 前端壳 | Hash 路由、导航、主题、设置页、各业务页。通过明确资产清单生成 dist/pages/，Cloudflare Pages 仅托管该产物。 | `index.html`、`styles.css`、`js/app.js`、`js/pages/*` |
 | 行情数据层 | K 线、足迹图、强平、衍生品、市场快照与员工输入快照。 | `cloudflare/binance-klines-worker.js`、`cloudflare/schema.sql`、`js/data-engine.js` |
-| 舆情与 LLM 层 | 事件一览、舆情分析、日报历史、成本估算、云端模型设置。 | `cloudflare/yuqing/yuqing-worker.js`、`cloudflare/yuqing/shijian/*`、`cloudflare/yuqing/fenxi/*` |
+| 舆情与历史报告层 | 事件一览、舆情分析、日报历史、历史费用展示与事实数据。 | `cloudflare/yuqing/yuqing-worker.js`、`cloudflare/yuqing/shijian/*`、`cloudflare/yuqing/fenxi/*` |
 | 校验与部署 | 语法、指标数学、足迹聚合、快照契约、Worker API、舆情报告、Cloudflare Pages 清理。 | `scripts/verify-*.cjs`、`scripts/smoke-api.cjs`、`scripts/prune-pages-deployments.cjs` |
 
 ## LLM 执行方式
 
-网站内置分析统一由云端 Worker 调用 Gemini，读取模块模型设置并把结果写入 D1。前端负责生成请求、流式展示与历史查询，不再派发本机 CLI 任务。
+自动模型分析与定时报告已退役，Worker 不再保存或调用 Gemini Key。前端仅展示既有报告历史与事实数据。
 
 Codex 对话用于人工发起的开发、研究和分析，不依赖本地网页服务。确需把人工报告显示到网站时，可复用 `scripts/import-yuqing-report.cjs` 导入符合报告契约的 JSON；远程写入须有当前任务明确授权。内置连通性样例不代表正式日报。
 
@@ -68,32 +67,17 @@ Codex 对话用于人工发起的开发、研究和分析，不依赖本地网�
 | 导航区域 | 当前能力 |
 | --- | --- |
 | 市场监测 | 行情工作台、多周期结构、指标数学、订单流与足迹图、强平雷达、热力压力矩阵、衍生品面板。 |
-| 舆情与事件 | 事件日报、实时扫描、GitHub 工具雷达、趋势线索、舆情二次分析、报告历史、成本估算。 |
+| 舆情与事件 | 既有事件日报、GitHub 工具雷达、趋势线索、舆情分析、报告历史与历史费用展示。 |
 | 智囊团 | 首席策略官、环境评估员、盘口流动性官、衍生品情报官、风控官的页面和输入契约逐步接入。 |
 | 交易执行 | 仓位与风险计算器为固定结果演示，尚未接入公式；策略模板库、订单草稿台、当前持仓为预留扩展区。 |
 | 复盘系统 | 交易日志、每日复盘、绩效统计、错误模式为预留区，后续会接入员工观点和历史归因。 |
-| 系统 | 设置页、主题、D1 运维、Cloudflare 定点说明、云端分析设置、路线图占位。 |
+| 系统 | 设置页、主题、D1 运维、云端分析停用说明、路线图占位。 |
 
 保留 `PLANNED`、占位 UI 和预留结构是本项目约定。未完成模块只在对应功能完整可用后再移除占位。
 
 ## 数据与报告流
 
-```mermaid
-sequenceDiagram
-  participant UI as 浏览器设置/业务页
-  participant DE as DataEngine
-  participant Y as yuqing Worker
-  participant D1 as Cloudflare D1
-  participant G as Gemini API
-
-  UI->>DE: 生成事件日报/舆情分析
-  DE->>Y: POST /api/yuqing/reports/generate
-  Y->>D1: 读取 model_channels
-  Y->>G: Gemini + Search grounding
-  Y->>D1: 写入 yuqing_reports
-  Y-->>DE: 返回报告（事件扫描支持流式输出）
-  DE-->>UI: 渲染报告、历史与成本信息
-```
+历史报告由浏览器通过 yuqing Worker 的只读接口从 D1 查询；自动生成入口与 Cron 已退役。
 
 ## 本地开发
 
