@@ -1,6 +1,8 @@
-import { readDataset } from './dataset-store.mjs';
+import { prepareBoundedObservations, readDatasetSummary, historyBaselineStatement } from './dataset-store.mjs';
+import { FINANCE_DATASETS } from './datasets.mjs';
+import { klineOpenAt } from '../kline-recovery.mjs';
 
-export const DESK_SCHEMA_VERSION = '2026-09-21.1';
+export const DESK_SCHEMA_VERSION = '2026-09-27.1';
 export const DESK_SCOPES = ['chart', 'orderflow', 'heatmap', 'context'];
 export const FORBIDDEN_COPY = [
   'DXY', '已接入', '主链路达标', '拥挤', '占优', '挤压', '清算池',
@@ -8,7 +10,7 @@ export const FORBIDDEN_COPY = [
 ];
 
 const INTERVAL_MS = { '5m': 300000, '15m': 900000, '1h': 3600000, '4h': 14400000, '1d': 86400000, '3d': 259200000, '1w': 604800000 };
-const NEEDED_BARS = { '5m': 864, '15m': 480, '1h': 200, '4h': 120, '1d': 60, '3d': 120, '1w': 52 };
+const NEEDED_BARS = { '5m': 864, '15m': 480, '1h': 336, '4h': 360, '1d': 180, '3d': 180, '1w': 156 };
 const LIVE_TAPE_FRESH_MS = 90 * 1000;
 
 function json(body, status = 200) {
@@ -18,9 +20,18 @@ function json(body, status = 200) {
   });
 }
 
+const BINANCE_EXACT_HOSTS = new Set([
+  'fapi.binance.com', 'fstream.binance.com', 'dapi.binance.com', 'api.binance.com',
+  'stream.binance.com', 'data-api.binance.vision',
+]);
+
 export function binanceHostOk(host) {
-  const h = String(host || '');
-  return /(?:^|\.)binance\.com$/i.test(h) || h === 'fapi.binance.com' || h === 'data-api.binance.vision' || /binance\.com/i.test(h) && !/bybit|okx/i.test(h);
+  const name = String(host || '').trim().toLowerCase().replace(/\.$/, '');
+  if (!name || name.includes('..') || /[^a-z0-9.-]/.test(name)) return false;
+  if (BINANCE_EXACT_HOSTS.has(name)) return true;
+  if (!name.endsWith('.binance.com')) return false;
+  const prefix = name.slice(0, -'.binance.com'.length);
+  return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/.test(prefix);
 }
 
 export function parseJsonSafe(value, fallback) {
@@ -54,19 +65,45 @@ export function klineAuthority(dataset, { now = Date.now(), interval = '15m' } =
   };
 }
 
+export function sourceVerified(row) {
+  return !!(row && row.origin === 'canonical' && row.ingestionMode !== 'local-bootstrap'
+    && binanceHostOk(row.sourceHost));
+}
+
 export function mapKlineObservations(observations) {
   return (observations || []).slice().reverse().map((row) => {
     const v = row.values || {};
-    return {
+    const bar = {
       t: Date.parse(row.observedAt),
       o: v.open, h: v.high, l: v.low, c: v.close,
-      v: v.baseVolume, quoteVolume: v.quoteVolume, trades: v.trades,
-      takerBuyBase: v.takerBuyBase, takerBuyQuote: v.takerBuyQuote,
-      closed: v.closed, windowEnded: v.windowEnded, finality: v.finality, closureBasis: v.closureBasis,
-      observedAt: row.observedAt, receivedAt: row.receivedAt, storedAt: row.storedAt,
-      sourceHost: row.sourceHost, ingestionMode: row.ingestionMode, publicAvailableAt: row.publicAvailableAt ?? null,
+      v: v.baseVolume, quoteVolume: v.quoteVolume ?? null, trades: v.trades ?? null,
+      takerBuyBase: v.takerBuyBase ?? null, takerBuyQuote: v.takerBuyQuote ?? null,
+      closed: v.closed ?? null, windowEnded: v.windowEnded ?? null, finality: v.finality ?? null, closureBasis: v.closureBasis ?? null,
+      observedAt: row.observedAt, receivedAt: row.receivedAt ?? null, storedAt: row.storedAt ?? null,
+      effectiveReceivedAt: row.effectiveReceivedAt ?? (row.receivedAt && row.receivedAt !== row.observedAt ? row.receivedAt : row.storedAt ?? row.receivedAt ?? null),
+      sourceHost: row.sourceHost ?? null, ingestionMode: row.ingestionMode ?? null, publicAvailableAt: row.publicAvailableAt ?? null,
+      origin: 'canonical',
+      sourceVerification: 'unverified',
     };
+    bar.sourceVerification = sourceVerified(bar) ? 'verified' : 'unverified';
+    return bar;
   }).filter((row) => Number.isFinite(row.t) && Number.isFinite(row.o) && Number.isFinite(row.c));
+}
+
+function rawTapeBar(row) {
+  return {
+    t: Number(row.t), o: Number(row.o), h: Number(row.h), l: Number(row.l), c: Number(row.c), v: Number(row.v) || 0,
+    quoteVolume: null, trades: null, takerBuyBase: null, takerBuyQuote: null,
+    closed: null, windowEnded: null, finality: null, closureBasis: null,
+    observedAt: new Date(Number(row.t)).toISOString(),
+    receivedAt: null, storedAt: null, effectiveReceivedAt: null,
+    sourceHost: null, ingestionMode: null, publicAvailableAt: null,
+    origin: 'raw-tape', sourceVerification: 'unverified',
+  };
+}
+
+export function nextKlineOpen(interval, open) {
+  return klineOpenAt(interval, Number(open) + INTERVAL_MS[interval]);
 }
 
 export async function readLiveKlineTape(db, interval, limit = 6000, now = Date.now()) {
@@ -99,36 +136,14 @@ export async function readLiveKlineTape(db, interval, limit = 6000, now = Date.n
 }
 
 export function buildChartDeskFromTape(tape, interval, now = Date.now()) {
-  const dataset = {
-    ok: tape.authoritative,
-    id: `binance-perp-klines-${interval}`,
-    observations: (tape.rows || []).slice().reverse().map((row) => ({
-      observedAt: new Date(row.t).toISOString(),
-      receivedAt: tape.lastRun ? new Date(tape.lastRun).toISOString() : new Date(now).toISOString(),
-      storedAt: tape.lastRun ? new Date(tape.lastRun).toISOString() : new Date(now).toISOString(),
-      sourceHost: tape.sourceHost || 'fapi.binance.com',
-      ingestionMode: tape.ingestionMode || 'cloud-ws',
-      publicAvailableAt: null,
-      values: {
-        open: row.o, high: row.h, low: row.l, close: row.c, baseVolume: row.v,
-        quoteVolume: null, trades: null, takerBuyBase: null, takerBuyQuote: null,
-        closed: null, windowEnded: null, finality: 'forming',
-        closureBasis: 'live-tape; exchange confirmation not stored on klines table',
-      },
-    })),
-    collectionStale: !tape.authoritative,
-    sourceStale: !tape.authoritative,
-    coverage: { available: (tape.rows || []).length, returned: (tape.rows || []).length, truncated: (tape.rows || []).length >= 6000 },
-    state: { last_ingestion_mode: tape.ingestionMode || 'cloud-ws', last_success_received_at: tape.lastRun ? new Date(tape.lastRun).toISOString() : null },
-  };
-  const desk = buildChartDesk(dataset, interval, now);
-  if (tape.authoritative) {
-    desk.pricePathAvailable = true;
-    desk.quality = quality('pass', (desk.gap && desk.gap.reason === 'coverage_short') ? 'coverage_short' : null);
-    desk.ingestionMode = tape.ingestionMode || 'cloud-ws';
-    desk.sourceHost = tape.sourceHost || 'fapi.binance.com';
-  }
-  return desk;
+  const series = (tape.rows || []).map(rawTapeBar).filter((row) => Number.isFinite(row.t) && Number.isFinite(row.o) && Number.isFinite(row.c));
+  return finishChartDesk({
+    interval, now, series, authoritative: !!tape.authoritative, truncated: series.length >= 6000,
+    dataset: { id: `binance-perp-klines-${interval}`, collectionStale: !tape.authoritative, sourceStale: !tape.authoritative,
+      state: { last_ingestion_mode: tape.ingestionMode || 'cloud-ws' } },
+    ingestionMode: tape.authoritative ? (tape.ingestionMode || 'cloud-ws') : null,
+    sourceHost: tape.authoritative ? (tape.sourceHost || 'fapi.binance.com') : null,
+  });
 }
 
 function inputRevision(parts) {
@@ -149,33 +164,85 @@ function sanitizeDeskReason(reason) {
   return raw.replace(/\s+/g, ' ').slice(0, 80);
 }
 
-export function buildChartDesk(dataset, interval, now = Date.now()) {
-  const asOf = new Date(now).toISOString();
-  const auth = klineAuthority(dataset, { now, interval });
-  const series = auth.ok ? mapKlineObservations(dataset.observations) : [];
-  const last = series.length ? series[series.length - 1] : null;
-  const needed = NEEDED_BARS[interval] || 0;
-  const coverage = {
-    available: series.length,
-    returned: series.length,
-    truncated: !!(dataset && dataset.coverage && dataset.coverage.truncated),
-    needed,
+function chartEvidence(series, inWindowGaps) {
+  return {
+    series: series.map((bar) => ({
+      t: bar.t, o: bar.o, h: bar.h, l: bar.l, c: bar.c, v: bar.v,
+      quoteVolume: bar.quoteVolume, trades: bar.trades, takerBuyBase: bar.takerBuyBase, takerBuyQuote: bar.takerBuyQuote,
+      origin: bar.origin, sourceVerification: bar.sourceVerification, effectiveReceivedAt: bar.effectiveReceivedAt,
+      closed: bar.closed, finality: bar.finality, closureBasis: bar.closureBasis,
+    })),
+    inWindowGaps,
   };
-  const gap = auth.ok ? (needed && series.length < needed ? { reason: 'coverage_short', needed, available: series.length } : null) : { reason: auth.reason };
+}
+
+export function finishChartDesk({
+  interval, now = Date.now(), series = [], predecessor = null, truncated = false, unresolvedGap = null,
+  readIntent = 'window', requestFrom = null, requestTo = null, tail = null, historyRevision = 0, headT = null,
+  dataset = null, authoritative = false, ingestionMode = null, sourceHost = null, clearStale = false,
+} = {}) {
+  const asOf = new Date(now).toISOString();
+  const step = INTERVAL_MS[interval] || INTERVAL_MS['15m'];
+  const ordered = (series || []).filter((bar) => Number.isFinite(bar.t)).slice().sort((a, b) => a.t - b.t);
+  const auth = dataset ? klineAuthority(dataset, { now, interval }) : { ok: false, reason: ordered.length ? null : 'missing', venue: null, instrumentId: null };
+  const visible = clearStale ? [] : ordered;
+  const inWindowGaps = [];
+  for (let i = 1; i < visible.length; i++) {
+    if (nextKlineOpen(interval, visible[i - 1].t) !== visible[i].t) inWindowGaps.push({ from: visible[i - 1].t + step, to: visible[i].t });
+  }
+  if (readIntent === 'window' && Number.isFinite(requestFrom) && visible.length && visible[0].t > requestFrom) {
+    inWindowGaps.unshift({ from: requestFrom, to: visible[0].t });
+  }
+  if (readIntent === 'window' && Number.isFinite(requestTo) && visible.length && visible[visible.length - 1].t + step < requestTo) {
+    inWindowGaps.push({ from: visible[visible.length - 1].t + step, to: requestTo });
+  }
+  const boundaryGap = predecessor && visible.length && nextKlineOpen(interval, predecessor.t) !== visible[0].t
+    ? { after: predecessor.t, before: visible[0].t } : null;
+  let continuousVerifiedClosed = 0;
+  let end = visible.length - 1;
+  while (end >= 0 && visible[end].closed !== true && now - visible[end].t < step * 2) end -= 1;
+  for (let i = end; i >= 0; i--) {
+    const bar = visible[i];
+    if (bar.sourceVerification !== 'verified' || bar.closed !== true) break;
+    if (i < end && nextKlineOpen(interval, bar.t) !== visible[i + 1].t) break;
+    continuousVerifiedClosed += 1;
+  }
+  const needed = NEEDED_BARS[interval] || 0;
+  const researchEligible = continuousVerifiedClosed >= needed;
+  let researchReason = null;
+  if (inWindowGaps.length && !researchEligible) researchReason = 'in_window_gap';
+  else if (readIntent === 'tail' && visible.length < needed) researchReason = 'tail_sample';
+  else if (!researchEligible) researchReason = 'verified_history_insufficient';
+  const last = visible.length ? visible[visible.length - 1] : null;
+  const fresh = !!(last && last.t <= now && now - last.t <= step * 2);
+  const pricePathAvailable = clearStale ? false : !!(authoritative || fresh);
+  const unverified = visible.some((bar) => bar.sourceVerification !== 'verified');
+  let status = 'pass';
+  let reason = null;
+  if (clearStale || (!visible.length && !pricePathAvailable)) {
+    status = 'fail';
+    reason = clearStale ? 'stale_bootstrap' : (auth.reason || 'missing');
+  } else if (inWindowGaps.length || unverified || !researchEligible) {
+    status = 'warn';
+    reason = inWindowGaps.length ? 'in_window_gap' : (unverified ? 'unverified_history' : researchReason);
+  }
+  const venue = !clearStale && (authoritative || auth.ok || visible.some((bar) => bar.sourceVerification === 'verified')) ? 'binance-usdm' : null;
+  const verifiedCount = visible.filter((bar) => bar.sourceVerification === 'verified').length;
   return {
     schemaVersion: DESK_SCHEMA_VERSION,
     asOf,
     asKnownMode: 'system_observed',
     scope: 'chart',
-    instrumentId: auth.instrumentId,
-    venue: auth.venue,
+    instrumentId: venue ? 'BINANCE:USDM:BTCUSDT:PERPETUAL' : null,
+    venue,
     marketType: 'usdm-perpetual',
     datasetId: dataset && dataset.id ? dataset.id : `binance-perp-klines-${interval}`,
-    ingestionMode: last ? last.ingestionMode : dataset && dataset.state ? dataset.state.last_ingestion_mode : null,
-    sourceHost: last ? last.sourceHost : null,
+    ingestionMode: ingestionMode || (last ? last.ingestionMode : dataset && dataset.state ? dataset.state.last_ingestion_mode : null),
+    sourceHost: sourceHost || (last && last.origin === 'canonical' ? last.sourceHost : null),
     observedAt: last ? last.observedAt : null,
-    receivedAt: last ? last.receivedAt : dataset && dataset.state ? dataset.state.last_success_received_at : null,
+    receivedAt: last ? last.receivedAt : null,
     storedAt: last ? last.storedAt : null,
+    effectiveReceivedAt: last ? last.effectiveReceivedAt : null,
     publicAvailableAt: null,
     closed: last ? last.closed : null,
     windowEnded: last ? last.windowEnded : null,
@@ -183,18 +250,38 @@ export function buildChartDesk(dataset, interval, now = Date.now()) {
     closureBasis: last ? last.closureBasis : null,
     collectionStale: dataset ? dataset.collectionStale : true,
     sourceStale: dataset ? dataset.sourceStale : null,
-    coverage,
+    requestWindow: { symbol: 'BTCUSDT', interval, readIntent, from: requestFrom, to: requestTo, tail: readIntent === 'tail' ? tail : null },
+    returnedRange: visible.length ? { from: visible[0].t, to: visible[visible.length - 1].t + step } : { from: null, to: null },
+    coverageScope: readIntent,
+    stateScope: 'current',
+    historyRevision: Number.isInteger(historyRevision) ? historyRevision : 0,
+    headT: Number.isFinite(headT) ? headT : null,
+    researchWindow: { needed, continuousVerifiedClosed, eligible: researchEligible, reason: researchReason },
+    coverage: {
+      returned: visible.length, verified: verifiedCount, truncated: !!truncated, needed,
+      inWindowGaps, boundaryGap, unresolvedGap: unresolvedGap || null, available: null,
+    },
     units: { price: 'USDT/BTC', baseVolume: 'BTC', quoteVolume: 'USDT' },
     baselineAt: null,
     windowEligible: false,
-    inputRevision: inputRevision({ scope: 'chart', interval, latest: last && last.t, reason: auth.reason }),
-    quality: quality(auth.ok ? (gap && gap.reason === 'coverage_short' ? 'warn' : 'pass') : 'fail', auth.reason || (gap && gap.reason)),
-    pricePathAvailable: auth.ok,
+    inputRevision: inputRevision(chartEvidence(visible, inWindowGaps)),
+    quality: quality(status, reason),
+    pricePathAvailable,
     tradingNarrative: false,
     interval,
-    series,
-    gap,
+    series: visible,
+    gap: status === 'fail' ? { reason } : (inWindowGaps.length ? { reason: 'in_window_gap' } : null),
   };
+}
+
+export function buildChartDesk(dataset, interval, now = Date.now()) {
+  const auth = klineAuthority(dataset, { now, interval });
+  return finishChartDesk({
+    interval, now, dataset, clearStale: auth.reason === 'stale_bootstrap',
+    series: auth.reason === 'stale_bootstrap' ? [] : mapKlineObservations(dataset && dataset.observations),
+    truncated: !!(dataset && dataset.coverage && dataset.coverage.truncated),
+    unresolvedGap: dataset && dataset.coverage ? dataset.coverage.unresolvedGap : null,
+  });
 }
 
 function clockCard(id, label, dataset, extra = {}) {
@@ -221,18 +308,93 @@ function clockCard(id, label, dataset, extra = {}) {
   };
 }
 
+function contractClock(dataset,id,now,{sourceMaxAgeMs=null}={}) {
+  const latest=dataset?.observations?.[0];
+  const trusted=!!latest && dataset?.ok!==false && binanceHostOk(latest.sourceHost) && latest.ingestionMode!=='local-bootstrap';
+  const observedAt=Date.parse(latest?.observedAt || '');
+  const receipt=Date.parse(dataset?.state?.last_success_received_at || latest?.receivedAt || '');
+  const refreshMs=Number(dataset?.refreshSeconds || FINANCE_DATASETS[id]?.refreshSeconds || 60)*1000;
+  const collectionLimit = sourceMaxAgeMs != null && sourceMaxAgeMs <= 60000 ? Math.max(refreshMs, sourceMaxAgeMs) : refreshMs;
+  const collectionStale=!trusted || dataset?.collectionStale===true || !Number.isFinite(receipt) || receipt>now || now-receipt>collectionLimit;
+  const sourceStale=!trusted || !Number.isFinite(observedAt) || observedAt>now
+    || dataset?.sourceStale===true || (sourceMaxAgeMs!==null && now-observedAt>sourceMaxAgeMs);
+  return {trusted,latest,observedAt,collectionStale,sourceStale,available:trusted && !collectionStale && !sourceStale};
+}
+
+function fundingClock(dataset,premium,premiumClock,info,now) {
+  const clock=contractClock(dataset,'binance-perp-funding',now);
+  const infoLatest=info?.observations?.[0];
+  const infoReceipt=Date.parse(info?.state?.last_success_received_at || infoLatest?.receivedAt || '');
+  const reportedHours=Number(infoLatest?.values?.record?.fundingIntervalHours);
+  const infoFresh=info?.ok!==false && !!infoLatest && binanceHostOk(infoLatest.sourceHost)
+    && infoLatest.ingestionMode!=='local-bootstrap' && info?.collectionStale!==true
+    && Number.isFinite(infoReceipt) && infoReceipt<=now
+    && now-infoReceipt<=Number(info?.refreshSeconds || FINANCE_DATASETS['binance-perp-funding-info'].refreshSeconds)*1000;
+  const prior=dataset?.observations?.find(row=>Date.parse(row.observedAt)<clock.observedAt);
+  const observedSpacing=prior ? clock.observedAt-Date.parse(prior.observedAt):null;
+  const intervalMs=infoFresh && Number.isFinite(reportedHours) && reportedHours>0 ? reportedHours*3600000
+    : Number.isFinite(observedSpacing) && observedSpacing>0 ? observedSpacing:null;
+  const intervalBasis=infoFresh && Number.isFinite(reportedHours) && reportedHours>0 ? 'exchange-funding-info'
+    : intervalMs ? 'observed-settlement-spacing; not a guaranteed future interval':'unknown';
+  const next= premiumClock.available ? Date.parse(premium?.observations?.[0]?.values?.nextFundingTime || ''):NaN;
+  let sourceStale=clock.sourceStale ? true:null,reason=clock.sourceStale?'invalid_settlement_observation':null;
+  // fundingTime is a settled event, not a continuously changing quote. Source
+  // clocks come from the exchange's next settlement and reported/observed interval.
+  if(!clock.sourceStale && Number.isFinite(next)) {
+    if(next<=now || clock.observedAt>=next) {sourceStale=true;reason='settlement_due_or_schedule_inconsistent';}
+    else if(intervalMs) {
+      sourceStale=clock.observedAt<next-intervalMs-1000;
+      reason=sourceStale?'latest_scheduled_settlement_missing':null;
+    }
+  } else if(!clock.sourceStale && intervalBasis==='exchange-funding-info') {
+    sourceStale=now>=clock.observedAt+intervalMs;
+    reason=sourceStale?'reported_settlement_interval_elapsed':null;
+  }
+  return {...clock,sourceStale,available:clock.trusted && !clock.collectionStale && sourceStale!==true,
+    nextFundingTime:Number.isFinite(next)?new Date(next).toISOString():null,
+    fundingIntervalHours:intervalMs ? intervalMs/3600000:null,intervalBasis,
+    sourceFreshnessBasis:'settled event; collection receipt and settlement schedule are separate',
+    freshnessReason:reason || (sourceStale===null?'settlement_schedule_not_verified':null)};
+}
+
+function contractCard(id,label,dataset,clock,note) {
+  return {...clockCard(id,label,clock.trusted?dataset:null,{note}),
+    collectionStale:clock.collectionStale,sourceStale:clock.sourceStale,
+    unavailable:!clock.trusted,
+    reason:!clock.trusted?'binance_cloud_path_missing':clock.collectionStale?'collection_stale':clock.freshnessReason || (clock.sourceStale?'source_stale':null),
+    ...(clock.intervalBasis?{nextFundingTime:clock.nextFundingTime,fundingIntervalHours:clock.fundingIntervalHours,
+      intervalBasis:clock.intervalBasis,sourceFreshnessBasis:clock.sourceFreshnessBasis}:{}),
+  };
+}
+
+function positioningCard(id, dataset, now, spec) {
+  const clock = contractClock(dataset, id, now, {sourceMaxAgeMs: spec.sourceMaxAgeMs});
+  const card = contractCard(id, spec.label, dataset, clock, spec.note);
+  const latest = clock.latest;
+  return {...card,
+    referencePeriod: latest ? latest.observedAt : null,
+    receivedAt: latest ? (latest.receivedAt || card.receivedAt) : card.receivedAt,
+    effectiveReceivedAt: latest ? (latest.effectiveReceivedAt ?? latest.receivedAt ?? null) : null,
+    period: spec.period, sample: spec.sample, units: spec.units,
+    collectionStale: clock.collectionStale, sourceStale: clock.sourceStale, unavailable: !clock.trusted};
+}
+
 export function buildContextDesk(datasets, now = Date.now()) {
   const asOf = new Date(now).toISOString();
   const get = (id) => datasets && datasets[id] ? datasets[id] : null;
-  const contractIds = ['binance-perp-premium', 'binance-perp-funding', 'binance-perp-basis'];
-  const contractReady = contractIds.every((id) => {
-    const ds = get(id);
-    const latest = ds && ds.observations && ds.observations[0];
-    if (!latest) return false;
-    if (!binanceHostOk(latest.sourceHost)) return false;
-    const age = Date.now() - Date.parse(latest.observedAt || latest.receivedAt || '');
-    return Number.isFinite(age) && age < 6 * 60 * 60 * 1000 && latest.ingestionMode !== 'local-bootstrap';
-  });
+  const premium=get('binance-perp-premium'),funding=get('binance-perp-funding'),basis=get('binance-perp-basis');
+  const premiumClock=contractClock(premium,'binance-perp-premium',now,{sourceMaxAgeMs:FINANCE_DATASETS['binance-perp-premium'].refreshSeconds*2000});
+  const fundingStatus=fundingClock(funding,premium,premiumClock,get('binance-perp-funding-info'),now);
+  const basisClock=contractClock(basis,'binance-perp-basis',now,{sourceMaxAgeMs:3*3600000});
+  const clocks=[premiumClock,fundingStatus,basisClock];
+  const contractReady=clocks.some(clock=>clock.trusted),contractComplete=clocks.every(clock=>clock.available && clock.sourceStale===false);
+  const positioning = {
+    oi: positioningCard('binance-perp-oi', get('binance-perp-oi'), now, {label:'持仓量', period:null, sample:null, sourceMaxAgeMs:15000, units:{openInterest:'BTC'}, note:'openInterest 单位 BTC，不是美元市值'}),
+    oiHistory: positioningCard('binance-perp-oi-history', get('binance-perp-oi-history'), now, {label:'持仓量历史', period:'1h', sample:null, sourceMaxAgeMs:7200000, units:{sumOpenInterest:'BTC', sumOpenInterestValue:'USDT'}, note:'sumOpenInterest 为 BTC，sumOpenInterestValue 为 USDT'}),
+    taker: positioningCard('binance-perp-taker', get('binance-perp-taker'), now, {label:'主动买卖量', period:'1h', sample:null, sourceMaxAgeMs:7200000, units:{buyVol:'BTC', sellVol:'BTC', buySellRatio:'ratio'}, note:'主动量单位 BTC'}),
+    accounts: positioningCard('binance-perp-accounts', get('binance-perp-accounts'), now, {label:'全账户多空比', period:'1h', sample:'all-accounts', sourceMaxAgeMs:7200000, units:{longAccount:'fraction', shortAccount:'fraction', longShortRatio:'ratio'}, note:'样本为全部账户'}),
+    topPositions: positioningCard('binance-perp-top-positions', get('binance-perp-top-positions'), now, {label:'头部持仓多空比', period:'1h', sample:'top-positions', sourceMaxAgeMs:7200000, units:{longPosition:'fraction', shortPosition:'fraction', longShortRatio:'ratio'}, note:'样本为头部持仓'}),
+  };
   return {
     schemaVersion: DESK_SCHEMA_VERSION,
     asOf,
@@ -248,15 +410,20 @@ export function buildContextDesk(datasets, now = Date.now()) {
     units: {},
     baselineAt: null,
     windowEligible: false,
-    inputRevision: inputRevision({ scope: 'context', asOf, contractReady }),
-    quality: quality(contractReady ? 'pass' : 'warn', contractReady ? null : 'binance_contract_unavailable'),
+    inputRevision: inputRevision({ scope: 'context', contractReady,
+      premium: premium?.observations?.[0]?.observedAt || null,
+      funding: funding?.observations?.[0]?.observedAt || null,
+      basis: basis?.observations?.[0]?.observedAt || null }),
+    quality: quality(contractComplete ? 'pass' : 'warn', contractComplete ? null : contractReady?'binance_contract_partial':'binance_contract_unavailable'),
     pricePathAvailable: false,
     tradingNarrative: false,
     contract: contractReady ? {
-      premium: clockCard('binance-perp-premium', '标记价与报告费率', get('binance-perp-premium'), { note: 'lastFundingRate 是当前报告费率，不是已结算资金费' }),
-      funding: clockCard('binance-perp-funding', '已结算资金费', get('binance-perp-funding'), { note: '按 fundingTime；禁止默认 8 小时' }),
-      basis: clockCard('binance-perp-basis', '永续基差三字段', get('binance-perp-basis'), { note: 'basis / basisRate / annualizedBasisRate 独立，空为 null' }),
-    } : { unavailable: true, reason: 'binance_cloud_path_missing' },
+      unavailable:false,partial:!contractComplete,
+      premium: contractCard('binance-perp-premium','标记价与报告费率',premium,premiumClock,'lastFundingRate 是当前报告费率，不是已结算资金费'),
+      funding: contractCard('binance-perp-funding','已结算资金费',funding,fundingStatus,'按 fundingTime 保留已结算事件；采集时钟与结算时钟分开，不默认结算周期'),
+      basis: contractCard('binance-perp-basis','永续基差三字段',basis,basisClock,'basis / basisRate / annualizedBasisRate 独立，空为 null'),
+      positioning,
+    } : { unavailable: true, reason: 'binance_cloud_path_missing', positioning },
     groups: {
       dailyRates: {
         title: '日终利率（CMT / SOFR，非可成交）',
@@ -379,9 +546,52 @@ export function buildOrderflowDesk(status, bars, now = Date.now()) {
   };
 }
 
-async function readQuiet(db, id) {
-  try { return await readDataset(db, id); }
+async function readSummaryQuiet(db, id, knownAt) {
+  try { return await readDatasetSummary(db, id, knownAt ? {knownAt} : {}); }
   catch { return { ok: false, id, observations: [], collectionStale: true, sourceStale: null, state: null }; }
+}
+
+function tapeRowsFrom(result) {
+  return ((result && result.results) || []).map((row) => rawTapeBar(row)).filter((row) => Number.isFinite(row.t));
+}
+
+function unresolvedFromState(row) {
+  const error = row && row.last_error ? String(row.last_error) : '';
+  if (!error.startsWith('dataset_history_gap_pending:')) return null;
+  try {
+    const gap = JSON.parse(error.slice('dataset_history_gap_pending:'.length));
+    return {from: new Date(gap.from).toISOString(), to: new Date(gap.to).toISOString(), retryAt: gap.retryAt ? new Date(gap.retryAt).toISOString() : null};
+  } catch { return null; }
+}
+
+function footprintLevels(raw) {
+  let levels = raw;
+  if (typeof raw === 'string') {
+    try { levels = JSON.parse(raw); } catch { levels = []; }
+  }
+  if (!Array.isArray(levels)) return [];
+  return levels.map((level) => ({
+    price: Number(level.price),
+    buyVol: Number(level.buyVol != null ? level.buyVol : level.buy_vol) || 0,
+    sellVol: Number(level.sellVol != null ? level.sellVol : level.sell_vol) || 0,
+  })).filter((level) => Number.isFinite(level.price) && (level.buyVol > 0 || level.sellVol > 0));
+}
+
+function footprintDeskBar(row) {
+  const levels = footprintLevels(row.levels_json);
+  const buyVol = Number(row.buy_vol) || levels.reduce((sum, level) => sum + level.buyVol, 0);
+  const sellVol = Number(row.sell_vol) || levels.reduce((sum, level) => sum + level.sellVol, 0);
+  return {
+    t: Number(row.t),
+    o: Number(row.o), h: Number(row.h), l: Number(row.l), c: Number(row.c),
+    open: Number(row.o), high: Number(row.h), low: Number(row.l), close: Number(row.c),
+    buyVol, sellVol, buy_vol: buyVol, sell_vol: sellVol,
+    delta: Number.isFinite(Number(row.delta)) ? Number(row.delta) : buyVol - sellVol,
+    volume: Number.isFinite(Number(row.volume)) ? Number(row.volume) : buyVol + sellVol,
+    pocPrice: row.poc_price == null ? null : Number(row.poc_price),
+    poc_price: row.poc_price == null ? null : Number(row.poc_price),
+    levels,
+  };
 }
 
 export async function handleDesk(request, env) {
@@ -392,25 +602,114 @@ export async function handleDesk(request, env) {
   if (!DESK_SCOPES.includes(scope)) return json({ error: 'unknown_desk_scope', supported: DESK_SCOPES }, 400);
   const now = Date.now();
   if (scope === 'chart') {
+    const symbolParam = url.searchParams.get('symbol');
+    const symbol = symbolParam == null || symbolParam.trim() === '' ? 'BTCUSDT' : symbolParam.trim().toUpperCase();
+    if (symbol !== 'BTCUSDT') return json({ error: 'unsupported_symbol' }, 400);
     const interval = String(url.searchParams.get('interval') || '15m');
     if (!INTERVAL_MS[interval]) return json({ error: 'unsupported_interval' }, 400);
-    const tail = Number(url.searchParams.get('tail') || 0);
-    const limit = Number.isFinite(tail) && tail > 0 ? Math.min(200, Math.max(2, Math.floor(tail))) : 6000;
-    const tape = await readLiveKlineTape(env.DB, interval, limit, now);
-    if (tape.authoritative) return json(buildChartDeskFromTape(tape, interval, now));
-    const dataset = await readQuiet(env.DB, `binance-perp-klines-${interval}`);
-    const desk = buildChartDesk(dataset, interval, now);
-    if (limit < 6000 && Array.isArray(desk.series) && desk.series.length > limit) desk.series = desk.series.slice(-limit);
-    return json(desk);
+    const hasFrom = url.searchParams.has('from');
+    const hasTo = url.searchParams.has('to');
+    if (hasFrom !== hasTo) return json({ error: 'invalid_window' }, 400);
+    let requestFrom = null, requestTo = null;
+    if (hasFrom) {
+      requestFrom = Number(url.searchParams.get('from'));
+      requestTo = Number(url.searchParams.get('to'));
+      if (!Number.isSafeInteger(requestFrom) || !Number.isSafeInteger(requestTo) || requestFrom >= requestTo
+        || requestFrom !== klineOpenAt(interval, requestFrom) || requestTo !== klineOpenAt(interval, requestTo)) {
+        return json({ error: 'invalid_window' }, 400);
+      }
+    }
+    let tail = null;
+    if (url.searchParams.has('tail')) {
+      const rawTail = url.searchParams.get('tail');
+      if (!/^\d+$/.test(rawTail)) return json({ error: 'invalid_tail' }, 400);
+      tail = Number(rawTail);
+      if (!Number.isInteger(tail) || tail < 2 || tail > 200) return json({ error: 'invalid_tail' }, 400);
+    }
+    let knownAt = null;
+    if (url.searchParams.has('knownAt') || url.searchParams.has('known_at')) {
+      knownAt = url.searchParams.get('knownAt') || url.searchParams.get('known_at');
+      if (!Number.isFinite(Date.parse(knownAt))) return json({ error: 'invalid_known_at' }, 400);
+    }
+    const readIntent = hasFrom ? 'window' : (tail ? 'tail' : 'window');
+    const limit = readIntent === 'tail' ? tail : 6000;
+    const datasetId = `binance-perp-klines-${interval}`;
+    const statements = [];
+    if (readIntent === 'window') statements.push(env.DB.prepare(historyBaselineStatement('BTCUSDT', interval, datasetId).sql).bind(...historyBaselineStatement('BTCUSDT', interval, datasetId).params));
+    statements.push(env.DB.prepare('SELECT head_t, history_revision FROM desk_history_state WHERE symbol=?1 AND interval=?2').bind('BTCUSDT', interval));
+    statements.push(env.DB.prepare(`SELECT t,o,h,l,c,v FROM klines WHERE symbol=?1 AND interval=?2
+      AND (?3 IS NULL OR t>=?3) AND (?4 IS NULL OR t<?4) ORDER BY t DESC LIMIT ?5`).bind('BTCUSDT', interval, requestFrom, requestTo, limit + 1));
+    const stateIndex = statements.length;
+    statements.push(env.DB.prepare('SELECT last_error FROM finance_dataset_state WHERE dataset_id=?1').bind(datasetId));
+    const canonicalRead = prepareBoundedObservations(env.DB, datasetId, {
+      limit, fromMs: requestFrom, toMs: requestTo, knownAt: knownAt || new Date(now).toISOString(), historical: knownAt != null,
+    });
+    const canonicalIndex = statements.length;
+    statements.push(canonicalRead.statement);
+    const predecessorIndex = statements.length;
+    statements.push(env.DB.prepare(`SELECT t,o,h,l,c,v FROM klines WHERE symbol=?1 AND interval=?2
+      AND t < COALESCE(?3, (SELECT MIN(t) FROM (SELECT t FROM klines WHERE symbol=?1 AND interval=?2
+        AND (?4 IS NULL OR t<?4) ORDER BY t DESC LIMIT ?5))) ORDER BY t DESC LIMIT 1`)
+      .bind('BTCUSDT', interval, requestFrom, requestTo, limit));
+    const statusIndex = statements.length;
+    statements.push(env.DB.prepare('SELECT last_run, last_ok, last_error FROM sync_status WHERE symbol=?1 AND interval=?2').bind('BTCUSDT', interval));
+    const batched = await env.DB.batch(statements);
+    const revisionRow = (batched[readIntent === 'window' ? 1 : 0].results || [])[0] || null;
+    const tapeResult = batched[readIntent === 'window' ? 2 : 1];
+    let tape = knownAt ? [] : tapeRowsFrom(tapeResult).reverse();
+    const tapeTruncated = tape.length > limit;
+    if (tapeTruncated) tape = tape.slice(tape.length - limit);
+    let tapePredecessor = null;
+    if (!knownAt) {
+      const rows = tapeRowsFrom(batched[predecessorIndex]);
+      tapePredecessor = rows.length && (!tape.length || rows[0].t !== tape[0].t) ? rows[0] : null;
+    }
+    let canonical = [];
+    let canonicalPredecessor = null;
+    let canonicalTruncated = false;
+    const bounded = canonicalRead.parse(batched[canonicalIndex]);
+    canonical = mapKlineObservations(bounded.observations);
+    canonicalPredecessor = bounded.predecessor ? mapKlineObservations([bounded.predecessor])[0] : null;
+    canonicalTruncated = bounded.truncated;
+    const byOpen = new Map();
+    for (const bar of tape) byOpen.set(bar.t, bar);
+    for (const bar of canonical) byOpen.set(bar.t, bar);
+    let series = [...byOpen.values()].sort((a, b) => a.t - b.t);
+    let predecessor = canonicalPredecessor || (knownAt ? null : tapePredecessor);
+    let truncated = tapeTruncated || canonicalTruncated;
+    if (series.length > limit) {
+      predecessor = series[series.length - limit - 1] || predecessor;
+      series = series.slice(series.length - limit);
+      truncated = true;
+    }
+    const unresolvedGap = unresolvedFromState((batched[stateIndex].results || [])[0]);
+    const status = (batched[statusIndex].results || [])[0] || null;
+    const lastRun = Number(status && status.last_run) || 0;
+    const last = series.length ? series[series.length - 1] : null;
+    const step = INTERVAL_MS[interval];
+    const authoritative = !!(status && Number(status.last_ok) === 1 && lastRun && now - lastRun <= LIVE_TAPE_FRESH_MS
+      && last && now - last.t <= step * 2 && !/bybit|okx/i.test(String(status.last_error || '')));
+    return json(finishChartDesk({
+      interval, now, series, predecessor, truncated, unresolvedGap,
+      readIntent, requestFrom, requestTo, tail, historyRevision: Number(revisionRow?.history_revision || 0),
+      headT: revisionRow ? Number(revisionRow.head_t) : null, authoritative,
+      dataset: { id: datasetId, collectionStale: !authoritative, sourceStale: null, observations: [] },
+    }));
   }
   if (scope === 'context') {
     const ids = [
-      'binance-perp-premium', 'binance-perp-funding', 'binance-perp-basis',
+      'binance-perp-premium', 'binance-perp-funding', 'binance-perp-funding-info', 'binance-perp-basis',
+      'binance-perp-oi', 'binance-perp-oi-history', 'binance-perp-taker', 'binance-perp-accounts', 'binance-perp-top-positions',
       'fred-dgs2', 'fred-dgs10', 'fred-real10y', 'fred-breakeven10y', 'nyfed-sofr',
       'fred-dollar', 'fred-fed-assets', 'fred-tga', 'fred-rrp', 'fred-cpi',
       'stablecoin-supply', 'crypto-breadth', 'btc-fees',
     ];
-    const entries = await Promise.all(ids.map(async (id) => [id, await readQuiet(env.DB, id)]));
+    let knownAt = null;
+    if (url.searchParams.has('knownAt') || url.searchParams.has('known_at')) {
+      knownAt = url.searchParams.get('knownAt') || url.searchParams.get('known_at');
+      if (!Number.isFinite(Date.parse(knownAt))) return json({ error: 'invalid_known_at' }, 400);
+    }
+    const entries = await Promise.all(ids.map(async (id) => [id, await readSummaryQuiet(env.DB, id, knownAt)]));
     return json(buildContextDesk(Object.fromEntries(entries), now));
   }
   if (scope === 'heatmap') {
@@ -429,10 +728,10 @@ export async function handleDesk(request, env) {
       'SELECT last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status WHERE symbol = ?1'
     ).bind(symbol).first();
     const { results } = await env.DB.prepare(
-      `SELECT t, o, h, l, c, buy_vol, sell_vol, delta, volume, poc_price FROM footprint_bars
+      `SELECT t, o, h, l, c, buy_vol, sell_vol, delta, volume, poc_price, levels_json FROM footprint_bars
         WHERE symbol = ?1 AND interval = '5m' ORDER BY t DESC LIMIT 240`
     ).bind(symbol).all();
-    const bars = (results || []).slice().reverse();
+    const bars = (results || []).slice().reverse().map(footprintDeskBar);
     return json(buildOrderflowDesk(status, bars, now));
   }
   return json({ error: 'unknown_desk_scope' }, 400);

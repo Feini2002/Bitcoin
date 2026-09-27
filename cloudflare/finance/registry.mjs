@@ -7,13 +7,14 @@ const date = value => text(value, '^\\d{4}-\\d{2}-\\d{2}$');
 const op = (path, params = {}, extra = {}) => ({ path, params, ...extra });
 const symbol = text('BTCUSDT');
 const limit = num(100, 1, 500);
+const historyWindow = { startTime:num(undefined,0,8640000000000000), endTime:num(undefined,0,8640000000000000) };
 const free = '公开市场数据，遵守来源限流和数据使用条款；不含交易与账户操作。';
 const provider = (name, category, base, docs, operations, extra = {}) => ({ name, category, base, docs, cost: 'free-public', notes: free, ttl: 60, operations, ...extra });
 export const FINANCE_PROVIDERS = {
   'binance-spot': provider('Binance 现货', 'exchange', 'https://data-api.binance.vision', 'https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints', {
     instruments: op('/api/v3/exchangeInfo', { symbol }),
     ticker: op('/api/v3/ticker/24hr', { symbol }),
-    klines: op('/api/v3/klines', { symbol, interval: choice('1h', ['1m','5m','15m','1h','4h','1d','1w']), limit }),
+    klines: op('/api/v3/klines', { symbol, interval: choice('1h', ['1m','5m','15m','1h','4h','1d','1w']), limit, ...historyWindow }),
     depth: op('/api/v3/depth', { symbol, limit: choice('100', ['5','10','20','50','100']) }),
   }, { market: 'spot' }),
   'binance-usdm': provider('Binance USDⓈ-M', 'derivatives', 'https://fapi.binance.com', 'https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data', {
@@ -21,15 +22,15 @@ export const FINANCE_PROVIDERS = {
     'funding-info': op('/fapi/v1/fundingInfo'),
     'book-ticker': op('/fapi/v1/ticker/bookTicker', { symbol }),
     ticker: op('/fapi/v1/ticker/24hr', { symbol }),
-    klines: op('/fapi/v1/klines', { symbol, interval: choice('1h', ['1m','5m','15m','1h','4h','1d','1w']), limit }),
+    klines: op('/fapi/v1/klines', { symbol, interval: choice('1h', ['1m','5m','15m','1h','4h','1d','3d','1w']), limit, ...historyWindow }),
     premium: op('/fapi/v1/premiumIndex', { symbol }),
-    funding: op('/fapi/v1/fundingRate', { symbol, limit }),
+    funding: op('/fapi/v1/fundingRate', { symbol, limit, ...historyWindow }),
     'open-interest': op('/fapi/v1/openInterest', { symbol }),
-    'oi-history': op('/futures/data/openInterestHist', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit }),
-    'taker-volume': op('/futures/data/takerlongshortRatio', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit }),
-    'account-ratio': op('/futures/data/globalLongShortAccountRatio', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit }),
-    'top-position-ratio': op('/futures/data/topLongShortPositionRatio', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit }),
-    basis: op('/futures/data/basis', { pair:symbol, contractType:choice('PERPETUAL',['PERPETUAL','CURRENT_QUARTER','NEXT_QUARTER']), period:choice('1h',['5m','15m','1h','4h','1d']), limit }),
+    'oi-history': op('/futures/data/openInterestHist', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit, ...historyWindow }),
+    'taker-volume': op('/futures/data/takerlongshortRatio', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit, ...historyWindow }),
+    'account-ratio': op('/futures/data/globalLongShortAccountRatio', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit, ...historyWindow }),
+    'top-position-ratio': op('/futures/data/topLongShortPositionRatio', { symbol, period:choice('1h',['5m','15m','1h','4h','1d']), limit, ...historyWindow }),
+    basis: op('/futures/data/basis', { pair:symbol, contractType:choice('PERPETUAL',['PERPETUAL','CURRENT_QUARTER','NEXT_QUARTER']), period:choice('1h',['5m','15m','1h','4h','1d']), limit, ...historyWindow }),
     depth: op('/fapi/v1/depth', { symbol, limit: choice('100', ['5','10','20','50','100']) }),
   }, { market: 'usdm-futures' }),
   bybit: provider('Bybit', 'derivatives', 'https://api.bybit.com', 'https://bybit-exchange.github.io/docs/v5/market/kline', {

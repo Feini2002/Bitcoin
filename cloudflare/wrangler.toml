@@ -34,6 +34,9 @@ database_id = "de758bb8-c7f5-41c7-a6ea-32c0ddf74d57"
 name = "LIQUIDATION_COLLECTOR"
 class_name = "LiquidationCollector"
 
+# Compatibility-only namespace. The class durably retires and cannot connect;
+# Kline wake/status now use LIQUIDATION_COLLECTOR/BTCUSDT's internal component.
+# Keep binding + migration history so existing objects can delete their alarms.
 [[durable_objects.bindings]]
 name = "KLINE_LIVE_COLLECTOR"
 class_name = "KlineLiveCollector"

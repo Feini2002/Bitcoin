@@ -1,5 +1,5 @@
 import { FINANCE_PROVIDERS, FINANCE_EXCLUSIONS, FINANCE_VERSION } from './registry.mjs';
-import { financeChannelKey, readFinanceSnapshot, persistFinanceSnapshot, persistFinanceFailure, financeStorageStatus } from './store.mjs';
+import { financeChannelKey, financeSnapshotKey, readFinanceSnapshot, persistFinanceSnapshot, persistFinanceFailure, financeStorageStatus } from './store.mjs';
 import { FINANCE_DATASETS, datasetCatalog, datasetRequest } from './datasets.mjs';
 import { persistDataset, datasetFailure, readDataset, datasetStates } from './dataset-store.mjs';
 import { remapProviderBase, joinEgress, envelopeHost, egressRequestHeaders } from './egress.mjs';
@@ -52,6 +52,7 @@ export function buildFinanceRequest(providerId, operation, search = new URLSearc
     if (spec.pattern === '^\\d{4}-\\d{2}-\\d{2}$' && (!Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0,10)!==value)) throw new ChannelError('invalid_date');
     values[key] = value;
   }
+  if (values.startTime !== undefined && values.endTime !== undefined && Number(values.startTime)>Number(values.endTime)) throw new ChannelError('invalid_parameter');
   const used = new Set();
   const pathname = o.path.replace(/\{([^}]+)\}/g, (_,key) => {
     if (values[key] === undefined) throw new ChannelError('missing_parameter');
@@ -248,11 +249,15 @@ export async function handleFinance(request, env = {}, ctx = {}, dependencies = 
   let built;
   try{built=buildFinanceRequest(providerId,operation,url.searchParams,env,true);}
   catch(e){return reply({ok:false,provider:providerId,operation,error:e.code || 'invalid_request'},e.status || 400);}
-  const key=financeChannelKey(providerId,operation,built.values);
+  const key=financeSnapshotKey(providerId,operation,built.values);
   const ttl=built.provider.ttl;
   let record;
   try{record=await readFinanceSnapshot(env.DB,key);}
   catch(_){return reply({ok:false,error:'finance_storage_unavailable'},503);}
+  // Window slots have bounded cardinality, but different windows are never
+  // interchangeable cache hits and must not masquerade as the current tape.
+  if (record.envelope && financeChannelKey(providerId,operation,record.envelope.parameters)
+    !== financeChannelKey(providerId,operation,built.values)) record={state:record.state,envelope:null};
   if(stored) return record.envelope ? storedResponse(record,ttl,true) : reply({ok:false,error:'snapshot_not_found'},404);
   if(record.envelope?.version===FINANCE_VERSION && Date.now()-Date.parse(record.state.received_at)<ttl*1000) return storedResponse(record,ttl,true);
   if(record.state?.retry_at && Date.parse(record.state.retry_at)>Date.now()) {
@@ -270,6 +275,9 @@ export async function handleFinance(request, env = {}, ctx = {}, dependencies = 
       await persistFinanceSnapshot(env.DB,key,body,attemptedAt);
       const saved=await readFinanceSnapshot(env.DB,key);
       if(!saved.envelope)throw new Error('snapshot_not_found');
+      if (financeChannelKey(providerId,operation,saved.envelope.parameters)!==financeChannelKey(providerId,operation,built.values)) {
+        return reply({...body,storage:{persisted:false,superseded:true}});
+      }
       return storedResponse(saved,ttl,false);
     }
     const retry=Number(response.headers.get('Retry-After'));
@@ -312,7 +320,7 @@ async function handleDatasets(request,env,ctx,dependencies) {
         return reply({ok:false,id,error:code},502);
       }
     }
-    const result=await readDataset(env.DB,id,{limit:Number(limit),knownAt:new Date(refresh?Date.now():Date.parse(knownAt)).toISOString()});
+    const result=await readDataset(env.DB,id,{limit:Number(limit),knownAt:new Date(refresh?Date.now():Date.parse(knownAt)).toISOString(),historical:!refresh&&url.searchParams.has('known_at')});
     return reply({...result,storage:{persisted:result.ok,mode:refresh?'refresh-and-readback':'read-only'}},result.ok?200:404);
   } catch(_) {return reply({ok:false,id,error:'dataset_storage_unavailable'},503);}
 }

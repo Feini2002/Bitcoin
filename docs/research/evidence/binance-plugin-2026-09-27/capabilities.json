@@ -1,0 +1,371 @@
+{
+  "capturedAt": "2026-09-27T15:29:46.402Z",
+  "count": 89,
+  "categories": {
+    "COIN-M": 24,
+    "USDS-M": 33,
+    "options": 10,
+    "portfolio": 2,
+    "spot": 16,
+    "overview": 4
+  },
+  "scope": "Current conversation callable Binance tools; not an installed plugin package version or permanent availability guarantee",
+  "tools": [
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_24hr_ticker_price_change_statistics",
+      "description": "Explore Binance market data\n\n24 hour rolling window price change statistics.\n\nWeight: **1** for a single symbol, **40** when the symbol parameter is omitted\n**Careful** when accessing this with no symbol. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_24hr_ticker_price_change_statistics(args: {\n  // Pair\n  pair?: string;\n  // Symbol\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_basis",
+      "description": "Explore Binance market data\n\nQuery basis. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_basis(args: {\n  // Contract type.\n  contractType: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\";\n  endTime?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  // Pair.\n  pair: string;\n  // Period interval.\n  period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\";\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_compressed_aggregate_trades_list",
+      "description": "Explore Binance market data\n\nGet compressed, aggregate trades. Market trades that fill in 100ms with\nthe same price and the same taking side will have the quantity\naggregated. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_compressed_aggregate_trades_list(args: {\n  // Timestamp in ms to get aggregate trades until INCLUSIVE.\n  endTime?: number;\n  // ID to get aggregate trades from INCLUSIVE.\n  fromId?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  // Timestamp in ms to get aggregate trades from INCLUSIVE.\n  startTime?: number;\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_continuous_contract_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for a specific contract type. Klines are uniquely identified by their open time.\n\nWeight: based on parameter `LIMIT`\n\n| LIMIT | weight |\n| --- | --- |\n| [1,100) | 1 |\n| [100, 500) | 2 |\n| [500, 1000] | 5 |\n| > 1000 | 10 |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_continuous_contract_kline_candlestick_data(args: {\n  contractType: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\";\n  // End time\n  endTime?: number;\n  // Interval\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  // Maximum number of records to return.\n  limit?: number;\n  // After CM migration, accepts both CM and UM pair values.\n  pair: string;\n  // Start time\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_exchange_information",
+      "description": "Explore Binance market data\n\nCurrent exchange trading rules and symbol information. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_exchange_information(args: { [key: string]: unknown; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_funding_rate_history_of_perpetual_futures",
+      "description": "Explore Binance market data\n\nGet Funding Rate History of Perpetual Futures. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_funding_rate_history_of_perpetual_futures(args: {\n  // Timestamp in ms to get funding rate until INCLUSIVE.\n  endTime?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  // Timestamp in ms to get funding rate from INCLUSIVE.\n  startTime?: number;\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_funding_rate_info",
+      "description": "Explore Binance market data\n\nQuery funding rate info for symbols that had FundingRateCap/FundingRateFloor/fundingIntervalHours adjustment. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_funding_rate_info(args: { [key: string]: unknown; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_index_price_and_mark_price",
+      "description": "Explore Binance market data\n\nQuery index price and mark price. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_index_price_and_mark_price(args: { pair?: string; symbol?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_index_price_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for the index price of a pair. Klines are uniquely identified by their open time.\n\nWeight: Based on parameter `LIMIT`\n\n| LIMIT | weight |\n| --- | --- |\n| [1,100) | 1 |\n| [100, 500) | 2 |\n| [500, 1000] | 5 |\n| > 1000 | 10 |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_index_price_kline_candlestick_data(args: {\n  // End time\n  endTime?: number;\n  // Interval\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  // Maximum number of records to return.\n  limit?: number;\n  // After CM migration, accepts both CM and UM pair values.\n  pair: string;\n  // Start time\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for a symbol. Klines are uniquely identified by their open time.\n\nWeight: Based on parameter `LIMIT`\n\n| LIMIT | weight |\n| --- | --- |\n| [1,100) | 1 |\n| [100, 500) | 2 |\n| [500, 1000] | 5 |\n| > 1000 | 10 |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_kline_candlestick_data(args: {\n  // End time\n  endTime?: number;\n  // Interval\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  // Maximum number of records to return.\n  limit?: number;\n  // Start time\n  startTime?: number;\n  // After CM migration, accepts both CM and UM symbols.\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_long_short_ratio",
+      "description": "Explore Binance market data\n\nQuery symbol Long/Short Ratio. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_long_short_ratio(args: {\n  // Contract type filter. If omitted, returns aggregated data across all contract types.\n  contractType?: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\";\n  endTime?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  // BTCUSD\n  pair: string;\n  period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\";\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_mark_price_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for the mark price of a symbol. Klines are uniquely identified by their open time.\n\nWeight: Based on parameter `LIMIT`\n\n| LIMIT | weight |\n| --- | --- |\n| [1,100) | 1 |\n| [100, 500) | 2 |\n| [500, 1000] | 5 |\n| > 1000 | 10 |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_mark_price_kline_candlestick_data(args: {\n  // End time\n  endTime?: number;\n  // Interval\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  // Maximum number of records to return.\n  limit?: number;\n  // Start time\n  startTime?: number;\n  // After CM migration, accepts both CM and UM symbols.\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_old_trades_lookup",
+      "description": "Explore Binance market data\n\nGet older market historical trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_old_trades_lookup(args: {\n  // TradeId to fetch from. Default gets most recent trades.\n  fromId?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_open_interest",
+      "description": "Explore Binance market data\n\nGet present open interest of a specific symbol. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_open_interest(args: {\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_open_interest_statistics",
+      "description": "Explore Binance market data\n\nQuery open interest stats. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_open_interest_statistics(args: {\n  // Contract type filter. If omitted, returns aggregated data across all contract types.\n  contractType?: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\";\n  endTime?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  pair: string;\n  period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\";\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_order_book",
+      "description": "Explore Binance market data\n\nQuery orderbook on specific symbol\n\nWeight: Adjusted based on the limit:\n\n| Limit | Weight |\n| ------------ | ------------ |\n| 5, 10, 20, 50 | 2 |\n| 100 | 5 |\n| 500 | 10 |\n| 1000 | 20 |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_order_book(args: {\n  // Valid limits:[5, 10, 20, 50, 100, 500, 1000].\n  limit?: number;\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_premium_index_kline_data",
+      "description": "Explore Binance market data\n\nPremium index kline bars of a symbol. Klines are uniquely identified by their open time.\n\nWeight: Based on parameter `LIMIT`\n\n| LIMIT       | weight |\n| ----------- | ------ |\n| [1,100)     | 1      |\n| [100, 500)  | 2      |\n| [500, 1000] | 5      |\n| > 1000      | 10     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_premium_index_kline_data(args: {\n  // End time\n  endTime?: number;\n  // Interval\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  // Maximum number of records to return.\n  limit?: number;\n  // Start time\n  startTime?: number;\n  // After CM migration, accepts both CM and UM symbols.\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_recent_trades_list",
+      "description": "Explore Binance market data\n\nGet recent market trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_recent_trades_list(args: {\n  // Maximum number of records to return.\n  limit?: number;\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_symbol_order_book_ticker",
+      "description": "Explore Binance market data\n\nBest price/qty on the order book for a symbol or symbols.\n\nWeight: **2** for a single symbol, **5** when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_symbol_order_book_ticker(args: {\n  // Symbol\n  pair?: string;\n  // Symbol\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_symbol_price_ticker",
+      "description": "Explore Binance market data\n\nLatest price for a symbol or symbols.\n\nWeight: **1** for a single symbol, **2** when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_symbol_price_ticker(args: {\n  // Pair\n  pair?: string;\n  // Symbol\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_taker_buy_sell_volume",
+      "description": "Explore Binance market data\n\nTaker Buy Volume: the total volume of buy orders filled by takers within\nthe period.\n\nTaker Sell Volume: the total volume of sell orders filled by takers\nwithin the period. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_taker_buy_sell_volume(args: {\n  contractType: \"ALL\" | \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\";\n  endTime?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  pair: string;\n  period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\";\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_top_trader_long_short_ratio_accounts",
+      "description": "Explore Binance market data\n\nThe proportion of net long and net short accounts to total accounts of\nthe top 20% users with the highest margin balance. Each account is\ncounted once only.\n\nLong Account % = Accounts of top traders with net long positions / Total\naccounts of top traders with open positions\n\nShort Account % = Accounts of top traders with net short positions /\nTotal accounts of top traders with open positions\n\nLong/Short Ratio (Accounts) = Long Account % / Short Account %. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_top_trader_long_short_ratio_accounts(args: {\n  // Contract type filter. If omitted, returns aggregated data across all contract types.\n  contractType?: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\";\n  endTime?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  // Pair\n  pair: string;\n  period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\";\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_coin_top_trader_long_short_ratio_positions",
+      "description": "Explore Binance market data\n\nThe proportion of net long and net short positions to total open\npositions of the top 20% users with the highest margin balance.\n\nLong Position % = Long positions of top traders / Total open positions\nof top traders\n\nShort Position % = Short positions of top traders / Total open positions\nof top traders\n\nLong/Short Ratio (Positions) = Long Position % / Short Position %. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_coin_top_trader_long_short_ratio_positions(args: {\n  // Contract type filter. If omitted, returns aggregated data across all contract types.\n  contractType?: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\";\n  endTime?: number;\n  // Maximum number of records to return.\n  limit?: number;\n  pair: string;\n  period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\";\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_24hr_ticker_price_change_statistics",
+      "description": "Explore Binance market data\n\n24 hour rolling window price change statistics.\n**Careful** when accessing this with no symbol.\n\nWeight: **1** for a single symbol;\n**40** when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_24hr_ticker_price_change_statistics(args: { symbol?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_asset_index",
+      "description": "Explore Binance market data\n\nAsset index price.\n\n> **CM-UM Integration (Effective 2026-06-30):** Renamed from *Multi-Assets Mode Asset Index*. The response now additionally pushes COIN-M settlement-asset price index entries (e.g., `BTCUSD`, `ETHUSD`, `BNBUSD`). The endpoint path `/fapi/v1/assetIndex` is unchanged.\n\nWeight: **1** for a single symbol; **10** when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_asset_index(args: {\n  // Asset pair\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_auto_deleveraging_risk",
+      "description": "Explore Binance market data\n\nQuery the symbol-level ADL risk rating.\n\nThe ADL risk rating measures the likelihood of ADL during liquidation,\nand the rating takes into account the insurance fund balance, position\nconcentration on the symbol, order book depth, price volatility, average\nleverage, unrealized PnL, and margin utilization at the symbol level.\n\nThe rating can be high, medium and low, and is updated every 30 minutes. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_auto_deleveraging_risk(args: {\n  // Symbol\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_basis",
+      "description": "Explore Binance market data\n\nQuery future basis. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_basis(args: { contractType: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\"; endTime?: number; limit?: number; pair: string; period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\"; startTime?: number; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_composite_index_symbol_information",
+      "description": "Explore Binance market data\n\nQuery composite index symbol information. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_composite_index_symbol_information(args: { symbol?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_compressed_aggregate_trades_list",
+      "description": "Explore Binance market data\n\nGet compressed, aggregate market trades. Market trades that fill in\n100ms with the same price and the same taking side will have the\nquantity aggregated.\n\nRetail Price Improvement(RPI) orders are aggregated and without special\ntags to be distinguished. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_compressed_aggregate_trades_list(args: {\n  // Timestamp in ms to get aggregate trades until INCLUSIVE.\n  endTime?: number;\n  // ID to get aggregate trades from INCLUSIVE.\n  fromId?: number;\n  limit?: number;\n  // Timestamp in ms to get aggregate trades from INCLUSIVE.\n  startTime?: number;\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_continuous_contract_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for a specific contract type.\nKlines are uniquely identified by their open time.\n\nWeight: based on parameter `LIMIT`\n\n| LIMIT       | weight |\n| ----------- | ------ |\n| [1,100)     | 1      |\n| [100, 500)  | 2      |\n| [500, 1000] | 5      |\n| > 1000      | 10     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_continuous_contract_kline_candlestick_data(args: {\n  // Futurestype\n  contractType: \"PERPETUAL\" | \"CURRENT_QUARTER\" | \"NEXT_QUARTER\" | \"TRADIFI_PERPETUAL\";\n  // End time\n  endTime?: number;\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  limit?: number;\n  // After CM migration, accepts both UM and CM pair values.\n  pair: string;\n  // Start time\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_exchange_information",
+      "description": "Explore Binance market data\n\nCurrent exchange trading rules and symbol information. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_exchange_information(args: { [key: string]: unknown; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_funding_rate_history",
+      "description": "Explore Binance market data\n\nGet Funding Rate History\n\nWeight: share 500/5min/IP rate limit with GET /fapi/v1/fundingInfo. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_funding_rate_history(args: {\n  // Timestamp in ms to get funding rate until INCLUSIVE.\n  endTime?: number;\n  limit?: number;\n  // Timestamp in ms to get funding rate from INCLUSIVE.\n  startTime?: number;\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_funding_rate_info",
+      "description": "Explore Binance market data\n\nQuery funding rate info for symbols that had FundingRateCap/FundingRateFloor / fundingIntervalHours adjustment\n\nWeight: **0**\n\nshare 500/5min/IP rate limit with `GET /fapi/v1/fundingRate`. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_funding_rate_info(args: { [key: string]: unknown; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_index_price_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for the index price of a pair.\nKlines are uniquely identified by their open time.\n\nWeight: based on parameter `LIMIT`\n\n| LIMIT       | weight |\n| ----------- | ------ |\n| [1,100)     | 1      |\n| [100, 500)  | 2      |\n| [500, 1000] | 5      |\n| > 1000      | 10     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_index_price_kline_candlestick_data(args: {\n  // End time\n  endTime?: number;\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  limit?: number;\n  // After CM migration, accepts both UM and CM pair values.\n  pair: string;\n  // Start time\n  startTime?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for a symbol.\nKlines are uniquely identified by their open time.\n\nWeight: based on parameter `LIMIT`\n\n| LIMIT       | weight |\n| ----------- | ------ |\n| [1,100)     | 1      |\n| [100, 500)  | 2      |\n| [500, 1000] | 5      |\n| > 1000      | 10     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_kline_candlestick_data(args: {\n  // End time\n  endTime?: number;\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  limit?: number;\n  // Start time\n  startTime?: number;\n  // After CM migration, accepts both UM and CM symbols.\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_long_short_ratio",
+      "description": "Explore Binance market data\n\nQuery symbol Long/Short Ratio. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_long_short_ratio(args: { endTime?: number; limit?: number; period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\"; startTime?: number; symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_mark_price",
+      "description": "Explore Binance market data\n\nMark Price and Funding Rate\n\nWeight: **1** with symbol, **10** without symbol. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_mark_price(args: { symbol?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_mark_price_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for the mark price of a symbol.\nKlines are uniquely identified by their open time.\n\nWeight: based on parameter `LIMIT`\n\n| LIMIT       | weight |\n| ----------- | ------ |\n| [1,100)     | 1      |\n| [100, 500)  | 2      |\n| [500, 1000] | 5      |\n| > 1000      | 10     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_mark_price_kline_candlestick_data(args: {\n  // End time\n  endTime?: number;\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  limit?: number;\n  // Start time\n  startTime?: number;\n  // After CM migration, accepts both UM and CM symbols.\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_old_trades_lookup",
+      "description": "Explore Binance market data\n\nGet older market historical trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_old_trades_lookup(args: {\n  // TradeId to fetch from. Default gets most recent trades.\n  fromId?: number;\n  limit?: number;\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_open_interest",
+      "description": "Explore Binance market data\n\nGet present open interest of a specific symbol. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_open_interest(args: { symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_open_interest_statistics",
+      "description": "Explore Binance market data\n\nOpen Interest Statistics. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_open_interest_statistics(args: { endTime?: number; limit?: number; period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\"; startTime?: number; symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_order_book",
+      "description": "Explore Binance market data\n\nQuery symbol orderbook\n\nRetail Price Improvement(RPI) orders are not visible and excluded in the\nresponse message.\n\nWeight: Adjusted based on the limit:\n\n| Limit         | Weight |\n| ------------- | ------ |\n| 5, 10, 20, 50 | 2      |\n| 100           | 5      |\n| 500           | 10     |\n| 1000          | 20     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_order_book(args: {\n  // Valid limits:[5, 10, 20, 50, 100, 500, 1000]\n  limit?: number;\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_premium_index_kline_data",
+      "description": "Explore Binance market data\n\nPremium index kline bars of a symbol. Klines are uniquely identified by their open time.\n\nWeight: based on parameter `LIMIT`\n\n| LIMIT       | weight |\n| ----------- | ------ |\n| [1,100)     | 1      |\n| [100, 500)  | 2      |\n| [500, 1000] | 5      |\n| > 1000      | 10     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_premium_index_kline_data(args: {\n  // End time\n  endTime?: number;\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  limit?: number;\n  // Start time\n  startTime?: number;\n  // After CM migration, accepts both UM and CM symbols.\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_quarterly_contract_settlement_price",
+      "description": "Explore Binance market data\n\nLatest price for a symbol or symbols. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_quarterly_contract_settlement_price(args: { pair: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_recent_trades_list",
+      "description": "Explore Binance market data\n\nGet recent market trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_recent_trades_list(args: { limit?: number; symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_retail_price_index_order_book",
+      "description": "Explore Binance market data\n\nQuery symbol orderbook with RPI orders\n\nRPI(Retail Price Improvement) orders are included and aggreated in the\nresponse message. Crossed price levels are hidden and invisible.\n\nWeight: Adjusted based on the limit:\n\n| Limit         | Weight |\n| ------------- | ------ |\n| 1000          | 20     |. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_retail_price_index_order_book(args: {\n  // Valid limits:[1000]\n  limit?: number;\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_symbol_order_book_ticker",
+      "description": "Explore Binance market data\n\nBest price/qty on the order book for a symbol or symbols.\n\nRetail Price Improvement(RPI) orders are not visible and excluded in the\nresponse message.\n\nWeight: **2** for a single symbol;\n**5** when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_symbol_order_book_ticker(args: { symbol?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_symbol_price_ticker",
+      "description": "Explore Binance market data\n\nLatest price for a symbol or symbols.\n\nWeight: 1 for a single symbol;\n2 when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_symbol_price_ticker(args: { symbol?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_symbol_price_ticker_v2",
+      "description": "Explore Binance market data\n\nLatest price for a symbol or symbols.\n\nWeight: 1 for a single symbol;\n2 when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_symbol_price_ticker_v2(args: { symbol?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_taker_buy_sell_volume",
+      "description": "Explore Binance market data\n\nTaker Buy/Sell Volume. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_taker_buy_sell_volume(args: { endTime?: number; limit?: number; period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\"; startTime?: number; symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_top_trader_long_short_ratio_accounts",
+      "description": "Explore Binance market data\n\nThe proportion of net long and net short accounts to total accounts of\nthe top 20% users with the highest margin balance. Each account is\ncounted once only.\n\nLong Account % = Accounts of top traders with net long positions / Total\naccounts of top traders with open positions\n\nShort Account % = Accounts of top traders with net short positions /\nTotal accounts of top traders with open positions\n\nLong/Short Ratio (Accounts) = Long Account % / Short Account %. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_top_trader_long_short_ratio_accounts(args: { endTime?: number; limit?: number; period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\"; startTime?: number; symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_top_trader_long_short_ratio_positions",
+      "description": "Explore Binance market data\n\nThe proportion of net long and net short positions to total open\npositions of the top 20% users with the highest margin balance.\n\nLong Position % = Long positions of top traders / Total open positions\nof top traders\n\nShort Position % = Short positions of top traders / Total open positions\nof top traders\n\nLong/Short Ratio (Positions) = Long Position % / Short Position %. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_top_trader_long_short_ratio_positions(args: { endTime?: number; limit?: number; period: \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"12h\" | \"1d\"; startTime?: number; symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_futures_usds_trading_schedule",
+      "description": "Explore Binance market data\n\nTrading session schedules for the underlying assets of TradFi Perps are provided for a one-week period forward and one-week period backward starting from the day prior to the query time, covering the U.S. equity market, Korean equity market, Hong Kong equity market, China equity market, and the commodity market.\n\nSession types per market:\n- U.S. equity market: \"PRE_MARKET\", \"REGULAR\", \"AFTER_MARKET\", \"OVERNIGHT\", \"NO_TRADING\".\n- Commodity market: \"REGULAR\", \"NO_TRADING\".\n- Korean equity market: \"REGULAR\", \"NO_TRADING\".\n- Hong Kong equity market: \"REGULAR\", \"NO_TRADING\".\n- China equity market: \"REGULAR\", \"NO_TRADING\". This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_futures_usds_trading_schedule(args: { [key: string]: unknown; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_24hr_ticker_price_change_statistics",
+      "description": "Explore Binance market data\n\n24 hour rolling window price change statistics.\n\nWeight: 1 for a single symbol; 40 when the symbol parameter is omitted. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_24hr_ticker_price_change_statistics(args: {\n  // Option trading pair\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_exchange_information",
+      "description": "Explore Binance market data\n\nCurrent exchange trading rules and symbol information. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_exchange_information(args: { [key: string]: unknown; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_historical_exercise_records",
+      "description": "Explore Binance market data\n\nGet historical exercise records.\n\n* REALISTIC_VALUE_STRICKEN -> Exercised\n* EXTRINSIC_VALUE_EXPIRED -> Expired OTM. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_historical_exercise_records(args: {\n  // End Time, e.g 1593512200000\n  endTime?: number;\n  // Number of result sets returned\n  limit?: number;\n  // Start Time, e.g 1593511200000\n  startTime?: number;\n  // Underlying asset.\n  underlying?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_index_price",
+      "description": "Explore Binance market data\n\nGet spot index price for option underlying. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_index_price(args: {\n  // Underlying asset.\n  underlying: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for an option symbol. Klines are uniquely identified by their open time. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_kline_candlestick_data(args: {\n  // End Time, e.g 1593512200000\n  endTime?: number;\n  // Time interval\n  interval: \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  // Number of result sets returned\n  limit?: number;\n  // Start Time, e.g 1593511200000\n  startTime?: number;\n  // Option trading pair\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_open_interest",
+      "description": "Explore Binance market data\n\nGet open interest for specific underlying asset on specific expiration date. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_open_interest(args: {\n  // expiration date\n  expiration: string;\n  // Underlying asset.\n  underlyingAsset: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_option_mark_price",
+      "description": "Explore Binance market data\n\nOption mark price and greek info. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_option_mark_price(args: {\n  // Option trading pair\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_order_book",
+      "description": "Explore Binance market data\n\nCheck orderbook depth on specific symbol\n\nWeight: limit         | weight\n------------  | ------------\n5, 10, 20, 50 | 1\n100           | 5\n500           | 10\n1000          | 20. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_order_book(args: {\n  // Default:100 Max:1000.Optional value:[10, 20, 50, 100, 500, 1000]\n  limit?: number;\n  // Option trading pair\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_recent_block_trades_list",
+      "description": "Explore Binance market data\n\nGet recent block trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_recent_block_trades_list(args: {\n  // Number of records\n  limit?: number;\n  // Option trading pair\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_options_recent_trades_list",
+      "description": "Explore Binance market data\n\nGet recent market trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_options_recent_trades_list(args: {\n  // Number of result sets returned\n  limit?: number;\n  // Option trading pair\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_portfolio_margin_collateral_rate",
+      "description": "Explore Binance market data\n\nPortfolio Margin Collateral Rate. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_portfolio_margin_collateral_rate(args: { [key: string]: unknown; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_24hr_ticker_price_change_statistics",
+      "description": "Explore Binance market data\n\n24 hour rolling window price change statistics. **Careful** when accessing this with no symbol.\n\nWeight: <table>\n  <thead>\n      <tr>\n          <th>Parameter</th>\n          <th>Symbols Provided</th>\n          <th>Weight</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td rowspan=\"2\">symbol</td>\n          <td>1</td>\n          <td>2</td>\n      </tr>\n      <tr>\n          <td>symbol parameter is omitted</td>\n          <td>80</td>\n      </tr>\n      <tr>\n          <td rowspan=\"4\">symbols</td>\n          <td>1-20</td>\n          <td>2</td>\n      </tr>\n      <tr>\n          <td>21-100</td>\n          <td>40</td>\n      </tr>\n      <tr>\n          <td>101 or more</td>\n          <td>80</td>\n      </tr>\n      <tr>\n          <td>symbols parameter is omitted</td>\n          <td>80</td>\n      </tr>\n  </tbody>\n</table>. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_24hr_ticker_price_change_statistics(args: {\n  // Either `symbol` or `symbols` must be provided\n  symbol?: string;\n  // Filters for symbols that have this `tradingStatus`.\n  // For a single symbol, a status mismatch returns error `-1220 SYMBOL_DOES_NOT_MATCH_STATUS`.\n  // For multiple symbols, non-matching ones are simply excluded from the response.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n  // Either `symbol` or `symbols` must be provided\n  // Examples of accepted format for the `symbols` parameter: [\"BTCUSDT\",\"BNBUSDT\"] or %5B%22BTCUSDT%22,%22BNBUSDT%22%5D\n  // The maximum number of symbols allowed in a request is 100.\n  symbols?: Array<string>;\n  type?: \"FULL\" | \"MINI\";\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_compressed_aggregate_trades_list",
+      "description": "Explore Binance market data\n\nGet compressed, aggregate trades. Trades that fill at the time, from the same taker order, with the same price will have the quantity aggregated. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_compressed_aggregate_trades_list(args: {\n  // Timestamp in ms to get aggregate trades until INCLUSIVE.\n  endTime?: number;\n  // ID to get aggregate trades from INCLUSIVE.\n  fromId?: number;\n  limit?: number;\n  // Timestamp in ms to get aggregate trades from INCLUSIVE.\n  startTime?: number;\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_current_average_price",
+      "description": "Explore Binance market data\n\nCurrent average price for a symbol. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_current_average_price(args: { symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_exchange_information",
+      "description": "Explore Binance market data\n\nCurrent exchange trading rules and symbol information. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_exchange_information(args: {\n  // Examples: curl -X GET \"https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT\"\n  // curl -X GET \"https://api.binance.com/api/v3/exchangeInfo?permissions=%5B%22MARGIN%22%2C%22LEVERAGED%22%5D\"\n  // or\n  // curl -g -X GET 'https://api.binance.com/api/v3/exchangeInfo?permissions=[\"MARGIN\",\"LEVERAGED\"]'\n  permissions?: Array<\"SPOT\" | \"MARGIN\" | \"LEVERAGED\" | \"TRD_GRP_002\" | \"TRD_GRP_003\" | \"TRD_GRP_004\" | \"TRD_GRP_005\" | \"TRD_GRP_006\" | \"TRD_GRP_007\" | \"TRD_GRP_008\" | \"TRD_GRP_009\" | \"TRD_GRP_010\" | \"TRD_GRP_011\" | \"TRD_GRP_012\" | \"TRD_GRP_013\" | \"TRD_GRP_014\" | \"TRD_GRP_015\" | \"TRD_GRP_016\" | \"TRD_GRP_017\" | \"TRD_GRP_018\" | \"TRD_GRP_019\" | \"TRD_GRP_020\" | \"TRD_GRP_021\" | \"TRD_GRP_022\" | \"TRD_GRP_023\" | \"TRD_GRP_024\" | \"TRD_GRP_025\">;\n  // Controls whether the content of the `permissionSets` field is populated or not.\n  showPermissionSets?: boolean;\n  // Example: curl -X GET \"https://api.binance.com/api/v3/exchangeInfo?symbol=BNBBTC\"\n  symbol?: string;\n  // Filters for symbols that have this `tradingStatus`. Cannot be used in combination with `symbols` or `symbol`.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n  // Examples: curl -X GET \"https://api.binance.com/api/v3/exchangeInfo?symbols=%5B%22BNBBTC%22,%22BTCUSDT%22%5D\" or curl -g -X GET 'https://api.binance.com/api/v3/exchangeInfo?symbols=[\"BTCUSDT\",\"BNBBTC\"]'\n  symbols?: Array<string>;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nKline/candlestick bars for a symbol.\nKlines are uniquely identified by their open time. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_kline_candlestick_data(args: {\n  endTime?: number;\n  interval: \"1s\" | \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  limit?: number;\n  startTime?: number;\n  symbol: string;\n  // Default: 0 (UTC)\n  timeZone?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_old_trade_lookup",
+      "description": "Explore Binance market data\n\nGet older trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_old_trade_lookup(args: {\n  // TradeId to fetch from. Default gets most recent trades.\n  fromId?: number;\n  limit?: number;\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_order_book",
+      "description": "Explore Binance market data\n\nOrder book\n\nWeight: Adjusted based on the limit:\n\n|Limit|Request Weight\n------|-------\n1-100|  5\n101-500| 25\n501-1000| 50\n1001-5000| 250. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_order_book(args: {\n  // If limit > 5000, only 5000 entries will be returned.\n  limit?: number;\n  symbol: string;\n  // Filters for symbols that have this `tradingStatus`.\n  // A status mismatch returns error `-1220 SYMBOL_DOES_NOT_MATCH_STATUS`.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_recent_trades_list",
+      "description": "Explore Binance market data\n\nGet recent trades. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_recent_trades_list(args: { limit?: number; symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_rolling_window_price_change_statistics",
+      "description": "Explore Binance market data\n\n**Note:** This endpoint differs from `GET /api/v3/ticker/24hr`.\n\nThe statistical time range of this endpoint can be up to 59999ms longer\nthan the requested `windowSize`.\n\n`openTime` starts at the beginning of a minute, while the end time is\nthe current time. Therefore, the actual interval can be up to 59999ms\nlonger than the requested window.\n\nFor example, if `closeTime` is 1641287867099 (January 04, 2022\n09:17:47:099 UTC) and `windowSize` is `1d`, then `openTime` is\n1641201420000 (January 3, 2022, 09:17:00 UTC).\n\nWeight: 4 for each requested symbol regardless of windowSize.\n\nThe weight for this request will cap at 200 once the number of `symbols` in the request is more than 50. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_rolling_window_price_change_statistics(args: {\n  // Either `symbol` or `symbols` must be provided\n  symbol?: string;\n  // Filters for symbols that have this `tradingStatus`.\n  // For a single symbol, a status mismatch returns error `-1220 SYMBOL_DOES_NOT_MATCH_STATUS`.\n  // For multiple symbols, non-matching ones are simply excluded from the response.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n  // Either `symbol` or `symbols` must be provided\n  // Examples of accepted format for the `symbols` parameter: [\"BTCUSDT\",\"BNBUSDT\"] or %5B%22BTCUSDT%22,%22BNBUSDT%22%5D\n  // The maximum number of symbols allowed in a request is 100.\n  symbols?: Array<string>;\n  type?: \"FULL\" | \"MINI\";\n  // Units cannot be combined (e.g. `1d2h` is not allowed).\n  windowSize?: \"1m\" | \"2m\" | \"3m\" | \"4m\" | \"5m\" | \"6m\" | \"7m\" | \"8m\" | \"9m\" | \"10m\" | \"11m\" | \"12m\" | \"13m\" | \"14m\" | \"15m\" | \"16m\" | \"17m\" | \"18m\" | \"19m\" | \"20m\" | \"21m\" | \"22m\" | \"23m\" | \"24m\" | \"25m\" | \"26m\" | \"27m\" | \"28m\" | \"29m\" | \"30m\" | \"31m\" | \"32m\" | \"33m\" | \"34m\" | \"35m\" | \"36m\" | \"37m\" | \"38m\" | \"39m\" | \"40m\" | \"41m\" | \"42m\" | \"43m\" | \"44m\" | \"45m\" | \"46m\" | \"47m\" | \"48m\" | \"49m\" | \"50m\" | \"51m\" | \"52m\" | \"53m\" | \"54m\" | \"55m\" | \"56m\" | \"57m\" | \"58m\" | \"59m\" | \"1h\" | \"2h\" | \"3h\" | \"4h\" | \"5h\" | \"6h\" | \"7h\" | \"8h\" | \"9h\" | \"10h\" | \"11h\" | \"12h\" | \"13h\" | \"14h\" | \"15h\" | \"16h\" | \"17h\" | \"18h\" | \"19h\" | \"20h\" | \"21h\" | \"22h\" | \"23h\" | \"1d\" | \"2d\" | \"3d\" | \"4d\" | \"5d\" | \"6d\" | \"7d\";\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_symbol_order_book_ticker",
+      "description": "Explore Binance market data\n\nBest price/qty on the order book for a symbol or symbols.\n\nWeight: |Parameter|Symbols Provided|Weight|\n|---|---|---|\n|symbol| 1 |2|\n| |omitted| 4|\n|symbols| Any |4|. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_symbol_order_book_ticker(args: {\n  // Parameter symbol and symbols cannot be used in combination.\n  // If neither parameter is sent, `bookTickers` for all symbols will be returned in an array.\n  symbol?: string;\n  // Filters for symbols that have this `tradingStatus`.\n  // For a single symbol, a status mismatch returns error `-1220 SYMBOL_DOES_NOT_MATCH_STATUS`.\n  // For multiple or all symbols, non-matching ones are simply excluded from the response.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n  // Parameter symbol and symbols cannot be used in combination.\n  // If neither parameter is sent, `bookTickers` for all symbols will be returned in an array.\n  // Examples of accepted format for the symbols parameter: [\"BTCUSDT\",\"BNBUSDT\"] or %5B%22BTCUSDT%22,%22BNBUSDT%22%5D\n  symbols?: Array<string>;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_symbol_price_ticker",
+      "description": "Explore Binance market data\n\nLatest price for a symbol or symbols.\n\nWeight: |Parameter|Symbols Provided|Weight|\n|---|---|---|\n|symbol| 1 |2|\n| |omitted| 4|\n|symbols| Any |4|. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_symbol_price_ticker(args: {\n  // Parameter symbol and symbols cannot be used in combination.\n  // If neither parameter is sent, prices for all symbols will be returned in an array.\n  symbol?: string;\n  // Filters for symbols that have this `tradingStatus`.\n  // For a single symbol, a status mismatch returns error `-1220 SYMBOL_DOES_NOT_MATCH_STATUS`.\n  // For multiple or all symbols, non-matching ones are simply excluded from the response.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n  // Parameter symbol and symbols cannot be used in combination.\n  // If neither parameter is sent, prices for all symbols will be returned in an array.\n  // Examples of accepted format for the symbols parameter: [\"BTCUSDT\",\"BNBUSDT\"] or %5B%22BTCUSDT%22,%22BNBUSDT%22%5D\n  symbols?: Array<string>;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_trading_day_ticker",
+      "description": "Explore Binance market data\n\nPrice change statistics for a trading day.\n\nWeight: 4 for each requested symbol. The weight for this request will cap at 200 once the number of symbols in the request is more than 50. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_trading_day_ticker(args: {\n  // Either `symbol` or `symbols` must be provided.\n  symbol?: string;\n  // Filters for symbols that have this `tradingStatus`.\n  // For a single symbol, a status mismatch returns error `-1220 SYMBOL_DOES_NOT_MATCH_STATUS`.\n  // For multiple symbols, non-matching ones are simply excluded from the response.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n  // Either `symbol` or `symbols` must be provided.\n  // Examples of accepted format for the `symbols` parameter: [\"BTCUSDT\",\"BNBUSDT\"] or %5B%22BTCUSDT%22,%22BNBUSDT%22%5D.\n  // The maximum number of `symbols` allowed in a request is 100.\n  symbols?: Array<string>;\n  // Default: 0 (UTC)\n  timeZone?: string;\n  type?: \"FULL\" | \"MINI\";\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_get_spot_ui_kline_candlestick_data",
+      "description": "Explore Binance market data\n\nThe request is similar to klines having the same parameters and\nresponse.\n\n`uiKlines` return modified kline data, optimized for presentation of\ncandlestick charts. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_get_spot_ui_kline_candlestick_data(args: {\n  endTime?: number;\n  interval: \"1s\" | \"1m\" | \"3m\" | \"5m\" | \"15m\" | \"30m\" | \"1h\" | \"2h\" | \"4h\" | \"6h\" | \"8h\" | \"12h\" | \"1d\" | \"3d\" | \"1w\" | \"1M\";\n  limit?: number;\n  startTime?: number;\n  symbol: string;\n  // Default: 0 (UTC)\n  timeZone?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_hot_category",
+      "description": "Explore Binance market data\n\nGet cryptocurrency hot categories overview including market cap, trading volume, 24h change, and top tokens per category. Use this when users ask about crypto category performance, category trends, or want to explore tokens by industry category (e.g., DeFi, Layer 2, AI, Meme, GameFi). This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_hot_category(args: {}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_hot_coin",
+      "description": "Explore Binance market data\n\nGet trending hot coins with rankings, price changes, market sentiment, and top player movements. Use this when users ask about trending coins, hot tokens, or what coins are popular right now. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_hot_coin(args: { rank_type?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_list_futures_usds_all_convert_pairs",
+      "description": "Explore Binance market data\n\nQuery for all convertible token pairs and the tokens’ respective upper/lower limits. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_list_futures_usds_all_convert_pairs(args: {\n  // User spends coin\n  fromAsset?: string;\n  // User receives coin\n  toAsset?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_market_overview",
+      "description": "Explore Binance market data\n\nGet cryptocurrency market overview including market cap, trading volume, fear/greed index, market analysis, news, and hot tokens carousel. Use this when users ask about overall crypto market conditions, market sentiment, or want to see trending tokens. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_market_overview(args: { lang?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_query_futures_coin_index_price_constituents",
+      "description": "Explore Binance market data\n\nQuery index price constituents. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_query_futures_coin_index_price_constituents(args: {\n  // Symbol\n  symbol: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_query_futures_usds_index_price_constituents",
+      "description": "Explore Binance market data\n\nQuery index price constituents\n\n**Note**:\nPrices from constituents of TradFi perps will be hiden and displayed as -1. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_query_futures_usds_index_price_constituents(args: { symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_query_futures_usds_insurance_fund_balance_snapshot",
+      "description": "Explore Binance market data\n\nQuery Insurance Fund Balance Snapshot. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_query_futures_usds_insurance_fund_balance_snapshot(args: {\n  // Symbol\n  symbol?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_query_portfolio_margin_asset_index_price",
+      "description": "Explore Binance market data\n\nQuery Portfolio Margin Asset Index Price\n\nWeight: - 1 if `asset` is sent\n- 50 if `asset` is not sent. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_query_portfolio_margin_asset_index_price(args: { asset?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_query_spot_execution_rules",
+      "description": "Explore Binance market data\n\nQuery execution rules for symbols.\n\nWeight: Parameter | Weight\n--- | ---\n`symbol` | 2\n`symbols` | 2 for each `symbol`, capped at a max of 40\n`symbolStatus` | 40\nNone | 40. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_query_spot_execution_rules(args: {\n  // Query for specified symbol.\n  symbol?: string;\n  // Query for all symbols with the specified status.\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n  // Query for multiple symbols.\n  symbols?: Array<string>;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_query_spot_reference_price",
+      "description": "Explore Binance market data\n\nQuery the reference price for a symbol. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_query_spot_reference_price(args: { symbol: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_query_spot_reference_price_calculation",
+      "description": "Explore Binance market data\n\nDescribes how reference price is calculated for a given symbol. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_query_spot_reference_price_calculation(args: {\n  symbol: string;\n  // Supported values: `TRADING`, `HALT`, `BREAK`\n  symbolStatus?: \"TRADING\" | \"HALT\" | \"BREAK\";\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__codex_apps__binance_token_quote",
+      "description": "Explore Binance market data\n\nGet AI-generated analysis and insights for a specific token, including TLDR summary, opportunities, risks, and community sentiment. Only use this when users explicitly ask for token analysis, AI insights, token summary, or in-depth overview — NOT for simple price checks. For basic price queries, use the ticker tools instead. This tool is part of plugin `Binance`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__codex_apps__binance_token_quote(args: { lang?: string; symbol?: string; }): Promise<CallToolResult>; };\n```"
+    }
+  ]
+}

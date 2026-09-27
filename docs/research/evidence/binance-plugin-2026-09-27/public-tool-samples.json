@@ -1,0 +1,165 @@
+{
+  "recordedAt": "2026-09-27T15:34:33.250Z",
+  "note": "Public market responses only. Three preceding-turn samples are reused; their exact client call times were not recorded. Provider times are retained. Two additional samples have client call timestamps. No production-system comparison or database import was performed.",
+  "samples": [
+    {
+      "id": "open-interest",
+      "tool": "mcp__codex_apps__binance_get_futures_usds_open_interest",
+      "input": {
+        "symbol": "BTCUSDT"
+      },
+      "calledAt": null,
+      "reusedFromPrecedingTurn": true,
+      "isError": false,
+      "response": {
+        "symbol": "BTCUSDT",
+        "openInterest": "94450.886",
+        "time": 1790522685171
+      }
+    },
+    {
+      "id": "klines",
+      "tool": "mcp__codex_apps__binance_get_futures_usds_kline_candlestick_data",
+      "input": {
+        "symbol": "BTCUSDT",
+        "interval": "5m",
+        "limit": 3
+      },
+      "calledAt": null,
+      "reusedFromPrecedingTurn": true,
+      "isError": false,
+      "response": {
+        "result": [
+          [
+            1790521800000,
+            "84462.50",
+            "84490.00",
+            "84425.00",
+            "84468.30",
+            "328.740",
+            1790522099999,
+            "27761734.85730",
+            7674,
+            "139.109",
+            "11747859.75110",
+            "0"
+          ],
+          [
+            1790522100000,
+            "84468.40",
+            "84587.10",
+            "84439.00",
+            "84520.00",
+            "317.166",
+            1790522399999,
+            "26811572.69260",
+            9841,
+            "210.172",
+            "17768209.49840",
+            "0"
+          ],
+          [
+            1790522400000,
+            "84520.00",
+            "84563.80",
+            "84476.10",
+            "84525.60",
+            "330.699",
+            1790522699999,
+            "27953147.43480",
+            8786,
+            "162.347",
+            "13721305.40950",
+            "0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "top-position-ratio",
+      "tool": "mcp__codex_apps__binance_get_futures_usds_top_trader_long_short_ratio_positions",
+      "input": {
+        "symbol": "BTCUSDT",
+        "period": "1h",
+        "limit": 3
+      },
+      "calledAt": null,
+      "reusedFromPrecedingTurn": true,
+      "isError": false,
+      "response": {
+        "result": [
+          {
+            "symbol": "BTCUSDT",
+            "longAccount": "0.6514",
+            "longShortRatio": "1.8689",
+            "shortAccount": "0.3486",
+            "timestamp": 1790514000000
+          },
+          {
+            "symbol": "BTCUSDT",
+            "longAccount": "0.6505",
+            "longShortRatio": "1.8614",
+            "shortAccount": "0.3495",
+            "timestamp": 1790517600000
+          },
+          {
+            "symbol": "BTCUSDT",
+            "longAccount": "0.6525",
+            "longShortRatio": "1.8775",
+            "shortAccount": "0.3475",
+            "timestamp": 1790521200000
+          }
+        ]
+      }
+    },
+    {
+      "id": "taker",
+      "tool": "mcp__codex_apps__binance_get_futures_usds_taker_buy_sell_volume",
+      "input": {
+        "symbol": "BTCUSDT",
+        "period": "1h",
+        "limit": 3
+      },
+      "calledAt": "2026-09-27T15:29:46.403Z",
+      "isError": false,
+      "response": {
+        "result": [
+          {
+            "buySellRatio": "0.7808",
+            "sellVol": "907.4250",
+            "buyVol": "708.5400",
+            "timestamp": 1790510400000
+          },
+          {
+            "buySellRatio": "1.0706",
+            "sellVol": "3014.7210",
+            "buyVol": "3227.5290",
+            "timestamp": 1790514000000
+          },
+          {
+            "buySellRatio": "0.7052",
+            "sellVol": "3371.7390",
+            "buyVol": "2377.6040",
+            "timestamp": 1790517600000
+          }
+        ]
+      }
+    },
+    {
+      "id": "adl",
+      "tool": "mcp__codex_apps__binance_get_futures_usds_auto_deleveraging_risk",
+      "input": {
+        "symbol": "BTCUSDT"
+      },
+      "calledAt": "2026-09-27T15:29:46.403Z",
+      "isError": false,
+      "response": {
+        "result": {
+          "symbol": "BTCUSDT",
+          "adlRisk": "LOW",
+          "updateTime": 1790521200534
+        }
+      }
+    }
+  ]
+}

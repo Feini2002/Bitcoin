@@ -2,6 +2,8 @@
 
 优先通过 package.json 的稳定命令调用。脚本保留现有路径，避免为分类而破坏操作入口。
 
+2026-09-27 当前开发从[四页工作台方案](../docs/research/repository-development-plan-2026-09-27.md)开始；`npm run build` 已包含研究路由完整性、Pages 清理离线回归和云端开关模拟。它们不执行生产删除或暂停/恢复。`verify:research` 可单独核对当前计划的可发现性；生产开关仍用 `cloud:status` / `cloud:pause` / `cloud:resume`，遵从[开关说明](../docs/research/cloudflare-pause-resume-2026-09-27.md)。
+
 | 用途 | 入口 | 副作用 |
 | --- | --- | --- |
 | 按功能/文件查询研究资料 | node scripts/research-context.cjs 问题；--file ID；--find 关键词 | 只读，输出有数量上限；不自动调用图工具、测试或网络 |

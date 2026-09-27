@@ -121,8 +121,8 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
   }
 
   function normalizeLevel(level, ratio, minSmall) {
-    const buyVol = Number(level.buyVol) || 0;
-    const sellVol = Number(level.sellVol) || 0;
+    const buyVol = Number(level.buyVol != null ? level.buyVol : level.buy_vol) || 0;
+    const sellVol = Number(level.sellVol != null ? level.sellVol : level.sell_vol) || 0;
     const total = buyVol + sellVol;
     return {
       price: Number(level.price),
@@ -1205,12 +1205,19 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     let pocPrice = pocPick && pocPick.pocPrice != null ? pocPick.pocPrice : null;
     let maxTotal = -1;
 
-    for (const level of levels) {
-      buyVol += level.buyVol;
-      sellVol += level.sellVol;
-      if (pocPrice == null && level.total > maxTotal) {
-        maxTotal = level.total;
-        pocPrice = level.price;
+    if (!levels.length) {
+      buyVol = Number(bar.buyVol != null ? bar.buyVol : bar.buy_vol) || 0;
+      sellVol = Number(bar.sellVol != null ? bar.sellVol : bar.sell_vol) || 0;
+      if (pocPrice == null && bar.pocPrice != null) pocPrice = Number(bar.pocPrice);
+      else if (pocPrice == null && bar.poc_price != null) pocPrice = Number(bar.poc_price);
+    } else {
+      for (const level of levels) {
+        buyVol += level.buyVol;
+        sellVol += level.sellVol;
+        if (pocPrice == null && level.total > maxTotal) {
+          maxTotal = level.total;
+          pocPrice = level.price;
+        }
       }
     }
 
@@ -1340,6 +1347,88 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     }
   }
 
+  const FOOTPRINT_SOURCE_INTERVAL = "5m";
+
+  function mergeFootprintGroup(rows, bucket) {
+    const ordered = rows.slice().sort((a, b) => Number(a.t) - Number(b.t));
+    let open = null;
+    let high = -Infinity;
+    let low = Infinity;
+    let close = null;
+    const levels = [];
+    for (const row of ordered) {
+      const rowOpen = barField(row, "open", "o");
+      const rowHigh = barField(row, "high", "h");
+      const rowLow = barField(row, "low", "l");
+      const rowClose = barField(row, "close", "c");
+      if (open == null && Number.isFinite(rowOpen)) open = rowOpen;
+      if (Number.isFinite(rowHigh)) high = Math.max(high, rowHigh);
+      if (Number.isFinite(rowLow)) low = Math.min(low, rowLow);
+      if (Number.isFinite(rowClose)) close = rowClose;
+      if (Array.isArray(row.levels) && row.levels.length) levels.push(...row.levels);
+    }
+    if (!Number.isFinite(high)) high = close;
+    if (!Number.isFinite(low)) low = close;
+    if (levels.length) {
+      return recomputeBar({ t: bucket, open: open, high: high, low: low, close: close, levels: levels }, {
+        imbalanceRatio: IMBALANCE_RATIO,
+        imbalanceMinSmall: IMBALANCE_MIN_SMALL,
+      });
+    }
+    const buyVol = ordered.reduce((sum, row) => sum + (Number(row.buyVol) || 0), 0);
+    const sellVol = ordered.reduce((sum, row) => sum + (Number(row.sellVol) || 0), 0);
+    return {
+      t: bucket,
+      open: open,
+      high: high,
+      low: low,
+      close: close,
+      o: open,
+      h: high,
+      l: low,
+      c: close,
+      buyVol: buyVol,
+      sellVol: sellVol,
+      delta: buyVol - sellVol,
+      volume: buyVol + sellVol,
+      pocPrice: null,
+      levels: [],
+    };
+  }
+
+  function aggregateFootprintBars(sourceBars, displayInterval, sourceInterval) {
+    const sourceName = sourceInterval || FOOTPRINT_SOURCE_INTERVAL;
+    const displayName = displayInterval || sourceName;
+    const expected = Math.max(1, Math.round(getIntervalMs(displayName) / getIntervalMs(sourceName)));
+    const groups = new Map();
+    for (const bar of sourceBars || []) {
+      const t = Number(bar && bar.t);
+      if (!Number.isFinite(t)) continue;
+      const bucket = bucketStart(t, displayName);
+      if (!groups.has(bucket)) groups.set(bucket, []);
+      groups.get(bucket).push(bar);
+    }
+    const bars = [];
+    let incomplete = false;
+    let detail = `组成 ${expected}/${expected}`;
+    for (const [bucket, rows] of [...groups.entries()].sort((a, b) => a[0] - b[0])) {
+      const seen = new Set(rows.map((row) => bucketStart(Number(row.t), sourceName)));
+      if (seen.size < expected) {
+        incomplete = true;
+        detail = `组成 ${seen.size}/${expected}`;
+      }
+      bars.push(mergeFootprintGroup(rows, bucket));
+    }
+    return {
+      bars: bars,
+      incomplete: incomplete,
+      detail: detail,
+      sourceInterval: sourceName,
+      displayInterval: displayName,
+      expected: expected,
+    };
+  }
+
   class FootprintStream {
     constructor(opts) {
       opts = opts || {};
@@ -1361,18 +1450,39 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       this.seenTradeQueue = [];
       this.polling = false;
       this.authoritative = false;
+      this.requestGeneration = 0;
+      this.activeAbort = null;
+      this.pausedForHide = false;
     }
 
     cacheKey() {
       return storageKey(this.symbol, this.interval, this.tickSize);
     }
 
-    loadCache() {
+    readCacheRecord() {
       try {
         const raw = global.localStorage && global.localStorage.getItem(this.cacheKey());
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return this.aggregator.loadBars(parsed && parsed.bars);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    cacheHasSourceMark(record) {
+      return !!(record && record.sourceMarked === true && record.sourceInterval && record.displayInterval);
+    }
+
+    hasUnmarkedCache() {
+      const record = this.readCacheRecord();
+      return !!(record && Array.isArray(record.bars) && record.bars.length && !this.cacheHasSourceMark(record));
+    }
+
+    loadCache() {
+      const record = this.readCacheRecord();
+      if (!this.cacheHasSourceMark(record)) return [];
+      try {
+        return this.aggregator.loadBars(record.bars);
       } catch (_) {
         return [];
       }
@@ -1396,6 +1506,9 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
             interval: this.interval,
             tickSize: this.tickSize,
             savedAt: Date.now(),
+            sourceMarked: true,
+            sourceInterval: FOOTPRINT_SOURCE_INTERVAL,
+            displayInterval: this.interval,
             bars: this.aggregator.getBars().slice(-MAX_CACHE_BARS),
           })
         );
@@ -1407,7 +1520,34 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       try {
         if (global.localStorage) global.localStorage.removeItem(this.cacheKey());
       } catch (_) {}
-      this.onBars(this.aggregator.getBars());
+      this.onBars(this.aggregator.getBars(), this.displayMeta({ authoritative: false, cleared: true }));
+    }
+
+    abortRequests() {
+      this.requestGeneration += 1;
+      if (this.activeAbort) {
+        try { this.activeAbort.abort(); } catch (_) {}
+        this.activeAbort = null;
+      }
+      this.polling = false;
+    }
+
+    displayMeta(extra) {
+      const displayInterval = this.interval;
+      return Object.assign({
+        desk: null,
+        displayInterval: displayInterval,
+        sourceInterval: FOOTPRINT_SOURCE_INTERVAL,
+        interval: displayInterval,
+        authoritative: this.authoritative === true,
+        aggregationIncomplete: false,
+        aggregationDetail: "",
+        rejectedUnmarkedCache: false,
+        streamBroken: false,
+        gap: null,
+        instrumentId: null,
+        venue: null,
+      }, extra || {});
     }
 
     setOptions(opts) {
@@ -1423,6 +1563,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       this.interval = nextInterval;
       this.tickSize = nextTickSize;
       this.maxBars = nextMaxBars;
+      this.abortRequests();
       this.authoritative = false;
       this.aggregator = new FootprintAggregator({
         symbol: this.symbol,
@@ -1431,7 +1572,8 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
         maxBars: this.maxBars,
       });
       this.resetSeenTrades();
-      this.onBars([]);
+      this.lastMeta = this.displayMeta({ authoritative: false, superseded: true });
+      this.onBars([], this.lastMeta);
       if (streamChanged || aggregateChanged || historyChanged) this.pollOnce();
       this.onStatus(this.statusText());
     }
@@ -1444,10 +1586,37 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 
     start() {
       this.closedByUser = false;
+      this.pausedForHide = false;
       this.aggregator.reset();
-      this.onBars([]);
+      this.lastMeta = this.displayMeta({ authoritative: false });
+      this.onBars([], this.lastMeta);
+      if (typeof document !== "undefined" && document.hidden) {
+        this.pausedForHide = true;
+        this.onStatus("desk polling paused");
+        return;
+      }
       this.pollOnce();
+      if (this.pollTimer) clearInterval(this.pollTimer);
       this.pollTimer = setInterval(() => this.pollOnce(), POLL_MS);
+      this.onStatus("desk polling");
+    }
+
+    pauseForHide() {
+      this.pausedForHide = true;
+      this.abortRequests();
+      if (this.pollTimer) {
+        clearInterval(this.pollTimer);
+        this.pollTimer = null;
+      }
+      this.onStatus("desk polling paused");
+    }
+
+    resumeFromHide() {
+      if (this.closedByUser || !this.pausedForHide) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      this.pausedForHide = false;
+      this.pollOnce();
+      if (!this.pollTimer) this.pollTimer = setInterval(() => this.pollOnce(), POLL_MS);
       this.onStatus("desk polling");
     }
 
@@ -1513,72 +1682,102 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     }
 
     async pollOnce() {
-      if (this.polling || this.closedByUser) return;
+      if (this.polling || this.closedByUser || this.pausedForHide) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      const generation = this.requestGeneration;
+      const displayInterval = this.interval;
       this.polling = true;
+      const ctrl = new AbortController();
+      this.activeAbort = ctrl;
       let lastErr = "";
       try {
-        const q = new URLSearchParams({
-          symbol: this.symbol,
-          interval: this.interval,
-          tickSize: String(this.tickSize || "auto"),
-          limit: String(Math.min(MAX_CACHE_BARS, Math.max(1, Number(this.maxBars) || 80))),
-          sync: "auto",
-        });
         let bars = null;
         let meta = null;
         let source = "";
         for (const base of this.apiBases()) {
           try {
-            if (typeof document !== "undefined" && document.hidden) {
-              this.polling = false;
-              return;
-            }
-            const res = await fetch(`${base}/api/desk/orderflow?${new URLSearchParams({ symbol: this.symbol }).toString()}`, {
+            if (generation !== this.requestGeneration || this.interval !== displayInterval || ctrl.signal.aborted) return;
+            const res = await fetch(`${base}/api/desk/orderflow?${new URLSearchParams({
+              symbol: this.symbol,
+              displayInterval: displayInterval,
+            }).toString()}`, {
               cache: "no-store",
               credentials: "include",
+              signal: ctrl.signal,
             });
+            if (generation !== this.requestGeneration || this.interval !== displayInterval || ctrl.signal.aborted) return;
             if (!res.ok) throw new Error(`${base} HTTP ${res.status}`);
             const parsed = await res.json();
             if (!parsed || !parsed.schemaVersion) throw new Error(`${base} desk shape`);
             if (!Array.isArray(parsed.series) || !parsed.series.length || parsed.quality && parsed.quality.status === "fail") {
-              bars = [];
-              meta = { venue: parsed.venue || null, gap: parsed.gap || null, authoritative: false };
               this.authoritative = false;
               this.aggregator.reset();
+              meta = this.displayMeta({
+                desk: parsed,
+                displayInterval: displayInterval,
+                authoritative: false,
+                gap: parsed.gap || { reason: "footprint_not_authoritative" },
+                venue: parsed.venue || null,
+                instrumentId: parsed.instrumentId || null,
+              });
               this.lastMeta = meta;
-              this.onBars([], this.lastMeta);
+              this.onBars([], meta);
               this.onStatus(parsed.gap && parsed.gap.reason ? `desk empty: ${parsed.gap.reason}` : "desk empty");
               source = "desk-empty";
+              bars = [];
               break;
             }
-            bars = parsed.series;
+            const display = aggregateFootprintBars(parsed.series, displayInterval, parsed.sourceInterval || FOOTPRINT_SOURCE_INTERVAL);
+            bars = display.bars;
             this.authoritative = true;
-            meta = {
-              symbol: this.symbol,
-              interval: this.interval,
+            meta = this.displayMeta({
+              desk: parsed,
+              displayInterval: displayInterval,
+              sourceInterval: display.sourceInterval,
+              aggregationIncomplete: display.incomplete,
+              aggregationDetail: display.detail,
+              authoritative: true,
               venue: parsed.venue || "binance-usdm",
               instrumentId: parsed.instrumentId || null,
-              count: parsed.coverage && parsed.coverage.returned,
+              gap: parsed.gap || null,
+              count: display.bars.length,
               latestT: parsed.observedAt ? Date.parse(parsed.observedAt) : null,
               lastSync: parsed.receivedAt || null,
-              authoritative: true,
-            };
+              symbol: this.symbol,
+            });
             source = res.headers.get("X-Data-Source") || base;
             break;
           } catch (e) {
+            if (e && e.name === "AbortError") throw e;
+            if (generation !== this.requestGeneration || ctrl.signal.aborted) throw e;
             lastErr = e && e.message ? e.message : String(e);
           }
         }
+        if (generation !== this.requestGeneration || this.interval !== displayInterval || ctrl.signal.aborted) return;
         if (!Array.isArray(bars)) throw new Error(lastErr || "all footprint candidates failed");
-        this.aggregator.loadBars(bars);
-        this.lastMeta = meta;
-        this.onBars(this.aggregator.getBars(), this.lastMeta);
-        if (this.authoritative) this.saveCacheSoon();
-        this.onStatus(source === "desk-empty" ? "desk empty" : (source ? `desk (${source})` : "desk polling"));
+        if (source !== "desk-empty") {
+          this.aggregator.loadBars(bars);
+          this.lastMeta = meta;
+          this.onBars(this.aggregator.getBars(), this.lastMeta);
+          if (this.authoritative) this.saveCacheSoon();
+          this.onStatus(source ? `desk (${source})` : "desk polling");
+        }
       } catch (e) {
-        this.onStatus(`desk failed: ${e && e.message ? e.message : e}`);
+        if (generation !== this.requestGeneration || this.closedByUser || ctrl.signal.aborted || (e && e.name === "AbortError")) return;
+        const rejected = this.hasUnmarkedCache();
+        this.authoritative = false;
+        this.lastMeta = this.displayMeta({
+          displayInterval: displayInterval,
+          authoritative: false,
+          streamBroken: true,
+          rejectedUnmarkedCache: rejected,
+          gap: { reason: "stream_broken" },
+        });
+        this.onBars(this.aggregator.getBars(), this.lastMeta);
+        this.onStatus(rejected ? "断流后未回用无来源标记缓存" : `desk failed: ${e && e.message ? e.message : e}`);
       } finally {
-        this.polling = false;
+        if (this.activeAbort === ctrl) this.activeAbort = null;
+        if (generation === this.requestGeneration) this.polling = false;
       }
     }
 
@@ -1588,8 +1787,10 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     }
 
     stop(markClosed) {
-      this.saveCacheNow();
       this.closedByUser = markClosed !== false;
+      this.pausedForHide = false;
+      this.abortRequests();
+      this.saveCacheNow();
       if (this.flushTimer) {
         clearTimeout(this.flushTimer);
         this.flushTimer = null;
@@ -1643,6 +1844,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     readModelDeltaBias,
     buildOrderflowReadModel,
     recomputeBar,
+    aggregateFootprintBars,
     FootprintAggregator,
     FootprintStream,
   };

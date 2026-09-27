@@ -271,20 +271,59 @@
       }
     },
 
+    _tileSignal() {
+      if (!this._abort || this._abort.signal.aborted) this._abort = new AbortController();
+      return this._abort.signal;
+    },
+
+    _tileEvidence(interval, desk, rows) {
+      const list = Array.isArray(rows) ? rows : [];
+      let verified = 0;
+      list.forEach((row) => {
+        if (row && row.sourceVerification === "verified") verified += 1;
+      });
+      const range = desk && desk.returnedRange;
+      const rangeText = range && Number.isFinite(Number(range.from)) && Number.isFinite(Number(range.to))
+        ? `返回范围 ${Number(range.from)}–${Number(range.to)}`
+        : "返回范围未知";
+      const gaps = desk && desk.coverageScope === "window" && desk.coverage && desk.coverage.inWindowGaps != null
+        ? desk.coverage.inWindowGaps
+        : "按已加载窗口";
+      const price = desk && desk.pricePathAvailable === true ? "价格路径可用" : "价格路径不可用";
+      const research = desk && desk.researchWindow && desk.researchWindow.eligible === true
+        ? "研究窗口合格"
+        : "研究窗口不合格";
+      const tailNote = desk && desk.coverageScope === "tail" ? "尾部返回不是全历史总数" : "";
+      return [
+        interval,
+        rangeText,
+        `已核实 ${verified} 根`,
+        `未核实 ${list.length - verified} 根`,
+        `窗内缺口 ${gaps}`,
+        price,
+        research,
+        `已加载 ${list.length} 根`,
+        tailNote,
+      ].filter(Boolean).join(" · ");
+    },
+
     async _loadTile(i) {
-      if (!this._open) return;
+      if (!this._open || document.hidden) return;
       this._createTileAt(i);
       const t = this._tiles[i];
       if (!t || !t.series) return;
       const sym = this._getSymbol ? this._getSymbol() : "BTCUSDT";
       const interval = this._tfs[i];
+      const identity = sym + ':' + interval;
+      if (t.requestIdentity === identity) return;
       t.interval = interval;
       t.loadGen += 1;
       const g = t.loadGen;
       this._setTileHint(i, "");
       const mainTf = this._getMainInterval ? this._getMainInterval() : "";
       const errEl = (msg) => {
-        if (g !== t.loadGen) return;
+        if (g !== t.loadGen || this._tiles[i] !== t) return;
+        t.cachedRows = null;
         this._setTileHint(i, msg);
         try {
           t.series.setData([]);
@@ -292,6 +331,7 @@
       };
 
       if (interval === mainTf) {
+        t.requestIdentity = null;
         const ohlcv = this._getMainOhlcv ? this._getMainOhlcv() : [];
         if (g !== t.loadGen) return;
         if (!Array.isArray(ohlcv) || ohlcv.length === 0) {
@@ -306,7 +346,8 @@
           close: d.c,
         }));
         t.series.setData(data);
-        this._setTileHint(i, "与主图同周期");
+        const mainDesk = typeof chartDeskPayload !== "undefined" ? chartDeskPayload : null;
+        this._setTileHint(i, `与主图同周期 · ${this._tileEvidence(interval, mainDesk, ohlcv)}`);
         this.syncTimeFromMain();
         return;
       }
@@ -321,16 +362,70 @@
         return;
       }
       try {
-        const desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval });
-        if (g !== t.loadGen) return;
+        t.requestIdentity = identity;
+        const signal = this._tileSignal();
+        const cached = t.cacheIdentity === identity && t.cachedRows && Date.now() - t.fullReadAt < 60 * 60 * 1000
+          ? t.cachedRows : null;
+        let desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval, signal, ...(cached ? { tail: 20 } : {}) });
+        if (g !== t.loadGen || this._tiles[i] !== t) return;
+        let fullRead = !cached;
+        // A hidden tab can miss more than the tail window. Refill before merging.
+        if (cached && desk.pricePathAvailable && desk.series && desk.series.length && Number(desk.series[0].t) > Number(cached[cached.length - 1].t)) {
+          desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval, signal });
+          fullRead = true;
+          if (g !== t.loadGen || this._tiles[i] !== t) return;
+        }
         if (!desk || desk.pricePathAvailable !== true) {
           errEl("子图无权威币安序列");
           return;
         }
-        const raw = Array.isArray(desk.series) ? desk.series : [];
+        let raw = Array.isArray(desk.series) ? desk.series : [];
         if (!Array.isArray(raw) || !raw.length) {
           errEl("无合格 K 线");
           return;
+        }
+        const revision = desk.historyRevision == null ? NaN : Number(desk.historyRevision);
+        if (t.cacheIdentity === identity && t.confirmedHistoryRevision != null
+            && Number.isFinite(revision) && revision < t.confirmedHistoryRevision) return;
+        if (cached && !fullRead) {
+          const rows = new Map(cached.map(row => [Number(row.t), row]));
+          raw.forEach(row => rows.set(Number(row.t), row));
+          raw = [...rows.values()].sort((a, b) => Number(a.t) - Number(b.t)).slice(-6000);
+        }
+        if (t.cacheIdentity !== identity) t.confirmedHistoryRevision = null;
+        t.cacheIdentity = identity;
+        t.cachedRows = raw;
+        if (fullRead) t.fullReadAt = Date.now();
+        // Consumption belongs to this tile. Another tile/main chart can read the
+        // same interval without having applied this tile's bounded history read.
+        if (fullRead) {
+          t.confirmedHistoryRevision = Number.isFinite(revision) ? revision : null;
+        } else if (Number.isFinite(revision)) {
+          if ((t.confirmedHistoryRevision == null || revision > t.confirmedHistoryRevision) && !t.rereadInFlight) {
+            const step = typeof DataEngine.getIntervalMs === "function" ? DataEngine.getIntervalMs(interval) : 0;
+            const from = Number(raw[0].t);
+            const to = Number(raw[raw.length - 1].t) + (step > 0 ? step : 1);
+            t.rereadInFlight = true;
+            try {
+              const again = await DataEngine.fetchDesk("chart", { symbol: sym, interval, from, to, signal });
+              if (g !== t.loadGen || this._tiles[i] !== t || !again || again.pricePathAvailable !== true) return;
+              const againRev = again.historyRevision == null ? NaN : Number(again.historyRevision);
+              if (!Number.isFinite(againRev) || againRev < revision) return;
+              // Replace the requested range, rather than merely upserting it:
+              // a historical correction can delete a previously displayed bar.
+              const merged = new Map(raw.filter((row) => Number(row.t) < from || Number(row.t) >= to)
+                .map((row) => [Number(row.t), row]));
+              (again.series || []).forEach((row) => {
+                if (Number(row.t) >= from && Number(row.t) < to) merged.set(Number(row.t), row);
+              });
+              raw = [...merged.values()].sort((a, b) => Number(a.t) - Number(b.t)).slice(-6000);
+              t.cachedRows = raw;
+              t.confirmedHistoryRevision = againRev;
+              desk = again;
+            } finally {
+              t.rereadInFlight = false;
+            }
+          }
         }
         const data = raw.map((d) => ({
           time: Number(d.t) / 1000,
@@ -340,10 +435,13 @@
           close: parseFloat(d.c),
         }));
         t.series.setData(data);
-        this._setTileHint(i, "");
+        this._setTileHint(i, this._tileEvidence(interval, desk, raw));
         this.syncTimeFromMain();
       } catch (e) {
+        if (e && e.name === "AbortError") return;
         errEl("加载失败: " + (e && e.message ? e.message : e));
+      } finally {
+        if (g === t.loadGen) t.requestIdentity = null;
       }
     },
 
@@ -458,6 +556,9 @@
     },
 
     dispose() {
+      if (this._abort) this._abort.abort();
+      this._abort = null;
+      this._panelBound = false;
       this._detachTimeSync();
       if (this.rafSync) cancelAnimationFrame(this.rafSync);
       this.rafSync = 0;

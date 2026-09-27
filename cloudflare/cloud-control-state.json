@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "accountId": "5c7e14191f8b616a07f03f767ec48bb8",
+  "zoneId": "3054bed2326bd0cbb301660b2c636c8e",
+  "accountSubdomain": "cmw1196466375",
+  "phase": "paused",
+  "verifiedAt": "2026-09-27T15:55:52.231Z",
+  "restore": {
+    "capturedAt": "2026-09-27T15:53:28.186Z",
+    "workers": {
+      "market-snapshot": {
+        "versionId": "96fb1e5d-1b64-406f-a68c-fe0873c508ec",
+        "crons": [],
+        "subdomain": {
+          "enabled": true,
+          "previews_enabled": true
+        },
+        "bindings": [
+          {
+            "name": "BTC_DB",
+            "type": "d1",
+            "id": "de758bb8-c7f5-41c7-a6ea-32c0ddf74d57"
+          },
+          {
+            "name": "SNAPSHOT_DB",
+            "type": "d1",
+            "id": "ab01fdd7-1e48-46de-a0e1-0a5013470361"
+          },
+          {
+            "name": "SNAPSHOT_WRITE_TOKEN",
+            "type": "secret_text"
+          }
+        ]
+      },
+      "btc": {
+        "versionId": "696db73c-4f71-4bef-8a5b-ed0801aa632c",
+        "crons": [
+          "* * * * *"
+        ],
+        "subdomain": {
+          "enabled": true,
+          "previews_enabled": true
+        },
+        "bindings": [
+          {
+            "name": "ACCESS_ALLOWED_ORIGINS",
+            "type": "plain_text"
+          },
+          {
+            "name": "BINANCE_FAPI_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "BINANCE_FSTREAM_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "BINANCE_SAPI_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "BINANCE_SPOT_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "BITGET_API_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "BTC_LLM_PROVIDER",
+            "type": "plain_text"
+          },
+          {
+            "name": "BYBIT_API_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "BYBIT_STREAM_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "DB",
+            "type": "d1",
+            "id": "de758bb8-c7f5-41c7-a6ea-32c0ddf74d57"
+          },
+          {
+            "name": "DERIBIT_API_ORIGIN",
+            "type": "plain_text"
+          },
+          {
+            "name": "EGRESS_PROXY_SECRET",
+            "type": "secret_text"
+          },
+          {
+            "name": "FINANCE_D1_ENABLED",
+            "type": "plain_text"
+          },
+          {
+            "name": "FINANCE_SEC_USER_AGENT",
+            "type": "secret_text"
+          },
+          {
+            "name": "FREE_ALPHAVANTAGE_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "FREE_COINGECKO_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "FREE_COINMARKETCAP_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "FREE_EIA_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "FREE_FINNHUB_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "FREE_FRED_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "FREE_TWELVEDATA_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "KLINE_LIVE_COLLECTOR",
+            "type": "durable_object_namespace",
+            "namespace_id": "2369a8e2ec4a4a72aee782eb6def800f",
+            "class_name": "KlineLiveCollector"
+          },
+          {
+            "name": "LIQUIDATION_COLLECTOR",
+            "type": "durable_object_namespace",
+            "namespace_id": "b6d1daa6fc9c4cb88e044ae2d900eea6",
+            "class_name": "LiquidationCollector"
+          },
+          {
+            "name": "OKX_API_ORIGIN",
+            "type": "plain_text"
+          }
+        ]
+      },
+      "yuqing": {
+        "versionId": "11de84c8-ccfe-4614-8ed8-f9b27e02fdf0",
+        "crons": [],
+        "subdomain": {
+          "enabled": true,
+          "previews_enabled": true
+        },
+        "bindings": [
+          {
+            "name": "ACCESS_ALLOWED_ORIGINS",
+            "type": "plain_text"
+          },
+          {
+            "name": "CODEX_BRIDGE_TOKEN",
+            "type": "secret_text"
+          },
+          {
+            "name": "FINNHUB_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "YUQING_DB",
+            "type": "d1",
+            "id": "e89cfebb-2d98-4f10-ae94-4f5f4fe52a8f"
+          }
+        ]
+      }
+    },
+    "domains": [
+      {
+        "hostname": "btc.feiniwork.com",
+        "service": "btc",
+        "zone_id": "3054bed2326bd0cbb301660b2c636c8e"
+      },
+      {
+        "hostname": "yuqing.feiniwork.com",
+        "service": "yuqing",
+        "zone_id": "3054bed2326bd0cbb301660b2c636c8e"
+      }
+    ],
+    "routes": [
+      {
+        "pattern": "yuqing.feiniwork.com/*",
+        "script": "yuqing",
+        "request_limit_fail_open": false
+      }
+    ]
+  },
+  "maintenance": {
+    "versionId": "be22bb8a-0d6b-4ce6-be08-5ce2038fe95c",
+    "sha256": "ab8fbee4228b56ea9aada8e86947b76aa64081c42384d8142736300c3b867436"
+  },
+  "updatedAt": "2026-09-27T15:55:52.231Z"
+}

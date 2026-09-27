@@ -14,7 +14,12 @@ const DERIV_LONG_SHORT_CHIP_WARN = 0.12;
 const DERIV_BASIS_ELEVATED_PCT = 8;
 const DERIV_BASIS_DISCOUNT_PCT = -1;
 let derivativesTimer = null;
+let derivativesInFlight = false;
+let derivativesGeneration = 0;
 let derivativesPayload = null;
+let derivativesShownDesk = null;
+let derivativesReadFailure = null;
+let derivativesAbort = null;
 let derivativesLastSyncReport = null;
 let derivActivePanel = "oi";
 
@@ -341,32 +346,44 @@ function pageDerivatives() {
         <div class="deriv-status-main">
           <span class="deriv-feed-dot" aria-hidden="true"></span>
           <strong>环境背景</strong>
-          <span>仅 FRED / SOFR / 稳定币等官方背景 · 分频展示 · 合约状态在币安未恢复前整组空</span>
+          <span>宏观按日频、周频、月频原频率 · 合约卡片单独标状态 · 未知结算周期不写成固定 8 小时</span>
         </div>
         <div class="deriv-status-actions">
           <span class="chip warn" id="deriv-live-chip">system_observed</span>
         </div>
       </section>
-      <p class="muted" id="deriv-research-evidence">宏观不能证明交易桌已活。asKnownMode 只能是 system_observed。</p>
+      <p class="muted" id="deriv-research-evidence">宏观按日频、周频、月频展示，不套用行情主图周期。asKnownMode 只能是 system_observed。宏观不能证明交易桌已活。</p>
       <div class="deriv-toolbar">
         <div class="deriv-action-cluster">
           <button type="button" class="btn" id="deriv-refresh"><i class="ph ph-arrow-clockwise"></i>刷新</button>
+          <button type="button" class="btn" data-workbench-export>导出已显示证据</button>
           <span class="deriv-status" id="deriv-status">准备读取 /api/desk/context...</span>
         </div>
       </div>
       <div class="deriv-kpis" id="deriv-kpis">
-        <div class="deriv-kpi"><span>合约状态</span><strong>空</strong><em>币安云端路径未恢复</em></div>
-        <div class="deriv-kpi"><span>asKnownMode</span><strong>system_observed</strong><em>不是 publicly_available</em></div>
+        <div class="deriv-kpi"><span>合约状态</span><strong id="deriv-contract-state">等待读取</strong><em id="deriv-contract-note">等待 /api/desk/context</em></div>
+        <div class="deriv-kpi"><span>asKnownMode</span><strong id="deriv-asknown">system_observed</strong><em>不是 publicly_available</em></div>
       </div>
-      <div id="deriv-contract-empty" class="desk-halt-card">合约状态（premium / 已结算 funding / 基差）整组空。不用宏观把版面填满成交易台。</div>
+      <div id="deriv-read-failure" class="desk-halt-card" hidden></div>
+      <section class="desk-freq-group" id="deriv-contract-section">
+        <h3>合约</h3>
+        <p class="muted">标记价、交易所报告费率、已结算资金费、基差。每张卡单独标正常、部分缺失、源陈旧或采集陈旧。</p>
+        <div class="desk-clock-grid" id="deriv-contract-cards"></div>
+      </section>
+      <section class="desk-freq-group" id="deriv-positioning-section">
+        <h3>持仓与主动量摘要</h3>
+        <p class="muted">OI 的 BTC 与 USDT 分开。主动量按 1h。账户样本与头部仓位样本分开。不还原混源评分或压力评分。</p>
+        <div class="desk-clock-grid" id="deriv-positioning-cards"></div>
+      </section>
+      <div id="deriv-contract-empty" class="desk-halt-card" hidden>合约组空 · 仅宏观背景</div>
       <div class="desk-freq-groups" id="deriv-freq-groups">等待 desk context...</div>
     </section>
   `;
 }
 function humanizeDerivativesReadError(message) {
   const s = String(message || "");
-  if (/Failed to fetch|NetworkError|NETWORK_ERROR|Load failed|ECONNREFUSED/i.test(s)) {
-    return `无法连接云端 Worker 或网络被拦截：${s}（请检查网络 / 代理 / 广告拦截插件 / DNS）`;
+  if (/Failed to fetch|NetworkError|NETWORK_ERROR|Load failed|ECONNREFUSED|paused|503|502|超时/i.test(s)) {
+    return "页面暂停或网络失败";
   }
   return s;
 }
@@ -697,16 +714,190 @@ function fmtDeskClock(iso) {
   return d.toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-function renderContextDesk(desk) {
-  derivativesPayload = desk;
-  const status = document.getElementById("deriv-status");
+function fmtDeskMinute(iso) {
+  const n = typeof iso === "number" ? iso : Date.parse(iso);
+  if (!Number.isFinite(n) || n <= 0) return "未知";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(n));
+  const pick = (type) => {
+    const part = parts.find((row) => row.type === type);
+    return part ? part.value : "";
+  };
+  const hour = pick("hour") === "24" ? "00" : pick("hour");
+  return `${pick("year")}-${pick("month")}-${pick("day")} ${hour}:${pick("minute")}`;
+}
+
+function fmtDeskPlain(value) {
+  if (value == null || value === "") return "—";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return Object.is(n, -0) ? "0" : String(n);
+}
+
+function derivFactMissing(card) {
+  return !card || card.unavailable === true || card.missing === true;
+}
+
+function derivFactStatus(card) {
+  if (derivFactMissing(card)) return "部分缺失";
+  const bits = [];
+  if (card.sourceStale === true) bits.push("源陈旧");
+  if (card.collectionStale === true) bits.push("采集陈旧");
+  return bits.length ? bits.join(" · ") : "正常";
+}
+
+function derivStatusClass(text) {
+  return text === "正常" ? "chip ok" : "chip warn";
+}
+
+function fundingIntervalLabel(card) {
+  const basis = String(card && card.intervalBasis || "");
+  const hours = Number(card && card.fundingIntervalHours);
+  if (!basis || basis === "unknown" || !Number.isFinite(hours) || hours <= 0) return "未知";
+  return `${hours} 小时 · ${basis}`;
+}
+
+function derivFactCard(key, title, lines, card) {
+  const status = derivFactStatus(card);
+  const items = lines.concat([
+    `观察时间：${fmtDeskMinute(card && card.referencePeriod)}`,
+    `接收时间：${fmtDeskMinute(card && card.receivedAt)}`,
+    `状态：${status}`,
+  ]);
+  return `<article class="desk-clock-card" data-deriv-card="${escapeDerivHtml(key)}"><h4>${escapeDerivHtml(title)}</h4><strong>${escapeDerivHtml(lines[0] || "—")}</strong><ul>${items.map((line) => `<li>${escapeDerivHtml(line)}</li>`).join("")}</ul><span class="${derivStatusClass(status)}">${escapeDerivHtml(status)}</span></article>`;
+}
+
+function derivValueLines(card, lines) {
+  return derivFactMissing(card) ? lines.map((line) => line.replace(/：.*/, "：—")) : lines;
+}
+
+function contractPremiumLines(card) {
+  const values = card && card.values || {};
+  return derivValueLines(card, [
+    `标记价：${fmtDeskPlain(values.markPrice)} USDT/BTC`,
+    `交易所报告费率：${fmtDeskPlain(values.lastFundingRate)} decimal`,
+  ]);
+}
+
+function contractFundingLines(card) {
+  const values = card && card.values || {};
+  return derivValueLines(card, [
+    `已结算资金费：${fmtDeskPlain(values.fundingRate)} decimal-per-settlement`,
+    `结算周期：${fundingIntervalLabel(card)}`,
+  ]);
+}
+
+function contractBasisLines(card) {
+  const values = card && card.values || {};
+  return derivValueLines(card, [
+    `基差：${fmtDeskPlain(values.basis)} USDT/BTC`,
+    `基差率：${fmtDeskPlain(values.basisRate)} decimal`,
+    `年化基差率：${fmtDeskPlain(values.annualizedBasisRate)} decimal-per-year`,
+  ]);
+}
+
+function positioningOiLines(card) {
+  const values = card && card.values || {};
+  const amount = card && card.value != null ? card.value : values.openInterest;
+  return derivValueLines(card, [
+    `未平仓量：${fmtDeskPlain(amount)} BTC`,
+    "单位：BTC",
+  ]);
+}
+
+function positioningOiHistoryLines(card) {
+  const values = card && card.values || {};
+  return derivValueLines(card, [
+    `未平仓量：${fmtDeskPlain(values.sumOpenInterest)} BTC`,
+    `未平仓名义：${fmtDeskPlain(values.sumOpenInterestValue)} USDT`,
+    `周期：${card && card.period ? card.period : "1h"}`,
+  ]);
+}
+
+function positioningTakerLines(card) {
+  const values = card && card.values || {};
+  return derivValueLines(card, [
+    `主动买：${fmtDeskPlain(values.buyVol)} BTC`,
+    `主动卖：${fmtDeskPlain(values.sellVol)} BTC`,
+    `周期：${card && card.period ? card.period : "1h"}`,
+  ]);
+}
+
+function positioningAccountsLines(card) {
+  const values = card && card.values || {};
+  return derivValueLines(card, [
+    `多空比：${fmtDeskPlain(values.longShortRatio)} ratio`,
+    `样本：${card && card.sample ? card.sample : "未标明"}`,
+    `周期：${card && card.period ? card.period : "1h"}`,
+  ]);
+}
+
+function positioningTopLines(card) {
+  const values = card && card.values || {};
+  return derivValueLines(card, [
+    `多空比：${fmtDeskPlain(values.longShortRatio)} ratio`,
+    `样本：${card && card.sample ? card.sample : "未标明"}`,
+    `周期：${card && card.period ? card.period : "1h"}`,
+  ]);
+}
+
+function derivContractCards(contract) {
+  const ready = contract && contract.unavailable !== true ? contract : {};
+  return [
+    derivFactCard("premium", "标记价与交易所报告费率", contractPremiumLines(ready.premium), ready.premium || { unavailable: true }),
+    derivFactCard("funding", "已结算资金费", contractFundingLines(ready.funding), ready.funding || { unavailable: true }),
+    derivFactCard("basis", "基差", contractBasisLines(ready.basis), ready.basis || { unavailable: true }),
+  ].join("");
+}
+
+function derivPositioningCards(contract) {
+  const positioning = contract && contract.positioning || {};
+  const missing = { unavailable: true, missing: true };
+  return [
+    derivFactCard("oi", "未平仓量", positioningOiLines(positioning.oi || missing), positioning.oi || missing),
+    derivFactCard("oiHistory", "未平仓历史", positioningOiHistoryLines(positioning.oiHistory || missing), positioning.oiHistory || missing),
+    derivFactCard("taker", "主动量", positioningTakerLines(positioning.taker || missing), positioning.taker || missing),
+    derivFactCard("accounts", "账户样本", positioningAccountsLines(positioning.accounts || missing), positioning.accounts || missing),
+    derivFactCard("topPositions", "头部仓位样本", positioningTopLines(positioning.topPositions || missing), positioning.topPositions || missing),
+  ].join("");
+}
+
+function derivRenderedCards(contract) {
+  const ready = contract && contract.unavailable !== true;
+  const positioning = ready && contract.positioning ? contract.positioning : {};
+  const slots = ready ? [contract.premium, contract.funding, contract.basis] : [];
+  if (ready) slots.push(positioning.oi, positioning.oiHistory, positioning.taker, positioning.accounts, positioning.topPositions);
+  return slots.filter(Boolean);
+}
+
+function derivHeadline(desk, failure) {
+  if (failure) {
+    const when = fmtDeskMinute(failure.at);
+    const kept = derivativesShownDesk ? "desk context 已返回 · 陈旧" : "没有上一次成功展示";
+    return `读取失败 · 失败时间 ${when} · ${failure.message} · ${kept}`;
+  }
+  if (!desk || !desk.contract || desk.contract.unavailable) return "合约组空 · 仅宏观背景";
+  const statuses = derivRenderedCards(desk.contract).map(derivFactStatus);
+  const bits = ["desk context 已返回"];
+  if (statuses.some((text) => text.indexOf("部分缺失") >= 0)) bits.push("部分缺失");
+  if (statuses.some((text) => text.indexOf("源陈旧") >= 0)) bits.push("源陈旧");
+  if (statuses.some((text) => text.indexOf("采集陈旧") >= 0)) bits.push("采集陈旧");
+  if (bits.length === 1) bits.push("正常");
+  return bits.join(" · ");
+}
+
+function renderMacroGroups(desk) {
   const groupsEl = document.getElementById("deriv-freq-groups");
-  const chip = document.getElementById("deriv-live-chip");
-  if (chip) chip.textContent = desk.asKnownMode || "system_observed";
-  if (status) status.textContent = desk.contract && desk.contract.unavailable ? "合约组空 · 仅宏观背景" : "desk context 已返回";
-  const groups = desk.groups || {};
-  const order = ["dailyRates", "weeklyDollarH41", "monthlyCpi", "cryptoBackground", "unofficialVol"];
   if (!groupsEl) return;
+  const groups = desk && desk.groups || {};
+  const order = ["dailyRates", "weeklyDollarH41", "monthlyCpi", "cryptoBackground", "unofficialVol"];
   groupsEl.innerHTML = order.map((key) => {
     const g = groups[key];
     if (!g) return "";
@@ -718,18 +909,144 @@ function renderContextDesk(desk) {
   }).join("");
 }
 
+function renderContextDesk(desk, failure) {
+  const shown = failure ? (derivativesShownDesk || desk) : desk;
+  if (!failure && desk) derivativesShownDesk = desk;
+  derivativesPayload = shown || desk;
+  derivativesReadFailure = failure || null;
+  const status = document.getElementById("deriv-status");
+  const chip = document.getElementById("deriv-live-chip");
+  const headline = derivHeadline(shown, failure);
+  if (status) status.textContent = headline;
+  const contract = shown && shown.contract;
+  const unavailable = !contract || contract.unavailable === true;
+  if (chip) {
+    chip.className = failure || headline.indexOf("陈旧") >= 0 || headline.indexOf("部分缺失") >= 0 ? "chip warn" : "chip ok";
+    chip.textContent = failure ? "读取失败" : (unavailable ? (shown && shown.asKnownMode) || "system_observed" : headline.replace(/^desk context 已返回 · /, ""));
+  }
+  const stateEl = document.getElementById("deriv-contract-state");
+  const noteEl = document.getElementById("deriv-contract-note");
+  if (stateEl) stateEl.textContent = failure ? "读取失败" : (unavailable ? "空" : "已返回");
+  if (noteEl) noteEl.textContent = failure ? "保留上一次成功展示" : (unavailable ? "仅宏观背景" : "卡片各自标状态");
+  const asknown = document.getElementById("deriv-asknown");
+  if (asknown) asknown.textContent = (shown && shown.asKnownMode) || "system_observed";
+  const failureEl = document.getElementById("deriv-read-failure");
+  if (failureEl) {
+    failureEl.hidden = !failure;
+    failureEl.innerHTML = failure
+      ? `<strong>读取失败</strong><p>失败时间 ${escapeDerivHtml(fmtDeskMinute(failure.at))}。${derivativesShownDesk ? "以下仍是上一次成功展示，已标陈旧。" : "没有上一次成功展示。"}${escapeDerivHtml(failure.message)}。</p>`
+      : "";
+  }
+  const emptyEl = document.getElementById("deriv-contract-empty");
+  if (emptyEl) emptyEl.hidden = !unavailable || !!failure && !!derivativesShownDesk;
+  const contractEl = document.getElementById("deriv-contract-cards");
+  const positioningEl = document.getElementById("deriv-positioning-cards");
+  if (contractEl) contractEl.innerHTML = shown ? derivContractCards(contract) : "";
+  if (positioningEl) positioningEl.innerHTML = shown ? derivPositioningCards(contract) : "";
+  if (shown) renderMacroGroups(shown);
+  publishDerivativesEvidence(shown, failure);
+}
+
+function publishDerivativesEvidence(desk, failure) {
+  if (typeof WorkbenchEvidence === "undefined") return;
+  if (!desk) {
+    WorkbenchEvidence.commitFailure("derivatives", failure || { at: new Date().toISOString(), message: "没有可展示的合约" });
+    return;
+  }
+  const contract = desk.contract || {};
+  const sourceById = {
+    premium: "binance-usdm-premium",
+    funding: "binance-usdm-funding",
+    basis: "binance-usdm-basis",
+    oi: "binance-usdm-oi",
+    oiHistory: "binance-usdm-oi-history",
+    taker: "binance-usdm-taker",
+    accounts: "binance-usdm-accounts",
+    topPositions: "binance-usdm-top-positions",
+  };
+  const cards = [];
+  ["premium", "funding", "basis"].forEach((id) => {
+    if (contract[id]) cards.push(Object.assign({ id, sourceId: sourceById[id] }, contract[id]));
+  });
+  const positioning = contract.positioning || {};
+  Object.keys(sourceById).forEach((id) => {
+    if (positioning[id]) cards.push(Object.assign({ id, sourceId: sourceById[id] }, positioning[id]));
+  });
+  const groups = desk.groups || {};
+  Object.keys(groups).forEach((key) => {
+    ((groups[key] && groups[key].cards) || []).forEach((card) => {
+      cards.push(Object.assign({ sourceId: "public-macro-displayed" }, card));
+    });
+  });
+  const saved = WorkbenchEvidence.commitDisplayed("derivatives", {
+    displayedAt: new Date().toISOString(),
+    readAt: desk.asOf || null,
+    asOf: desk.asOf || null,
+    parameters: { scope: "context" },
+    contentRevision: desk.inputRevision || null,
+    cards,
+    stale: !!failure,
+  });
+  if (failure) WorkbenchEvidence.commitFailure("derivatives", failure);
+  return saved;
+}
+
+function renderDerivativesUnreadFailure(failure) {
+  const status = document.getElementById("deriv-status");
+  const chip = document.getElementById("deriv-live-chip");
+  if (status) status.textContent = `读取失败 · 失败时间 ${fmtDeskMinute(failure.at)} · ${failure.message} · 没有上一次成功展示`;
+  if (typeof WorkbenchEvidence !== "undefined") WorkbenchEvidence.commitFailure("derivatives", failure);
+  if (chip) {
+    chip.className = "chip warn";
+    chip.textContent = "读取失败";
+  }
+  const failureEl = document.getElementById("deriv-read-failure");
+  if (failureEl) {
+    failureEl.hidden = false;
+    failureEl.innerHTML = `<strong>读取失败</strong><p>失败时间 ${escapeDerivHtml(fmtDeskMinute(failure.at))}。没有上一次成功展示。${escapeDerivHtml(failure.message)}。</p>`;
+  }
+  const stateEl = document.getElementById("deriv-contract-state");
+  const noteEl = document.getElementById("deriv-contract-note");
+  if (stateEl) stateEl.textContent = "读取失败";
+  if (noteEl) noteEl.textContent = failure.message;
+}
+
+function derivReadAborted(error) {
+  const name = error && error.name;
+  const message = String(error && error.message || error || "");
+  return name === "AbortError" || /已取消|AbortError/.test(message);
+}
+
 async function loadDerivativesPage() {
+  if (document.hidden || derivativesInFlight) return;
+  derivativesInFlight = true;
+  const generation = derivativesGeneration;
+  if (derivativesAbort) derivativesAbort.abort();
+  const ctrl = new AbortController();
+  derivativesAbort = ctrl;
   const status = document.getElementById("deriv-status");
   try {
-    if (status) status.textContent = "正在读取 /api/desk/context...";
-    const desk = await DataEngine.fetchDesk("context");
+    if (status && !derivativesShownDesk) status.textContent = "正在读取 /api/desk/context...";
+    const desk = await DataEngine.fetchDesk("context", { signal: ctrl.signal });
+    if (generation !== derivativesGeneration || ctrl.signal.aborted) return;
+    derivativesReadFailure = null;
     renderContextDesk(desk);
   } catch (e) {
-    const message = humanizeDerivativesReadError(e && e.message ? e.message : String(e));
-    if (status) status.textContent = `desk 读取失败：${message}`;
-    const groupsEl = document.getElementById("deriv-freq-groups");
-    if (groupsEl) groupsEl.innerHTML = `<div class="desk-halt-card">环境背景不可用：${escapeDerivHtml(message)}</div>`;
+    if (generation !== derivativesGeneration || derivReadAborted(e)) return;
+    const failure = {
+      at: new Date().toISOString(),
+      message: humanizeDerivativesReadError(e && e.message ? e.message : String(e)),
+    };
+    derivativesReadFailure = failure;
+    if (derivativesShownDesk) renderContextDesk(derivativesShownDesk, failure);
+    else renderDerivativesUnreadFailure(failure);
+  } finally {
+    if (generation === derivativesGeneration) derivativesInFlight = false;
   }
+}
+
+function resumeDerivativesPolling() {
+  if (!document.hidden) loadDerivativesPage();
 }
 
 function summarizeDerivativesSourceStatus(payload) {
@@ -773,16 +1090,25 @@ async function loadDerivativesSourceStatus() {
 }
 
 function initDerivatives() {
+  disposeDerivatives();
   const refresh = document.getElementById("deriv-refresh");
   if (refresh) refresh.addEventListener("click", () => loadDerivativesPage());
   loadDerivativesPage();
   derivativesTimer = setInterval(() => loadDerivativesPage(), 15_000);
+  document.addEventListener("visibilitychange", resumeDerivativesPolling);
 }
 
 function disposeDerivatives() {
+  derivativesGeneration += 1;
+  derivativesInFlight = false;
+  if (derivativesAbort) derivativesAbort.abort();
+  derivativesAbort = null;
+  document.removeEventListener("visibilitychange", resumeDerivativesPolling);
   if (derivativesTimer) clearInterval(derivativesTimer);
   derivativesTimer = null;
   derivativesPayload = null;
+  derivativesShownDesk = null;
+  derivativesReadFailure = null;
   derivativesLastSyncReport = null;
   derivActivePanel = "oi";
 }

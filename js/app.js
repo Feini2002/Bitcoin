@@ -131,6 +131,12 @@ function init() {
   }
   render();
   window.addEventListener("hashchange", render);
+  document.addEventListener("visibilitychange", () => {
+    if (mountedPage !== "chart") return;
+    const hook = window.__bitDeskSetChartVisible;
+    if (typeof hook !== "function") return;
+    hook(!document.hidden);
+  });
   tickClock();
   setInterval(tickClock, 1000);
 }

@@ -12,6 +12,11 @@ let heatmapRefreshTimer = null;
 let heatmapCloudTimer = null;
 let heatmapCloudStatus = null;
 let heatmapCloudBuckets = null;
+let heatmapCloudInFlight = false;
+let heatmapCloudGeneration = 0;
+let heatmapAbort = null;
+let heatmapAppliedWindow = null;
+let heatmapReadFailure = null;
 const HEATMAP_PRESSURE_POLL_MS = 15_000;
 let heatmapPressurePayload = null;
 let heatmapPressureKlines = null;
@@ -180,7 +185,7 @@ function pageHeatmap() {
       </div>
     </section>
 
-    <p class="muted" id="hm-research-evidence"></p>
+    <p class="muted" id="hm-research-evidence">强平窗口按本页 24h、7d、30d，不跟随行情主图周期，也不套用宏观日频。分所展示已观察事件，缺一所时另一所未覆盖，不把币安与 Bybit 合并成完整覆盖。</p>
 
     <div class="heatmap-toolbar">
       <label class="heatmap-field">
@@ -199,6 +204,7 @@ function pageHeatmap() {
         <span>最小金额</span>
         <input type="number" min="0" step="1000" id="hm-min-notional" value="${state.minNotional}" />
       </label>
+      <button type="button" class="btn" data-workbench-export>导出已显示证据</button>
       <span class="heatmap-status" id="hm-status">准备连接...</span>
     </div>
 
@@ -336,10 +342,69 @@ function hmDeskByExchange() {
     : null;
 }
 
+function hmVenueObserved(ex) {
+  const g = hmDeskByExchange() && hmDeskByExchange()[ex];
+  if (!g) return false;
+  const buckets = Array.isArray(g.buckets) ? g.buckets.length : 0;
+  return buckets > 0 || (Number(g.longNotional) || 0) + (Number(g.shortNotional) || 0) > 0;
+}
+
+function hmObservedExchanges() {
+  return ["binance", "bybit"].filter((ex) => hmVenueObserved(ex));
+}
+
+function hmCoverageNote() {
+  const observed = hmObservedExchanges();
+  const coverage = typeof LiquidationEngine !== "undefined" && typeof LiquidationEngine.describeObservedCoverage === "function"
+    ? LiquidationEngine.describeObservedCoverage(observed)
+    : { note: "不把币安与 Bybit 合并成完整覆盖。" };
+  const range = heatmapCloudBuckets && heatmapCloudBuckets._range
+    ? heatmapCloudBuckets._range
+    : heatmapD1RangeForWindow(currentHeatmapStateFromDom().window);
+  return `强平窗口 ${range}（24h/7d/30d），不跟随行情主图周期，也不套用宏观日频。${coverage.note}`;
+}
+
+function hmReadAborted(error) {
+  const name = error && error.name;
+  const message = String(error && error.message || error || "");
+  return name === "AbortError" || /已取消|AbortError/.test(message);
+}
+
+function fmtHmStamp(iso) {
+  const n = Date.parse(iso);
+  if (!Number.isFinite(n)) return "未知";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(n));
+  const pick = (type) => {
+    const part = parts.find((row) => row.type === type);
+    return part ? part.value : "";
+  };
+  const hour = pick("hour") === "24" ? "00" : pick("hour");
+  return `${pick("year")}-${pick("month")}-${pick("day")} ${hour}:${pick("minute")}`;
+}
+
 function hmVenueNotional(ex) {
   const g = hmDeskByExchange() && hmDeskByExchange()[ex];
   if (!g) return 0;
   return (Number(g.longNotional) || 0) + (Number(g.shortNotional) || 0);
+}
+
+function renderHeatmapVenueKpi(ex, total, longNotional, shortNotional) {
+  const label = ex === "bybit" ? "Bybit" : "Binance";
+  if (!hmVenueObserved(ex)) {
+    setHmText(`hm-kpi-${ex}`, "未覆盖");
+    setHmText(`hm-kpi-${ex}-note`, `${label} 未覆盖`);
+    return;
+  }
+  setHmText(`hm-kpi-${ex}`, fmtHmMoney(total));
+  setHmText(`hm-kpi-${ex}-note`, `多 ${fmtHmMoney(longNotional)} · 空 ${fmtHmMoney(shortNotional)}`);
 }
 
 function renderHeatmapKpis(snapshot) {
@@ -350,15 +415,11 @@ function renderHeatmapKpis(snapshot) {
   const bybitTotal = (Number(bybit.longNotional) || 0) + (Number(bybit.shortNotional) || 0);
   const binanceTotal = (Number(binance.longNotional) || 0) + (Number(binance.shortNotional) || 0);
   const unknownTotal = (Number(unknown.longNotional) || 0) + (Number(unknown.shortNotional) || 0);
-  setHmText("hm-kpi-bybit", fmtHmMoney(bybitTotal));
-  setHmText("hm-kpi-binance", fmtHmMoney(binanceTotal));
-  setHmText("hm-kpi-unknown-ex", fmtHmMoney(unknownTotal));
-  setHmText("hm-kpi-bybit-note", `多 ${fmtHmMoney(bybit.longNotional)} · 空 ${fmtHmMoney(bybit.shortNotional)}`);
-  setHmText("hm-kpi-binance-note", `多 ${fmtHmMoney(binance.longNotional)} · 空 ${fmtHmMoney(binance.shortNotional)}`);
+  renderHeatmapVenueKpi("bybit", bybitTotal, bybit.longNotional, bybit.shortNotional);
+  renderHeatmapVenueKpi("binance", binanceTotal, binance.longNotional, binance.shortNotional);
+  setHmText("hm-kpi-unknown-ex", unknownTotal ? fmtHmMoney(unknownTotal) : "--");
   const evidenceEl = document.getElementById("hm-research-evidence");
-  if (evidenceEl) {
-    evidenceEl.textContent = "分所已实现强平；禁止跨所合计；未知来源不得写成 Binance。";
-  }
+  if (evidenceEl) evidenceEl.textContent = hmCoverageNote();
   renderHeatmapCloudWindows();
 }
 
@@ -370,7 +431,7 @@ function renderHeatmapHealth(snapshot, displaySnapshot) {
   const venues = Object.keys(by).filter((ex) => by[ex] && ((by[ex].buckets && by[ex].buckets.length) || by[ex].longNotional || by[ex].shortNotional));
   setHmText("hm-health-status", "压力矩阵本轮不上屏");
   setHmText("hm-health-note", "只展示已发生、已标注交易所的名义金额。禁止合计，禁止把未知来源写成 Binance。浏览器推送不是权威路径。");
-  setHmText("hm-health-market", venues.length ? `desk 分所 ${venues.join(" / ")}` : "等待 desk 分所桶");
+  setHmText("hm-health-market", hmDeskByExchange() ? hmCoverageNote() : "等待 desk 分所桶");
   setHmText("hm-health-event", snapshot && snapshot.error ? String(snapshot.error).slice(0, 80) : "不以浏览器连接充当在线");
   setHmText("hm-health-buckets", rows ? `${rows} 个 5m 桶` : "窗口 --");
 }
@@ -614,6 +675,11 @@ function renderHeatmapCloudWindows() {
     ["binance", "1h", 60 * 60 * 1000],
     ["binance", "1d", 24 * 60 * 60 * 1000],
   ].forEach(([ex, id, ms]) => {
+    if (!hmVenueObserved(ex)) {
+      setHmText(`hm-cloud-${ex}-${id}`, "未覆盖");
+      setHmText(`hm-cloud-${ex}-${id}-detail`, `${ex === "bybit" ? "Bybit" : "Binance"} 未覆盖`);
+      return;
+    }
     const s = summarizeCloudBucketsForExchange(ex, ms);
     const total = (Number(s.longNotional) || 0) + (Number(s.shortNotional) || 0);
     setHmText(`hm-cloud-${ex}-${id}`, fmtHmMoney(total));
@@ -635,7 +701,7 @@ function renderHeatmapBuckets(snapshot) {
     return;
   }
   const venues = ["bybit", "binance", "unknown"].filter((ex) => by[ex] && ((by[ex].buckets && by[ex].buckets.length) || by[ex].longNotional || by[ex].shortNotional));
-  if (label) label.textContent = venues.length ? `分所：${venues.join(" / ")}` : "desk 无分所桶";
+  if (label) label.textContent = hmDeskByExchange() ? hmCoverageNote() : "等待 desk 分所桶";
   if (!venues.length) {
     wrap.innerHTML = `<div class="heatmap-empty">当前窗口无已标注交易所的已实现强平。</div>`;
     return;
@@ -827,11 +893,52 @@ function refreshHeatmapView(statusText) {
   if (statusText) {
     setHmText("hm-status", statusText);
   } else if (hmDeskByExchange()) {
-    const keys = Object.keys(hmDeskByExchange());
-    setHmText("hm-status", keys.length ? `desk 分所：${keys.join(" / ")}` : "desk 无强平桶");
+    const keys = hmObservedExchanges();
+    const range = heatmapCloudBuckets && heatmapCloudBuckets._range
+      ? heatmapCloudBuckets._range
+      : heatmapD1RangeForWindow(currentHeatmapStateFromDom().window);
+    let text = `desk 分所：${keys.join(" / ") || "无"} · 范围 ${range} · 不跟随主图周期`;
+    if (heatmapReadFailure && heatmapReadFailure.window === heatmapAppliedWindow) {
+      text = `读取失败 · 失败时间 ${fmtHmStamp(heatmapReadFailure.at)} · 陈旧 · ${text}`;
+    }
+    setHmText("hm-status", text);
   } else {
     setHmText("hm-status", "等待 /api/desk/heatmap");
   }
+  publishHeatmapEvidence();
+}
+
+function publishHeatmapEvidence() {
+  if (typeof WorkbenchEvidence === "undefined") return;
+  const desk = heatmapCloudBuckets;
+  if (!desk || !desk.byExchange) {
+    if (heatmapReadFailure) WorkbenchEvidence.commitFailure("heatmap", heatmapReadFailure);
+    return;
+  }
+  const range = desk._range || null;
+  const buckets = Object.keys(desk.byExchange).map((name) => {
+    const group = desk.byExchange[name] || {};
+    const exchange = String(group.exchange || name).toLowerCase();
+    return {
+      exchange,
+      sourceId: exchange === "bybit" ? "bybit-liquidation" : exchange === "binance" ? "binance-liquidation" : "unknown-vendor",
+      longNotional: Number(group.longNotional) || 0,
+      shortNotional: Number(group.shortNotional) || 0,
+      bucketCount: Array.isArray(group.buckets) ? group.buckets.length : 0,
+    };
+  });
+  WorkbenchEvidence.commitDisplayed("heatmap", {
+    displayedAt: new Date().toISOString(),
+    readAt: desk.asOf || null,
+    asOf: desk.asOf || null,
+    parameters: { symbol: HEATMAP_SYMBOL, range, window: desk._window || null },
+    contentRevision: desk.inputRevision || null,
+    units: desk.units || { notional: "USDT" },
+    buckets,
+    combinedTotalsForbidden: true,
+    stale: !!(heatmapReadFailure && heatmapReadFailure.window === heatmapAppliedWindow),
+    failure: heatmapReadFailure && heatmapReadFailure.window === heatmapAppliedWindow ? heatmapReadFailure : null,
+  });
 }
 
 function applyHeatmapState() {
@@ -850,21 +957,47 @@ function bindHeatmapControls() {
   const min = document.getElementById("hm-min-notional");
   const onChange = () => applyHeatmapState();
   if (bucket) bucket.addEventListener("change", onChange);
-  if (win) win.addEventListener("change", onChange);
+  if (win) win.addEventListener("change", () => {
+    const state = currentHeatmapStateFromDom();
+    writeHeatmapState(state);
+    heatmapCloudBuckets = null;
+    heatmapAppliedWindow = null;
+    heatmapReadFailure = null;
+    refreshHeatmapView(`正在读取强平范围 ${heatmapD1RangeForWindow(state.window)}，不跟随主图周期`);
+    refreshHeatmapCloudStatus("window");
+  });
   if (min) min.addEventListener("input", onChange);
 }
 
-async function refreshHeatmapCloudStatus(wake) {
-  if (typeof DataEngine === "undefined") return;
+async function refreshHeatmapCloudStatus(reason) {
+  if (typeof DataEngine === "undefined" || document.hidden) return;
+  const switchWindow = reason === "window";
+  if (heatmapCloudInFlight && !switchWindow) return;
+  const requestedWindow = currentHeatmapStateFromDom().window;
+  const requestedRange = heatmapD1RangeForWindow(requestedWindow);
+  if (switchWindow) {
+    heatmapCloudGeneration += 1;
+    if (heatmapAbort) heatmapAbort.abort();
+    heatmapCloudInFlight = false;
+  }
+  if (heatmapCloudInFlight) return;
+  heatmapCloudInFlight = true;
+  const generation = heatmapCloudGeneration;
+  const ctrl = new AbortController();
+  heatmapAbort = ctrl;
   if (!heatmapCloudStatus) heatmapCloudStatus = { loading: true };
-  refreshHeatmapView();
+  if (!switchWindow) refreshHeatmapView();
   try {
     if (typeof DataEngine.fetchDesk !== "function") throw new Error("desk 装配层不可用");
-    const state = currentHeatmapStateFromDom();
     const desk = await DataEngine.fetchDesk("heatmap", {
       symbol: HEATMAP_SYMBOL,
-      range: heatmapD1RangeForWindow(state.window),
+      range: requestedRange,
+      signal: ctrl.signal,
     });
+    if (generation !== heatmapCloudGeneration || ctrl.signal.aborted) return;
+    if (currentHeatmapStateFromDom().window !== requestedWindow) return;
+    heatmapReadFailure = null;
+    heatmapAppliedWindow = requestedWindow;
     heatmapCloudStatus = { ok: true, desk: true, asKnownMode: desk.asKnownMode };
     const buckets = [];
     const byExchange = desk.byExchange || {};
@@ -877,25 +1010,37 @@ async function refreshHeatmapCloudStatus(wake) {
       buckets,
       byExchange,
       combinedTotalsForbidden: true,
+      _window: requestedWindow,
+      _range: requestedRange,
     };
   } catch (e) {
-    heatmapCloudStatus = {
-      ok: false,
-      error: e && e.message ? e.message : String(e),
-    };
-    heatmapCloudBuckets = {
-      error: e && e.message ? e.message : String(e),
-      buckets: [],
-      byExchange: {},
-    };
+    if (generation !== heatmapCloudGeneration || ctrl.signal.aborted || hmReadAborted(e)) return;
+    if (currentHeatmapStateFromDom().window !== requestedWindow) return;
+    const message = e && e.message ? e.message : String(e);
+    heatmapReadFailure = { at: new Date().toISOString(), window: requestedWindow, message: message };
+    heatmapCloudStatus = { ok: false, error: message, failedAt: heatmapReadFailure.at };
+    if (!(heatmapAppliedWindow === requestedWindow && heatmapCloudBuckets)) heatmapCloudBuckets = null;
+  } finally {
+    if (generation === heatmapCloudGeneration) heatmapCloudInFlight = false;
   }
+  if (generation !== heatmapCloudGeneration) return;
   refreshHeatmapView();
+}
+
+function resumeHeatmapCloudPolling() {
+  if (document.hidden) {
+    if (heatmapStream && typeof heatmapStream.pauseForHide === "function") heatmapStream.pauseForHide();
+    return;
+  }
+  if (heatmapStream && typeof heatmapStream.resumeFromHide === "function") heatmapStream.resumeFromHide();
+  refreshHeatmapCloudStatus(false);
 }
 
 function startHeatmapCloudPolling() {
   if (heatmapCloudTimer) clearInterval(heatmapCloudTimer);
   refreshHeatmapCloudStatus(false);
   heatmapCloudTimer = setInterval(() => refreshHeatmapCloudStatus(false), HEATMAP_CLOUD_POLL_MS);
+  document.addEventListener("visibilitychange", resumeHeatmapCloudPolling);
 }
 
 function initHeatmap() {
@@ -913,6 +1058,13 @@ function initHeatmap() {
 }
 
 function disposeHeatmap() {
+  heatmapCloudGeneration += 1;
+  heatmapCloudInFlight = false;
+  if (heatmapAbort) heatmapAbort.abort();
+  heatmapAbort = null;
+  heatmapAppliedWindow = null;
+  heatmapReadFailure = null;
+  document.removeEventListener("visibilitychange", resumeHeatmapCloudPolling);
   if (heatmapRefreshTimer) {
     clearInterval(heatmapRefreshTimer);
     heatmapRefreshTimer = null;

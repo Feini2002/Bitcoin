@@ -1,10 +1,13 @@
 import { accessCorsHeaders, requireCloudflareAccess } from "./access-auth.js";
 import { handleFinance } from "./finance/gateway.mjs";
 import { handleDesk } from "./finance/desk.mjs";
-import { persistLiveKlineBar, persistLiveSnapshot, pruneExpiredDatasets } from "./finance/dataset-store.mjs";
+import { persistLiveKlineBar, persistLiveSnapshot, persistRestKlineBatch, pruneExpiredDatasets, rawKlineHistoryStatements } from "./finance/dataset-store.mjs";
 import { syncFinanceDatasetsIfDue } from "./finance/scheduler.mjs";
-import { KlineLiveCollector, bindKlineLiveHooks } from "./kline-live-collector.mjs";
-import { egressRequestHeaders, parseOriginOnly, toWebSocketUrl, openEgressWebSocket, parseOriginBase, joinEgress } from "./finance/egress.mjs";
+import { KlineLiveCollector, KlineLiveComponent, KLINE_LIVE_ALARM_MS, bindKlineLiveHooks } from "./kline-live-collector.mjs";
+import { LiquidationRecovery } from "./liquidation-recovery.mjs";
+import { FINANCE_DATASETS } from "./finance/datasets.mjs";
+import { klineOpenAt } from "./kline-recovery.mjs";
+import { egressRequestHeaders, parseOriginOnly, toWebSocketUrl, openEgressWebSocket, parseOriginBase, joinEgress, marketTransportProvenance } from "./finance/egress.mjs";
 
 export { KlineLiveCollector };
 
@@ -12,7 +15,7 @@ export { KlineLiveCollector };
  * Cloudflare Worker：币安 U 本位永续 K 线的云端数据层
  *
  * 三件事：
- *   1) Durable Object 订阅币安 K 线流，未收盘/收盘秒级写入 D1；Cron 每分钟全周期 REST 尾部备份；
+ *   1) 同一 Durable Object 订阅强平与币安 K 线；形成中 5 秒最小写周期、收盘优先；Cron 按健康补缺；
  *      每个 (symbol, interval) 只保留最新 6000 根。
  *   2) 提供读接口：GET /api/d1/klines?symbol=&interval=&limit=   → 从 D1 读并返回 JSON
  *   3) 提供设置页/运维手动同步接口：POST/GET /api/d1/sync?symbol=&interval=(all|5m,15m,...)
@@ -66,7 +69,8 @@ const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
 const FETCH_TIMEOUT_MS = 8000;
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
-const WORKER_BUILD = "btc-worker/3.9.7-collect";
+const WORKER_BUILD = "btc-worker/3.11.1-context-clocks";
+const KLINE_RECONCILE_CLOSED_BARS = 24;
 const KLINE_HISTORY_FLOOR_MS = 1567382400000;
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
 const KLINE_READ_CACHE_SECONDS = 1;
@@ -522,7 +526,8 @@ async function fetchKlinesFromBinance(env, { symbol, interval, limit, startTime,
         continue;
       }
       chain.push(`${host}:ok`);
-      return { ok: true, klines: data, host, chain, raw: text };
+      const provenance = marketTransportProvenance(env, { transportHost: host, venue: "binance-usdm" });
+      return { ok: true, klines: data, host: provenance.providerHost, transportHost: provenance.transportHost, chain, raw: text };
     } catch (e) {
       const msg = (e && e.message ? e.message : String(e)).replace(/\s+/g, " ").trim().slice(0, 140);
       chain.push(`${host}:err ${msg.slice(0, 40)}`);
@@ -537,7 +542,7 @@ async function fetchKlinesFromBybit(env, { symbol, interval, limit, startTime, e
   const p = new URLSearchParams();
   p.set("category", "linear");
   p.set("symbol", symbol);
-  p.set("interval", mapIntervalToBybit(interval));
+  p.set("interval", mapIntervalToBybit(interval === "3d" ? "1d" : interval));
   p.set("limit", String(Math.min(BYBIT_MAX_LIMIT_PER_REQUEST, Math.max(1, Number(limit) || BYBIT_MAX_LIMIT_PER_REQUEST))));
   if (startTime != null) p.set("start", String(startTime));
   if (endTime != null) p.set("end", String(endTime));
@@ -562,7 +567,7 @@ async function fetchKlinesFromBybit(env, { symbol, interval, limit, startTime, e
       const msg = data && data.retMsg ? String(data.retMsg) : "bad shape";
       return { ok: false, chain: ["bybit:bad-shape"], error: msg, status: r.status };
     }
-    const klines = bybitListToBinanceKlines(data.result.list.slice().reverse(), interval);
+    const klines = bybitListToBinanceKlines(data.result.list.slice().reverse(), interval === "3d" ? "1d" : interval);
     if (!klines.length) {
       return { ok: false, chain: ["bybit:empty"], error: "empty bybit kline response", status: r.status };
     }
@@ -739,15 +744,14 @@ async function d1QueryLatestMeta(env, symbol, interval) {
   };
 }
 
-/** 批量 INSERT OR REPLACE 后按 6000 根上限 prune */
+/** 同业务键只更新变化的 OHLCV；6000 根保留由每小时分片清理维护。 */
 async function persistKlines(env, symbol, interval, rawKlines, options = {}) {
   if (!Array.isArray(rawKlines) || rawKlines.length === 0) return { inserted: 0, pruned: 0 };
 
-  const insertSql =
-    "INSERT OR REPLACE INTO klines (symbol, interval, t, o, h, l, c, v) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)";
-  const prep = env.DB.prepare(insertSql);
-
-  const stmts = [];
+  const insertSql = `INSERT INTO klines (symbol, interval, t, o, h, l, c, v) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+    ON CONFLICT(symbol,interval,t) DO UPDATE SET o=excluded.o,h=excluded.h,l=excluded.l,c=excluded.c,v=excluded.v
+    WHERE o IS NOT excluded.o OR h IS NOT excluded.h OR l IS NOT excluded.l OR c IS NOT excluded.c OR v IS NOT excluded.v`;
+  const valid = [];
   for (const row of rawKlines) {
     const t = Number(row[0]);
     const o = parseFloat(row[1]);
@@ -756,39 +760,73 @@ async function persistKlines(env, symbol, interval, rawKlines, options = {}) {
     const c = parseFloat(row[4]);
     const v = parseFloat(row[5]);
     if (!Number.isFinite(t) || !Number.isFinite(o) || !Number.isFinite(c)) continue;
-    stmts.push(prep.bind(symbol, interval, t, o, h, l, c, v));
+    valid.push([t, o, h, l, c, v]);
   }
-  if (stmts.length === 0) return { inserted: 0, pruned: 0 };
+  if (valid.length === 0) return { inserted: 0, pruned: 0 };
+  valid.sort((a, b) => a[0] - b[0]);
 
   const CHUNK = 100;
-  for (let i = 0; i < stmts.length; i += CHUNK) {
-    await env.DB.batch(stmts.slice(i, i + CHUNK));
+  for (let i = 0; i < valid.length; i += CHUNK) {
+    const part = valid.slice(i, i + CHUNK);
+    const history = rawKlineHistoryStatements(symbol, interval, part);
+    await env.DB.batch([
+      ...history.before.map((query) => env.DB.prepare(query.sql).bind(...query.params)),
+      ...part.map((row) => env.DB.prepare(insertSql).bind(symbol, interval, row[0], row[1], row[2], row[3], row[4], row[5])),
+      ...history.after.map((query) => env.DB.prepare(query.sql).bind(...query.params)),
+    ]);
   }
 
-  const pruned = options.skipPrune ? 0 : await pruneKlinesCap(env, symbol, interval);
-  return { inserted: stmts.length, pruned };
+  // Hourly sharded retention owns cleanup; no write-triggered table scans.
+  return { inserted: valid.length, pruned: 0 };
 }
 
 async function pruneKlinesCap(env, symbol, interval) {
   const res = await env.DB.prepare(
-    "DELETE FROM klines WHERE symbol = ?1 AND interval = ?2 AND t < (SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1 OFFSET ?3)"
+    "DELETE FROM klines WHERE rowid IN (SELECT rowid FROM klines WHERE symbol = ?1 AND interval = ?2 AND t < (SELECT t FROM klines WHERE symbol = ?1 AND interval = ?2 ORDER BY t DESC LIMIT 1 OFFSET ?3) ORDER BY t LIMIT 1000)"
   ).bind(symbol, interval, MAX_KLINES_PER_INTERVAL - 1).run();
   return Number(res?.meta?.changes) || 0;
 }
 
-async function pruneExpiredStorage(env) {
-  const out = { klines: 0, datasets: 0 };
+async function pruneExpiredStorage(env, now = Date.now(), { shard = false } = {}) {
+  const out = { klines: 0, datasets: 0, liquidations: 0, footprint: 0, derivatives: 0, onchain: 0 };
   if (!env || !env.DB) return out;
+  const minute = new Date(now).getUTCMinutes();
   for (const symbol of getConfiguredSymbols(env)) {
-    for (const interval of SUPPORTED_INTERVALS) {
+    for (const [index, interval] of SUPPORTED_INTERVALS.entries()) {
+      if (shard && minute !== index) continue;
       try {
         out.klines += await pruneKlinesCap(env, symbol, interval);
       } catch (_) {}
     }
   }
   try {
-    out.datasets = await pruneExpiredDatasets(env.DB);
+    const ids = Object.keys(FINANCE_DATASETS).filter((_, index) => !shard || index % 60 === minute);
+    if (ids.length) out.datasets = await pruneExpiredDatasets(env.DB, now, { ids });
   } catch (_) {}
+  const cleanup = [
+    ["liquidations", "liquidation_5m_buckets", "bucket_start", now - LIQUIDATION_RETENTION_MS],
+    ["footprint", "footprint_bars", "t", now - FOOTPRINT_MAX_BARS * intervalMs(FOOTPRINT_BASE_INTERVAL)],
+    ["derivatives", "derivative_timeseries", "t", now - DERIVATIVE_RETENTION_MS],
+    ["onchain", "onchain_timeseries", "t", now - ONCHAIN_RETENTION_MS],
+  ];
+  for (const [index, [key, table, timeColumn, cutoff]] of cleanup.entries()) {
+    if (shard && minute !== index + SUPPORTED_INTERVALS.length) continue;
+    try {
+      if (key === "footprint") {
+        for (const symbol of getConfiguredSymbols(env)) {
+          const result = await env.DB.prepare(`DELETE FROM footprint_bars WHERE rowid IN
+            (SELECT rowid FROM footprint_bars WHERE symbol=?1 AND interval=?2 AND
+            t<(SELECT MAX(t)-?3 FROM footprint_bars WHERE symbol=?1 AND interval=?2) ORDER BY t LIMIT 1000)`)
+            .bind(symbol, FOOTPRINT_BASE_INTERVAL, FOOTPRINT_MAX_BARS * intervalMs(FOOTPRINT_BASE_INTERVAL)).run();
+          out[key] += Number(result?.meta?.changes) || 0;
+        }
+        continue;
+      }
+      const result = await env.DB.prepare(`DELETE FROM ${table} WHERE rowid IN
+        (SELECT rowid FROM ${table} WHERE ${timeColumn}<?1 ORDER BY ${timeColumn} LIMIT 1000)`).bind(cutoff).run();
+      out[key] = Number(result?.meta?.changes) || 0;
+    } catch (_) {}
+  }
   return out;
 }
 
@@ -798,11 +836,14 @@ function shouldPreserveLiveTapeStatus(meta, interval, now = Date.now()) {
   return { liveFresh, tailFresh, preserve: liveFresh || tailFresh };
 }
 
-async function updateSyncStatus(env, symbol, interval, { ok, inserted, latestT, error }) {
+async function updateSyncStatus(env, symbol, interval, { ok, inserted, latestT, error, strict = false }) {
   try {
     await env.DB.prepare(
-      `INSERT OR REPLACE INTO sync_status (symbol, interval, last_run, last_t, last_count, last_ok, last_error)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
+      `INSERT INTO sync_status (symbol, interval, last_run, last_t, last_count, last_ok, last_error)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+       ON CONFLICT(symbol,interval) DO UPDATE SET last_run=excluded.last_run,
+       last_t=MAX(sync_status.last_t,excluded.last_t),last_count=excluded.last_count,
+       last_ok=excluded.last_ok,last_error=excluded.last_error`
     ).bind(
       symbol,
       interval,
@@ -812,7 +853,7 @@ async function updateSyncStatus(env, symbol, interval, { ok, inserted, latestT, 
       ok ? 1 : 0,
       error ? String(error).slice(0, 300) : null
     ).run();
-  } catch (_) {}
+  } catch (error) { if (strict) throw error; }
 }
 
 /* =============================================================
@@ -821,9 +862,8 @@ async function updateSyncStatus(env, symbol, interval, { ok, inserted, latestT, 
 
 /** Read the newest history backwards; pin one venue for the whole backfill. */
 async function fetchKlineHistory(env, symbol, interval) {
-  const aggregateDays = interval === "3d";
-  const sourceInterval = aggregateDays ? "1d" : interval;
-  const target = aggregateDays ? MAX_KLINES_PER_INTERVAL * 3 + 2 : MAX_KLINES_PER_INTERVAL;
+  const sourceInterval = interval;
+  const target = MAX_KLINES_PER_INTERVAL;
   const rows = new Map();
   let endTime = Date.now(), venue = null, lastResult = null, exhausted = false;
   const deadline = Date.now() + 45000;
@@ -849,7 +889,7 @@ async function fetchKlineHistory(env, symbol, interval) {
     console.log("[kline backfill] " + symbol + "/" + interval + " page=" + (page + 1) + " rows=" + rows.size);
   }
   const sorted = [...rows.values()].sort((a, b) => Number(a[0]) - Number(b[0]));
-  const klines = (aggregateDays ? bybitListToBinanceKlines(sorted, "3d") : sorted).slice(-MAX_KLINES_PER_INTERVAL);
+  const klines = (interval === "3d" && venue === "bybit-failover" ? bybitListToBinanceKlines(sorted, "3d") : sorted).slice(-MAX_KLINES_PER_INTERVAL);
   return { ...lastResult, ok: true, klines, source: venue, historyExhausted: exhausted };
 }
 
@@ -866,10 +906,29 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
     return { ok: false, symbol, interval, error: err };
   }
 
-  const bulkFill = !meta.hasRows || options.backfill === true;
+  // Every BTC history writer uses the same DO queue as live WS writes. Obtain
+  // the durable checkpoint immediately before fetching, not before other jobs.
+  const collector = symbol === DEFAULT_SYMBOL ? getLiquidationCollectorStub(env) : null;
+  let context = null;
+  if (collector) {
+    try {
+      const response = await collector.fetch(`https://liquidation-collector.local/kline/reconcile-context?interval=${interval}`);
+      if (!response.ok) throw new Error('kline reconcile context unavailable');
+      context = await response.json();
+    } catch (error) {
+      return { ok: false, symbol, interval, error: String(error?.message || error) };
+    }
+  }
+  const requestStartedAt = Date.now();
+  const recoveryFromT = Number(context?.health?.needsReconcile ? context.health.recoveryFromT : options.recoveryFromT) || 0;
+  const bulkFill = !meta.hasRows || options.backfill === true ||
+    context?.health?.recoveryFull === true ||
+    recoveryFromT > 0 && Date.now() - recoveryFromT > BINANCE_MAX_LIMIT_PER_REQUEST * intervalMs(interval);
+  const overlapFrom = Math.max(KLINE_HISTORY_FLOOR_MS, klineOpenAt(interval, requestStartedAt) - KLINE_RECONCILE_CLOSED_BARS * intervalMs(interval));
+  const startTime = Math.min(meta.maxT, overlapFrom, recoveryFromT > 0 ? recoveryFromT : Infinity);
   const fetchArgs = bulkFill
     ? { symbol, interval, limit: MAX_KLINES_PER_INTERVAL }
-    : { symbol, interval: interval === "3d" ? "1d" : interval, startTime: meta.maxT, limit: BINANCE_MAX_LIMIT_PER_REQUEST };
+    : { symbol, interval, startTime, limit: BINANCE_MAX_LIMIT_PER_REQUEST };
 
   const got = bulkFill ? await fetchKlineHistory(env, symbol, interval) : await fetchKlinesWithFailover(env, fetchArgs);
   if (!got.ok) {
@@ -896,11 +955,26 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
     return { ok: false, symbol, interval, error: detail, chain: got.chain };
   }
 
-  if (!bulkFill && interval === "3d") got.klines = bybitListToBinanceKlines(got.klines, "3d");
+  if (got.source && got.source !== "binance-fapi" && got.source !== "none") {
+    return { ok: false, symbol, interval, error: "alternate venue is not a Binance canonical source", source: got.source };
+  }
+  // The live component owns forming bars. A slow hourly/history response cannot
+  // overwrite a newer WS update for that same open timestamp.
+  if (collector || options.closedOnly) got.klines = got.klines.filter(row => Number(row[0]) + intervalMs(interval) <= requestStartedAt);
 
   let persist;
   try {
-    persist = await persistKlines(env, symbol, interval, got.klines);
+    if (collector) {
+      const response = await collector.fetch('https://liquidation-collector.local/kline/reconcile', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          interval, rows: got.klines, sourceHost: got.host, transportHost: got.transportHost || null, requestStartedAt, receivedAt: new Date().toISOString(),
+          generation: context.health.recoveryGeneration, requestSequence: context.requestSequence, historyExhausted: got.historyExhausted === true,
+        }),
+      });
+      if (!response.ok) throw new Error(`collector reconciliation HTTP ${response.status}`);
+      persist = await response.json();
+      if (persist.error) throw new Error(persist.error);
+    } else persist = await persistKlines(env, symbol, interval, got.klines);
   } catch (e) {
     const err = "persist " + (e && e.message ? e.message : String(e)).slice(0, 160);
     await updateSyncStatus(env, symbol, interval, { ok: false, latestT: meta.maxT, error: err });
@@ -923,6 +997,7 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
     fetched: got.klines.length,
     inserted: persist.inserted,
     pruned: persist.pruned,
+    reconciled: persist.reconciled,
     host: got.host,
     source: got.source || "binance-fapi",
     primaryStatus: got.primaryStatus || null,
@@ -1041,6 +1116,9 @@ function ingestTradeIntoFootprintBars(map, trade) {
   if (!Number.isFinite(t) || !Number.isFinite(price) || !Number.isFinite(qty) || qty <= 0) return null;
   const start = bucketStart(t, FOOTPRINT_BASE_INTERVAL);
   let bar = map.get(start);
+  // D1 may have committed the bar while its status/response was lost. Replaying
+  // that cursor must not add the same trade quantities to the stored bar twice.
+  if (bar && id > 0 && id <= Number(bar.lastTradeId || 0)) return bar;
   if (!bar) {
     bar = emptyFootprintBar(start, price);
     map.set(start, bar);
@@ -1141,9 +1219,13 @@ async function persistFootprintBars(env, symbol, barMap) {
   if (!bars.length) return { written: 0, pruned: 0 };
 
   const prep = env.DB.prepare(
-    `INSERT OR REPLACE INTO footprint_bars
+    `INSERT INTO footprint_bars
       (symbol, interval, t, o, h, l, c, buy_vol, sell_vol, delta, volume, poc_price, levels_json, last_trade_id, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)`
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+     ON CONFLICT(symbol,interval,t) DO UPDATE SET o=excluded.o,h=excluded.h,l=excluded.l,c=excluded.c,
+       buy_vol=excluded.buy_vol,sell_vol=excluded.sell_vol,delta=excluded.delta,volume=excluded.volume,
+       poc_price=excluded.poc_price,levels_json=excluded.levels_json,last_trade_id=excluded.last_trade_id,
+       updated_at=excluded.updated_at WHERE excluded.last_trade_id>=footprint_bars.last_trade_id`
   );
   const now = Date.now();
   const stmts = bars.map((bar) => prep.bind(
@@ -1169,23 +1251,18 @@ async function persistFootprintBars(env, symbol, barMap) {
   ));
   await env.DB.batch(stmts);
 
-  const latestT = bars.reduce((max, bar) => Math.max(max, Number(bar && bar.t) || 0), 0);
-  let pruned = 0;
-  if (latestT > 0) {
-    const cutoff = latestT - intervalMs(FOOTPRINT_BASE_INTERVAL) * FOOTPRINT_MAX_BARS;
-    const res = await env.DB.prepare(
-      "DELETE FROM footprint_bars WHERE symbol = ?1 AND interval = ?2 AND t < ?3"
-    ).bind(symbol, FOOTPRINT_BASE_INTERVAL, cutoff).run();
-    pruned = res?.meta?.changes || 0;
-  }
-  return { written: bars.length, pruned };
+  return { written: bars.length, pruned: 0 };
 }
 
 async function updateFootprintStatus(env, symbol, { ok, lastTradeId, lastTradeTime, count, error }) {
   await env.DB.prepare(
-    `INSERT OR REPLACE INTO footprint_sync_status
+    `INSERT INTO footprint_sync_status
       (symbol, last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+     ON CONFLICT(symbol) DO UPDATE SET last_run=excluded.last_run,
+       last_trade_id=MAX(footprint_sync_status.last_trade_id,excluded.last_trade_id),
+       last_trade_time=MAX(footprint_sync_status.last_trade_time,excluded.last_trade_time),
+       last_count=excluded.last_count,last_ok=excluded.last_ok,last_error=excluded.last_error`
   ).bind(
     symbol,
     Date.now(),
@@ -1223,7 +1300,7 @@ async function syncFootprintOne(env, symbol) {
     }
     if (!got.ok) {
       const err = got.error || "aggTrades fetch failed";
-      await updateFootprintStatus(env, symbol, { ok: false, lastTradeId, lastTradeTime, count: allTrades.length, error: err });
+      await updateFootprintStatus(env, symbol, { ok: false, lastTradeId: status.lastTradeId, lastTradeTime: status.lastTradeTime, count: 0, error: err });
       return { ok: false, symbol, error: err, chain: got.chain, recoveredStaleCursor };
     }
     host = got.host || host;
@@ -1401,10 +1478,17 @@ function mergeFootprintRows(rows, interval, tickSize) {
  * ============================================================= */
 
 /**
- * Cron 每分钟同步全部周期尾部（含未收盘）。亚分钟由 KlineLiveCollector 负责。
+ * Cron 每分钟检查各周期健康，重启/断流补缺并每小时核对；亚分钟由同对象内 K 线组件负责。
  */
-function intervalsDueAt(_date) {
-  return SUPPORTED_INTERVALS.slice();
+function intervalsDueAt(date, collector, symbol = DEFAULT_SYMBOL) {
+  const now = date.getTime();
+  return SUPPORTED_INTERVALS.filter(interval => {
+    const health = collector?.intervalHealth?.[interval];
+    // Hourly small-window reconciliation, or per-interval gap recovery. Mark price
+    // traffic cannot conceal a missing kline subscription.
+    return symbol !== DEFAULT_SYMBOL || date.getUTCMinutes() === 0 || !health ||
+      health.needsReconcile !== false || now - Number(health.lastMessageAt || 0) > 10000 || now - Number(health.lastWriteAt || 0) > 15000;
+  });
 }
 
 function isKlineTailStaleForRead(latestT, interval, now = Date.now()) {
@@ -2297,9 +2381,7 @@ async function persistDerivativePoints(env, points) {
       now
     )));
   }
-  const cutoff = now - DERIVATIVE_RETENTION_MS;
-  const pruned = await env.DB.prepare("DELETE FROM derivative_timeseries WHERE t < ?1").bind(cutoff).run();
-  return { written: rows.length, pruned: pruned?.meta?.changes || 0 };
+  return { written: rows.length, pruned: 0 };
 }
 
 async function updateDerivativeSyncStatus(env, symbol, metric, { ok, count, error }) {
@@ -4055,9 +4137,7 @@ async function persistOnchainPoints(env, points) {
       )
     );
   }
-  const cutoff = now - ONCHAIN_RETENTION_MS;
-  const pruned = await env.DB.prepare("DELETE FROM onchain_timeseries WHERE t < ?1").bind(cutoff).run();
-  return { written: rows.length, pruned: pruned?.meta?.changes || 0 };
+  return { written: rows.length, pruned: 0 };
 }
 
 async function updateOnchainSyncStatus(env, scope, metric, { ok, count, error }) {
@@ -4486,10 +4566,16 @@ function liquidationFreshness(rows, sources, generatedAt = Date.now()) {
 async function persistLiquidationBuckets(env, buckets) {
   if (!env.DB || !Array.isArray(buckets) || buckets.length === 0) return { written: 0, pruned: 0 };
   const stmt = env.DB.prepare(
-    `INSERT OR REPLACE INTO liquidation_5m_buckets
+    `INSERT INTO liquidation_5m_buckets
       (symbol, exchange, bucket_start, long_notional, short_notional, long_count, short_count,
        max_notional, max_side, min_price, max_price, vwap_price, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+     ON CONFLICT(symbol,exchange,bucket_start) DO UPDATE SET
+       long_notional=excluded.long_notional,short_notional=excluded.short_notional,
+       long_count=excluded.long_count,short_count=excluded.short_count,max_notional=excluded.max_notional,
+       max_side=excluded.max_side,min_price=excluded.min_price,max_price=excluded.max_price,
+       vwap_price=excluded.vwap_price,updated_at=excluded.updated_at
+     WHERE excluded.long_count+excluded.short_count >= liquidation_5m_buckets.long_count+liquidation_5m_buckets.short_count`
   );
   const serialized = buckets.map(serializeLiquidationBucket);
   await env.DB.batch(serialized.map((b) => stmt.bind(
@@ -4507,19 +4593,7 @@ async function persistLiquidationBuckets(env, buckets) {
     b.vwap_price,
     b.updated_at
   )));
-  const pruned = await pruneLiquidationBuckets(env);
-  return { written: serialized.length, pruned };
-}
-
-async function pruneLiquidationBuckets(env, now = Date.now()) {
-  if (!env.DB) return 0;
-  const cutoff = now - LIQUIDATION_RETENTION_MS;
-  try {
-    const res = await env.DB.prepare("DELETE FROM liquidation_5m_buckets WHERE bucket_start < ?1").bind(cutoff).run();
-    return res?.meta?.changes || 0;
-  } catch (_) {
-    return 0;
-  }
+  return { written: serialized.length, pruned: 0 };
 }
 
 function getLiquidationCollectorStub(env) {
@@ -4547,15 +4621,15 @@ function getKlineLiveStub(env) {
 }
 
 async function handleKlineLiveWake(env) {
-  const stub = getKlineLiveStub(env);
-  if (!stub) return json({ ok: false, error: "Durable Object binding KLINE_LIVE_COLLECTOR missing" }, 501);
-  return stub.fetch("https://kline-live.local/wake", { method: "POST" });
+  const stub = getLiquidationCollectorStub(env);
+  if (!stub) return json({ ok: false, error: "Durable Object binding LIQUIDATION_COLLECTOR missing" }, 501);
+  return stub.fetch("https://liquidation-collector.local/kline/wake", { method: "POST" });
 }
 
 async function handleKlineLiveStatus(env) {
-  const stub = getKlineLiveStub(env);
-  if (!stub) return json({ ok: false, error: "Durable Object binding KLINE_LIVE_COLLECTOR missing" }, 501);
-  return stub.fetch("https://kline-live.local/status");
+  const stub = getLiquidationCollectorStub(env);
+  if (!stub) return json({ ok: false, error: "Durable Object binding LIQUIDATION_COLLECTOR missing" }, 501);
+  return stub.fetch("https://liquidation-collector.local/kline/status");
 }
 
 async function getLiquidationCollectorSnapshot(env) {
@@ -4705,6 +4779,59 @@ async function handleReadKlines(_request, env, url) {
   );
 }
 
+async function repairKlineGaps(env, symbol, interval) {
+  const step = intervalMs(interval);
+  const listed = await env.DB.prepare(
+    "SELECT t FROM klines WHERE symbol=?1 AND interval=?2 ORDER BY t ASC LIMIT 6000"
+  ).bind(symbol, interval).all();
+  const opens = (listed.results || []).map((row) => Number(row.t)).filter(Number.isFinite);
+  const gaps = [];
+  for (let i = 1; i < opens.length && gaps.length < 6; i++) {
+    if (opens[i] - opens[i - 1] > step) gaps.push({ from: opens[i - 1] + step, to: opens[i] });
+  }
+  const requestStartedAt = Date.now();
+  const receivedAt = new Date(requestStartedAt).toISOString();
+  const reports = [];
+  for (const gap of gaps) {
+    let cursor = gap.from;
+    let pages = 0;
+    let wrote = 0;
+    while (cursor < gap.to && pages < 3) {
+      const got = await fetchKlinesFromBinance(env, {
+        symbol, interval, startTime: cursor, endTime: gap.to - 1, limit: 1500,
+      });
+      pages += 1;
+      if (!got.ok) { reports.push({ from: gap.from, to: gap.to, ok: false, error: got.error }); break; }
+      const rows = (got.klines || []).filter((row) => Number(row[0]) >= cursor && Number(row[0]) < gap.to && Number(row[6]) < requestStartedAt);
+      if (!rows.length) { reports.push({ from: gap.from, to: gap.to, ok: true, inserted: wrote, absentUpstream: true }); break; }
+      await persistKlines(env, symbol, interval, rows);
+      await persistRestKlineBatch(env.DB, interval, rows, got.host, {
+        receivedAt, requestStartedAt: receivedAt, transportHost: got.transportHost,
+      });
+      wrote += rows.length;
+      const last = Number(rows[rows.length - 1][0]);
+      if (last + step <= cursor) break;
+      cursor = last + step;
+    }
+    if (!reports.some((item) => item.from === gap.from)) reports.push({ from: gap.from, to: gap.to, ok: true, inserted: wrote });
+  }
+  const keep = interval === "5m" ? 900 : 600;
+  const tailFrom = klineOpenAt(interval, requestStartedAt) - keep * step;
+  const tail = await fetchKlinesFromBinance(env, { symbol, interval, startTime: tailFrom, limit: Math.min(1500, keep + 2) });
+  let tailRows = 0;
+  if (tail.ok) {
+    const rows = (tail.klines || []).filter((row) => Number(row[6]) < requestStartedAt);
+    tailRows = rows.length;
+    if (rows.length) {
+      await persistKlines(env, symbol, interval, rows);
+      await persistRestKlineBatch(env.DB, interval, rows, tail.host, {
+        receivedAt, requestStartedAt: receivedAt, transportHost: tail.transportHost,
+      });
+    }
+  }
+  return { ok: tail.ok !== false, symbol, interval, gaps: reports, tailRows, providerHost: tail.host || null, transportHost: tail.transportHost || null, tailError: tail.ok ? null : tail.error };
+}
+
 async function handleManualSync(request, env, url, ctx) {
   if (!env.DB) return json({ error: "D1 binding missing" }, 500);
   if (request && request.method === "HEAD") {
@@ -4727,7 +4854,9 @@ async function handleManualSync(request, env, url, ctx) {
         results.push({ symbol, interval: iv, ok: false, error: "unsupported" });
         continue;
       }
-      results.push(await syncKlinesOne(env, symbol, iv, { backfill: url.searchParams.get("backfill") === "1" }));
+      results.push(url.searchParams.get("repair") === "1"
+        ? await repairKlineGaps(env, symbol, iv)
+        : await syncKlinesOne(env, symbol, iv, { backfill: url.searchParams.get("backfill") === "1" }));
     }
     return results;
   };
@@ -5333,6 +5462,15 @@ export class LiquidationCollector {
       bybit: this.emptySource("bybit"),
     };
     this.buckets = new Map();
+    this.recovery = new LiquidationRecovery(state.storage);
+    this.buckets = new Map(this.recovery.pending());
+    this.flushTask = null;
+    this.connectionTask = null;
+    this.nextLiquidationAt = 0;
+    this.nextRecoveryPruneAt = 0;
+    this.alarmAt = 0;
+    this.alarmChain = Promise.resolve();
+    this.kline = new KlineLiveComponent(state, env);
     this.lastFlushAt = 0;
     this.lastWritten = 0;
     this.lastPruned = 0;
@@ -5344,8 +5482,6 @@ export class LiquidationCollector {
     this.bybitWs = null;
     this.bybitConnecting = false;
     this.bybitPingTimer = null;
-    this.seenEventIds = new Set();
-    this.seenEventQueue = [];
   }
 
   emptySource(exchange) {
@@ -5369,6 +5505,7 @@ export class LiquidationCollector {
       lastRawType: "",
       lastSubscribeAt: 0,
       lastSubscribeOk: 0,
+      subscriptions: {},
       reconnectCount: 0,
       reconnectAt: 0,
     };
@@ -5376,9 +5513,24 @@ export class LiquidationCollector {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === "/kline/reconciled" && request.method === "POST") {
+      // Old clients must not clear a checkpoint without verified persisted rows.
+      return json({ ok: false, error: 'use kline/reconcile with coverage rows' }, 409);
+    }
+    if (url.pathname === "/kline/reconcile-context") {
+      try { return json(await this.kline.reconciliationContext(url.searchParams.get('interval'))); }
+      catch (error) { return json({ error: error?.message || String(error) }, 503); }
+    }
+    if (url.pathname === "/kline/reconcile" && request.method === "POST") {
+      try { return json(await this.kline.applyReconciliation(await request.json())); }
+      catch (error) { return json({ error: error?.message || String(error) }, 503); }
+    }
+    if (url.pathname === "/kline/wake" || url.pathname === "/kline/status") {
+      await this.ensureStarted();
+      return json({ ok: true, collector: this.kline.snapshot() }, 200, { "Cache-Control": "no-store" });
+    }
     if (url.pathname === "/wake") {
       await this.ensureStarted();
-      await this.flushClosedBuckets();
       return json({ ok: true, collector: this.statusSnapshot() }, 200, { "Cache-Control": "no-store" });
     }
     if (url.pathname === "/status") {
@@ -5389,25 +5541,44 @@ export class LiquidationCollector {
   }
 
   async alarm() {
+    this.alarmAt = 0;
     await this.ensureStarted();
-    await this.flushClosedBuckets();
-    this.lastPruned = await pruneLiquidationBuckets(this.env);
     await this.scheduleAlarm();
   }
 
   async ensureStarted() {
     if (!this.startedAt) this.startedAt = Date.now();
-    if (!this.binanceWs && !this.binanceConnecting) await this.connectBinance();
-    if (!this.binanceProbeWs && !this.binanceProbeConnecting) await this.connectBinanceProbe();
-    if (!this.bybitWs && !this.bybitConnecting) await this.connectBybit();
-    this.checkStaleSources();
+    const now = Date.now();
+    // Network jobs never own blockConcurrencyWhile or the shared alarm handler.
+    if (!this.connectionTask) {
+      this.connectionTask = Promise.allSettled([
+        this.connectBinance(), this.connectBinanceProbe(), this.connectBybit(),
+      ]).finally(() => { this.connectionTask = null; });
+      this.state.waitUntil(this.connectionTask);
+    }
+    this.kline.tick(now);
+    if (now >= this.nextLiquidationAt) {
+      this.nextLiquidationAt = now + LIQUIDATION_ALARM_MS;
+      this.checkStaleSources();
+      this.state.waitUntil(this.flushClosedBuckets().catch(error => console.warn("[liquidation] flush failed", error?.message || error)));
+    }
+    if (now >= this.nextRecoveryPruneAt) {
+      this.nextRecoveryPruneAt = now + 3600000;
+      this.recovery.prune(liquidationBucketStart(now - LIQUIDATION_RETENTION_MS));
+    }
     await this.scheduleAlarm();
   }
 
   async scheduleAlarm() {
-    if (this.state && this.state.storage && typeof this.state.storage.setAlarm === "function") {
-      await this.state.storage.setAlarm(Date.now() + LIQUIDATION_ALARM_MS);
-    }
+    // Only this owner touches the platform's single alarm; concurrent wake/status
+    // requests can bring it forward, never replace 1s with a 60s component deadline.
+    const nextAt = Math.min(Date.now() + KLINE_LIVE_ALARM_MS, this.nextLiquidationAt || Infinity);
+    this.alarmChain = this.alarmChain.catch(() => {}).then(async () => {
+      if (this.alarmAt && this.alarmAt <= nextAt) return;
+      await this.state.storage.setAlarm(nextAt);
+      this.alarmAt = nextAt;
+    });
+    await this.alarmChain;
   }
 
   sourceStatus(exchange, patch) {
@@ -5431,16 +5602,17 @@ export class LiquidationCollector {
 
   touchHeartbeat(exchange, rawType) {
     const current = this.sources[exchange] || this.emptySource(exchange);
+    const primary = (current.subscriptions || {})[exchange === "bybit" ? "liq-all" : "forceOrder"];
+    const blocked = primary && primary.ok === false;
+    const market = rawType === "aggTrade";
     const now = Date.now();
     this.sources[exchange] = {
       ...current,
-      status: "realtime",
+      status: blocked ? "degraded" : (current.status === "error" ? "error" : "realtime"),
       lastHeartbeatAt: now,
-      lastMarketMessageAt: now,
       heartbeatCount: (Number(current.heartbeatCount) || 0) + 1,
       lastRawType: rawType || current.lastRawType || "",
-      lastError: "",
-      reconnectAt: 0,
+      ...(market ? { lastMarketMessageAt: now } : {}),
     };
   }
 
@@ -5448,22 +5620,25 @@ export class LiquidationCollector {
     const current = this.sources[exchange] || this.emptySource(exchange);
     this.sources[exchange] = {
       ...current,
-      status: "realtime",
       lastTransportAt: Date.now(),
       lastRawType: rawType || current.lastRawType || "",
-      lastError: "",
-      reconnectAt: 0,
     };
   }
 
-  noteSubscribe(exchange, ok, detail) {
+  noteSubscribe(exchange, reqId, ok, detail) {
     const current = this.sources[exchange] || this.emptySource(exchange);
+    const id = String(reqId || (exchange === "bybit" ? "liq-all" : "forceOrder"));
+    const subscriptions = { ...(current.subscriptions || {}), [id]: { ok: !!ok, at: Date.now(), detail: ok ? "" : String(detail || "subscribe failed").slice(0, 160) } };
+    const primaryId = exchange === "bybit" ? "liq-all" : "forceOrder";
+    const primary = subscriptions[primaryId];
     this.sources[exchange] = {
       ...current,
+      subscriptions,
       lastSubscribeAt: Date.now(),
-      lastSubscribeOk: ok ? 1 : 0,
-      lastError: ok ? "" : String(detail || "subscribe failed").slice(0, 160),
-      lastRawType: "subscribe",
+      lastSubscribeOk: primary ? (primary.ok ? 1 : 0) : (ok ? 1 : 0),
+      lastError: primary && primary.ok === false ? primary.detail : (ok ? current.lastError : String(detail || "subscribe failed").slice(0, 160)),
+      lastRawType: "subscribe:" + id,
+      status: primary && primary.ok === false ? "degraded" : current.status,
     };
   }
 
@@ -5521,6 +5696,7 @@ export class LiquidationCollector {
 
   connectBinance() {
     if (this.binanceWs || this.binanceConnecting) return Promise.resolve();
+    if (Number(this.sources.binance?.reconnectAt) > Date.now()) return Promise.resolve();
     if (typeof WebSocket === "undefined") {
       this.sourceStatus("binance", { status: "unavailable", lastError: "WebSocket unavailable" });
       return Promise.resolve();
@@ -5606,6 +5782,7 @@ export class LiquidationCollector {
 
   connectBinanceProbe() {
     if (this.binanceProbeWs || this.binanceProbeConnecting) return Promise.resolve();
+    if (Number(this.sources.binance?.reconnectAt) > Date.now()) return Promise.resolve();
     if (typeof WebSocket === "undefined") return Promise.resolve();
     const origin = parseCustomFapiOrigin(this.env && this.env.BINANCE_FSTREAM_ORIGIN);
     const sym = this.symbol.toLowerCase();
@@ -5673,7 +5850,7 @@ export class LiquidationCollector {
         }
         if (msg.op === "subscribe") {
           const ok = msg.success !== false && Number(msg.retCode || 0) === 0;
-          this.noteSubscribe("bybit", ok, msg.retMsg || msg.ret_msg || JSON.stringify(msg).slice(0, 120));
+          this.noteSubscribe("bybit", msg.req_id || msg.reqId || "unknown", ok, msg.retMsg || msg.ret_msg || JSON.stringify(msg).slice(0, 120));
           return;
         }
         this.touchSource("bybit", { lastRawType: rawType || "control" });
@@ -5720,6 +5897,7 @@ export class LiquidationCollector {
 
   connectBybit() {
     if (this.bybitWs || this.bybitConnecting) return Promise.resolve();
+    if (Number(this.sources.bybit?.reconnectAt) > Date.now()) return Promise.resolve();
     if (typeof WebSocket === "undefined") {
       this.sourceStatus("bybit", { status: "unavailable", lastError: "WebSocket unavailable" });
       return Promise.resolve();
@@ -5791,40 +5969,66 @@ export class LiquidationCollector {
 
   ingest(event) {
     if (!event || event.symbol !== this.symbol) return;
+    if (Number(event.ts) < Date.now() - LIQUIDATION_RETENTION_MS) return;
     const eventId = `${event.exchange}:${event.symbol}:${event.ts}:${event.side}:${event.price}:${event.qty}`;
-    if (this.seenEventIds.has(eventId)) return;
-    this.seenEventIds.add(eventId);
-    this.seenEventQueue.push(eventId);
-    while (this.seenEventQueue.length > 1000) {
-      const old = this.seenEventQueue.shift();
-      this.seenEventIds.delete(old);
-    }
     const bucketStart = liquidationBucketStart(event.ts);
     const key = `${event.exchange}:${bucketStart}`;
-    let bucket = this.buckets.get(key);
-    if (!bucket) {
-      bucket = emptyLiquidationBucket(event.symbol, event.exchange, bucketStart);
-      this.buckets.set(key, bucket);
-    }
-    addLiquidationToBucket(bucket, event);
-    this.flushClosedBuckets().catch((e) => console.warn("[liquidation] flush failed", e?.message || e));
+    const bucket = this.recovery.ingest(key, eventId, bucketStart, prior => {
+      const next = prior || emptyLiquidationBucket(event.symbol, event.exchange, bucketStart);
+      addLiquidationToBucket(next, event);
+      return next;
+    });
+    if (!bucket) return;
+    this.buckets.set(key, bucket);
+    const work = this.flushClosedBuckets().catch((e) => console.warn("[liquidation] flush failed", e?.message || e));
+    this.state.waitUntil(work);
   }
 
   async flushClosedBuckets(now = Date.now()) {
-    const currentStart = liquidationBucketStart(now);
-    const closed = [];
-    for (const [key, bucket] of this.buckets.entries()) {
-      if (Number(bucket.bucketStart) < currentStart) {
-        closed.push(bucket);
-        this.buckets.delete(key);
+    if (this.flushTask) return this.flushTask;
+    this.flushTask = (async () => {
+      const currentStart = liquidationBucketStart(now);
+      const candidates = [...this.buckets.entries()].filter(([, b]) => Number(b.bucketStart) < currentStart)
+        .slice(0, 100).map(([key, bucket]) => [key, { ...bucket }]);
+      if (!candidates.length) return { written: 0, pruned: 0 };
+      if (!this.env.DB) throw new Error("liquidation D1 binding missing");
+      // On first cutover, an old closed bucket can already exist in D1. Load its
+      // complete base once, persist the merged base locally BEFORE sending D1,
+      // so retry after a lost response never adds that base a second time.
+      for (const [key, bucket] of candidates) {
+        if (bucket.d1BaselineLoaded) continue;
+        const prior = await this.env.DB.prepare(`SELECT * FROM liquidation_5m_buckets
+          WHERE symbol=?1 AND exchange=?2 AND bucket_start=?3`).bind(bucket.symbol, bucket.exchange, bucket.bucketStart).first();
+        const seeded = this.recovery.seed(key, current => {
+          if (!prior) return current;
+          const baseNotional = Number(prior.long_notional || 0) + Number(prior.short_notional || 0);
+          return { ...current,
+            longNotional: current.longNotional + Number(prior.long_notional || 0),
+            shortNotional: current.shortNotional + Number(prior.short_notional || 0),
+            longCount: current.longCount + Number(prior.long_count || 0),
+            shortCount: current.shortCount + Number(prior.short_count || 0),
+            maxNotional: Math.max(current.maxNotional, Number(prior.max_notional || 0)),
+            maxSide: Number(prior.max_notional || 0) > current.maxNotional ? prior.max_side : current.maxSide,
+            minPrice: prior.min_price == null ? current.minPrice : Math.min(current.minPrice, Number(prior.min_price)),
+            maxPrice: prior.max_price == null ? current.maxPrice : Math.max(current.maxPrice, Number(prior.max_price)),
+            vwapNumerator: current.vwapNumerator + baseNotional,
+            vwapQty: current.vwapQty + (Number(prior.vwap_price) > 0 ? baseNotional / Number(prior.vwap_price) : 0),
+          };
+        });
+        if (seeded) this.buckets.set(key, seeded);
       }
-    }
-    if (!closed.length) return { written: 0, pruned: 0 };
-    const out = await persistLiquidationBuckets(this.env, closed);
-    this.lastFlushAt = Date.now();
-    this.lastWritten += out.written || 0;
-    this.lastPruned += out.pruned || 0;
-    return out;
+      const closed = candidates.map(([key]) => [key, { ...this.buckets.get(key) }]);
+      const out = await persistLiquidationBuckets(this.env, closed.map(([, bucket]) => bucket));
+      if (out.written !== closed.length) throw new Error("liquidation snapshot write not acknowledged");
+      for (const [key, bucket] of closed) {
+        this.recovery.acknowledge(key, bucket.recoveryVersion);
+        if (this.buckets.get(key)?.recoveryVersion === bucket.recoveryVersion) this.buckets.delete(key);
+      }
+      this.lastFlushAt = Date.now();
+      this.lastWritten += out.written || 0;
+      return out;
+    })().finally(() => { this.flushTask = null; });
+    return this.flushTask;
   }
 
   statusSnapshot() {
@@ -5853,6 +6057,8 @@ export class LiquidationCollector {
 }
 
 export const __footprintTestHooks = {
+  syncKlinesOne,
+  d1QueryLatestMeta,
   persistDerivativePoints,
   syncDerivativesOne,
   syncFootprintOne,
@@ -5910,8 +6116,10 @@ bindKlineLiveHooks({
   updateSyncStatus,
   persistLiveKlineBar,
   persistLiveSnapshot,
+  persistRestKlineBatch,
   fetchKlinesFromBinance,
   fetchBinanceFapiJson,
+  readKlineCursor: d1QueryLatestMeta,
 });
 
 export default {
@@ -5945,6 +6153,13 @@ export default {
     if (path === "/api/d1/status") return handleStatus(request, env, url);
     if (path === "/api/d1/klines/live") return handleKlineLiveStatus(env);
     if (path === "/api/d1/klines/wake") return handleKlineLiveWake(env);
+    if (path === "/api/d1/collectors/retire-kline" || path === "/api/d1/collectors/legacy-kline/status") {
+      const retire = path.endsWith("retire-kline");
+      if (retire && request.method !== "POST") return json({ ok: false, error: "POST required" }, 405);
+      const stub = getKlineLiveStub(env);
+      if (!stub) return json({ ok: false, error: "legacy collector binding missing" }, 501);
+      return stub.fetch(`https://kline-live.local/${retire ? "retire" : "status"}`, { method: retire ? "POST" : "GET" });
+    }
     if (path === "/api/d1/footprint") return handleReadFootprint(request, env, url, ctx);
     if (path === "/api/d1/footprint/sync") return handleManualFootprintSync(request, env, url, ctx);
     if (path === "/api/d1/liquidations") return handleReadLiquidations(request, env, url);
@@ -5991,7 +6206,7 @@ export default {
   },
 
   /**
-   * Cron 触发：每分钟一次。唤醒 live collector、规范集调度，并对全部周期做 REST 尾部备份与 prune。
+   * Cron 每分钟唤醒同一采集器、调度规范集；按健康补缺，保留与清理每小时分片执行。
    * @param {{scheduledTime: number, cron: string}} event
    * @param {object} env
    * @param {ExecutionContext} ctx
@@ -6004,11 +6219,10 @@ export default {
     const run = async () => {
       const summary = [];
       const liq = await handleLiquidationWake(env).then((r) => r.json()).catch((e) => ({ ok: false, error: e?.message || String(e) }));
-      const liqPruned = await pruneLiquidationBuckets(env);
       summary.push(
         liq.ok
-          ? `liquidation:collector ok prune=${liqPruned}`
-          : `liquidation:collector fail ${liq.error || ""} prune=${liqPruned}`
+          ? "liquidation:collector ok"
+          : `liquidation:collector fail ${liq.error || ""}`
       );
       const live = await handleKlineLiveWake(env).then((r) => r.json()).catch((e) => ({ ok: false, error: e?.message || String(e) }));
       summary.push(live.ok ? "kline-live:ok" : `kline-live:fail ${live.error || ""}`);
@@ -6035,7 +6249,7 @@ export default {
             ? `${symbol}/footprint:ok got=${fp.fetched || 0} written=${fp.written || 0}`
             : `${symbol}/footprint:fail ${fp.error || ""}`
         );
-        for (const interval of due) {
+        for (const interval of intervalsDueAt(time, live.ok ? live.collector : null, symbol)) {
           const r = await syncKlinesOne(env, symbol, interval);
           summary.push(
             r.ok
@@ -6044,7 +6258,7 @@ export default {
           );
         }
       }
-      if (time.getUTCMinutes() % 10 === 0) {
+      if (time.getUTCMinutes() === 20) {
         for (const symbol of symbols) {
           for (const interval of ["1d", "3d"]) {
             const extended = await extendKlineHistoryOnePage(env, symbol, interval);
@@ -6065,7 +6279,7 @@ export default {
             : `onchain:fail ${((oc.errors && oc.errors.join(";")) || oc.error || "unknown").slice(0, 120)}`
         );
       }
-      const retention = await pruneExpiredStorage(env);
+      const retention = await pruneExpiredStorage(env, time.getTime(), { shard: true });
       summary.push(`retention:klines=${retention.klines} datasets=${retention.datasets}`);
       console.log(`[cron ${time.toISOString()}] due=${due.join(",")} → ${summary.join(" | ")}`);
     };

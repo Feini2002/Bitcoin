@@ -51,10 +51,14 @@ const { DatabaseSync } = require('node:sqlite');
     const env={DB:{prepare(sql){return {bind(...args){return {run:async()=>({meta:db.prepare(sql).run(...args)})}}}},batch:async stmts=>Promise.all(stmts.map(s=>s.run()))}};
     const rows=Array.from({length:6005},(_,i)=>[i*600000,1,2,0,1,3]);
     await hooks.persistKlines(env,'BTCUSDT','5m',rows);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM klines').get().n,6005);
+    await hooks.pruneKlinesCap(env,'BTCUSDT','5m');
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM klines').get().n,6000);
     assert.equal(db.prepare('SELECT MIN(t) AS t FROM klines').get().t,3000000);
     await hooks.persistKlines(env,'BTCUSDT','5m',[[6005*600000,1,2,0,1,3]]);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM klines').get().n,6001);
+    await hooks.pruneKlinesCap(env,'BTCUSDT','5m');
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM klines').get().n,6000);
-    console.log('PASS retain exactly 6000 with gaps and new candles');
+    console.log('PASS scheduled retention keeps exactly 6000 without scanning on every write');
   } finally { db.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1});

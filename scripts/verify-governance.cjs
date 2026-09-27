@@ -11,6 +11,18 @@ async function main() {
   vm.runInContext(source('js/config.js')+source('js/features.js')+source('js/data-engine.js')+';globalThis.engine=DataEngine;globalThis.features=FEATURES;',context);
   check('GOV-01 API override is used by data engine',()=>assert.equal(context.engine.apiBase(),'https://fixture.local'));
   check('GOV-02 all navigation entries have explicit maturity',()=> { assert.equal(context.features.length,26); assert.ok(context.features.every(x=>x.state)); });
+  check('GOV-11 market-page maturity does not claim runtime availability',()=> {
+    for (const pricePathAvailable of [false, true]) {
+      context.window.__bitDeskChartPricePathAvailable=pricePathAvailable;
+      for (const id of ['chart','orderflow','heatmap','derivatives']) {
+        assert.equal(context.features.find(item=>item.id===id).state,'connected');
+        const info=vm.runInContext(`featureInfo(${JSON.stringify(id)})`,context);
+        assert.equal(info.label,'已接入');
+        assert.match(info.note,/页内的数据来源、更新时间和错误提示/);
+        assert.match(info.note,/不代表服务在线或可交易/);
+      }
+    }
+  });
   const pending = new Map();
   context.engine.workerFetch = (url, options) => new Promise((resolve,reject) => {
     if(options.signal.aborted) return reject(new DOMException('aborted','AbortError'));
@@ -29,6 +41,10 @@ async function main() {
   await assert.rejects(cancelled,{name:'AbortError'}); passed++; console.log('PASS GOV-04 request cancellation propagates');
   context.engine.workerFetch=async()=>new Response('<html>unavailable</html>',{status:503});
   await assert.rejects(context.engine.fetchKlinesFromD1('BTCUSDT','5m'),/503/); passed++; console.log('PASS GOV-05 service failure preserves status');
+  const failedDeskRequests=[];
+  context.engine.workerFetch=async url=>{failedDeskRequests.push(new URL(url).pathname);return new Response(JSON.stringify({error:'fixture service paused'}),{status:503});};
+  await assert.rejects(context.engine.fetchDesk('chart'),/503/);
+  check('GOV-12 connected market page preserves desk failure without fallback',()=>assert.deepEqual(failedDeskRequests,['/api/desk/chart']));
   context.engine.workerFetch=async()=>new Response(JSON.stringify({klines:[],latestT:0}));
   const empty=await context.engine.fetchKlinesFromD1('BTCUSDT','5m');
   check('GOV-06 empty data is not fabricated',()=>assert.equal(empty.length,0));

@@ -297,12 +297,27 @@
     return { action: "reject", reason: "identity_content_conflict" };
   }
 
+  var localDisplayed = function (notes) {
+    return { read: "allowed", persist: "unknown", modelSend: "unknown", export: "unknown", localDisplayedDownload: "allowed", notes: notes };
+  };
   var SOURCE_USAGE = {
-    "binance-usdm-klines": { read: "allowed", persist: "unknown", modelSend: "unknown", export: "unknown", notes: "公开行情只读；保存/外发需按用途再核条款。" },
+    "binance-usdm-klines": localDisplayed("用户点击后，只把本页已经显示的公开永续 K 线下载到本地。未核实原始棒不带出 OHLC。export 仍是 unknown，不授权模型外发或第三方上传。"),
     "binance-usdm-ticker": { read: "allowed", persist: "unknown", modelSend: "unknown", export: "unknown", notes: "标题价只读。" },
-    "legacy-d1-klines": { read: "allowed", persist: "denied", modelSend: "denied", export: "unknown", notes: "旧主键无 venue；可读但不得补标 Binance 后外发为单所证据。" },
+    "binance-usdm-premium": localDisplayed("本页已显示的币安标记价与报告费率，仅用户本地下载。"),
+    "binance-usdm-funding": localDisplayed("本页已显示的已结算资金费，仅用户本地下载。未知周期不补成 8 小时。"),
+    "binance-usdm-basis": localDisplayed("本页已显示的基差三字段，仅用户本地下载。"),
+    "binance-usdm-oi": localDisplayed("本页已显示的持仓量，单位 BTC，仅用户本地下载。"),
+    "binance-usdm-oi-history": localDisplayed("本页已显示的 1h 持仓历史，BTC 与 USDT 分开，仅用户本地下载。"),
+    "binance-usdm-taker": localDisplayed("本页已显示的 1h 主动量，仅用户本地下载。不是逐笔 CVD。"),
+    "binance-usdm-accounts": localDisplayed("本页已显示的全账户样本，仅用户本地下载。"),
+    "binance-usdm-top-positions": localDisplayed("本页已显示的头部持仓样本，仅用户本地下载。不与账户样本合并。"),
+    "binance-usdm-aggtrade": localDisplayed("本页已显示的 aggTrade 近似足迹，仅用户本地下载。不是逐笔成交。"),
+    "binance-liquidation": localDisplayed("本页已显示的币安强平桶，仅用户本地下载。不代表其他交易所。"),
+    "bybit-liquidation": localDisplayed("本页已显示的 Bybit 强平桶，仅用户本地下载。不与币安合并成完整覆盖。"),
+    "public-macro-displayed": localDisplayed("本页已显示的公开宏观参考值，仅用户本地下载。不是交易结论。"),
+    "legacy-d1-klines": { read: "allowed", persist: "denied", modelSend: "denied", export: "unknown", notes: "旧主键无 venue；可读但不得补标 Binance 后外发为单所证据。本地下载也不导出 OHLC。" },
     "stored-restricted-model": { read: "allowed", persist: "allowed", modelSend: "denied", export: "unknown", notes: "入库不自动授权模型外发。" },
-    "unknown-vendor": { read: "unknown", persist: "denied", modelSend: "denied", export: "denied", notes: "未知不自动允许。" },
+    "unknown-vendor": { read: "unknown", persist: "denied", modelSend: "denied", export: "denied", localDisplayedDownload: "denied", notes: "未知不自动允许。" },
   };
 
   function sourcePurpose(sourceId, purpose) {

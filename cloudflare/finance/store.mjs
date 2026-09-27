@@ -8,6 +8,19 @@ export function financeChannelKey(provider, operation, parameters) {
   return `${provider}/${operation}?${query}`;
 }
 
+// Historical windows are not new permanent channels. Keep a single bounded
+// slot for time-window reads, separate from the latest full/tail snapshot.
+// The gateway still compares the entire parameter set before reusing a slot.
+export function financeSnapshotKey(provider, operation, parameters) {
+  if (Object.hasOwn(parameters, 'startTime') || Object.hasOwn(parameters, 'endTime')) {
+    const identity = { ...parameters };
+    delete identity.startTime;
+    delete identity.endTime;
+    return `${financeChannelKey(provider, operation, identity)}&window=history`;
+  }
+  return financeChannelKey(provider, operation, parameters);
+}
+
 export async function readFinanceSnapshot(db, key) {
   const [metadata, parts] = await db.batch([
     db.prepare('SELECT * FROM finance_channel_state WHERE channel_key = ?').bind(key),
@@ -22,6 +35,12 @@ export async function readFinanceSnapshot(db, key) {
 }
 
 export async function persistFinanceSnapshot(db, key, envelope, attemptedAt) {
+  const [metadata] = await db.batch([
+    db.prepare('SELECT received_at FROM finance_channel_state WHERE channel_key = ?').bind(key),
+  ]);
+  // Same receipt is cache reuse; older responses are already superseded. Do not
+  // create and immediately delete another set of chunks in either case.
+  if (metadata.results[0]?.received_at >= envelope.receivedAt) return false;
   const raw = JSON.stringify(envelope);
   const bytes = new TextEncoder().encode(raw).byteLength;
   if (bytes > MAX_SNAPSHOT_BYTES) throw new Error('snapshot_too_large');
@@ -43,6 +62,7 @@ export async function persistFinanceSnapshot(db, key, envelope, attemptedAt) {
     VALUES (?, ?, ?, ?, ?, 200, ?, ?, ?, ?, ?)
     ON CONFLICT(channel_key) DO UPDATE SET
       attempted_at = excluded.attempted_at, last_http_status = 200, last_error = NULL,
+      parameters_json = excluded.parameters_json,
       upstream_status = NULL, retry_at = NULL, snapshot_id = excluded.snapshot_id,
       received_at = excluded.received_at, stored_at = excluded.stored_at,
       payload_bytes = excluded.payload_bytes, chunk_count = excluded.chunk_count
@@ -53,6 +73,7 @@ export async function persistFinanceSnapshot(db, key, envelope, attemptedAt) {
     AND snapshot_id <> (SELECT snapshot_id FROM finance_channel_state WHERE channel_key = ?)`
   ).bind(key, key));
   await db.batch(statements);
+  return true;
 }
 
 export async function persistFinanceFailure(db, key, provider, operation, parameters, body, status, attemptedAt, retryAt) {
@@ -60,6 +81,7 @@ export async function persistFinanceFailure(db, key, provider, operation, parame
     (channel_key, provider, operation, parameters_json, attempted_at, last_http_status, last_error, upstream_status, retry_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(channel_key) DO UPDATE SET attempted_at = excluded.attempted_at,
+      parameters_json = excluded.parameters_json,
       last_http_status = excluded.last_http_status, last_error = excluded.last_error,
       upstream_status = excluded.upstream_status, retry_at = excluded.retry_at
     WHERE excluded.attempted_at >= finance_channel_state.attempted_at

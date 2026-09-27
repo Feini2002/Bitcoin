@@ -1,8 +1,10 @@
 # 比特币系统升级资料总纲
 
+**当前执行入口（2026-09-27）：[四页数据工作台方案](../repository-development-plan-2026-09-27.md)。** 四页基础数据已可用于后续开发。云端于 2026-09-27 15:55 UTC 暂停，恢复时说「开起来」。[架构核对](../repository-architecture-review-2026-09-27.md)保存依据。下文带日期的开发状态和第二批执行记录只作历史，不覆盖当前方案。
+
 更新日期：2026-09-21。**当前开发状态：东京出口已接线完毕，不再当待办。** Worker 出站经灰云 `bit-egress.feiniwork.com` 反代；desk 主带已恢复；生产 `#chart` / `#orderflow` / `#heatmap` 已点检。直连五域仍 403。K 线 live tape 由 Durable Object 写入 D1，分析读口仍是 `/api/desk`。Deribit 等限额项继续停每日采集。第一批研究资料保持原位归档；第二批可执行主线在独立目录。
 
-日常修改优先使用[功能定位入口](QUICK_ROUTER.md)或 `node scripts/research-context.cjs "当前问题"`，不必每次阅读本总纲。第二批连续开发只读 [第二批执行总任务](batch2-execution/EXECUTION_MASTER.md) 与 [执行日志](batch2-execution/EXECUTION_LOG.md)。云端三库与四页装配见 [2026-09-21 治理记录](../cloud-d1-desk-governance-2026-09-21.md)。各源秒/分/日限额见 [刷新频率复核](../data-refresh-cadence-2026-09-21.md)。
+日常修改优先使用[功能定位入口](QUICK_ROUTER.md)或 `node scripts/research-context.cjs "当前问题"`，不必每次阅读本总纲。当前连续开发从上方工作台方案开始；[第二批总任务](batch2-execution/EXECUTION_MASTER.md)与[执行日志](batch2-execution/EXECUTION_LOG.md)只用于旧编号、方法和当时验证的追溯。云端三库与四页装配见 [2026-09-21 治理记录](../cloud-d1-desk-governance-2026-09-21.md)。各源秒/分/日限额见 [刷新频率复核](../data-refresh-cadence-2026-09-21.md)。
 
 ## 第二批执行入口
 

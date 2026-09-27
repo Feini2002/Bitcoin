@@ -5,7 +5,7 @@ const perp = (operation, parameters, kind, seconds, fields, limitations) => data
 const macro = (series, units) => dataset('fred','observations',{series_id:series,limit:'1000'},'context','fred',3600,
   {value:units},'最新可得版本；观察日期不是发布日期。缺值保留 null，首次导入不提供当时已知的历史回放证据。');
 export const FINANCE_DATASETS = {
-  ...Object.fromEntries(['5m','15m','1h','4h','1d','1w'].map(interval => [`binance-perp-klines-${interval}`,
+  ...Object.fromEntries(['5m','15m','1h','4h','1d','3d','1w'].map(interval => [`binance-perp-klines-${interval}`,
     perp('klines',{symbol:'BTCUSDT',interval,limit:'500'},'klines',15,
       {open:'USDT/BTC',high:'USDT/BTC',low:'USDT/BTC',close:'USDT/BTC',baseVolume:'BTC',quoteVolume:'USDT',takerBuyBase:'BTC',takerBuyQuote:'USDT',trades:'count'},
       'Binance USDⓈ-M BTCUSDT 独立序列；仅最新500根初始覆盖，缺口不填补，未收盘记录不能当确认信号。') ])),
@@ -50,11 +50,34 @@ export const FINANCE_DATASETS = {
     {mark_iv:'percent',open_interest:'native-contract-units'},'保存原生期权摘要；mark IV不是可成交报价，不伪造25delta偏斜、庄家GEX或方向概率。'),
 };
 
-export function datasetRequest(id, origin='https://finance.internal') {
+export function datasetSupportsIncremental(id) {
+  const d = FINANCE_DATASETS[id];
+  return !!d?.provider.startsWith('binance-') && ['klines','funding','oi-history','taker','ratio','basis'].includes(d.kind);
+}
+
+function validateDatasetParameters(id, parameters) {
+  const d = FINANCE_DATASETS[id], incremental = datasetSupportsIncremental(id);
+  if (!parameters) throw new Error('dataset_parameter_mismatch');
+  for (const [key,value] of Object.entries(d.parameters)) {
+    if (incremental && key === 'limit') {
+      if (!/^\d+$/.test(String(parameters.limit)) || Number(parameters.limit)<1 || Number(parameters.limit)>500) throw new Error('dataset_parameter_mismatch');
+    } else if (String(parameters[key]) !== String(value)) throw new Error('dataset_parameter_mismatch');
+  }
+  for (const key of ['startTime','endTime']) if (Object.hasOwn(parameters,key)) {
+    if (!incremental || !/^\d+$/.test(String(parameters[key])) || !Number.isSafeInteger(Number(parameters[key]))
+      || Number(parameters[key])>8640000000000000) throw new Error('dataset_parameter_mismatch');
+  }
+  if (parameters.startTime !== undefined && parameters.endTime !== undefined && Number(parameters.startTime)>Number(parameters.endTime)) throw new Error('dataset_parameter_mismatch');
+}
+
+export function datasetRequest(id, origin='https://finance.internal', window={}) {
   const definition=FINANCE_DATASETS[id];
   if(!definition)throw new Error('unknown_dataset');
+  if (Object.keys(window).some(key => !['limit','startTime','endTime'].includes(key))) throw new Error('dataset_parameter_mismatch');
+  const parameters={...definition.parameters,...window};
+  validateDatasetParameters(id,parameters);
   const url=new URL(`/api/finance/${definition.provider}/${definition.operation}`,origin);
-  for(const [key,value] of Object.entries(definition.parameters))url.searchParams.set(key,value);
+  for(const [key,value] of Object.entries(parameters))url.searchParams.set(key,value);
   return new Request(url);
 }
 
@@ -73,7 +96,7 @@ const numeric = (row,keys) => Object.fromEntries(keys.map(key=>[key,number(row[k
 export function normalizeDataset(id,envelope) {
   const d=FINANCE_DATASETS[id];
   if(!d || envelope.provider!==d.provider || envelope.operation!==d.operation)throw new Error('dataset_source_mismatch');
-  for(const [key,value] of Object.entries(d.parameters))if(String(envelope.parameters[key])!==String(value))throw new Error('dataset_parameter_mismatch');
+  validateDatasetParameters(id,envelope.parameters);
   const data=envelope.data,receivedAt=envelope.receivedAt;
   if(!Number.isFinite(Date.parse(receivedAt)))throw new Error('dataset_invalid_receipt');
   if(d.provider.startsWith('binance-') && data?.symbol && data.symbol!=='BTCUSDT')throw new Error('dataset_instrument_mismatch');
@@ -91,7 +114,8 @@ export function normalizeDataset(id,envelope) {
           windowEnded:Number(r[6])<Date.parse(receivedAt),
           closed:Number.isFinite(Date.parse(envelope.requestedAt))?Number(r[6])<Date.parse(envelope.requestedAt):null,
           closureBasis:'request-after-scheduled-close; no exchange confirmation flag',
-          finality:Number(r[6])<Date.parse(receivedAt)?'time_elapsed_only':'forming'});
+          finality:Number(r[6])<Date.parse(receivedAt)?'time_elapsed_only':'forming'}, 'millisecond',
+          envelope.source?.transportHost ? { transportHost: envelope.source.transportHost, providerHost: envelope.source.host } : null);
         const last=rows[rows.length-1].values;
         if(!(last.high>=last.open && last.high>=last.close && last.high>=last.low && last.low<=last.open && last.low<=last.close))throw new Error('dataset_invalid_ohlc');
         if(last.baseVolume<0 || last.quoteVolume<0 || last.takerBuyBase<0)throw new Error('dataset_negative_volume');
@@ -103,8 +127,17 @@ export function normalizeDataset(id,envelope) {
     case 'oi-history': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['sumOpenInterest','sumOpenInterestValue'])); break;
     case 'taker': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['buyVol','sellVol','buySellRatio'])); break;
     case 'ratio': {
-      const keys = d.fields && d.fields.longPosition ? ['longPosition','shortPosition','longShortRatio'] : ['longAccount','shortAccount','longShortRatio'];
-      for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,keys));
+      const position = !!(d.fields && d.fields.longPosition);
+      for (const r of list()) {
+        const values = position
+          ? {
+              longPosition: number(r.longPosition != null ? r.longPosition : r.longAccount),
+              shortPosition: number(r.shortPosition != null ? r.shortPosition : r.shortAccount),
+              longShortRatio: number(r.longShortRatio),
+            }
+          : numeric(r, ['longAccount', 'shortAccount', 'longShortRatio']);
+        add(r.timestamp, at(r.timestamp), values);
+      }
     } break;
     case 'basis': for(const r of list())add(r.timestamp,at(r.timestamp),numeric(r,['basis','basisRate','annualizedBasisRate','indexPrice','futuresPrice'])); break;
     case 'book': if(!Array.isArray(data.bids)||!Array.isArray(data.asks))throw new Error('dataset_invalid_book');
@@ -119,7 +152,13 @@ export function normalizeDataset(id,envelope) {
     case 'fred': if(!Array.isArray(data.observations))throw new Error('dataset_invalid_fred');
       for(const r of data.observations) {
         if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date))throw new Error('dataset_invalid_date');
-        add(r.date,r.date,{value:number(r.value)},'day',{realtimeStart:r.realtime_start,realtimeEnd:r.realtime_end});
+        const requestDay=String(envelope.requestedAt || receivedAt).slice(0,10);
+        const rootWindow=data.realtime_start && data.realtime_end ? {start:data.realtime_start,end:data.realtime_end}:null;
+        const queryWindow=(!envelope.parameters.output_type || String(envelope.parameters.output_type)==='1')
+          && !envelope.parameters.vintage_dates && !envelope.parameters.realtime_start && !envelope.parameters.realtime_end
+          && (rootWindow ? r.realtime_start===rootWindow.start && r.realtime_end===rootWindow.end
+            : r.realtime_start===requestDay && r.realtime_end===requestDay);
+        add(r.date,r.date,{value:number(r.value)},'day',{realtimeStart:r.realtime_start,realtimeEnd:r.realtime_end,queryWindow});
       } break;
     case 'sofr': if(!Array.isArray(data.refRates))throw new Error('dataset_invalid_sofr');
       for(const r of data.refRates)add(r.effectiveDate,r.effectiveDate,{percentRate:number(r.percentRate)},'day'); break;
@@ -137,6 +176,9 @@ export function normalizeDataset(id,envelope) {
     default:throw new Error('dataset_unknown_adapter');
   }
   if(!rows.length)throw new Error('dataset_empty');
+  if (datasetSupportsIncremental(id) && rows.some(row =>
+    (envelope.parameters.startTime !== undefined && Date.parse(row.observedAt)<Number(envelope.parameters.startTime))
+    || (envelope.parameters.endTime !== undefined && Date.parse(row.observedAt)>Number(envelope.parameters.endTime)))) throw new Error('dataset_window_mismatch');
   if(['klines','premium','funding','oi','oi-history','taker','ratio','basis','fred','sofr','global'].includes(d.kind) && rows.some(r=>!r.observedAt))throw new Error('dataset_missing_source_time');
   if(rows.some(r=>r.key==='undefined'))throw new Error('dataset_missing_observation_key');
   if(['premium','funding','oi','oi-history','taker','ratio','basis','global','sofr','fees'].includes(d.kind) && rows.some(r=>!Object.values(r.values).some(v=>typeof v==='number'&&Number.isFinite(v))))throw new Error('dataset_missing_values');

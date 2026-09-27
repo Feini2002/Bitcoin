@@ -2,18 +2,24 @@
 
 [资料总纲](README.md) · [完整主题表](READING_ROUTES.md) · [仓库对应表](REPOSITORY_MAP.md)
 
-**第二批执行入口（2026-09-17）：** [EXECUTION_MASTER.md](batch2-execution/EXECUTION_MASTER.md)。第一批归档仍在 [sources/2026-09-16](sources/2026-09-16/README.md)，本轮不重排。
+**当前开发入口（2026-09-27）：** [四页数据工作台方案](../repository-development-plan-2026-09-27.md)。四页基础数据已可继续开发；云端现为暂停，恢复时说「开起来」。[架构核对](../repository-architecture-review-2026-09-27.md)保存依据。第二批 [EXECUTION_MASTER.md](batch2-execution/EXECUTION_MASTER.md) 仅作历史追溯；第一批归档保持原位。
 
 ## 最短使用路径
+
+币安插件、Binance MCP、插件对账或插件补查，先读 [插件与四页工作台复用手册（2026-09-27）](../binance-plugin-workbench-research-2026-09-27.md)。包含实际可调用工具、公开样本和官方/社区来源；研究建议不自动变成开发或生产写入任务。
+
+Cloudflare 费用治理、断线补缺、收盘写入顺序或宏观修订去重，先读 [治理正确性修复依据（2026-09-26）](../cloudflare-governance-correctness-2026-09-26.md)，再核对实际实现及本轮验收证据。
+
+云端“开起来 / 暂停 / 查看状态”先读 [云端开关说明（2026-09-27）](../cloudflare-pause-resume-2026-09-27.md)，执行固定 `cloud:resume` / `cloud:pause` / `cloud:status`；恢复依据是当前恢复记录，不重新打开退役舆情任务。
 
 基础采集先读 [采集路由](../data-collection-routing-2026-09-22.md)：交易所走东京 VPS，FRED、SOFR、广度、稳定币和费率走 Cloudflare。再读 [限额停采名单](../finance-daily-quota-skip-2026-09-21.md) 与 [刷新频率复核](../data-refresh-cadence-2026-09-21.md)。Alpha、BLS、GDELT 不进时钟。云端三库与四页装配先读 [空桌治理](../cloud-d1-desk-governance-2026-09-21.md)；分析读口是 `/api/desk`，K 线 live tape 新鲜时 desk 可读 `klines` 表，失败仍不回落混源分析文案。过期数据按 LOCAL-CADENCE 硬删除边界直接删，无云端回收站。币安出口**运行现状**先读 [接线现状](../binance-egress-vps-cutover-2026-09-21.md)；约束仍读 [对抗审查](../binance-egress-plan-adversarial-2026-09-21.md)，本机 SSH 读 [本地记录](../binance-egress-vps-local-2026-09-21.md)。Deribit 日采读 [限额停采](../finance-daily-quota-skip-2026-09-21.md)。不要在 Worker 里继续换域名碰直连 403。
 
 1. 描述问题：例如 `node scripts/research-context.cjs K线历史回补`。返回最相关功能、代码起点、最多3份首读资料及章节行号、CodeGraph查询、条件关联和验证入口。
-2. 先看真实代码：执行返回的CodeGraph查询；命令运行仍沿用项目的有界执行约定。索引有代码变化时先 `codegraph sync`，查询可以用 `codegraph query loadChartData --limit 5` 缩小到符号，再用explore查看关系。
+2. 先看真实代码：当前路径有适用 CodeGraph 索引才执行返回的查询；索引缺失时用 `rg` 和定向源码，不自动初始化。2026-09-27 本机核对无索引。已有索引发生代码变化时按有界约定 sync/status，再查询符号关系。
 3. 任何修改前先读相关资料片段并据此构思：例如 `node scripts/research-context.cjs --file V08 时间和来源`，只返回摘要与章节位置；按该位置读取相关段落。资料不足或过时时，立即定向检索外部来源，核验并沉淀后再实施依赖该结论的修改；具体要求见根目录 AGENTS.md。
 4. 若问题涉及共享数据、快照或报告，沿输出的“关联扩展”继续；没有对应依赖就停在当前功能范围。路由是入口提示，不是穷尽式影响分析或必须修改的文件清单。
 
-其他入口：`--list` 列17条功能路由；`--find 期权` 返回最多8份文件摘要；`--file TOOL057` 查图表库复用卡；`--file RES07` 查历史回补研究。自然语言使用关键词匹配，不保证理解所有同义表达；未命中时换关键词或直接输入路由ID，不默认全文加载。
+其他入口：`--list` 列当前功能路由；`--find 期权` 返回最多8份文件摘要；`--file TOOL057` 查图表库复用卡；`--file RES07` 查历史回补研究。自然语言使用关键词匹配，不保证理解所有同义表达；未命中时换关键词或直接输入路由ID，不默认全文加载。
 
 所有查询只读；工具展示的CodeGraph、测试和部署相关文字不会被自动执行。
 
@@ -36,8 +42,8 @@
 
 ## 文件级目录怎样维护
 
-- [routing.json](routing.json)保存17条功能路由的关键词、首读资料、章节、代码起点、条件关联和已有验证命令，是查询结果的来源。
-- [FILE_CATALOG.json](FILE_CATALOG.json)保存291个资料的用途摘要、批次、权威等级和Markdown章节行号。它由程序读取，不建议整个放入对话上下文。
+- [routing.json](routing.json)保存功能路由的关键词、首读资料、章节、代码起点、条件关联和已有验证命令，是查询结果的来源；当前开发路由为 `current-plan`。
+- [FILE_CATALOG.json](FILE_CATALOG.json)保存资料用途摘要、批次、权威等级和Markdown章节行号。文件数以 `--check` 为准；它由程序读取，不建议整个放入对话上下文。旧第二批总任务/日志标为历史，当前方案可通过 `--file LOCAL-NEXT` 获取。
 - 编目范围：本地核验记录5份（`docs/research/*.md`）、第一批219份归档＋2份仓库基线、第二批自有文件63份（`00_current`/`01_execution`/`02_contracts`/`03_validation`/`04_evidence`/`05_release`/`99_history`＋总任务与日志）、原始ZIP。第二批的`90_reference`与第一批逐路径完全重复，只保留指针，不重复编目。
 - 权威等级：本地核验 > 第一批设计 > 备选参考 > 仅追溯；查询输出直接标注。冲突时按此顺序取舍，并在记录中写明依据；等级只表示可信度排序，不表示已授权执行。
 - `node scripts/research-context.cjs --refresh` 在来源文档新增或变化后刷新目录；只写FILE_CATALOG.json，不改写原件、不执行包内脚本。
@@ -45,6 +51,8 @@
 - 代码重命名或职责迁移时，同步更新对应路由；新功能只补相关路由，不重读整个资料库。原件版本变化仍按总纲约定另存来源快照。
 
 ## CodeGraph范围与边界
+
+以下初始化与查询结果为旧环境历史；2026-09-27 当前 checkout 无 `.codegraph/`，使用 `rg` 和定向源码。只有索引存在且适用时才执行 CodeGraph 查询与同步，不自动重建。
 
 - 本仓库已使用本机CodeGraph 1.4.1初始化 `.codegraph/`，并实际执行status、query与explore。查询通过CLI可用；本轮未改全局MCP/账号配置。
 - [codegraph.json](../../../codegraph.json)排除docs、验收产物、项目技能和本地环境文件；依赖与构建产物沿用CodeGraph默认排除。资料包中的Python和SQL参考不混入现行业务图。

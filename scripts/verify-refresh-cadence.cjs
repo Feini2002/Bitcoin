@@ -9,14 +9,17 @@ const root = path.resolve(__dirname, '..');
   const { __footprintTestHooks: hooks } = await import(pathToFileURL(path.join(root, 'cloudflare/binance-klines-worker.js')));
   const due = hooks.intervalsDueAt(new Date('2026-09-21T00:07:00.000Z'));
   assert.deepEqual(due, ['5m', '15m', '1h', '4h', '1d', '3d', '1w']);
-  console.log('PASS cadence cron syncs every interval each minute');
+  console.log('PASS cadence cron reconciles every interval when collector health is unavailable');
 
   const { klineArrayFromWsK, canonicalBinanceHost, markPriceToPremium, klineLiveCombinedStreamUrl } = await import(pathToFileURL(path.join(root, 'cloudflare/kline-live-collector.mjs')));
   const row = klineArrayFromWsK({ t: 1000, T: 1999, o: '1', h: '2', l: '0.5', c: '1.5', v: '3', q: '4', n: 9, V: '1', Q: '2' });
   assert.equal(row[0], 1000);
   assert.equal(row[4], '1.5');
-  assert.equal(canonicalBinanceHost('proxy.example.com'), 'fapi.binance.com');
   assert.equal(canonicalBinanceHost('fstream.binance.com'), 'fstream.binance.com');
+  assert.equal(canonicalBinanceHost('proxy.example.com'), 'proxy.example.com');
+  const { marketTransportProvenance } = await import(pathToFileURL(path.join(root, 'cloudflare/finance/egress.mjs')));
+  assert.equal(marketTransportProvenance({ BINANCE_FAPI_ORIGIN: 'https://bit-egress.feiniwork.com' }, { transportHost: 'bit-egress.feiniwork.com', venue: 'binance-usdm' }).providerHost, 'fapi.binance.com');
+  assert.equal(marketTransportProvenance({}, { transportHost: 'proxy.example.com', venue: 'binance-usdm' }).providerHost, 'proxy.example.com');
   const premium = markPriceToPremium({ e: 'markPriceUpdate', E: 2000, p: '100', i: '99', r: '0.0001', T: 3000 });
   assert.equal(premium.markPrice, '100');
   assert.equal(premium.time, 2000);
@@ -106,7 +109,7 @@ const root = path.resolve(__dirname, '..');
   assert.equal(FINANCE_DATASETS['binance-perp-oi'].refreshSeconds, 5);
   console.log('PASS live premium snapshots insert independently');
 
-  assert.equal(datasetRetention('binance-perp-klines-5m').keep, 600);
+  assert.equal(datasetRetention('binance-perp-klines-5m').keep, 900);
   assert.equal(datasetRetention('btc-fees').maxAgeMs, 7 * 86400000);
   sqlite.exec(`INSERT INTO finance_dataset_observations
     (dataset_id, observation_key, observed_at, time_precision, received_at, stored_at, source_host, ingestion_mode, value_json)
@@ -136,6 +139,15 @@ const root = path.resolve(__dirname, '..');
   ], 8);
   assert.equal(picked.some((item) => item.id === 'sofr'), true);
   assert.equal(picked.length, 8);
+  const burst = pickDatasetsToRefresh([
+    { id: 'f1', provider: 'fred', age: 9 },
+    { id: 'f2', provider: 'fred', age: 8 },
+    { id: 'f3', provider: 'fred', age: 7 },
+    { id: 'f4', provider: 'fred', age: 6 },
+    { id: 'live', provider: 'binance-usdm', age: 5 },
+  ], 8);
+  assert.equal(burst.filter((item) => item.provider === 'fred').length, 1);
+  assert.equal(burst.some((item) => item.id === 'live'), true);
   assert.equal(datasetDueForCollection('btc-fees', FINANCE_DATASETS['btc-fees'], null).due, true);
   const recent = { last_success_received_at: new Date().toISOString(), attempted_at: new Date().toISOString() };
   assert.equal(datasetDueForCollection('btc-fees', FINANCE_DATASETS['btc-fees'], recent).due, false);
@@ -168,5 +180,5 @@ const root = path.resolve(__dirname, '..');
   const wrangler = fs.readFileSync(path.join(root, 'cloudflare/wrangler.toml'), 'utf8');
   assert.match(wrangler, /KLINE_LIVE_COLLECTOR/);
   assert.match(wrangler, /KlineLiveCollector/);
-  console.log('PASS wrangler binds kline live collector');
+  console.log('PASS wrangler retains the legacy namespace binding for explicit retirement');
 })().catch((error) => { console.error(error); process.exitCode = 1; });

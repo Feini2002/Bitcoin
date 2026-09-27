@@ -8,6 +8,7 @@ let orderflowStream = null;
 let orderflowCanvas = null;
 let orderflowBars = [];
 let orderflowMeta = null;
+let orderflowDeskEvidence = null;
 let orderflowCanvasMeta = null;
 let orderflowStudyTab = "levels";
 let orderflowTechnicalLevels = null;
@@ -181,9 +182,10 @@ function pageOrderflow() {
         <div class="orderflow-data-main">
           <span class="orderflow-feed-dot"></span>
           <strong>BTCUSDT 永续</strong>
-          <span>Cloud D1 Footprint · 仅 desk 权威路径 · 失败则主画布空 · Delta 为 aggTrade 主动量近似</span>
+          <span>来源周期 5m，显示周期可为 5m/15m/1h/4h。Delta 为 aggTrade 主动量近似，不是逐笔 CVD。</span>
         </div>
         <div class="orderflow-data-meta">
+          <button type="button" class="btn" data-workbench-export>导出已显示证据</button>
           <span class="chip warn" id="of-live-chip">等待 desk</span>
           <a class="owner-link orderflow-owner-link" href="#/agent-flow" title="查看 盘口流动性官 的演示原型">
             <span class="owner-dot" style="background:var(--agent-flow)">盘</span>
@@ -268,7 +270,9 @@ function pageOrderflow() {
           <div class="orderflow-rail-section orderflow-rail-section--dense">
             <div class="orderflow-rail-title">数据状态</div>
             <div class="orderflow-side-row"><span>交易对</span><strong>${ORDERFLOW_SYMBOL}</strong></div>
-            <div class="orderflow-side-row"><span>周期</span><strong id="of-side-interval">${s.interval}</strong></div>
+            <div class="orderflow-side-row"><span>来源周期</span><strong id="of-side-source">5m</strong></div>
+            <div class="orderflow-side-row"><span>显示周期</span><strong id="of-side-interval">${s.interval}</strong></div>
+            <div class="orderflow-side-row"><span>聚合</span><strong id="of-side-agg">等待足迹</strong></div>
             <div class="orderflow-side-row"><span>已加载</span><strong id="of-side-bars">0</strong></div>
             <div class="orderflow-side-row"><span>D1 基础</span><strong id="of-side-base-bars">--</strong></div>
             <div class="orderflow-side-row"><span>新鲜度</span><strong id="of-side-freshness">--</strong></div>
@@ -298,8 +302,44 @@ function setOrderflowDeskHalt(halted, reason) {
       reasonEl.textContent = clean || "desk 足迹未确认，主画布不可当作盘口使用。";
     }
   }
-  document.querySelectorAll(".of-tf-btn, #of-visible-bars, #of-tick-size, #of-load-bars, #of-imbalance-toggle, #of-vp-toggle, #of-clear-cache").forEach((el) => {
+  document.querySelectorAll("#of-visible-bars, #of-tick-size, #of-load-bars, #of-imbalance-toggle, #of-vp-toggle, #of-clear-cache").forEach((el) => {
     if (el) el.disabled = !!halted;
+  });
+}
+
+function publishOrderflowEvidence() {
+  if (typeof WorkbenchEvidence === "undefined") return;
+  const selected = readOrderflowState().interval;
+  const desk = orderflowDeskEvidence || {};
+  const meta = orderflowMeta || {};
+  const stale = meta.authoritative !== true || meta.streamBroken === true;
+  const gaps = meta.gap ? [meta.gap] : [];
+  if (meta.aggregationIncomplete) gaps.push({ reason: "incomplete_aggregation" });
+  if (!orderflowBars.length) {
+    WorkbenchEvidence.commitFailure("orderflow", { at: new Date().toISOString(), message: "足迹没有可展示的棒" });
+    return;
+  }
+  WorkbenchEvidence.commitDisplayed("orderflow", {
+    sourceId: "binance-usdm-aggtrade",
+    displayedAt: new Date().toISOString(),
+    readAt: desk.asOf || null,
+    asOf: desk.asOf || null,
+    parameters: { symbol: ORDERFLOW_SYMBOL, sourceInterval: "5m", displayInterval: selected },
+    contentRevision: desk.inputRevision || null,
+    gaps,
+    authoritative: meta.authoritative === true,
+    streamBroken: meta.streamBroken === true,
+    stale,
+    failure: stale ? {
+      at: new Date().toISOString(),
+      message: meta.gap && meta.gap.reason ? String(meta.gap.reason) : "footprint_not_authoritative",
+    } : null,
+    units: { volume: "BTC" },
+    bars: orderflowBars.slice(-240).map((bar) => ({
+      t: bar.t, o: bar.o, h: bar.h, l: bar.l, c: bar.c,
+      buyVol: bar.buyVol, sellVol: bar.sellVol, delta: bar.delta, volume: bar.volume,
+    })),
+    aggregationIncomplete: !!(orderflowMeta && orderflowMeta.aggregationIncomplete),
   });
 }
 
@@ -308,10 +348,17 @@ function updateOrderflowStats(statusText) {
   const freshness = getOrderflowFreshness(latest);
   const statusEl = document.getElementById("of-status");
   const chip = document.getElementById("of-live-chip");
+  const incomplete = !!(orderflowMeta && orderflowMeta.aggregationIncomplete);
+  const rejectedCache = !!(orderflowMeta && orderflowMeta.rejectedUnmarkedCache);
+  const sourceInterval = orderflowMeta && orderflowMeta.sourceInterval ? orderflowMeta.sourceInterval : "5m";
+  const displayInterval = readOrderflowState().interval;
   if (statusEl) {
     const count = orderflowBars.length;
-    statusEl.textContent = `${statusText || "Cloud D1 polling"} · ${count} bars`;
-    statusEl.title = `主路径为 Cloud D1 轮询快照；${freshness.label}`;
+    const bits = [`${statusText || "Cloud D1 polling"} · ${count} bars`, `来源 ${sourceInterval}`, `显示 ${displayInterval}`];
+    if (incomplete) bits.push(`不完整 · ${orderflowMeta.aggregationDetail || "缺组成棒"}`);
+    if (rejectedCache) bits.push("断流后未回用无来源标记缓存");
+    statusEl.textContent = bits.join(" · ");
+    statusEl.title = `主路径为 Cloud D1 轮询快照；${freshness.label}；来源 ${sourceInterval} 聚合成显示周期 ${displayInterval}；Delta 为 aggTrade 主动量近似`;
   }
   const halted = !(orderflowMeta && orderflowMeta.authoritative) || !orderflowBars.length;
   setOrderflowDeskHalt(halted, halted
@@ -324,16 +371,30 @@ function updateOrderflowStats(statusText) {
     chip.title = `${text || "订单流 desk 轮询"}；浏览器 WS 不是权威路径`;
   }
   const evidenceEl = document.getElementById("of-research-evidence");
-  if (evidenceEl && typeof BitContracts !== "undefined" && BitContracts.formatResearchEvidenceLines) {
+  if (evidenceEl) {
     const state = readOrderflowState();
-    evidenceEl.textContent = BitContracts.formatResearchEvidenceLines({
-      instrumentId: (orderflowMeta && orderflowMeta.instrumentId) || "unconfirmed",
-      interval: state.interval,
-      windowLabel: `可视 ${state.visibleBars} bars`,
-      source: "desk-orderflow",
-      coverage: (orderflowMeta && orderflowMeta.authoritative) ? freshness.label : "desk 足迹未确认，主画布空",
-    });
+    const parts = [
+      `来源周期 ${sourceInterval}，显示周期 ${displayInterval}。`,
+      "聚合范围是把来源 5m 足迹收成当前显示周期；缺组成棒时标不完整。",
+      "Delta 是 aggTrade 主动量近似，不是逐笔 CVD。",
+      incomplete ? `不完整 ${orderflowMeta.aggregationDetail || ""}`.trim() : (orderflowBars.length ? "聚合完整" : "等待聚合"),
+    ];
+    if (rejectedCache) parts.push("断流后未回用无来源标记缓存");
+    if (orderflowDeskEvidence && orderflowDeskEvidence.instrumentId) parts.push(String(orderflowDeskEvidence.instrumentId));
+    if (orderflowMeta && orderflowMeta.displayInterval) parts.push(`显示聚合周期 ${orderflowMeta.displayInterval}`);
+    if (orderflowMeta && orderflowMeta.authoritative) parts.push(freshness.label);
+    else parts.push("desk 足迹未确认，主画布空");
+    parts.push(`可视 ${state.visibleBars} bars`);
+    evidenceEl.textContent = parts.join(" ");
   }
+  const aggEl = document.getElementById("of-side-agg");
+  if (aggEl) {
+    aggEl.textContent = rejectedCache
+      ? "断流后未回用无来源标记缓存"
+      : (incomplete ? `不完整 ${orderflowMeta.aggregationDetail || ""}`.trim() : (orderflowBars.length ? "聚合完整" : "等待足迹"));
+  }
+  const sourceEl = document.getElementById("of-side-source");
+  if (sourceEl) sourceEl.textContent = sourceInterval;
 
   const set = (id, text, cls) => {
     const el = document.getElementById(id);
@@ -1213,6 +1274,15 @@ function bindOrderflowControls() {
   });
 }
 
+function orderflowVisibility() {
+  if (!orderflowStream) return;
+  if (document.hidden) {
+    if (typeof orderflowStream.pauseForHide === "function") orderflowStream.pauseForHide();
+    return;
+  }
+  if (typeof orderflowStream.resumeFromHide === "function") orderflowStream.resumeFromHide();
+}
+
 function initOrderflow() {
   disposeOrderflow();
   const canvas = document.getElementById("of-footprint-canvas");
@@ -1237,20 +1307,26 @@ function initOrderflow() {
     tickSize: state.tickSize,
     maxBars: state.loadBars || FootprintEngine.DEFAULT_LOAD_BARS || FootprintEngine.MAX_CACHE_BARS,
     onBars: (bars, meta) => {
+      const selected = readOrderflowState().interval;
+      if (meta && meta.displayInterval && meta.displayInterval !== selected) return;
       orderflowBars = Array.isArray(bars) ? bars : [];
       if (meta) orderflowMeta = meta;
+      if (meta && meta.desk) orderflowDeskEvidence = meta.desk;
       if (orderflowCanvas) orderflowCanvas.setData(orderflowBars);
       updateOrderflowStats(orderflowStream ? orderflowStream.statusText() : "Cloud D1 polling");
+      publishOrderflowEvidence();
     },
     onStatus: (text) => updateOrderflowStats(text),
   });
   bindOrderflowControls();
   setOrderflowStudyTab(orderflowStudyTab, false);
+  document.addEventListener("visibilitychange", orderflowVisibility);
   orderflowStream.start();
   refreshOrderflowTechnicalLevels(state);
 }
 
 function disposeOrderflow() {
+  document.removeEventListener("visibilitychange", orderflowVisibility);
   if (orderflowStream) {
     try {
       orderflowStream.stop(true);
@@ -1265,6 +1341,7 @@ function disposeOrderflow() {
   }
   orderflowBars = [];
   orderflowMeta = null;
+  orderflowDeskEvidence = null;
   orderflowCanvasMeta = null;
   orderflowTechnicalLevels = null;
   orderflowTechnicalStatus = "";

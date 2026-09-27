@@ -14,6 +14,11 @@ CREATE TABLE IF NOT EXISTS finance_dataset_observations (
 );
 CREATE INDEX IF NOT EXISTS idx_finance_dataset_receipt
   ON finance_dataset_observations(dataset_id, received_at DESC);
+-- Tail and summary walks seek the newest observed_at instead of scanning every receipt.
+-- One extra secondary index per inserted observation; acceptable next to the receipt index
+-- because chart tail and context summary run on every read.
+CREATE INDEX IF NOT EXISTS idx_finance_dataset_observed
+  ON finance_dataset_observations(dataset_id, observed_at DESC, observation_key);
 CREATE TABLE IF NOT EXISTS finance_dataset_state (
   dataset_id TEXT PRIMARY KEY,
   attempted_at TEXT NOT NULL,

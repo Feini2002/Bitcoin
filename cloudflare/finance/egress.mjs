@@ -79,6 +79,25 @@ export function envelopeHost(providerId, urlHost) {
   return EGRESS_ENVELOPE_HOST[providerId] || urlHost;
 }
 
+/** Separate the configured Tokyo egress from the upstream it is documented to reach.
+ *  An unknown host is left unchanged and must not be relabeled as Binance. */
+export function marketTransportProvenance(env, { transportHost, venue } = {}) {
+  const host = String(transportHost || '').trim().toLowerCase().replace(/\.$/, '');
+  const official = EGRESS_ENVELOPE_HOST[venue] || null;
+  if (!host) return { providerHost: official || '', transportHost: null };
+  if (official && (host === official || host.endsWith('.binance.com') && venue.startsWith('binance'))) {
+    return { providerHost: host, transportHost: null };
+  }
+  const originKey = venue === 'binance-fstream' ? 'BINANCE_FSTREAM_ORIGIN' : venue === 'binance-usdm' ? 'BINANCE_FAPI_ORIGIN' : null;
+  let configured = '';
+  try { configured = originKey ? new URL(parseOriginOnly(env && env[originKey]) || 'http://invalid').host.toLowerCase() : ''; }
+  catch { configured = ''; }
+  if (official && configured && host === configured && configured !== official) {
+    return { providerHost: official, transportHost: host };
+  }
+  return { providerHost: host, transportHost: null };
+}
+
 export function egressHostsFromEnv(env) {
   const hosts = new Set();
   for (const key of EGRESS_ENV_KEYS) {

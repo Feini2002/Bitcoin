@@ -19,6 +19,10 @@ node_modules/
 .wrangler/
 .pages-dist-*/
 .artifacts/
+cloudflare/.cloud-control.lock
+cloudflare/cloud-control-state.json.tmp
+cloudflare/.cloud-control.lock
+cloudflare/cloud-control-state.json.tmp
 .codex/*
 !.codex/skills/
 .codex/skills/*

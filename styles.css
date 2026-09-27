@@ -10265,7 +10265,13 @@ html[data-theme="dark"] .yuqing-delete-modal-sheet {
 .chart-desk.halted .mtf-panel,
 .orderflow-desk.halted .orderflow-toolbar,
 .orderflow-desk.halted .orderflow-kpis,
-.orderflow-desk.halted .orderflow-layout { pointer-events:none; opacity:.38; }
+.orderflow-desk.halted .orderflow-layout { pointer-events:none; }
+.orderflow-desk.halted .orderflow-kpis,
+.orderflow-desk.halted .orderflow-layout,
+.orderflow-desk.halted .orderflow-field,
+.orderflow-desk.halted .orderflow-status,
+.orderflow-desk.halted .orderflow-toolbar-advanced { opacity:.38; }
+.orderflow-desk.halted .orderflow-tfs { position:relative; z-index:9; pointer-events:auto; opacity:1; }
 .desk-halt-card { max-width:560px; padding:20px 24px; border:1px solid var(--border); border-radius:12px; background:var(--surface); line-height:1.6; }
 .desk-halt-card strong { display:block; font-size:var(--fz-lg); margin-bottom:8px; }
 .desk-freq-groups { display:grid; gap:20px; margin-top:16px; }

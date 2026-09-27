@@ -565,6 +565,9 @@ const DataEngine = {
     if (opts.symbol) q.set("symbol", String(opts.symbol));
     if (opts.range) q.set("range", String(opts.range));
     if (opts.tail != null && String(opts.tail) !== "") q.set("tail", String(opts.tail));
+    if (opts.from != null && String(opts.from) !== "") q.set("from", String(opts.from));
+    if (opts.to != null && String(opts.to) !== "") q.set("to", String(opts.to));
+    if (opts.knownAt != null && String(opts.knownAt) !== "") q.set("knownAt", String(opts.knownAt));
     const url = `${this.apiBase()}/api/desk/${encodeURIComponent(name)}${q.toString() ? "?" + q.toString() : ""}`;
     const ctrl = new AbortController();
     const unsub = this.attachAbort(opts.signal, ctrl);
@@ -818,6 +821,52 @@ const DataEngine = {
 
   async syncKlines(symbol, interval, limit = 6000, opts = {}) {
     return await this.fetchKlinesFromD1(symbol, interval, limit, opts);
+  },
+
+  /**
+   * 行情历史版本只留在本模块内存。完整窗口成功提交后才确认；
+   * 页面对象重建不丢失，刷新浏览器则清空。不写入 localStorage。
+   */
+  _deskHistoryState: Object.create(null),
+
+  deskHistoryKey(symbol, interval) {
+    return `${String(symbol || "")}|${String(interval || "")}`;
+  },
+
+  readDeskHistory(symbol, interval) {
+    const row = this._deskHistoryState[this.deskHistoryKey(symbol, interval)];
+    if (!row) return { confirmedRevision: null, pendingRevision: null };
+    return { confirmedRevision: row.confirmedRevision, pendingRevision: row.pendingRevision };
+  },
+
+  noteDeskHistoryPending(symbol, interval, revision) {
+    const key = this.deskHistoryKey(symbol, interval);
+    const row = this._deskHistoryState[key] || { confirmedRevision: null, pendingRevision: null };
+    this._deskHistoryState[key] = row;
+    const rev = Number(revision);
+    if (!Number.isFinite(rev) || (row.confirmedRevision != null && rev <= row.confirmedRevision)) {
+      return {
+        raised: false,
+        confirmedRevision: row.confirmedRevision,
+        pendingRevision: row.pendingRevision,
+      };
+    }
+    const raised = row.pendingRevision == null || rev > row.pendingRevision;
+    if (raised) row.pendingRevision = rev;
+    return { raised, confirmedRevision: row.confirmedRevision, pendingRevision: row.pendingRevision };
+  },
+
+  confirmDeskHistory(symbol, interval, revision) {
+    const key = this.deskHistoryKey(symbol, interval);
+    const row = this._deskHistoryState[key] || { confirmedRevision: null, pendingRevision: null };
+    this._deskHistoryState[key] = row;
+    const rev = Number(revision);
+    if (!Number.isFinite(rev) || (row.confirmedRevision != null && rev < row.confirmedRevision)) {
+      return { confirmedRevision: row.confirmedRevision, pendingRevision: row.pendingRevision };
+    }
+    row.confirmedRevision = rev;
+    if (row.pendingRevision != null && row.pendingRevision <= rev) row.pendingRevision = null;
+    return { confirmedRevision: row.confirmedRevision, pendingRevision: row.pendingRevision };
   },
 
   /** 字符串周�?�?毫秒 */

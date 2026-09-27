@@ -4,7 +4,7 @@
 
 ## 治理状态
 
-功能清单见前端概览和 [治理记录](docs/governance.md)。已接入只表示代码链路存在，不代表远程服务持续在线。2026-06-15 的暂停记录属于历史状态；当前本地 Wrangler 配置声明启用，2026-09-16 行情状态接口探测返回 HTTP 200。Cron、域名和入口的当前状态仍须操作前实时核对；普通治理不会主动改变启停状态或执行远程 D1 迁移。
+功能清单见前端概览和 [治理记录](docs/governance.md)。已接入只表示代码链路存在，不代表远程服务持续在线。2026-09-27 15:55 UTC 已按固定开关暂停本系统三个 Worker：入口和 BTC 定时采集关闭，数据仍留在 D1。过几天说「开起来」即可按保存的正式版本恢复。这次暂停停的是采集和请求，不取消 Cloudflare 套餐基础费，也不动同账号其他网站。
 
 `npm run build` 执行离线回归和静态壳检查；`npm run verify:api` 单独验证线上行情服务，停机或网络失败应如实记录。`npm run verify:ui` 执行固定数据的 Chromium 桌面与移动验收。
 
@@ -37,6 +37,9 @@ flowchart LR
 
 ## 文件导航
 
+- [当前开发方案：四页数据工作台](docs/research/repository-development-plan-2026-09-27.md)：唯一当前调度入口。四页基础数据已接到可分析的研究窗；云端现为暂停，恢复时说「开起来」。
+- [当前架构核对与治理记录](docs/research/repository-architecture-review-2026-09-27.md)：已完成治理、实际反例、旧任务归并、费用证据和验证限制。
+- [云端暂停与恢复](docs/research/cloudflare-pause-resume-2026-09-27.md)：2026-09-27 已暂停。说「开起来」恢复保存的正式版本，不是重新部署一份新代码。
 - [按功能定位代码与研究资料](docs/research/bitcoin-upgrade/QUICK_ROUTER.md)：支持K线/指标等17条路由、文件摘要和CodeGraph定位，日常修改优先从这里开始。
 - [系统升级资料总纲](docs/research/bitcoin-upgrade/README.md)：本轮收口记录、免费通道与D1交付、币安连接限制及下一轮工作台改版起点；原始研究包仍作为参考。
 - [完整文档索引](docs/README.md)
@@ -109,7 +112,7 @@ npm run dev:local
 | 足迹图 / 订单流 / 强平 | `npm run verify:footprint` |
 | 行情 Worker 与静态壳探活 | `npm run verify:api` |
 | 衍生品 Worker | `npm run verify:derivatives` |
-| 舆情报告与云端模型契约 | `npm run verify:yuqing` |
+| 舆情历史报告与模型退役契约 | `npm run verify:yuqing` |
 | Fibonacci 统计验证 | `npm run verify:fib` |
 
 `npm run build` 先执行 `verify:all`，再按 `config/pages-assets.json` 生成 `dist/pages/`。`npm run build:pages` 仅生成静态产物，`npm run verify:pages` 验证发布范围。

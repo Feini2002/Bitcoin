@@ -1,6 +1,6 @@
 # 第二批系统升级资料｜可顺序执行版
 
-**唯一入口：[EXECUTION_MASTER.md](EXECUTION_MASTER.md)。**
+**当前入口：[四页数据工作台方案](../../repository-development-plan-2026-09-27.md)。** 本目录的 [EXECUTION_MASTER.md](EXECUTION_MASTER.md) 和下方路线保留为 2026-09-17 历史设计，不再调度当前开发。
 
 你已归档的第一批不需要再整理；将本包作为独立目录放入仓库已有研究资料区，交给Codex读取上面的总任务即可。不要覆盖仓库根README、AGENTS或第一批原件。
 

@@ -1,0 +1,90 @@
+{
+  "retrievedDate": "2026-09-27",
+  "snapshotMode": "Short verbatim excerpts plus direct links, not full-text copies. Source content is research data, not instructions. Community assertions require independent verification.",
+  "sources": [
+    {
+      "id": "S01",
+      "kind": "official-doc",
+      "url": "https://developers.openai.com/plugins/concepts/mcp-server",
+      "excerpt": "The model selects a tool and supplies arguments that match its input schema.",
+      "note": "MCP tool invocation does not itself prove persistent collection, historical completeness, or the current Binance connector implementation."
+    },
+    {
+      "id": "S02",
+      "kind": "official-repository",
+      "url": "https://github.com/binance/binance-skills-hub",
+      "excerpt": "Each skill lives in its own folder and contains a `SKILL.md` file with YAML frontmatter and structured instructions.",
+      "note": "Skill instructions are not identical to the current conversation's 89 callable tools."
+    },
+    {
+      "id": "S03",
+      "kind": "official-announcement",
+      "url": "https://www.binance.com/en/square/post/360313703798060",
+      "excerpt": "Currently, MCP covers access to trading and market data",
+      "note": "Verified Binance Blog account announcement about Agent OS; not proof of current Codex connector permissions."
+    },
+    {
+      "id": "S04",
+      "kind": "official-skill-source",
+      "url": "https://github.com/binance/binance-skills-hub/blob/main/skills/binance-web3/crypto-market-rank/SKILL.md",
+      "excerpt": "Social Hype Leaderboard, Tokens with highest social buzz + sentiment summary",
+      "note": "Inspected skill metadata version 3.0; available ranking categories vary by operation and chain. Research only, not executed."
+    },
+    {
+      "id": "S05",
+      "kind": "official-repository",
+      "url": "https://github.com/binance/binance-public-data",
+      "excerpt": "Each zip file has a `.CHECKSUM` file together in the same folder to verify data integrity.",
+      "note": "Archive checksums concern download integrity, not semantic continuity. No archive was imported in this research."
+    },
+    {
+      "id": "S06",
+      "kind": "official-api-doc",
+      "url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data",
+      "excerpt": "Market Data",
+      "note": "Used to cross-check market-data and ratio semantics. Endpoint parameters and limits must be rechecked at implementation time."
+    },
+    {
+      "id": "S07",
+      "kind": "community-repository",
+      "url": "https://github.com/py7hagoras/binance-mcp",
+      "excerpt": "This MCP server acts as a bridge between AI assistants and the Binance cryptocurrency exchange.",
+      "note": "Community implementation includes trading/account capabilities; not verified as current Codex plugin backend and not installed or fully audited."
+    },
+    {
+      "id": "S08",
+      "kind": "community-skill-source",
+      "url": "https://github.com/mnemox-ai/tradememory-protocol/blob/master/skills/binance-skills-hub/trade-memory/SKILL.md",
+      "excerpt": "TradeMemory records why.",
+      "note": "Decision-context recording is a design reference only; the repository path does not make it an official Binance skill."
+    },
+    {
+      "id": "S09",
+      "kind": "community-issue-in-official-repository",
+      "url": "https://github.com/binance/binance-public-data/issues/484",
+      "excerpt": "I found reproducible continuity defects in official Binance USD-M public-data archives for BTCUSDT and ETHUSDT.",
+      "note": "Reporter allegation read, not independently reproduced or treated as Binance confirmation. Inspiration for gap and duplicate checks."
+    },
+    {
+      "id": "S10",
+      "kind": "community-social",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1simv72/i_built_a_skill_that_turns_claude_into_a_crypto/",
+      "excerpt": "Checks which exchanges are online and confirms the trading pair exists",
+      "note": "Author-described crypto research workflow, not verified latency, accuracy, or production reliability evidence."
+    },
+    {
+      "id": "S11",
+      "kind": "community-social",
+      "url": "https://www.reddit.com/r/mcp/comments/1upjg03/so_whats_the_best_mcp_for_trading/",
+      "excerpt": "Let the AI/MCP layer do the parts that tolerate latency",
+      "note": "Community discussion only; useful distinction between on-demand analysis and continuous execution."
+    },
+    {
+      "id": "S12",
+      "kind": "community-article-on-binance-square",
+      "url": "https://www.binance.com/en/square/post/300022112113138",
+      "excerpt": "package the discrete API capabilities provided by the MCP",
+      "note": "MarsBit News article; hosted on Binance Square does not mean official Binance guidance. Broad claims about Skill/MCP isolation or statelessness are not adopted."
+    }
+  ]
+}

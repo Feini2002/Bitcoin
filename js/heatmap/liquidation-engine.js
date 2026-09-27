@@ -221,6 +221,19 @@
     return [...rows.values()].sort((a, b) => b.price - a.price);
   }
 
+  function describeObservedCoverage(exchanges) {
+    const labels = { binance: "Binance", bybit: "Bybit" };
+    const present = new Set((exchanges || []).map((ex) => String(ex || "").toLowerCase()));
+    const observed = ["binance", "bybit"].filter((ex) => present.has(ex));
+    const uncovered = ["binance", "bybit"].filter((ex) => !present.has(ex));
+    const observedText = observed.map((ex) => labels[ex]).join("、");
+    const uncoveredText = uncovered.map((ex) => labels[ex]).join("、");
+    let note = "Binance 与 Bybit 分所展示已观察事件，不把币安与 Bybit 合并成完整覆盖。";
+    if (!observed.length) note = "Binance 未覆盖。Bybit 未覆盖。没有已观察的分所事件，不把币安与 Bybit 合并成完整覆盖。";
+    else if (uncovered.length) note = `${observedText} 已观察事件。${uncoveredText} 未覆盖。不把币安与 Bybit 合并成完整覆盖。`;
+    return { observed: observed, uncovered: uncovered, note: note, mergedComplete: false };
+  }
+
   function buildStats(events, sourceStatus) {
     const now = Date.now();
     const five = events.filter((ev) => Number(ev.ts) >= now - 5 * 60 * 1000);
@@ -281,7 +294,7 @@
         const rows = Array.isArray(parsed && parsed.events) ? parsed.events : [];
         const now = Date.now();
         this.events = rows
-          .filter((ev) => ev && ev.symbol === this.symbol && Number.isFinite(Number(ev.price)))
+          .filter((ev) => ev && ev.exchange && ev.symbol === this.symbol && Number.isFinite(Number(ev.price)))
           .filter((ev) => isRealEvent(ev) && eventWithinRetention(ev, this.cacheRetentionMs, now))
           .slice(-this.maxEvents);
         this.resetSeen();
@@ -485,6 +498,8 @@
         testCount: testEvents.length,
         latestRealEvent: this.latestRealEvent(),
         cacheRetentionMs: this.cacheRetentionMs,
+        coverage: describeObservedCoverage(realEvents.map((ev) => ev.exchange)),
+        combinedTotalsForbidden: true,
       };
     }
 
@@ -494,12 +509,31 @@
 
     start() {
       this.closedByUser = false;
+      if (typeof document !== "undefined" && document.hidden) {
+        this.pausedForHide = true;
+        this.onStatus(this.sourceSnapshot());
+        return;
+      }
+      this.pausedForHide = false;
       this.loadCache();
       this.publish();
       this.startWatchdog();
       this.connectBinance();
       this.connectBinanceProbe();
       this.connectBybit();
+    }
+
+    pauseForHide() {
+      this.pausedForHide = true;
+      this.stop(false);
+      this.closedByUser = false;
+    }
+
+    resumeFromHide() {
+      if (!this.pausedForHide || this.closedByUser) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      this.pausedForHide = false;
+      this.start();
     }
 
     stop(markClosed) {
@@ -784,6 +818,7 @@
     filterEvents,
     aggregateByPrice,
     buildStats,
+    describeObservedCoverage,
     LiquidationStream,
   };
 })(typeof window !== "undefined" ? window : globalThis);

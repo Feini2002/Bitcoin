@@ -2,6 +2,11 @@
 
 本仓库是 Bit Trading Desk / 加密数据监测分模块。Codex 在本项目中工作时，优先用可验证的小步修改，而不是大范围重构。
 
+## Current Development Entry
+
+- 当前开发调度以 [四页数据工作台方案](docs/research/repository-development-plan-2026-09-27.md) 为入口，当前事实与发现见 [架构核对](docs/research/repository-architecture-review-2026-09-27.md)。W1–W4 已有实现；继续前先核对计划顶部的验收与发布状态，不重新从 W1 开发，也不把本地通过当作生产已上线。
+- 第二批 P00–P10/NEW 编号保留供追溯，不重新执行旧总计划，不恢复已退役模型生成。后续任务完成时更新当前方案中的实现、验证、启用和精确下一步。
+
 ## Context First
 
 - 先读 `AGENTS.md`、`package.json`、`index.html` 与相关 `js/` 页面入口，再改代码。
@@ -19,8 +24,8 @@
 
 ## CodeGraph
 
-- 本仓库已初始化本地 `.codegraph/`；定位代码优先使用 `codegraph explore "符号或问题" --max-files 2`，可先用 `codegraph query "符号" --limit 5` 缩小范围。没有MCP工具时直接用已安装CLI；运行仍遵守有界命令规则。
-- 本轮未启用常驻索引服务，代码变化后先 `codegraph sync`，再用 `codegraph status` 核对；新电脑缺少索引时重新init。索引仅是定位辅助，HTTP、D1、全局脚本和动态调用需结合真实入口确认，不能把缺边或“未发现覆盖测试”当作不存在关联/测试。
+- 先确认当前 checkout 存在 `.codegraph/` 且工具可用，满足时优先使用 `codegraph explore "符号或问题" --max-files 2`，可用 `codegraph query "符号" --limit 5` 缩小范围。索引缺失或工具不适用时回退 `rg` 和定向源码，不自动初始化。2026-09-27 本机核对未发现索引；旧电脑的初始化记录不代表当前状态。
+- 已有索引且本次改代码时，用有界 `codegraph sync` / `codegraph status` 核对新鲜度。索引仅是定位辅助，HTTP、D1、全局脚本和动态调用需结合真实入口确认，不能把缺边或“未发现覆盖测试”当作不存在关联/测试。
 - CodeGraph范围见codegraph.json；研究原件走资料目录而不混入业务代码图。查询时使用 `CODEGRAPH_TELEMETRY=0`、`CODEGRAPH_NO_DOWNLOAD=1`、`CODEGRAPH_NO_DAEMON=1`，无需修改全局代理或账号配置。
 
 ## Connected Logic Scope
@@ -32,7 +37,7 @@
 
 ## LLM Execution
 
-- 系统内置 LLM 分析、报告和 Agent 功能统一由 Worker/云端模型执行；不再维护网页派单给本机 Codex CLI 的任务队列、轮询、回传或执行通道设置。
+- 自动、手动和流式模型报告生成已退役，旧生成/模型通道接口按现有契约返回 410；历史报告和事实数据继续读取。不得按旧计划恢复云端模型或本机 Codex CLI 任务队列。
 - Codex 对话用于用户主动发起的开发、研究和分析，不是网站运行依赖。需要把人工整理的报告保存到网站时，复用独立的报告导入脚本，并遵守远程 D1 写入授权边界。
 - 修改 LLM 功能时，同步检查 Worker/API、模型设置、上下文来源、报告结构、D1 读写、历史展示和前端流式反馈，保留现有已接入与预留模块的业务契约。
 - 历史报告和已存在的迁移记录保留；退役任务表与旧执行设置不再参与运行，不因代码清理自动删除远程数据。
@@ -65,14 +70,15 @@
 
 ## Cloudflare Pause / Restore Runbook
 
-- 本系统在 2026-06-15 已进入暂停态：`btc` 与 `yuqing` 两个 Worker 的 Cron 已清空，`workers.dev` 与 preview 已关闭，`btc.feiniwork.com` / `yuqing.feiniwork.com` 已从 Worker 自定义域解绑，`yuqing.feiniwork.com/*` route 保留但 `script = null`。
-- D1 本身没有“暂停”开关；暂停或恢复系统时不要删除、重建或迁移 D1。当前应保留 `btc` D1（`DB`，`de758bb8-c7f5-41c7-a6ea-32c0ddf74d57`）和 `yuqing` D1（`YUQING_DB`，`e89cfebb-2d98-4f10-ae94-4f5f4fe52a8f`）。
-- 暂停态下，普通部署规则不应自动恢复 Worker 入口。只有用户明确说“恢复系统 / 重新启用 Worker / 恢复 D1 写入 / 恢复线上”时，才执行下面恢复流程。
-- 恢复前先读取当前 Cloudflare 状态：确认 `btc`、`yuqing` 的 Cron、`workers.dev`、Workers Domains、`feiniwork.com` zone routes，以及本地 `cloudflare/wrangler.toml`、`cloudflare/wrangler.yuqing.toml`。
-- 恢复本地配置：`cloudflare/wrangler.toml` 中重新启用 `btc` 的 Cron `* * * * *`，并将 `workers_dev` 改回启用或移除暂停态；`cloudflare/wrangler.yuqing.toml` 中重新启用 `workers_dev`、Cron `0 0,1,4,6,12,14,16 * * *`，并恢复 `yuqing.feiniwork.com/*` route。
-- 恢复远程 Worker 入口：把 `btc`、`yuqing` 的 Cron 写回原表达式，打开 `workers.dev` 与 preview，重新把 `btc.feiniwork.com` 绑定到 `btc` Worker、`yuqing.feiniwork.com` 绑定到 `yuqing` Worker，并把 `yuqing.feiniwork.com/*` route 的 `script` 恢复为 `yuqing`。
-- 恢复部署顺序：先在 `cloudflare/` 下部署 `btc` Worker，再用 `wrangler.yuqing.toml` 部署 `yuqing` Worker；若前端也有变更，再按 Pages 缓存规则提升 `index.html` 资源版本并部署 Pages。
-- 恢复验证：用 Cloudflare API 或控制台复查 Cron、subdomain、custom domain、route 已恢复；再运行 `npm run verify:api`、`npm run verify:yuqing`，必要时运行 `npm run diagnose` 和 `npm run build`。网络实时源成功只能说明当下连通，不能当作长期稳定结论。
+- 固定入口见 [云端开关说明](docs/research/cloudflare-pause-resume-2026-09-27.md)，恢复记录是 `cloudflare/cloud-control-state.json`。2026-09-27 15:55 UTC 已再次暂停 `btc`、`yuqing`、`market-snapshot`；实际状态始终用 `npm run cloud:status` 核对，不能只读日期判断。
+- 用户在本仓库说 **“开起来 / 恢复云端 / 重新启用系统”**，即授权执行 `npm run cloud:resume` 并完成读回、入口健康和行情入库验证，然后继续开发；不要求用户重复提供账号、域名或版本号。只是讨论恢复方案或要求只读预检时不执行开启。
+- 用户说 **“暂停云端 / 关起来”**，执行 `npm run cloud:pause`，包括保存当前正式版本、关闭三个 Worker 的入口/Cron、部署不采集的 BTC 云端维护版本、观察写入停止。用户说 **“查看云端状态 / 看看开着没”**，仅运行 `npm run cloud:status`。
+- 先读取该说明和当前状态。暂停/恢复由固定脚本管理，不再手动改 `wrangler.toml`，也不拿普通 `wrangler deploy` 代替恢复。`npm run cloud:resume -- --dry-run` 只检查恢复点和存储，无云端修改；`npm run verify:cloud-control` 是无网络模拟。
+- 暂停优先于上面的普通部署规则：未收到明确开启指令时，不部署业务 Worker、恢复 Cron/域名或用生产 API 唤醒采集。仅修改开关脚本、规则和说明不需要 Pages/业务部署。BTC 维护版本是完全停采的必要部分；只关入口不能停止已有 DO 外连。
+- 每次新暂停周期保存当时最新云端版本、入口和绑定标识；中途失败保留 `pausing` / `resuming`，先查状态再按同一意图续做，不删除或重置恢复记录。保存记录是可携带项目文件，不含变量值；备份项目时一并保留最新版本，未经用户要求不自动 commit/push。
+- 只恢复保存的配置：本次 BTC Cron 为每分钟；**舆情与 market-snapshot 的原 Cron 均为空，禁止重新加上历史舆情七次日报 Cron**。三个 D1 和两个 DO 命名空间保留，不迁移、不重建、不清库；不改其他账号项目、Pages 或 VPS。
+- 实际开关默认约两分钟采集观察，HTTP 最长 20 秒，脚本内部硬截止 8 分钟，外层用 `node scripts/run-bounded.cjs 500 npm run cloud:pause` 或 `cloud:resume` 监督，每轮读取最多 30 秒。脚本输出实际 PID/阶段；超时先核对云端和本次进程，不盲目重启。只有真实入库推进才报告恢复完成。
+- 账号登录失效时按官方 Wrangler 登录恢复权限，不读取浏览器 Cookie，不要求用户发送密钥。配置漂移、资源缺失、上游故障或跨电脑并发要报告精确差异并解决，不能以模拟通过替代真实恢复验收。
 
 ## Pages Custom Domain Cache
 

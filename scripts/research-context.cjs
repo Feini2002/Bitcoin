@@ -51,8 +51,8 @@ const descriptions = {
 
 // 批次与权威等级：本地核验记录 > 第一批设计快照 > 外部经验/候选；用于冲突时排序，不改变资料原文。
 const BATCH = {
-  local: { label: '本地核验', note: '本仓库 2026-09-16 的实际核验记录；反映当时仓库与网络事实，优先于外部设计。' },
-  batch2: { label: '第二批', note: '第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。' },
+  local: { label: '本地核验', note: '本仓库实际核验与当前方案；按记录日期和验证范围使用，不把历史状态当作现状。' },
+  batch2: { label: '第二批', note: '第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。' },
   batch1: { label: '第一批', note: '第一批研究/设计快照（2026-09-16）；用于方法、组件与工程细节，不是当前执行指令。' },
   archive: { label: '历史档案', note: '更早一轮原件，仅作追溯。' }
 };
@@ -64,11 +64,12 @@ const AUTHORITY = {
 };
 function classify(repoPath) {
   const p = posix(repoPath);
+  if (p === RESEARCH + '/binance-plugin-workbench-research-2026-09-27.md') return { batch: 'local', authority: 'reference' };
   if (p.startsWith(RESEARCH + '/') && !p.startsWith(LIBRARY + '/')) return { batch: 'local', authority: 'high' };
   if (p.startsWith(BATCH2 + '/')) {
     if (p.includes('/90_reference/')) return { batch: 'batch2', authority: 'reference' };
     if (p.includes('/99_history/')) return { batch: 'batch2', authority: 'history' };
-    if (/EXECUTION_(MASTER|LOG)\.md$/.test(p) || p.includes('/01_execution/')) return { batch: 'batch2', authority: 'high' };
+    if (/EXECUTION_(MASTER|LOG)\.md$/.test(p)) return { batch: 'batch2', authority: 'history' };
     return { batch: 'batch2', authority: 'design' };
   }
   if (p.startsWith(LIBRARY + '/sources/2026-09-16/90_archive/')) return { batch: 'archive', authority: 'history' };
@@ -93,8 +94,8 @@ function batch2Meta(repoPath) {
   const rel = repoPath.slice(BATCH2.length + 1);
   const phase = rel.match(/^01_execution\/phases\/(P\d{2})_/);
   if (phase) return { id: phase[1], role: '第二批阶段任务定义' };
-  if (/(^|\/)EXECUTION_MASTER\.md$/.test(rel)) return { id: 'EXECUTION-MASTER', role: '第二批唯一执行总任务' };
-  if (/(^|\/)EXECUTION_LOG\.md$/.test(rel)) return { id: 'EXECUTION-LOG', role: '第二批实际进度日志' };
+  if (/(^|\/)EXECUTION_MASTER\.md$/.test(rel)) return { id: 'EXECUTION-MASTER', role: '第二批历史任务定义；当前入口为 LOCAL-NEXT' };
+  if (/(^|\/)EXECUTION_LOG\.md$/.test(rel)) return { id: 'EXECUTION-LOG', role: '第二批历史进度与验收记录' };
   if (rel.startsWith('00_current/')) return { id: 'B2-' + rel.match(/(\d{2})_/)?.[1], role: '第二批技术方案正文' };
   if (rel === 'README.md') return { id: 'B2-README', role: '第二批说明与阶段表' };
   if (rel.startsWith('01_execution/')) return { id: 'B2-EXEC-' + path.basename(rel), role: '第二批执行导航/镜像' };
@@ -108,6 +109,7 @@ function batch2Meta(repoPath) {
 
 function localMeta(repoPath) {
   const name = path.basename(repoPath);
+  if (name === 'binance-plugin-workbench-research-2026-09-27.md') return { id: 'LOCAL-BINANCE-PLUGIN', role: '插件实测与外部研究参考；接入建议未实施' };
   const ids = {
     'binance-connectivity-2026-09-16.md': 'LOCAL-BINANCE',
     'chart-workbench-review-2026-09-16.md': 'LOCAL-CHART',
@@ -124,7 +126,11 @@ function localMeta(repoPath) {
     'binance-egress-vps-local-2026-09-21.md': 'LOCAL-EGRESSVPS',
     'binance-egress-plan-adversarial-2026-09-21.md': 'LOCAL-EGRESSADV',
     'binance-egress-vps-cutover-2026-09-21.md': 'LOCAL-EGRESSCUTOVER',
-    'data-collection-routing-2026-09-22.md': 'LOCAL-COLLECT'
+    'data-collection-routing-2026-09-22.md': 'LOCAL-COLLECT',
+    'cloudflare-governance-correctness-2026-09-26.md': 'LOCAL-COST-CORRECTNESS',
+    'cloudflare-pause-resume-2026-09-27.md': 'LOCAL-CLOUD-CONTROL',
+    'repository-architecture-review-2026-09-27.md': 'LOCAL-ARCHITECTURE',
+    'repository-development-plan-2026-09-27.md': 'LOCAL-NEXT'
   };
   return ids[name] ? { id: ids[name], role: '本仓库本地核验记录（权威最高，但仅代表核验当时）' } : null;
 }

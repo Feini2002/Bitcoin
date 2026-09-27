@@ -2,11 +2,39 @@
   "sourceRoot": "docs/research/bitcoin-upgrade/sources/2026-09-16",
   "routes": [
     {
+      "id": "binance-plugin",
+      "title": "币安插件、MCP 与四页数据核对",
+      "keywords": ["币安插件", "Binance插件", "币安MCP", "Binance MCP", "插件对账", "插件补查"],
+      "summary": "先区分当前会话工具、官方 Skills Hub、Agent OS 与社区实现。复用公开样本做有界核对和研究；建议尚未接入，不替代连续采集，不恢复模型任务。",
+      "code": ["cloudflare/finance/datasets.mjs", "cloudflare/finance/desk.mjs", "js/workbench-evidence.js", "js/orderflow/footprint-engine.js"],
+      "primary": [{"id": "LOCAL-BINANCE-PLUGIN"}],
+      "expand": [],
+      "graph": "normalizeDataset handleDesk atomicSnapshot",
+      "related": [
+        {"id": "derivatives", "when": "核对持仓量、资金费或多空比例"},
+        {"id": "footprint", "when": "用完整成交窗口核对足迹"},
+        {"id": "snapshot", "when": "基于四页导出追加插件补查"}
+      ],
+      "checks": ["npm run verify:research", "npm run lint"],
+      "acceptance": "固定产品与时间窗 → 留存公开原始响应 → 核对单位、来源、覆盖和差异；查询成功不冒充生产一致性通过。"
+    },
+    {
+      "id":"current-plan", "title":"当前架构基线与四页工作台开发方案",
+      "keywords":["当前计划","下一步开发","开发方案","仓库治理","架构治理","架构基线","遗留计划","开发进度","四页工作台","总计划"],
+      "summary":"先读2026-09-27当前方案顶部和第9节。W1–W4已有实现与复审加固；接续R1云端恢复验收、R2发布和R3生产采样，不重新开发W1。旧第二批计划仅用于追溯。",
+      "code":["cloudflare/finance/desk.mjs","cloudflare/finance/dataset-store.mjs","js/data-engine.js","js/pages/chart.js","js/pages/derivatives.js","js/features.js"],
+      "primary":[{"id":"LOCAL-NEXT"},{"id":"LOCAL-ARCHITECTURE"},{"id":"LOCAL-CLOUD-CONTROL"}],
+      "expand":["LOCAL-COST-CORRECTNESS","EXECUTION-LOG"], "graph":"handleDesk buildChartDesk readLiveKlineTape fetchDesk",
+      "related":[{"id":"chart-history","when":"实施 W1 来源与覆盖"},{"id":"derivatives","when":"实施合约卡片数据呈现"},{"id":"snapshot","when":"处理证据导出与旧快照兼容"}],
+      "checks":["npm run verify:governance","npm run build"],
+      "acceptance":"当前方案 → 有依据的就绪任务 → 四页来源、时间、窗口与缺口可核对；不重跑已完成治理，不恢复已退役模型。"
+    },
+    {
       "id":"workbench-data", "title":"币安主源工作台数据底座与整体方案",
       "keywords":["行情工作台","工作台方案","数据集","币安主源","聚合数据","金融审查","卡点","空桌","装配","desk","治理"],
-      "summary":"先读工作台方案与 2026-09-21 空桌治理记录；分析输入走 /api/desk，不把混源表或过期 bootstrap 当币安主带。",
+      "summary":"当前开发先读 LOCAL-NEXT；旧工作台方案与空桌治理记录用于方法依据。分析输入走 /api/desk，需区分最新尾部可用与完整历史来源/覆盖。",
       "code":["cloudflare/finance/datasets.mjs","cloudflare/finance/dataset-store.mjs","cloudflare/finance/dataset-schema.sql","cloudflare/finance/gateway.mjs","scripts/collect-finance-datasets.cjs","scripts/verify-finance-datasets.cjs","scripts/verify-finance-datasets-live.cjs"],
-      "primary":[{"id":"LOCAL-DESK"},{"id":"LOCAL-WORKBENCH"},{"id":"V04","section":"通用时间语义"},{"id":"V08","section":"市场工作区交互"}],
+      "primary":[{"id":"LOCAL-NEXT"},{"id":"LOCAL-DESK"},{"id":"LOCAL-WORKBENCH"}],
       "expand":[], "graph":"normalizeDataset readDataset handleDatasets",
       "related":[{"id":"finance-channels","when":"查免费边界和原生通道"},{"id":"chart-history","when":"主图来源或历史迁移"},{"id":"runtime","when":"币安出口或 VPS 反代"},{"id":"snapshot","when":"切换聚合和分析输入"}],
       "checks":["npm run verify:finance","npm run build"],
@@ -193,6 +221,12 @@
     }
   ],
   "examples": [
+    {"query": "币安插件怎么帮助本系统", "expected": "binance-plugin"},
+    {"query": "Binance MCP 插件对账", "expected": "binance-plugin"},
+    {"query": "插件补查历史窗口", "expected": "binance-plugin"},
+    {"query":"仓库治理后下一步开发方案", "expected":"current-plan"},
+    {"query":"四页工作台当前计划", "expected":"current-plan"},
+    {"query":"遗留计划和开发进度", "expected":"current-plan"},
     {"query":"修改K线图缩放", "expected":"chart"},
     {"query":"币安403出口封锁", "expected":"runtime"},
     {"query":"Worker采集持续性问题", "expected":"runtime"},

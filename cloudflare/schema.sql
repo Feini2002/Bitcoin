@@ -215,3 +215,13 @@ CREATE TABLE IF NOT EXISTS onchain_sync_status (
   last_error  TEXT,
   PRIMARY KEY (scope, metric)
 );
+
+-- Chart history invalidation. One row per product and interval.
+-- Old workers do not read this table; do not drop it when rolling code back.
+CREATE TABLE IF NOT EXISTS desk_history_state (
+  symbol TEXT NOT NULL,
+  interval TEXT NOT NULL,
+  head_t INTEGER NOT NULL,
+  history_revision INTEGER NOT NULL,
+  PRIMARY KEY (symbol, interval)
+);

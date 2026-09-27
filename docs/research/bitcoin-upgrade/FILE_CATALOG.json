@@ -13289,7 +13289,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "2026-09-21：旧 WS 入口退役的修复仍有效；当时「迁 /market 不解 CF 403」也被后来直连五域持续 403 证实。永续 REST/fstream 现经东京反代，见 接线现状。下文采样与「不购买服务器」是 09-16 边界。",
-      "bytes": 5414,
+      "bytes": 5448,
       "headings": [
         {
           "title": "币安连接诊断与修复（2026-09-16）",
@@ -13731,6 +13731,118 @@
       ]
     },
     {
+      "id": "LOCAL-BINANCE-PLUGIN",
+      "path": "docs/research/binance-plugin-workbench-research-2026-09-27.md",
+      "title": "币安插件怎样补足四页数据工作台：研究与复用手册",
+      "role": "插件实测与外部研究参考；接入建议未实施",
+      "batch": "local",
+      "authority": "reference",
+      "summary": "保留本系统作为连续采集、历史保存、四页展示和证据导出的主体。插件最有价值的用途是：核对数据、补查具体问题、低成本试验新指标。先证明它能发现错误或减少人工查数，再决定是否把某项能力做成网站功能。",
+      "bytes": 21190,
+      "headings": [
+        {
+          "title": "币安插件怎样补足四页数据工作台：研究与复用手册",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 结论与适用边界",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 先分清四种“币安插件”",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "3. 本次实际能力与样本",
+          "line": 26,
+          "level": 2
+        },
+        {
+          "title": "3.1 当前可见能力",
+          "line": 28,
+          "level": 3
+        },
+        {
+          "title": "3.2 已执行的五项公开查询",
+          "line": 41,
+          "level": 3
+        },
+        {
+          "title": "4. 四页分别能得到什么",
+          "line": 53,
+          "level": 2
+        },
+        {
+          "title": "5. 推荐的七个复用流程",
+          "line": 62,
+          "level": 2
+        },
+        {
+          "title": "A. 对同一窗口做数据核对：第一优先级",
+          "line": 64,
+          "level": 3
+        },
+        {
+          "title": "B. 用真实响应做字段映射回归",
+          "line": 74,
+          "level": 3
+        },
+        {
+          "title": "C. 补查有明确起止时间的小缺口",
+          "line": 80,
+          "level": 3
+        },
+        {
+          "title": "D. 用成交样本核对足迹，而不是拼一个假完整窗口",
+          "line": 88,
+          "level": 3
+        },
+        {
+          "title": "E. 四页证据导出 + 插件补查 + 人工研究记录",
+          "line": 94,
+          "level": 3
+        },
+        {
+          "title": "F. ADL、保险基金和币安期权：先回答一个新问题",
+          "line": 102,
+          "level": 3
+        },
+        {
+          "title": "G. 排名、热点和社会讨论：作为研究线索",
+          "line": 108,
+          "level": 3
+        },
+        {
+          "title": "6. GitHub 与社媒材料：采用什么，不采用什么",
+          "line": 114,
+          "level": 2
+        },
+        {
+          "title": "7. 未来接入时的数据收据",
+          "line": 126,
+          "level": 2
+        },
+        {
+          "title": "8. 与本仓库代码的连接位置",
+          "line": 143,
+          "level": 2
+        },
+        {
+          "title": "9. 可以直接复用的研究指令",
+          "line": 159,
+          "level": 2
+        },
+        {
+          "title": "10. 证据、验证与维护",
+          "line": 179,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-CHART",
       "path": "docs/research/chart-workbench-review-2026-09-16.md",
       "title": "行情工作台：数据口径与 K 线评估",
@@ -13738,7 +13850,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "日期：2026-09-16。对象：当前仓库 #chart；图表版本 Lightweight Charts 4.1.3。依据为当前代码、用户截图、仓库 V04/V05/V08 与本次官方资料核验。本文是诊断与建议，不代表已完成数据层升级，也不把附带研究资料中的命令当作用户指令。",
-      "bytes": 9456,
+      "bytes": 9515,
       "headings": [
         {
           "title": "行情工作台：数据口径与 K 线评估",
@@ -13825,6 +13937,85 @@
         {
           "title": "关联代码与验证",
           "line": 52,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-COST-CORRECTNESS",
+      "path": "docs/research/cloudflare-governance-correctness-2026-09-26.md",
+      "title": "Cloudflare 费用治理后的正确性修复依据（2026-09-26）",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "Cloudflare 费用治理后的正确性修复依据（2026-09-26）",
+      "bytes": 8070,
+      "headings": [
+        {
+          "title": "Cloudflare 费用治理后的正确性修复依据（2026-09-26）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "来源与核验事实",
+          "line": 7,
+          "level": 2
+        },
+        {
+          "title": "原始资料摘录快照",
+          "line": 19,
+          "level": 2
+        },
+        {
+          "title": "当前代码反例与修复决定",
+          "line": 26,
+          "level": 2
+        },
+        {
+          "title": "关联代码与验证",
+          "line": 39,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-CLOUD-CONTROL",
+      "path": "docs/research/cloudflare-pause-resume-2026-09-27.md",
+      "title": "云端开关：暂停与继续开发",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "实现是 scripts/cloud-control.cjs，维护模块是 cloudflare/btc-maintenance.mjs。恢复记录在 cloudflare/cloud-control-state.json，属于项目文件，只有账号/资源标识、版本、开关和绑定名称，没有变量值或密钥。每次实际开关会原子更新记录，…",
+      "bytes": 7311,
+      "headings": [
+        {
+          "title": "云端开关：暂停与继续开发",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "直接这样说",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "固定执行入口",
+          "line": 10,
+          "level": 2
+        },
+        {
+          "title": "恢复范围与真实限制",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "核验依据与查询日期",
+          "line": 36,
+          "level": 2
+        },
+        {
+          "title": "本次验证边界",
+          "line": 46,
           "level": 2
         }
       ]
@@ -14036,6 +14227,68 @@
       ]
     },
     {
+      "id": "docs/research/four-workbench-data-audit-2026-09-27.md",
+      "path": "docs/research/four-workbench-data-audit-2026-09-27.md",
+      "title": "四页工作台：采集实况、缺口与补源审查",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "核对日期：2026-09-27 北京时间；主要线上样本为 2026-09-26 19:35–19:45 UTC。当前源码工作区已有其他会话改动，本记录不覆盖它们。范围为只读审查、真实响应复现及外部研究；未修改运行代码、远程数据、调度或部署。记录与导航属于 L1 可逆文档变更。",
+      "bytes": 13730,
+      "headings": [
+        {
+          "title": "四页工作台：采集实况、缺口与补源审查",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "结论与接续入口",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "实测证据与限制",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "四页当前状态",
+          "line": 21,
+          "level": 2
+        },
+        {
+          "title": "行情：当前研究窗合格，完整远期历史仍需区别",
+          "line": 23,
+          "level": 3
+        },
+        {
+          "title": "足迹/订单流：P1，已有明细被接口遗漏",
+          "line": 39,
+          "level": 3
+        },
+        {
+          "title": "衍生品/环境：P1 字段丢失；宏观部分采集失败",
+          "line": 47,
+          "level": 3
+        },
+        {
+          "title": "强平：有历史数据，当前订阅与覆盖仍须核验",
+          "line": 58,
+          "level": 3
+        },
+        {
+          "title": "外部来源核验与取舍",
+          "line": 65,
+          "level": 2
+        },
+        {
+          "title": "建议下一轮直接执行的 C1–C5",
+          "line": 84,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-CHANNELS",
       "path": "docs/research/free-financial-api-channels-2026-09-16.md",
       "title": "免费金融数据通道（2026-09-16）",
@@ -14043,7 +14296,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "最新扩展：现为40个平台/产品、93个公开操作。新增9项Binance规则/统计通道，以及独立的32项规范观察数据集；完整现状见币安主源数据与改版方案，逐平台限制见限制矩阵。2026-09-21 起，Deribit、Alpha Vantage、GDELT、BLS 以及不稳定的 CoinPaprika 额度不作为每日长期…",
-      "bytes": 19340,
+      "bytes": 19499,
       "headings": [
         {
           "title": "免费金融数据通道（2026-09-16）",
@@ -14110,7 +14363,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "本页列出全部40个平台/产品、93个操作的用途与边界。来源为仓库已核验的官方资料及当前注册表；历史全量实测时间为 2026-09-16T07:32:35.912Z，当时84个操作、61通过、23失败。下表历史状态不等于本轮全部93项已重新验证；新增9项均为Binance公开数据。32个规范数据集的最新接入、D1和工作台…",
-      "bytes": 13660,
+      "bytes": 13735,
       "headings": [
         {
           "title": "免费金融平台限制与连接记录（2026-09-16）",
@@ -14125,6 +14378,150 @@
         {
           "title": "故障归因与处理",
           "line": 63,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-ARCHITECTURE",
+      "path": "docs/research/repository-architecture-review-2026-09-27.md",
+      "title": "仓库架构核对与治理记录",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "查询/核对日期：2026-09-27（北京时间）。当前开发入口为四页数据工作台方案。本记录区分源码事实、本轮反例、复用的历史验收和未验证范围，不把计划文字当运行成果。",
+      "bytes": 23848,
+      "headings": [
+        {
+          "title": "仓库架构核对与治理记录",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "收口复审：恢复、迁移与生产抽验（2026-09-27）",
+          "line": 7,
+          "level": 2
+        },
+        {
+          "title": "最新复审：四页实现后的加固（2026-09-27）",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "1. 首次治理结论与当时边界",
+          "line": 46,
+          "level": 2
+        },
+        {
+          "title": "2. 当前职责与真实数据流",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "3. 复用 Cloudflare 治理的证据",
+          "line": 69,
+          "level": 2
+        },
+        {
+          "title": "4. 本轮发现及处理",
+          "line": 92,
+          "level": 2
+        },
+        {
+          "title": "5. 旧 39 项主线与 9 项条件任务的归并",
+          "line": 106,
+          "level": 2
+        },
+        {
+          "title": "6. 验证与交付记录",
+          "line": 130,
+          "level": 2
+        },
+        {
+          "title": "7. 开工前收尾复核（2026-09-27）",
+          "line": 144,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-NEXT",
+      "path": "docs/research/repository-development-plan-2026-09-27.md",
+      "title": "当前开发方案：四页数据工作台",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "更新日期：2026-09-27（北京时间）。这是当前开发调度入口；架构核对保存依据，第二批旧总任务和执行日志只用于追溯，不再并行安排工作。",
+      "bytes": 35088,
+      "headings": [
+        {
+          "title": "当前开发方案：四页数据工作台",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 目标与保留的架构",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "2. 本轮治理与下一任务",
+          "line": 21,
+          "level": 2
+        },
+        {
+          "title": "开工顺序与完成界线",
+          "line": 35,
+          "level": 3
+        },
+        {
+          "title": "3. W1：历史来源、时间与覆盖",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "W1 的接口与数据规则",
+          "line": 65,
+          "level": 3
+        },
+        {
+          "title": "W1 的修订与查询验收",
+          "line": 84,
+          "level": 3
+        },
+        {
+          "title": "4. W2：已有数据真正上屏",
+          "line": 112,
+          "level": 2
+        },
+        {
+          "title": "5. W3：窗口、切换与生命周期",
+          "line": 130,
+          "level": 2
+        },
+        {
+          "title": "6. W4：同一事实的导出与交接",
+          "line": 145,
+          "level": 2
+        },
+        {
+          "title": "验收落点（已实施；新增审查回归与原用例一起维护）",
+          "line": 162,
+          "level": 3
+        },
+        {
+          "title": "7. 云端恢复、发布与验收的顺序",
+          "line": 178,
+          "level": 2
+        },
+        {
+          "title": "8. 暂缓事项与重新触发条件",
+          "line": 188,
+          "level": 2
+        },
+        {
+          "title": "9. 收口记录（2026-09-27）",
+          "line": 197,
           "level": 2
         }
       ]
@@ -14269,7 +14666,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "研究/实施日期：2026-09-16。用户确认本轮完成数据接入、D1 沉淀、对抗审查与详细方案，页面下一轮改。本文区分事实、已实施内容和后续方案，不把 API 可调用当作数据可用于交易决策。2026-09-21 空桌治理与 /api/desk 装配见 cloud-d1-desk-governance-2026-09-2…",
-      "bytes": 27351,
+      "bytes": 27818,
       "headings": [
         {
           "title": "币安主源行情工作台：数据接入与改版依据",
@@ -14278,82 +14675,82 @@
         },
         {
           "title": "本轮采用的依据",
-          "line": 5,
+          "line": 7,
           "level": 2
         },
         {
           "title": "实时核对的关键事实",
-          "line": 13,
+          "line": 15,
           "level": 2
         },
         {
           "title": "本轮数据底座设计",
-          "line": 21,
+          "line": 23,
           "level": 2
         },
         {
           "title": "实施与验证顺序",
-          "line": 30,
+          "line": 32,
           "level": 2
         },
         {
           "title": "第一性原理：系统到底需要证明什么",
-          "line": 38,
+          "line": 40,
           "level": 2
         },
         {
           "title": "32 个规范数据集与使用边界",
-          "line": 51,
+          "line": 53,
           "level": 2
         },
         {
           "title": "对抗审查与处理决定",
-          "line": 72,
+          "line": 74,
           "level": 2
         },
         {
           "title": "仍缺什么：分开可补、需建设和免费范围不能证明的内容",
-          "line": 88,
+          "line": 90,
           "level": 2
         },
         {
           "title": "下一轮工作台方案（本轮不实施）",
-          "line": 104,
+          "line": 106,
           "level": 2
         },
         {
           "title": "信息顺序",
-          "line": 106,
+          "line": 108,
           "level": 3
         },
         {
           "title": "聚合逻辑",
-          "line": 113,
+          "line": 115,
           "level": 3
         },
         {
           "title": "K线与图表规则",
-          "line": 122,
+          "line": 124,
           "level": 3
         },
         {
           "title": "联动文件与实施次序",
-          "line": 131,
+          "line": 133,
           "level": 3
         },
         {
           "title": "免费预算、保留与持续采集的决定",
-          "line": 143,
+          "line": 145,
           "level": 2
         },
         {
           "title": "代码、操作与恢复",
-          "line": 156,
+          "line": 158,
           "level": 2
         },
         {
           "title": "本轮实际交付与验收（2026-09-16 北京时间）",
-          "line": 162,
+          "line": 164,
           "level": 2
         }
       ]
@@ -14366,7 +14763,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "审查日期：2026-09-17，Asia/Singapore。代码基线：a6ef6c8974dcdaace32acf25c3a231ecd279ef37。 本版直接读取 GitHub 固定提交的关键源码及文档；没有运行该仓库、访问生产数据库、调用真实模型、修改代码或部署。它不是上一版事实报告换日期。",
-      "bytes": 13225,
+      "bytes": 13309,
       "headings": [
         {
           "title": "卷00｜当前仓库系统升级技术总纲（执行入口已统一）",
@@ -14428,7 +14825,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "R-current：本轮直接读取的固定提交源码；可证明代码中的逻辑和声明。R-record：同一提交中的测试、运行和部署记录；可证明作者记录了这些事，不能冒充本轮重新测试。R-local-old：用户提供的2026-09-16本地事实报告，包含未提交与未跟踪修改；不等于当前remote commit。E：本轮公开官方资…",
-      "bytes": 12369,
+      "bytes": 12441,
       "headings": [
         {
           "title": "卷01｜当前仓库证据基线与旧报告差异",
@@ -14500,7 +14897,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "基线：a6ef6c8974dcdaace32acf25c3a231ecd279ef37；查询日期：2026-09-17。 本卷依据实际读取的源码范围，不是线上故障统计。以下“可推导”表示从函数与条件可严格推导，未执行原函数；“风险路径”表示需要调用链或运行样本确定影响。P0/P1/P2是本方案的修复排序，不是交易风险评…",
-      "bytes": 17028,
+      "bytes": 17108,
       "headings": [
         {
           "title": "02｜当前源码审查：问题、反例、影响范围与修正决定",
@@ -14562,7 +14959,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "外部核验日期：2026-09-17。 本卷比较公开技术能力与设计模式，不评价谁是世界第一，不声称掌握机构私有策略、实际收益或完整内部架构。商业数据商、研究产品和模型工程团队解决的是不同问题，不能放在一个“最强系统”排名中。",
-      "bytes": 11820,
+      "bytes": 11906,
       "headings": [
         {
           "title": "03｜专业机构与成熟平台：可以吸收什么，不能凭名称推断什么",
@@ -14629,7 +15026,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "当前代码基线：a6ef6c8；设计日期2026-09-17。 本卷不要求替换全部旧表。最小目标是把已存在的规范数据变成可信、持续、带范围的数据产品，并让四页只通过同一语义读取。",
-      "bytes": 11916,
+      "bytes": 12022,
       "headings": [
         {
           "title": "04｜数据底座：从已接入API到可供四页与分析共同消费的事实",
@@ -14696,7 +15093,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "范围：#chart及其实际消费者。 当前主体为js/pages/chart.js、js/chart/indicator-math.js、js/data-engine.js、多周期组件与独立快照。后两者须由执行者继续绑定具体调用；本轮不宣称已经阅读所有实现。新设计优先复用Lightweight Charts 4.1.3，…",
-      "bytes": 16554,
+      "bytes": 16677,
       "headings": [
         {
           "title": "05｜行情工作台：逐项计算、数据和交互改造设计",
@@ -14803,7 +15200,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "对象：js/orderflow/footprint-engine.js、js/pages/orderflow.js及D1足迹桶、快照。 当前足迹基于Binance aggTrade，不是仅依K线涨跌估算。当前5m桶可再合并更长周期，已有买卖量及恢复逻辑；本轮不建议新建第二套采集器。C19｜js/orderflow/fo…",
-      "bytes": 13855,
+      "bytes": 13965,
       "headings": [
         {
           "title": "06｜订单流与足迹：保留真实成交基础，修正聚合与历史信号",
@@ -14895,7 +15292,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "当前源码：js/heatmap/liquidation-engine.js、pressure-matrix.js与独立快照。 本页已明确区分估算压力和潜在清算池，不应被整体当作伪造热力图。需要解决的是观测范围、未知分类、金额口径、窗口和跨层规则一致性。C24｜js/heatmap/liquidation-engine.…",
-      "bytes": 12706,
+      "bytes": 12801,
       "headings": [
         {
           "title": "07｜强平雷达：观测事件、价格类型与风险条件重设计",
@@ -14967,7 +15364,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "当前依据：js/pages/derivatives.js、finance/datasets.mjs及快照。 本页不是缺少字段，而是旧指标槽、单位推断、比较窗口和旁路解释与新数据底座尚未统一。新设计以“持有成本、仓位存量、主动成交、期限结构、外部背景”五个问题组织，不把所有数值加成多空总分。C27｜js/pages/de…",
-      "bytes": 14052,
+      "bytes": 14141,
       "headings": [
         {
           "title": "08｜衍生品面板：资金费、OI、基差、期权与宏观的分层升级",
@@ -15034,7 +15431,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "本卷定义的是拟采用方法，不是已验证预测器。 保留当前合法的EMA/ATR/RSI等实现，修改的是同名方法跨页面不一致、输入语义与质量边界；新增方法按实际数据能力启用，不能全部默认加载。当前实现证据见C11｜js/chart/indicator-math.js（读取范围见登记） C19｜js/orderflow/foot…",
-      "bytes": 13214,
+      "bytes": 13334,
       "headings": [
         {
           "title": "09｜统一分析方法注册表：新增价值、公式、参数与失效条件",
@@ -15101,7 +15498,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "当前规范目录已经登记九条FRED序列、SOFR、USDT/USDC供应、CoinGecko全局数据、mempool费用和Deribit期权摘要。它们不是过去事实报告描述的空白区域，但目录仍不代表已被前端和LLM消费，也不代表实时采集持续成功。C04｜cloudflare/finance/datasets.mjs（读取范…",
-      "bytes": 10166,
+      "bytes": 10241,
       "headings": [
         {
           "title": "10｜辅助数据升级：宏观、ETF、稳定币、链上与期权",
@@ -15168,7 +15565,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "结构化市场数据与情报收集是并行输入。分析层可以基于数据先发现异常，再让情报层核查一个明确事件；也可以先收到事件再检查市场反应。它们不应成为必须先跑全球日报、再跑每个角色、最后才能看BTC的长串链。",
-      "bytes": 9002,
+      "bytes": 9082,
       "headings": [
         {
           "title": "11｜舆情与情报层：敏锐意味着发现重要变化，不是搜得最多",
@@ -15235,7 +15632,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "当前marketStateFromLegacy按数据是否存在产生62/58/46与72/54，三个分数全部处于其中性阈值；opportunitiesFromInputs在市场可用时直接写“同向”，而不是检验同向；固定calendar与未搜索文案也有语义问题。它们不是模型智力不足造成，而是输入与程序规则已经给了无依据结论…",
-      "bytes": 12946,
+      "bytes": 13102,
       "headings": [
         {
           "title": "12｜分析层：角色、证据、工具、提示词与发布流程",
@@ -15312,7 +15709,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "行情页解释价格、参与度和已知结构；足迹页解释成交分布与主动量；强平页解释已观测事件与有条件的压力背景；衍生品页解释成本、存量、比例和价格关系。四页不是四个独立计算宇宙，应共享研究选择、时间语义、方法输出和质量元数据。",
-      "bytes": 8747,
+      "bytes": 8830,
       "headings": [
         {
           "title": "13｜页面、共享状态、API、历史与导出的统一设计",
@@ -15379,7 +15776,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "每个方框是职责，可以在现有Worker/模块中实现。当前已经有finance存储、旧市场表、独立snapshot和yuqing，不应新建第五个没有清楚责任的数据中心。先指定每种对象唯一写入者与转换边界，再按负载分进程。C04｜cloudflare/finance/datasets.mjs（读取范围见登记） C06｜cl…",
-      "bytes": 9241,
+      "bytes": 9325,
       "headings": [
         {
           "title": "14｜架构与运行：推荐混合职责，按证据决定部署",
@@ -15446,7 +15843,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "本包审查固定GitHub提交a6ef6c8，不覆盖用户本机未提交变化。此前事实报告针对有大量未提交/未跟踪文件的工作区，不能简单按旧HEAD或本包SHA执行reset。实施前只读记录当前branch/HEAD、相关diff、配置与受影响文件摘要，确定哪些旧问题已修复，哪些新的变化需要保留。",
-      "bytes": 6985,
+      "bytes": 7060,
       "headings": [
         {
           "title": "15｜迁移、兼容、回退与并发治理边界",
@@ -15508,7 +15905,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "本版不再从旧S1—S6任意选择或与旧WP并行执行。唯一调度入口：EXECUTION_MASTER.md；39项默认主线和9项条件分支的原NEW编号均保留。",
-      "bytes": 6257,
+      "bytes": 6315,
       "headings": [
         {
           "title": "16｜执行任务导航（已收口）",
@@ -15525,7 +15922,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "第一层是实现正确性：给定输入是否遵守单位、窗口、来源、公式、状态和权限。第二层是研究合理性：结果是否受证据支持，是否存在前视、样本偏差、错误合并或不恰当因果解释。第三层是用户价值：能否更快找到重要变化、核数字、识别反证、恢复研究现场。",
-      "bytes": 7321,
+      "bytes": 7404,
       "headings": [
         {
           "title": "17｜验收与实验：证明数据、方法和研究价值，而非证明文件很多",
@@ -15606,8 +16003,8 @@
       "role": "第二批技术方案正文",
       "batch": "batch2",
       "authority": "design",
-      "summary": "请从EXECUTION_MASTER.md执行。原本“先只读、等用户再选一个切片”的接手方式，已由本轮用户要求改为：明确默认主线、P00核对后继续开发、常规阶段不重复索要scope。",
-      "bytes": 1484,
+      "summary": "2026-09-27 接手修订： 当前从四页数据工作台方案的 W1 开始；下文是第二批原接手说明，仅追溯。先核对现有工作区与云端暂停状态，不按旧模型/采集前提重新启动任务。",
+      "bytes": 1779,
       "headings": [
         {
           "title": "18｜开发者接手（唯一入口版）",
@@ -15624,7 +16021,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "当前代码基线为GitHub main读取时的a6ef6c8974dcdaace32acf25c3a231ecd279ef37。先读取commit/tree与目录，再通过GitHub连接器逐范围读取关键文件。没有克隆整个仓库，没有运行依赖安装、候选代码、仓库测试、API诊断或生产部署。",
-      "bytes": 5287,
+      "bytes": 5338,
       "headings": [
         {
           "title": "19｜证据、审阅覆盖、未解决项与统计规则",
@@ -15676,7 +16073,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "来源为固定提交cloudflare/finance/datasets.mjs及其归一化。下表不是新增32个API或自动采集配置；同一目录已存在，重点是消费、覆盖和领域验收。C04｜cloudflare/finance/datasets.mjs（读取范围见登记） C05｜cloudflare/finance/datase…",
-      "bytes": 7221,
+      "bytes": 7271,
       "headings": [
         {
           "title": "20｜32个当前规范数据集的接入清单",
@@ -15706,9 +16103,9 @@
       "title": "当前任务目录",
       "role": "第二批执行导航/镜像",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "tasks.json与阶段MD由本次整理同步生成，保留原48项NEW编号及硬依赖。它是导航镜像，不用作可变进度或另一套调度权威。实际开发只更新根EXECUTION_LOG.md。",
-      "bytes": 778,
+      "bytes": 787,
       "headings": [
         {
           "title": "当前任务目录",
@@ -15723,9 +16120,9 @@
       "title": "acceptance_map.json",
       "role": "第二批执行导航/镜像",
       "batch": "batch2",
-      "authority": "high",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 18820,
+      "authority": "design",
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 19553,
       "headings": []
     },
     {
@@ -15734,9 +16131,9 @@
       "title": "P00｜绑定当前仓库与已归档资料，建立测试和权限基线",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 16794,
+      "bytes": 16972,
       "headings": [
         {
           "title": "P00｜绑定当前仓库与已归档资料，建立测试和权限基线",
@@ -15811,9 +16208,9 @@
       "title": "P01｜建立供当前页面使用的最小数据、时间和方法边界",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 14805,
+      "bytes": 14983,
       "headings": [
         {
           "title": "P01｜建立供当前页面使用的最小数据、时间和方法边界",
@@ -15888,9 +16285,9 @@
       "title": "P02｜完成行情工作台的产品身份、确认状态、VWAP和结构修正",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 17541,
+      "bytes": 17751,
       "headings": [
         {
           "title": "P02｜完成行情工作台的产品身份、确认状态、VWAP和结构修正",
@@ -15970,9 +16367,9 @@
       "title": "P03｜尽早交付固定输入的市场变化模板与报告生命周期",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 12260,
+      "bytes": 12410,
       "headings": [
         {
           "title": "P03｜尽早交付固定输入的市场变化模板与报告生命周期",
@@ -16042,9 +16439,9 @@
       "title": "P04｜统一衍生品单位、窗口、OI和跨消费者方法",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 13863,
+      "bytes": 14040,
       "headings": [
         {
           "title": "P04｜统一衍生品单位、窗口、OI和跨消费者方法",
@@ -16119,9 +16516,9 @@
       "title": "P05｜统一足迹分箱、POC、价值区、CVD和SFP时点",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 13736,
+      "bytes": 13912,
       "headings": [
         {
           "title": "P05｜统一足迹分箱、POC、价值区、CVD和SFP时点",
@@ -16196,9 +16593,9 @@
       "title": "P06｜修正强平事件语义、统计范围及压力条件",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 14015,
+      "bytes": 14192,
       "headings": [
         {
           "title": "P06｜修正强平事件语义、统计范围及压力条件",
@@ -16273,9 +16670,9 @@
       "title": "P07｜完成有限来源、文档版本、事件去重与低噪音情报链",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 14705,
+      "bytes": 14885,
       "headings": [
         {
           "title": "P07｜完成有限来源、文档版本、事件去重与低噪音情报链",
@@ -16350,9 +16747,9 @@
       "title": "P08｜接入受约束模型综合、根预算与输出核验",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 9100,
+      "bytes": 9217,
       "headings": [
         {
           "title": "P08｜接入受约束模型综合、根预算与输出核验",
@@ -16417,9 +16814,9 @@
       "title": "P09｜贯通四页证据、研究现场、旧链接与导出",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 8974,
+      "bytes": 9090,
       "headings": [
         {
           "title": "P09｜贯通四页证据、研究现场、旧链接与导出",
@@ -16484,9 +16881,9 @@
       "title": "P10｜完成价值对照、跨页回归、迁移演练与开发收口",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "唯一入口：EXECUTION_MASTER.md。本文件只展开总任务的本阶段，不构成另一套独立计划。",
-      "bytes": 13767,
+      "bytes": 13916,
       "headings": [
         {
           "title": "P10｜完成价值对照、跨页回归、迁移演练与开发收口",
@@ -16556,9 +16953,9 @@
       "title": "P11｜九项条件分支：有触发则处理，无触发则保留证据",
       "role": "第二批阶段任务定义",
       "batch": "batch2",
-      "authority": "high",
+      "authority": "design",
       "summary": "本文件不是默认第十二个“全部必须实现”的阶段，也不是积压清单清零目标。先读唯一总任务。每个分支在标注的检查点判断，可在主线中途触发，不用等四页全部完成。最终P10必须给每个分支一个明确状态。",
-      "bytes": 29646,
+      "bytes": 30014,
       "headings": [
         {
           "title": "P11｜九项条件分支：有触发则处理，无触发则保留证据",
@@ -16668,9 +17065,9 @@
       "title": "tasks.json",
       "role": "第二批执行导航/镜像",
       "batch": "batch2",
-      "authority": "high",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 87316,
+      "authority": "design",
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 89386,
       "headings": []
     },
     {
@@ -16681,7 +17078,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "本目录是小型语义合同示例，不是生产数据库迁移，不取代finance现有响应。所有example都是合成，example_only=true；scope外部调用和生产写入均false。原旧版本的30表/39API不作为本次必建清单。",
-      "bytes": 825,
+      "bytes": 832,
       "headings": [
         {
           "title": "设计契约与合成链路",
@@ -16697,8 +17094,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 1110,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 1150,
       "headings": []
     },
     {
@@ -16708,8 +17105,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 7739,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 8106,
       "headings": []
     },
     {
@@ -16719,8 +17116,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 378,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 394,
       "headings": []
     },
     {
@@ -16730,8 +17127,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 373,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 393,
       "headings": []
     },
     {
@@ -16741,8 +17138,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 388,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 405,
       "headings": []
     },
     {
@@ -16752,8 +17149,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 391,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 408,
       "headings": []
     },
     {
@@ -16763,8 +17160,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 442,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 460,
       "headings": []
     },
     {
@@ -16774,8 +17171,8 @@
       "role": "第二批拟议契约/合成样例",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 348,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 368,
       "headings": []
     },
     {
@@ -16786,7 +17183,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "原66个针对性场景完整保留在acceptance_cases.json，均不是本轮仓库测试结果。输入为最小问题描述，接入真实函数时需要补齐其参数，不能当生产payload或正常fallback。",
-      "bytes": 806,
+      "bytes": 813,
       "headings": [
         {
           "title": "原业务验收材料与检查范围",
@@ -16802,8 +17199,8 @@
       "role": "第二批原验收场景，未在仓库执行",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 26556,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 27477,
       "headings": []
     },
     {
@@ -16813,8 +17210,8 @@
       "role": "第二批原验收场景，未在仓库执行",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 43902,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 45742,
       "headings": []
     },
     {
@@ -16825,7 +17222,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "代码固定于a6ef6c8974dcdaace32acf25c3a231ecd279ef37；外部查询日期2026-09-17。源码range为请求范围，短文件返回至实际末尾；只对实际返回内容作判断。文件出现与运行成功分开。",
-      "bytes": 12578,
+      "bytes": 12641,
       "headings": [
         {
           "title": "本轮直接证据索引",
@@ -16846,8 +17243,8 @@
       "role": "第二批依据与清单",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 1093,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 1125,
       "headings": []
     },
     {
@@ -16857,8 +17254,8 @@
       "role": "第二批依据与清单",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 48296,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 49619,
       "headings": []
     },
     {
@@ -16868,8 +17265,8 @@
       "role": "第二批依据与清单",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 26038,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 26621,
       "headings": []
     },
     {
@@ -16880,7 +17277,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "整理日期：2026-09-17。输入是用户已收到的bitcoin_system_upgrade_2026-09-17.zip；这次没有重新调查当前GitHub或改变生产代码。第一批已经归档是本次用户提供的状态，具体路径由开发阶段核对。",
-      "bytes": 2137,
+      "bytes": 2162,
       "headings": [
         {
           "title": "第二批执行版｜重整范围与保全说明",
@@ -16917,7 +17314,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "来源：原第二批根README、卷00/15/16/18、01_execution/tasks.json、66项验收场景和技术专项。它们支持当前任务标题、原前置、模块线索、修改范围、验收和回退。第一批事实报告仅用于理解历史工作区边界，不覆盖后来的固定提交。",
-      "bytes": 889,
+      "bytes": 896,
       "headings": [
         {
           "title": "本轮证据与设计边界",
@@ -16934,7 +17331,7 @@
       "batch": "batch2",
       "authority": "design",
       "summary": "所有原NEW编号恰好有一份当前任务正文；未重编号，未删除原任务。39项非条件任务全部纳入主线，9项原条件任务保持触发式。硬依赖与原JSON保持一致；默认主线是其有效拓扑顺序。",
-      "bytes": 7125,
+      "bytes": 7181,
       "headings": [
         {
           "title": "48项原任务覆盖与入口去冲突",
@@ -16950,8 +17347,8 @@
       "role": "第二批重整说明与保全",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 26621,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 27626,
       "headings": []
     },
     {
@@ -16961,8 +17358,8 @@
       "role": "第二批重整说明与保全",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 251504,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 260996,
       "headings": []
     },
     {
@@ -16972,8 +17369,8 @@
       "role": "第二批重整说明与保全",
       "batch": "batch2",
       "authority": "design",
-      "summary": "第二批可执行资料（2026-09-17）；调度与验收以 EXECUTION_MASTER 与 EXECUTION_LOG 为准。",
-      "bytes": 14172,
+      "summary": "第二批历史设计与执行记录（2026-09-17）；当前调度以 LOCAL-NEXT 为准，原任务编号仅用于追溯。",
+      "bytes": 14426,
       "headings": []
     },
     {
@@ -16984,7 +17381,7 @@
       "batch": "batch2",
       "authority": "history",
       "summary": "batch2_original_entry_files.zip仅保存本轮调整过入口或角色的原文件，供追溯，不解压进当前执行目录、不用于安排任务。其余未改材料仍在原相对路径。",
-      "bytes": 505,
+      "bytes": 510,
       "headings": [
         {
           "title": "本轮改版前的执行入口原件",
@@ -17008,11 +17405,11 @@
       "id": "EXECUTION-LOG",
       "path": "docs/research/bitcoin-upgrade/batch2-execution/EXECUTION_LOG.md",
       "title": "执行日志｜由实际开发者填写",
-      "role": "第二批实际进度日志",
+      "role": "第二批历史进度与验收记录",
       "batch": "batch2",
-      "authority": "high",
-      "summary": "这是本包唯一可变进度记录。初始状态全部待执行；文档生成器没有完成任何仓库开发。不得把本文件初始表、原QA或合成场景数写成业务测试结果。",
-      "bytes": 19172,
+      "authority": "history",
+      "summary": "历史记录边界（2026-09-27）： 下文保留 09-17 的任务与验收记录，不覆盖此后已发生的出口恢复、治理、模型退役和主动暂停。当前进度与下一步转至四页数据工作台方案，旧编号归并见架构核对。不将旧 partial/deferred 自动当作当前待办。",
+      "bytes": 19766,
       "headings": [
         {
           "title": "执行日志｜由实际开发者填写",
@@ -17021,37 +17418,37 @@
         },
         {
           "title": "1. 工作区绑定",
-          "line": 5,
+          "line": 7,
           "level": 2
         },
         {
           "title": "2. 权限记录",
-          "line": 27,
+          "line": 29,
           "level": 2
         },
         {
           "title": "3. 当前检查点",
-          "line": 41,
+          "line": 43,
           "level": 2
         },
         {
           "title": "4. 任务状态",
-          "line": 50,
+          "line": 52,
           "level": 2
         },
         {
           "title": "5. 每次任务完成记录（按时间追加）",
-          "line": 105,
+          "line": 107,
           "level": 2
         },
         {
           "title": "6. 条件分支记录（必须填写，不能默认勾选）",
-          "line": 151,
+          "line": 153,
           "level": 2
         },
         {
           "title": "7. 最终交接",
-          "line": 165,
+          "line": 167,
           "level": 2
         }
       ]
@@ -17059,81 +17456,81 @@
     {
       "id": "EXECUTION-MASTER",
       "path": "docs/research/bitcoin-upgrade/batch2-execution/EXECUTION_MASTER.md",
-      "title": "第二批资料｜唯一执行总任务",
-      "role": "第二批唯一执行总任务",
+      "title": "第二批资料｜历史执行总任务",
+      "role": "第二批历史任务定义；当前入口为 LOCAL-NEXT",
       "batch": "batch2",
-      "authority": "high",
-      "summary": "执行版：batch2-execution-1.0-design｜整理日期：2026-09-17。",
-      "bytes": 19127,
+      "authority": "history",
+      "summary": "2026-09-27 后续入口变更： 当前开发只从四页数据工作台方案调度；本文件保留 09-17 原设计、编号和授权范例供追溯，不再是当前执行指令。后续 desk 接线、费用治理、模型退役和暂停机制已改变前提；不得照下文重新启用旧模型或重做已完成工作。归并依据。",
+      "bytes": 19752,
       "headings": [
         {
-          "title": "第二批资料｜唯一执行总任务",
+          "title": "第二批资料｜历史执行总任务",
           "line": 1,
           "level": 1
         },
         {
           "title": "1. 当前目标与明确范围",
-          "line": 9,
+          "line": 11,
           "level": 2
         },
         {
           "title": "2. 哪份材料决定什么",
-          "line": 19,
+          "line": 21,
           "level": 2
         },
         {
           "title": "3. 一次授权下的执行方式",
-          "line": 34,
+          "line": 36,
           "level": 2
         },
         {
           "title": "3.1 默认可连续推进的范围",
-          "line": 36,
+          "line": 38,
           "level": 3
         },
         {
           "title": "3.2 不把测试前置变成全仓工程",
-          "line": 54,
+          "line": 56,
           "level": 3
         },
         {
           "title": "4. 默认主线与阶段顺序",
-          "line": 62,
+          "line": 64,
           "level": 2
         },
         {
           "title": "5. 阻塞时怎样继续，而不是停在询问",
-          "line": 84,
+          "line": 86,
           "level": 2
         },
         {
           "title": "6. 九项条件分支，不是全部必做",
-          "line": 101,
+          "line": 103,
           "level": 2
         },
         {
           "title": "7. 与第一批资料的衔接",
-          "line": 121,
+          "line": 123,
           "level": 2
         },
         {
           "title": "8. 共同责任与最小改动原则",
-          "line": 133,
+          "line": 135,
           "level": 2
         },
         {
           "title": "9. 进度、检查点与恢复",
-          "line": 141,
+          "line": 143,
           "level": 2
         },
         {
           "title": "10. 最终交付判定",
-          "line": 158,
+          "line": 160,
           "level": 2
         },
         {
           "title": "11. 本轮整理的核验边界",
-          "line": 168,
+          "line": 170,
           "level": 2
         }
       ]
@@ -17145,8 +17542,8 @@
       "role": "第二批说明与阶段表",
       "batch": "batch2",
       "authority": "design",
-      "summary": "唯一入口：EXECUTION_MASTER.md。",
-      "bytes": 3986,
+      "summary": "当前入口：四页数据工作台方案。 本目录的 EXECUTION_MASTER.md 和下方路线保留为 2026-09-17 历史设计，不再调度当前开发。",
+      "bytes": 4207,
       "headings": [
         {
           "title": "第二批系统升级资料｜可顺序执行版",

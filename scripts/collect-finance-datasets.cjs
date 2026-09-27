@@ -11,7 +11,7 @@ const sqlValue=value=>value===null?'NULL':typeof value==='number'?String(value):
 (async()=>{
   if(!['cloud','local-bootstrap'].includes(mode))throw Error('mode must be cloud or local-bootstrap');
   const {FINANCE_DATASETS:D,datasetRequest}=await import(pathToFileURL(path.resolve(__dirname,'../cloudflare/finance/datasets.mjs')));
-  const {datasetWriteQueries}=await import(pathToFileURL(path.resolve(__dirname,'../cloudflare/finance/dataset-store.mjs')));
+  const {datasetWriteQueries,canonicalHistoryStatements}=await import(pathToFileURL(path.resolve(__dirname,'../cloudflare/finance/dataset-store.mjs')));
   const {handleFinance}=await import(pathToFileURL(path.resolve(__dirname,'../cloudflare/finance/gateway.mjs')));
   const {FINANCE_PROVIDERS:P}=await import(pathToFileURL(path.resolve(__dirname,'../cloudflare/finance/registry.mjs')));
   const ids=Object.keys(D).filter(id=>(!selected||id===selected)&&(mode!=='local-bootstrap'||
@@ -40,7 +40,8 @@ const sqlValue=value=>value===null?'NULL':typeof value==='number'?String(value):
         result={...result,status:response.ok&&body.ok?'PREPARED':'FAIL',http:response.status,error:body.error||null,diagnosis:body.diagnosis||null,upstreamStatus:body.upstreamStatus||null};
         if(result.status==='PREPARED'){
           const {queries,normalized}=datasetWriteQueries(id,body,'local-bootstrap');
-          const sql=queries.map(q=>q.sql.replace(/\?(\d+)/g,(_,n)=>sqlValue(q.params[Number(n)-1]))+';');
+          const history=canonicalHistoryStatements(id,normalized.rows,normalized.sourceHost,'local-bootstrap');
+          const sql=[...history.before,...queries,...history.after].map(q=>q.sql.replace(/\?(\d+)/g,(_,n)=>sqlValue(q.params[Number(n)-1]))+';');
           if(sql.some(s=>Buffer.byteLength(s)>99000))throw Error('dataset_sql_statement_too_large');
           statements.push(...sql);result.rows=normalized.rows.length;result.receivedAt=normalized.receivedAt;
           result.sourceHost=normalized.sourceHost;
