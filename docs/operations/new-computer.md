@@ -5,10 +5,27 @@
 1. 安装 Git 和 Node.js 24（本次使用 24.14.1；版本记录在根目录 .node-version）。
 2. 克隆 https://github.com/Feini2002/Bitcoin.git，进入仓库根目录。
 3. 执行 `npm ci --include=dev`，按 package-lock.json 安装完整开发依赖。无需全局安装 Vite、Playwright 或 Wrangler。
-4. 执行 `npm run dev:local`。Windows 也可双击 start-local-cloud.bat；依赖缺失时会按锁文件安装。
-5. 默认在本机 http://127.0.0.1:5173/index.html 打开页面。端口占用时以终端显示为准，Ctrl+C 结束。
+4. 执行 `npm run setup:browser` 安装测试使用的 Chromium。完整 build 包含浏览器检查，应先完成这一步；仅查看页面不依赖测试浏览器。
+5. 按下节恢复旧电脑私密配置，再执行 `npm run dev:local`。Windows 也可双击 start-local-cloud.bat；依赖缺失时会按锁文件安装。
+6. 默认在本机 http://127.0.0.1:5173/#/chart 打开页面。端口占用时以终端显示为准，Ctrl+C 结束。
 
-源码、页面壳和离线回归无需 API 密钥；真实行情、报告和模型调用取决于相应服务与凭据，克隆源码不会复制远程 D1 数据。
+源码、页面壳和离线回归无需 API 密钥；真实行情与报告读取依赖现有云端服务，网站模型执行已退役，不需要模型 Key。克隆源码不会复制远程 D1 数据；更换开发电脑也不会搬走或停止云端历史与采集。当前代码和接续方向见 [开发交接记录](development-handoff-2026-09-30.md)。
+
+## 桌面私密包恢复
+
+2026-09-30 交接使用桌面的 `BitDesk-PRIVATE-2026-09-30.zip` 和同名 SHA-256 文件。复制到新电脑后用 `Get-FileHash -Algorithm SHA256` 比较校验值，再解压到临时目录，按包内 `PRIVATE-RESTORE.md` 操作。压缩包未加密，不能上传 GitHub、Pages 或聊天。
+
+| 包内路径 | 放回新克隆的位置 |
+| --- | --- |
+| `project/.env` | 仓库根目录 `.env` |
+| `project/.codex/binance-egress-vps.local.md` | 同名本地出口机记录 |
+| `project/.codex/ssh/bitdesk_egress_ed25519` | 同名 SSH 私钥 |
+| `project/.codex/ssh/bitdesk_egress_ed25519.pub` | 同名 SSH 公钥 |
+| `legacy/BTC拷贝.zip` | 仅保存旧备份，不自动覆盖当前配置 |
+
+只合并上述私密文件，不覆盖已跟踪的 `.codex/skills/`。检查 `.env` 与本地出口记录中的绝对路径，尤其 `VPS_BINANCE_EGRESS_IDENTITY_FILE`，调整为新仓库的私钥位置。遇到现有不同配置先比较，不整目录覆盖。
+
+旧电脑 `.artifacts/migration-2026-09-30/` 中早先生成的 SOURCE 包早于读取性能修复，已不是当前交接版本；源码以本次推送后的 Git `main` 为准，不再叠加那个 SOURCE 包。
 
 ## 本地敏感配置
 
@@ -32,11 +49,11 @@
 
 ## 验证
 
+- `npm run setup:browser`：首次安装项目 Playwright 对应的 Chromium，不依赖机器上是否安装 Chrome；先于 build。
 - `npm run build`：离线回归和网站产物构建。
-- `npm run setup:browser`：安装项目 Playwright 对应的 Chromium，不依赖机器上是否安装 Chrome。
 - `npm run verify:dev`：开发服务器入口、API 地址注入和 .env 访问隔离。
 - `npm run verify:ui`：固定数据的桌面与移动界面流程。
-- `node scripts/verify-yuqing-cloud-ui.cjs`：舆情设置与报告流程固定数据验收。
+- `npm run verify:research-ui`：新版事件/舆情及历史报告兼容、复制、导出与预览验收。
 - `npm run verify:api`：额外的线上只读探测；网络或服务异常与离线构建结果分开记录。
 - 自动化长任务可用 `node scripts/run-bounded.cjs 180 npm run build`；该命令有内部截止并记录本次父子 PID。
 

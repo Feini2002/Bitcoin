@@ -7,6 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="btc.svg" />
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="styles.css?v=20260927-release1" />
+  <link rel="stylesheet" href="desk-ui.css?v=20260930-read1" />
 </head>
 <body>
   <div class="app">
@@ -17,7 +18,7 @@
         </div>
         <div>
           <div class="brand-name">Bit 交易决策平台</div>
-          <div class="brand-sub">Personal Futures Desk</div>
+          <div class="brand-sub">BITCOIN RESEARCH DESK</div>
         </div>
       </div>
       <nav class="nav" id="nav"></nav>
@@ -27,6 +28,7 @@
       <button class="btn mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-controls="primary-sidebar" aria-expanded="false">导航</button>
       <div class="breadcrumb" id="breadcrumb"></div>
       <div class="topbar-right">
+        <span class="desk-timezone">北京时间 · UTC+8</span>
         <div class="daily-clock-pill topbar-clock-pill" aria-live="polite" title="北京时间">
           <i class="ph ph-clock" aria-hidden="true"></i>
           <span id="nowTime">--:--:--</span>
@@ -41,35 +43,38 @@
 
   <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
   <script src="js/contracts/bit-contracts.js?v=20260927-release1"></script>
-  <script src="js/config.js?v=20260927-release1"></script>
+  <script src="js/config.js?v=20260929-research1"></script>
   <script src="js/utils.js?v=20260506-yuqing-delete-modal"></script>
   <script src="js/theme.js"></script>
-  <script src="js/data-engine.js?v=20260927-release1"></script>
+  <script src="js/data-engine.js?v=20260930-read2"></script>
   <script src="js/workbench-evidence.js?v=20260927-release1"></script>
-  <script src="js/orderflow/footprint-engine.js?v=20260927-release2"></script>
+  <script src="js/orderflow/footprint-engine.js?v=20260929-research1"></script>
   <script src="js/orderflow/footprint-canvas.js"></script>
   <script src="js/heatmap/liquidation-engine.js?v=20260927-release1"></script>
   <script src="js/heatmap/pressure-matrix.js?v=20260917-batch2b"></script>
-  <script src="js/features.js?v=20260927-release1"></script>
+  <script src="js/features.js?v=20260929-research1"></script>
   <script src="js/nav.js?v=20260916-govern1"></script>
   <script src="js/banners.js?v=20260916-govern1"></script>
   <script src="js/sparkline.js"></script>
   <script src="js/agent-views.js"></script>
-  <script src="js/placeholders.js?v=20260916-govern1"></script>
+  <script src="js/placeholders.js?v=20260929-research1"></script>
+  <script src="js/research-protocol.js?v=20260929-research1"></script>
+  <script src="js/research-desk.js?v=20260929-research1"></script>
   <script src="js/pages/overview.js?v=20260927-release1"></script>
+  <script src="js/pages/research-overview.js?v=20260929-research1"></script>
   <script src="js/chart/indicator-math.js?v=20260917-batch2b"></script>
   <script src="js/chart/indicator-panes.js?v=20260505-domain-refresh1"></script>
-  <script src="js/chart/mtf-tiles.js?v=20260927-release1"></script>
-  <script src="js/pages/chart.js?v=20260927-release1"></script>
-  <script src="js/pages/orderflow.js?v=20260927-release1"></script>
-  <script src="js/pages/heatmap.js?v=20260927-release1"></script>
-  <script src="js/pages/derivatives.js?v=20260927-release1"></script>
+  <script src="js/chart/mtf-tiles.js?v=20260930-read2"></script>
+  <script src="js/pages/chart.js?v=20260930-read2"></script>
+  <script src="js/pages/orderflow.js?v=20260929-research1"></script>
+  <script src="js/pages/heatmap.js?v=20260929-research1"></script>
+  <script src="js/pages/derivatives.js?v=20260929-research1"></script>
   <script src="js/pages/env-agent.js?v=20260916-govern1"></script>
   <script src="js/pages/boardroom.js?v=20260916-govern1"></script>
   <script src="js/pages/news.js?v=20260923-retire2"></script>
   <script src="js/pages/events.js?v=20260923-retire2"></script>
   <script src="js/pages/calc.js?v=20260916-govern1"></script>
-  <script src="js/pages/settings.js?v=20260923-retire2"></script>
-  <script src="js/app.js?v=20260927-release1"></script>
+  <script src="js/pages/settings.js?v=20260929-research1"></script>
+  <script src="js/app.js?v=20260929-research1"></script>
 </body>
 </html>

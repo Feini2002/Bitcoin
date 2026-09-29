@@ -24,6 +24,7 @@ function featureInfo(id) {
 function renderFeatureNotice(id) {
   const info = featureInfo(id);
   if (!info || id === "chart" || FEATURE_STATE_BY_ROUTE[id] === "local") return "";
+  if (FEATURE_STATE_BY_ROUTE[id] === "connected") return '<details class="feature-notice feature-notice--compact" data-testid="feature-notice"><summary>数据与使用说明</summary><div class="feature-notice-body"><span>' + info.note + '</span><a href="#/overview">研究总览</a></div></details>';
   return '<aside class="feature-notice" data-testid="feature-notice"><strong>' + info.label + '</strong><span>' + info.note + '</span><a href="#/overview">功能清单</a></aside>';
 }
 function renderDemoPreview(content) {

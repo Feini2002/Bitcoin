@@ -48,7 +48,7 @@ const { DatabaseSync } = require('node:sqlite');
   const db = new DatabaseSync(':memory:');
   try {
     db.exec('CREATE TABLE klines(symbol TEXT,interval TEXT,t INTEGER,o REAL,h REAL,l REAL,c REAL,v REAL,PRIMARY KEY(symbol,interval,t))');
-    const env={DB:{prepare(sql){return {bind(...args){return {run:async()=>({meta:db.prepare(sql).run(...args)})}}}},batch:async stmts=>Promise.all(stmts.map(s=>s.run()))}};
+    const env={DB:{prepare(sql){return {bind(...args){return {run:async()=>({meta:db.prepare(sql).run(...args)}),first:async()=>db.prepare(sql).get(...args)||null}}}},batch:async stmts=>Promise.all(stmts.map(s=>s.run()))}};
     const rows=Array.from({length:6005},(_,i)=>[i*600000,1,2,0,1,3]);
     await hooks.persistKlines(env,'BTCUSDT','5m',rows);
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM klines').get().n,6005);
@@ -60,5 +60,22 @@ const { DatabaseSync } = require('node:sqlite');
     await hooks.pruneKlinesCap(env,'BTCUSDT','5m');
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM klines').get().n,6000);
     console.log('PASS scheduled retention keeps exactly 6000 without scanning on every write');
+    const head=Date.parse('2023-09-19T00:00:00Z');
+    await hooks.persistKlines(env,'BTCUSDT','3d',[[head,100,110,90,105,10]]);
+    const native=[head-259200000,'101','111','91','106','123.5'];
+    let requestedInterval='';
+    global.fetch=async input=>{
+      requestedInterval=new URL(input).searchParams.get('interval');
+      return Response.json([native]);
+    };
+    try {
+      const extended=await hooks.extendKlineHistoryOnePage(env,'BTCUSDT','3d');
+      assert.equal(extended.ok,true);
+      assert.equal(requestedInterval,'3d');
+      assert.deepEqual({...db.prepare("SELECT t,o,h,l,c,v FROM klines WHERE interval='3d' ORDER BY t LIMIT 1").get()},
+        {t:native[0],o:101,h:111,l:91,c:106,v:123.5});
+      assert.equal(db.prepare("SELECT COUNT(*) n FROM klines WHERE interval='3d'").get().n,2);
+      console.log('PASS old 3d extension preserves native exchange times and OHLCV without daily reaggregation');
+    } finally { global.fetch=originalFetch; }
   } finally { db.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1});

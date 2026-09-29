@@ -13282,6 +13282,38 @@
       ]
     },
     {
+      "id": "LOCAL-AI-RESEARCH",
+      "path": "docs/research/ai-research-workflow.md",
+      "title": "AI 对话研究与网站报告工作流",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "适用：2026-09-29 起的 bitdesk.research.v1。网站不运行模型，不接收模型 API Key，不提供公网报告写入接口。旧模型生成端点继续返回 410。",
+      "bytes": 4147,
+      "headings": [
+        {
+          "title": "AI 对话研究与网站报告工作流",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "发起与完成",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "数据与分析契约",
+          "line": 14,
+          "level": 2
+        },
+        {
+          "title": "验证与维护",
+          "line": 23,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-BINANCE",
       "path": "docs/research/binance-connectivity-2026-09-16.md",
       "title": "币安连接诊断与修复（2026-09-16）",
@@ -13843,6 +13875,53 @@
       ]
     },
     {
+      "id": "docs/research/chart-read-performance-2026-09-30.md",
+      "path": "docs/research/chart-read-performance-2026-09-30.md",
+      "title": "行情切换与读取性能修复（2026-09-30）",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "用户继续要求优化读取策略。本轮修改前端共享读取层、行情页及多周期子图，沿用第一轮 Worker；不修改采集节奏、保留量、schema 或来源判断。",
+      "bytes": 10487,
+      "headings": [
+        {
+          "title": "行情切换与读取性能修复（2026-09-30）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "范围与契约",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "已核验的问题",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "实现",
+          "line": 18,
+          "level": 2
+        },
+        {
+          "title": "验证与观测",
+          "line": 29,
+          "level": 2
+        },
+        {
+          "title": "第二轮：读取调度、共享历史与失败退避",
+          "line": 42,
+          "level": 2
+        },
+        {
+          "title": "外部核验（2026-09-30）",
+          "line": 71,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-CHART",
       "path": "docs/research/chart-workbench-review-2026-09-16.md",
       "title": "行情工作台：数据口径与 K 线评估",
@@ -13985,8 +14064,8 @@
       "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
       "batch": "local",
       "authority": "high",
-      "summary": "实现是 scripts/cloud-control.cjs，维护模块是 cloudflare/btc-maintenance.mjs。恢复记录在 cloudflare/cloud-control-state.json，属于项目文件，只有账号/资源标识、版本、开关和绑定名称，没有变量值或密钥。每次实际开关会原子更新记录，…",
-      "bytes": 7311,
+      "summary": "最新状态（2026-09-29 05:24 UTC）：用户要求恢复后，三个 Worker 已恢复入口，BTC 每分钟 Cron 恢复，舆情与快照 Cron 仍为空。三服务健康检查和入库观察通过，恢复记录为 active；BTC 恢复点已更新为修复版 e8e58e2f-b4a3-4895-bc43-00ed4f1ee46…",
+      "bytes": 7831,
       "headings": [
         {
           "title": "云端开关：暂停与继续开发",
@@ -13995,27 +14074,27 @@
         },
         {
           "title": "直接这样说",
-          "line": 3,
+          "line": 5,
           "level": 2
         },
         {
           "title": "固定执行入口",
-          "line": 10,
+          "line": 12,
           "level": 2
         },
         {
           "title": "恢复范围与真实限制",
-          "line": 24,
+          "line": 26,
           "level": 2
         },
         {
           "title": "核验依据与查询日期",
-          "line": 36,
+          "line": 38,
           "level": 2
         },
         {
           "title": "本次验证边界",
-          "line": 46,
+          "line": 48,
           "level": 2
         }
       ]
@@ -14383,6 +14462,73 @@
       ]
     },
     {
+      "id": "LOCAL-RESEARCH-DESK",
+      "path": "docs/research/product-redesign-2026-09-29.md",
+      "title": "研究工作台重构：产品判断与实施记录",
+      "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
+      "batch": "local",
+      "authority": "high",
+      "summary": "用户于 2026-09-29 授权全站逐页审查、自主选择设计方向、重做事件与舆情模块，并明确以后由 AI 对话发起分析，不接模型 API Key。当前目标模式以实际实现、模块提示词、截图及行为验证、发布为完成条件。",
+      "bytes": 11746,
+      "headings": [
+        {
+          "title": "研究工作台重构：产品判断与实施记录",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "目标与依据",
+          "line": 3,
+          "level": 2
+        },
+        {
+          "title": "对抗审查",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "专业平台参考（查询 2026-09-29）",
+          "line": 17,
+          "level": 2
+        },
+        {
+          "title": "选择的设计与范围",
+          "line": 25,
+          "level": 2
+        },
+        {
+          "title": "验收",
+          "line": 36,
+          "level": 2
+        },
+        {
+          "title": "实施状态",
+          "line": 40,
+          "level": 2
+        },
+        {
+          "title": "模块逐项判断",
+          "line": 44,
+          "level": 3
+        },
+        {
+          "title": "逐页审查与修复",
+          "line": 63,
+          "level": 3
+        },
+        {
+          "title": "已通过的专项验证",
+          "line": 73,
+          "level": 3
+        },
+        {
+          "title": "发布读回",
+          "line": 83,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-ARCHITECTURE",
       "path": "docs/research/repository-architecture-review-2026-09-27.md",
       "title": "仓库架构核对与治理记录",
@@ -14452,7 +14598,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "更新日期：2026-09-27（北京时间）。这是当前开发调度入口；架构核对保存依据，第二批旧总任务和执行日志只用于追溯，不再并行安排工作。",
-      "bytes": 35088,
+      "bytes": 40684,
       "headings": [
         {
           "title": "当前开发方案：四页数据工作台",
@@ -14461,68 +14607,78 @@
         },
         {
           "title": "1. 目标与保留的架构",
-          "line": 11,
+          "line": 15,
           "level": 2
         },
         {
           "title": "2. 本轮治理与下一任务",
-          "line": 21,
+          "line": 25,
           "level": 2
         },
         {
           "title": "开工顺序与完成界线",
-          "line": 35,
+          "line": 39,
           "level": 3
         },
         {
           "title": "3. W1：历史来源、时间与覆盖",
-          "line": 51,
+          "line": 55,
           "level": 2
         },
         {
           "title": "W1 的接口与数据规则",
-          "line": 65,
+          "line": 69,
           "level": 3
         },
         {
           "title": "W1 的修订与查询验收",
-          "line": 84,
+          "line": 88,
           "level": 3
         },
         {
           "title": "4. W2：已有数据真正上屏",
-          "line": 112,
+          "line": 116,
           "level": 2
         },
         {
           "title": "5. W3：窗口、切换与生命周期",
-          "line": 130,
+          "line": 134,
           "level": 2
         },
         {
           "title": "6. W4：同一事实的导出与交接",
-          "line": 145,
+          "line": 149,
           "level": 2
         },
         {
           "title": "验收落点（已实施；新增审查回归与原用例一起维护）",
-          "line": 162,
+          "line": 166,
           "level": 3
         },
         {
           "title": "7. 云端恢复、发布与验收的顺序",
-          "line": 178,
+          "line": 182,
           "level": 2
         },
         {
           "title": "8. 暂缓事项与重新触发条件",
-          "line": 188,
+          "line": 192,
           "level": 2
         },
         {
           "title": "9. 收口记录（2026-09-27）",
-          "line": 197,
+          "line": 201,
           "level": 2
+        },
+        {
+          "title": "2026-09-29 恢复与停机历史核验",
+          "line": 215,
+          "level": 3
+        },
+        {
+          "title": "2026-09-29 持续采集复核收口（更新上述初次恢复记录）",
+          "line": 226,
+          "level": 3
         }
       ]
     },
@@ -14751,6 +14907,53 @@
         {
           "title": "本轮实际交付与验收（2026-09-16 北京时间）",
           "line": 164,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/workbench-recovery-2026-09-29.md",
+      "path": "docs/research/workbench-recovery-2026-09-29.md",
+      "title": "四页恢复与持续采集核验（2026-09-29）",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "本轮目标：恢复停机历史，确认四页真实采集推进；沿用 Cloudflare、D1、东京出口和现有单常驻对象。操作获用户恢复云端、补齐历史及本轮核验授权。本文记录实测，不承诺长期无故障。",
+      "bytes": 8774,
+      "headings": [
+        {
+          "title": "四页恢复与持续采集核验（2026-09-29）",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "依据与核验事实",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "修复",
+          "line": 12,
+          "level": 2
+        },
+        {
+          "title": "验证与恢复点",
+          "line": 22,
+          "level": 2
+        },
+        {
+          "title": "限制与下一步",
+          "line": 30,
+          "level": 2
+        },
+        {
+          "title": "最终实测（05:19–05:24 UTC）",
+          "line": 34,
+          "level": 2
+        },
+        {
+          "title": "Pages 发布读回（05:27 UTC）",
+          "line": 45,
           "level": 2
         }
       ]

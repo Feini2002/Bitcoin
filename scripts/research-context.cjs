@@ -130,7 +130,9 @@ function localMeta(repoPath) {
     'cloudflare-governance-correctness-2026-09-26.md': 'LOCAL-COST-CORRECTNESS',
     'cloudflare-pause-resume-2026-09-27.md': 'LOCAL-CLOUD-CONTROL',
     'repository-architecture-review-2026-09-27.md': 'LOCAL-ARCHITECTURE',
-    'repository-development-plan-2026-09-27.md': 'LOCAL-NEXT'
+    'repository-development-plan-2026-09-27.md': 'LOCAL-NEXT',
+    'product-redesign-2026-09-29.md': 'LOCAL-RESEARCH-DESK',
+    'ai-research-workflow.md': 'LOCAL-AI-RESEARCH'
   };
   return ids[name] ? { id: ids[name], role: '本仓库本地核验记录（权威最高，但仅代表核验当时）' } : null;
 }

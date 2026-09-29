@@ -104,6 +104,8 @@ assert.equal(recovered.gaps[0].reason, 'incomplete_aggregation');
 pass('orderflow retained bars carry a stream failure and recover without masking aggregation gaps');
 
 async function checkChartPoll() {
+  chart.chartPollNextAttemptAt = 0;
+  chart.chartPollFailures = 0;
   chart.lwChart = {};
   chart.document = { hidden: false, getElementById: () => ({}) };
   chart.chartLoadGen = 1;
@@ -118,13 +120,14 @@ async function checkChartPoll() {
   await new Promise(setImmediate);
   const failed = chart.evidence.capture().pages.chart;
   assert.equal(failed.stale, true);
-  assert.equal(failed.failure.message, 'fixture: tail unavailable');
+  assert.equal(failed.failure.message, 'fixture: tail unavailable · 保留历史，2 秒后重试');
   assert.equal(failed.readAt, previous.readAt);
   assert.deepEqual(plain(failed.series), previous.series);
   assert.equal(chart.chartD1PollInFlight, false);
   pass('actual chart poll rejection marks retained export stale without inventing a new data read');
 
   chart.publishChartEvidence(null);
+  chart.chartPollNextAttemptAt = 0; // A deliberate visible/manual retry starts a new attempt.
   let rejectOld;
   chart.readChartD1Klines = () => new Promise((_resolve, reject) => { rejectOld = reject; });
   chart.queueD1Poll();
@@ -171,7 +174,7 @@ async function checkMtf() {
     calls.push({ phase, ...options });
     const initial = phase === 'initial';
     return {
-      pricePathAvailable: true, historyRevision: initial ? 1 : 2,
+      pricePathAvailable: true, historyRevision: initial ? 1 : 2, coverageScope: options.tail ? 'tail' : 'window',
       series: initial ? [bar(0, 10), bar(3600000, 20), bar(7200000, 30)]
         : options.tail ? [bar(7200000, 31)] : [bar(0, 99), bar(7200000, 31)],
     };
@@ -195,7 +198,7 @@ async function checkMtf() {
   pass('each same-interval tile rereads its own revision exactly once, deleting removed historical bars');
 
   const retained = plain(a.rendered);
-  engine.fetchDesk = async () => ({ pricePathAvailable: true, historyRevision: 1, series: [bar(7200000, 5)] });
+  engine.fetchDesk = async () => ({ pricePathAvailable: true, historyRevision: 1, coverageScope: 'tail', series: [bar(7200000, 5)] });
   await ctrl._loadTile(0);
   assert.deepEqual(a.rendered, retained);
   assert.equal(a.confirmedHistoryRevision, 2);
@@ -204,7 +207,7 @@ async function checkMtf() {
   let retryCalls = 0;
   engine.fetchDesk = async (_page, options) => {
     retryCalls += 1;
-    return { pricePathAvailable: true, historyRevision: options.tail ? 3 : 2, series: [bar(7200000, 32)] };
+    return { pricePathAvailable: true, historyRevision: options.tail ? 3 : 2, coverageScope: options.tail ? 'tail' : 'window', series: [bar(7200000, 32)] };
   };
   await ctrl._loadTile(0);
   assert.equal(a.confirmedHistoryRevision, 2);

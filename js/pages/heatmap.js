@@ -46,8 +46,8 @@ function readHeatmapState() {
     const raw = localStorage.getItem(HEATMAP_STATE_KEY);
     if (!raw) return d;
     const parsed = JSON.parse(raw);
-    const allowedWindows = ["5m", "15m", "60m", "24h", "all"];
-    const savedWindow = allowedWindows.includes(parsed.window) ? parsed.window : d.window;
+    const allowedWindows = ["7d", "24h", "all"];
+    const savedWindow = allowedWindows.includes(parsed.window) ? parsed.window : ["5m","15m","60m"].includes(parsed.window) ? "7d" : d.window;
     const legacyDefaultWindow =
       parsed.version == null &&
       (parsed.window == null || parsed.window === "15m");
@@ -105,6 +105,7 @@ function heatmapWindowMs(windowValue) {
   if (windowValue === "15m") return 15 * 60 * 1000;
   if (windowValue === "60m") return 60 * 60 * 1000;
   if (windowValue === "24h") return 24 * 60 * 60 * 1000;
+  if (windowValue === "7d") return 7 * 24 * 60 * 60 * 1000;
   return 0;
 }
 
@@ -113,6 +114,7 @@ function heatmapWindowLabel(windowValue) {
   if (windowValue === "15m") return "15 分钟";
   if (windowValue === "60m") return "60 分钟";
   if (windowValue === "24h") return "24 小时";
+  if (windowValue === "7d") return "7 天";
   return "30天 D1";
 }
 
@@ -156,14 +158,13 @@ function pageHeatmap() {
     .map((v) => `<option value="${v}" ${v === state.bucketSize ? "selected" : ""}>${v} USDT</option>`)
     .join("");
   const windowOptions = [
-    ["5m", "5 分钟"],
-    ["15m", "15 分钟"],
-    ["60m", "60 分钟"],
     ["24h", "24 小时"],
-    ["all", "30天 D1"],
+    ["7d", "7 天"],
+    ["all", "30 天"],
   ].map(([v, label]) => `<option value="${v}" ${v === state.window ? "selected" : ""}>${label}</option>`).join("");
 
   return html`
+    <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">REALIZED LIQUIDATIONS</div><h1>强平雷达</h1><p>看已经发生的强平，按交易所分别核对金额、时间与覆盖。</p></div><a class="btn" href="#/news-analysis">检验杠杆叙事 ↗</a></header>
     <section class="heatmap-status-strip" aria-label="强平雷达状态">
       <div class="heatmap-status-main">
         <span class="heatmap-feed-dot" aria-hidden="true"></span>
@@ -193,15 +194,15 @@ function pageHeatmap() {
         <strong>${HEATMAP_SYMBOL}</strong>
       </label>
       <label class="heatmap-field">
-        <span>价位桶</span>
-        <select id="hm-bucket-size">${bucketOptions}</select>
+        <span>时间精度</span>
+        <strong title="云端保留 5 分钟强平桶，不能重建每个价格档位">5 分钟桶</strong>
       </label>
       <label class="heatmap-field">
         <span>窗口</span>
         <select id="hm-window">${windowOptions}</select>
       </label>
       <label class="heatmap-field">
-        <span>最小金额</span>
+        <span>下表最小桶金额</span>
         <input type="number" min="0" step="1000" id="hm-min-notional" value="${state.minNotional}" />
       </label>
       <button type="button" class="btn" data-workbench-export>导出已显示证据</button>
@@ -272,7 +273,7 @@ function pageHeatmap() {
       <section class="heatmap-panel">
         <div class="heatmap-panel-head">
           <div>
-            <div class="card-title">强平价位聚合</div>
+            <div class="card-title">分所强平记录</div>
             <div class="heatmap-panel-sub" id="hm-range-label">等待 desk 分所桶</div>
           </div>
           <div class="heatmap-legend">
@@ -709,9 +710,16 @@ function renderHeatmapBuckets(snapshot) {
   wrap.innerHTML = venues.map((ex) => {
     const g = by[ex];
     const title = ex === "unknown" ? "未知来源（不得写成 Binance）" : ex;
-    return `<div class="heatmap-venue-block"><h3>${hmEsc(title)}</h3>
-      <p>多 ${fmtHmMoney(g.longNotional)} · 空 ${fmtHmMoney(g.shortNotional)} · ${Array.isArray(g.buckets) ? g.buckets.length : 0} 个 5m 桶</p></div>`;
+    const rows = hmDisplayedBuckets(g);
+    const total = (Number(g.longNotional)||0)+(Number(g.shortNotional)||0);
+    const share = total>0 ? (Number(g.longNotional)||0)/total*100 : 0;
+    return `<div class="heatmap-venue-block"><header><h3>${hmEsc(title)}</h3><span>窗口内 ${Array.isArray(g.buckets) ? g.buckets.length : 0} 个 5m 桶</span></header><div class="hm-venue-totals"><div><span>多头被强平</span><strong>${fmtHmMoney(g.longNotional)}</strong></div><div><span>空头被强平</span><strong>${fmtHmMoney(g.shortNotional)}</strong></div></div><div class="hm-side-bar" aria-label="本所多头强平金额占比 ${share.toFixed(1)}%"><i style="width:${share}%"></i></div><p>下表为筛选后最近 ${rows.length} 个桶（最多 12 个），不改变窗口汇总。金额单位 USDT。</p><div class="rd-table-scroll"><table class="rd-table"><thead><tr><th>北京时间</th><th>多头强平</th><th>空头强平</th><th>观察价区间</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${hmEsc(fmtHmStamp(new Date(Number(row.bucket_start)).toISOString()))}</td><td>${fmtHmMoney(row.long_notional)}</td><td>${fmtHmMoney(row.short_notional)}</td><td>${fmtHmPrice(row.min_price)}–${fmtHmPrice(row.max_price)}</td></tr>`).join('')||'<tr><td colspan="4">没有匹配的已观察桶；不表示没有强平。</td></tr>'}</tbody></table></div></div>`;
   }).join("");
+}
+
+function hmDisplayedBuckets(group) {
+  const minimum=currentHeatmapStateFromDom().minNotional;
+  return (group.buckets||[]).filter(row=>Number.isFinite(Number(row.bucket_start))&&Number(row.bucket_start)>0&&(Number(row.long_notional)||0)+(Number(row.short_notional)||0)>=minimum).slice().sort((a,b)=>Number(b.bucket_start)-Number(a.bucket_start)).slice(0,12);
 }
 
 function hmSourceLabel(exchange) {
@@ -925,13 +933,14 @@ function publishHeatmapEvidence() {
       longNotional: Number(group.longNotional) || 0,
       shortNotional: Number(group.shortNotional) || 0,
       bucketCount: Array.isArray(group.buckets) ? group.buckets.length : 0,
+      displayedBuckets: hmDisplayedBuckets(group),
     };
   });
   WorkbenchEvidence.commitDisplayed("heatmap", {
     displayedAt: new Date().toISOString(),
     readAt: desk.asOf || null,
     asOf: desk.asOf || null,
-    parameters: { symbol: HEATMAP_SYMBOL, range, window: desk._window || null },
+    parameters: { symbol: HEATMAP_SYMBOL, range, window: desk._window || null, minimumBucketNotional: currentHeatmapStateFromDom().minNotional },
     contentRevision: desk.inputRevision || null,
     units: desk.units || { notional: "USDT" },
     buckets,

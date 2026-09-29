@@ -227,6 +227,7 @@ async function openPage(origin, prepare) {
     if (url.pathname === "/api/desk/heatmap") {
       state.counts.heatmap += 1;
       const range = url.searchParams.get("range") || "24h";
+      state.lastHeatmapRange = range;
       if (state.mode === "heat-hold") {
         state.held.push({ kind: "heatmap", range, route });
         return;
@@ -392,8 +393,8 @@ async function runDerivatives(origin) {
   console.log("PASS WB-11 derivatives hidden pauses requests");
 
   const left = state.counts.context;
-  await page.evaluate(() => { location.hash = "#/overview"; });
-  await expect(page.getByRole("heading", { name: "功能清单", exact: true })).toBeVisible();
+  await page.evaluate(() => { location.hash = "#/archive"; });
+  await expect(page.getByRole("heading", { name: "发言历史库", exact: true })).toBeVisible();
   await page.clock.runFor(20000);
   if (state.counts.context !== left) throw new Error("left derivatives page kept polling");
   console.log("PASS WB-10 derivatives leave stops requests");
@@ -466,9 +467,30 @@ async function runHeatmap(origin) {
   await page.setViewportSize({ width: 390, height: 800 });
   const heatmapNarrow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   if (heatmapNarrow > 1) throw new Error("WB-12 heatmap horizontal overflow " + heatmapNarrow);
+  const clippedVenue = await page.locator(".heatmap-venue-block").evaluateAll(elements => elements.some(el => el.getBoundingClientRect().right > innerWidth + 1));
+  if (clippedVenue) throw new Error("liquidation venue summary is clipped on mobile");
+  const tableScroll = page.locator(".heatmap-venue-block .rd-table-scroll").first();
+  await tableScroll.evaluate(el => { el.scrollLeft = el.scrollWidth; });
+  if (await tableScroll.evaluate(el => el.scrollLeft <= 0)) throw new Error("mobile liquidation table cannot scroll to its last column");
   await page.setViewportSize({ width: 1440, height: 1000 });
   console.log("PASS WB-12 heatmap 390 width");
   console.log("PASS WB-08 liquidation stays split by venue");
+
+  await page.locator("#hm-window").selectOption("7d");
+  await expect.poll(() => state.lastHeatmapRange).toBe("7d");
+  await expect(page.locator("#hm-status")).toContainText("范围 7d");
+  await page.locator("#hm-min-notional").fill("300000");
+  await expect(page.locator(".heatmap-venue-block tbody")).toContainText("没有匹配");
+  await expect(page.locator("#hm-kpi-binance")).toContainText("$222.0K");
+  const [filteredDownload] = await Promise.all([page.waitForEvent("download"), page.locator("[data-workbench-export]").click()]);
+  const filteredEvidence = JSON.parse(fs.readFileSync(await filteredDownload.path(), "utf8")).pages.heatmap;
+  if (filteredEvidence.parameters.range !== "7d" || filteredEvidence.parameters.minimumBucketNotional !== 300000
+    || filteredEvidence.buckets.find(row => row.exchange === "binance").displayedBuckets.length !== 0) throw new Error("filtered liquidation export differs from displayed rows");
+  await page.locator("#hm-min-notional").fill("0");
+  await expect(page.locator(".heatmap-venue-block tbody")).toContainText("$222.0K");
+  await page.locator("#hm-window").selectOption("24h");
+  await expect(page.locator("#hm-status")).toContainText("范围 24h");
+  console.log("PASS research liquidation 7d query, minimum filter, unchanged totals and filtered export");
 
   await page.evaluate(() => {
     window.__testHidden = false;
@@ -489,8 +511,8 @@ async function runHeatmap(origin) {
   console.log("PASS WB-11 heatmap hidden pauses requests");
 
   const left = state.counts.heatmap;
-  await page.evaluate(() => { location.hash = "#/overview"; });
-  await expect(page.getByRole("heading", { name: "功能清单", exact: true })).toBeVisible();
+  await page.evaluate(() => { location.hash = "#/archive"; });
+  await expect(page.getByRole("heading", { name: "发言历史库", exact: true })).toBeVisible();
   await page.clock.runFor(12000);
   if (state.counts.heatmap !== left) throw new Error("left heatmap kept requesting");
   console.log("PASS WB-10 heatmap leave stops requests");
@@ -545,8 +567,8 @@ async function runOrderflow(origin) {
   console.log("PASS WB-08 broken footprint ignores unmarked cache and the period control stays usable");
 
   state.mode = "order-incomplete";
-  await page.evaluate(() => { location.hash = "#/overview"; });
-  await expect(page.getByRole("heading", { name: "功能清单", exact: true })).toBeVisible();
+  await page.evaluate(() => { location.hash = "#/archive"; });
+  await expect(page.getByRole("heading", { name: "发言历史库", exact: true })).toBeVisible();
   await page.evaluate(() => { location.hash = "#/orderflow"; });
   await expect(page.locator("#of-status")).toContainText("不完整");
   await expect(page.locator("#of-status")).toContainText("组成 2/3");
@@ -589,8 +611,8 @@ async function runOrderflow(origin) {
   console.log("PASS WB-11 orderflow hidden pauses requests");
 
   const left = state.counts.orderflow;
-  await page.evaluate(() => { location.hash = "#/overview"; });
-  await expect(page.getByRole("heading", { name: "功能清单", exact: true })).toBeVisible();
+  await page.evaluate(() => { location.hash = "#/archive"; });
+  await expect(page.getByRole("heading", { name: "发言历史库", exact: true })).toBeVisible();
   await page.clock.runFor(12000);
   if (state.counts.orderflow !== left) throw new Error("left orderflow kept requesting");
   console.log("PASS WB-10 orderflow leave stops requests");

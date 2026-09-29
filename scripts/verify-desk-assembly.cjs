@@ -5,8 +5,13 @@ const { pathToFileURL } = require('node:url');
 const root = path.resolve(__dirname, '..');
 
 (async () => {
-  const { klineAuthority, buildChartDesk, buildContextDesk, buildHeatmapDesk, DESK_SCHEMA_VERSION, binanceHostOk, handleDesk } =
+  const { klineAuthority, buildChartDesk, buildContextDesk, buildHeatmapDesk, finishChartDesk, DESK_SCHEMA_VERSION, binanceHostOk, handleDesk } =
     await import(pathToFileURL(path.join(root, 'cloudflare/finance/desk.mjs')));
+  const oldThree=Date.parse('2023-08-08T00:00:00Z');
+  const oldThreeBars=[0,1,2].map(i=>({t:oldThree+i*259200000,o:100,h:110,l:90,c:105,v:1}));
+  assert.equal(finishChartDesk({interval:'3d',series:oldThreeBars}).coverage.inWindowGaps.length,0);
+  assert.equal(finishChartDesk({interval:'3d',series:[oldThreeBars[0],oldThreeBars[2]]}).coverage.inWindowGaps.length,1);
+  console.log('PASS native historical 3d anchor stays continuous while a real missing bar remains a gap');
   const now = Date.parse('2026-09-21T02:00:00.000Z');
   const stale = {
     ok: true,
@@ -95,6 +100,10 @@ const root = path.resolve(__dirname, '..');
     const delayed=structuredClone(oldCollection);
     delayed['binance-perp-premium'].state.last_success_received_at=new Date(contextNow-visibleDelay).toISOString();
     delayed['binance-perp-premium'].observations[0].observedAt=new Date(contextNow-visibleDelay).toISOString();
+    // Summary's 5s collection flag must not override the desk's existing 10s
+    // availability clock; this mirrors the real summary rather than a bare mock.
+    delayed['binance-perp-premium'].collectionStale=true;
+    delayed['binance-perp-premium'].sourceStale=visibleDelay>10000;
     delayed['binance-perp-basis'].state.last_success_received_at='2026-09-26T13:39:05.811Z';
     contractDesk=buildContextDesk(delayed,contextNow);
     assert.equal(contractDesk.contract.unavailable,false);

@@ -171,6 +171,7 @@ function pageOrderflow() {
 
   return html`
     <section class="orderflow-desk">
+      <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">ORDER FLOW</div><h1>订单流与足迹</h1><p>观察主动成交在哪些价位聚集，区分量的方向与价格的响应。</p></div><a class="btn" href="#/news-analysis">复核市场叙事 ↗</a></header>
       <div id="orderflow-empty-desk" class="desk-halt-overlay" hidden>
         <div class="desk-halt-card">
           <strong>足迹停机</strong>

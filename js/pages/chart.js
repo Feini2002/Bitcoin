@@ -6,9 +6,38 @@ let chartWindowGapCount = null;
 let chartCommittedIdentity = null;
 let chartReadAbort = null;
 let chartPollAbort = null;
+let chartPollFailures = 0;
+let chartPollNextAttemptAt = 0;
 let chartHistoryReread = { inFlight: false, again: false, failures: 0, nextAttemptAt: 0, converged: false };
 const CHART_HISTORY_REREAD_BASE_MS = 5000;
 const CHART_HISTORY_REREAD_MAX_MS = 60000;
+let chartRecoveryTimer = null;
+let chartRecoveryHandler = null;
+let chartRecoveryFailures = 0;
+function clearChartRecovery() {
+  clearTimeout(chartRecoveryTimer);
+  chartRecoveryTimer = null;
+  if (chartRecoveryHandler) document.removeEventListener("visibilitychange", chartRecoveryHandler);
+  chartRecoveryHandler = null;
+}
+function scheduleChartRecovery(symbol, interval, gen) {
+  clearChartRecovery();
+  const delay = Math.min(60000, 3000 * Math.pow(2, Math.min(5, chartRecoveryFailures++)));
+  const arm = () => {
+    clearTimeout(chartRecoveryTimer);
+    if (document.hidden || !chartPageStillCurrent(gen, symbol, interval)) return;
+    chartRecoveryTimer = setTimeout(() => {
+      if (!document.hidden && chartPageStillCurrent(gen, symbol, interval)) {
+        void loadChartData(symbol, interval, { recovery: true, skipAutoSync: true });
+      }
+    }, delay);
+  };
+  chartRecoveryHandler = arm;
+  document.addEventListener("visibilitychange", arm);
+  arm();
+  const status = document.getElementById("chart-status");
+  if (status) status.textContent += ' · ' + Math.round(delay / 1000) + ' 秒后自动重试';
+}
 
 function chartReadSignal(extra) {
   const ctrl = new AbortController();
@@ -41,6 +70,8 @@ async function readChartD1Klines(symbol, interval, limit, opts = {}) {
       from: opts.from,
       to: opts.to,
       knownAt: opts.knownAt,
+      fresh: opts.fresh,
+      priority: opts.priority,
       signal: linked.ctrl.signal,
     });
     const series = desk && desk.pricePathAvailable === true && Array.isArray(desk.series) ? desk.series : [];
@@ -50,6 +81,24 @@ async function readChartD1Klines(symbol, interval, limit, opts = {}) {
   } finally {
     linked.release();
   }
+}
+
+async function readChartSwitchWindow(symbol, interval, forceFull, opts = {}) {
+  const cached = !forceFull && typeof DataEngine.peekChartWindow === 'function'
+    ? DataEngine.peekChartWindow(symbol, interval) : null;
+  if (cached && cached.historyRevision != null && cached.series?.length) {
+    const tail = await readChartD1Klines(symbol, interval, CHART_D1_POLL_LIMIT, { tail: CHART_D1_POLL_LIMIT, fresh: true, priority: opts.priority });
+    const desk = tail.desk;
+    const last = Number(cached.series[cached.series.length - 1].t);
+    // Only a fresh, matching, overlapping tail can validate the retained history.
+    if (desk.pricePathAvailable === true && desk.coverageScope === 'tail' && desk.historyRevision != null
+        && deskRevision(desk) === deskRevision(cached) && desk.instrumentId === cached.instrumentId
+        && tail.rows.length && Number(tail.rows[0].t) <= last && Number(tail.rows[tail.rows.length - 1].t) >= last
+        && !responseStale(symbol, interval, deskRevision(desk), 'full')) {
+      return { desk: cached, rows: cached.series, symbol, interval, freshTail: tail };
+    }
+  }
+  return readChartD1Klines(symbol, interval, 6000, { fresh: true, priority: opts.priority });
 }
 /* =======================================================
    行情工作台
@@ -253,16 +302,18 @@ function chartPricePathOpen() {
   return !!(chartDeskPayload && chartDeskPayload.pricePathAvailable === true && Array.isArray(chartOhlcv) && chartOhlcv.length);
 }
 
-function setChartDeskHalt(halted, reason) {
+function setChartDeskHalt(halted, reason, loading = false) {
   const desk = document.querySelector(".chart-desk");
   const overlay = document.getElementById("chart-empty-desk");
   if (desk) desk.classList.toggle("halted", !!halted);
   if (overlay) {
     overlay.hidden = !halted;
+    const title = overlay.querySelector('strong');
+    if (title) title.textContent = loading ? '正在读取行情' : '行情暂时读取失败';
     const reasonEl = overlay.querySelector(".desk-halt-reason");
     if (reasonEl) reasonEl.textContent = reason || "币安主源未恢复，主图不可当作行情使用。";
   }
-  document.querySelectorAll(".tf-btn, .chart-sync-btn, #mtf-toggle, .chart-indicator-panel input, .chart-indicator-panel select, .chart-indicator-panel button").forEach((el) => {
+  document.querySelectorAll(".chart-sync-btn, #mtf-toggle, .chart-indicator-panel input, .chart-indicator-panel select, .chart-indicator-panel button").forEach((el) => {
     if (el) el.disabled = !!halted;
   });
   window.__bitDeskChartPricePathAvailable = !halted;
@@ -452,7 +503,7 @@ function updateChartKeyLevelPanel(analysis) {
   const rangeText = rcOk ? `${fmtChartLevelPrice(rc.lower)} - ${fmtChartLevelPrice(rc.upper)}` : "--";
   const rangePos = rc && Number.isFinite(Number(rc.positionPct)) ? `${Number(rc.positionPct).toFixed(0)}%` : "--";
   const rangeNote = rc
-    ? `${rc.sampleBars || 0}/${rc.windowBars || "--"} 根 · ${rc.sampleState || ""} · 置信 ${Number.isFinite(Number(rc.confidence)) ? Number(rc.confidence).toFixed(2) : "--"} · 位置 ${rangePos}`
+    ? `${rc.sampleBars || 0}/${rc.windowBars || "--"} 根 · ${rc.sampleState || ""} · 规则分 ${Number.isFinite(Number(rc.confidence)) ? Number(rc.confidence).toFixed(2) : "--"}（非概率） · 位置 ${rangePos}`
     : "";
   const near = analysis.nearContext || {};
   const pressure = near.resistance || (analysis.resistance && analysis.resistance[0]) || null;
@@ -724,12 +775,15 @@ async function loadHigherChartStructure(baseAnalysis, requestId, atrPeriod) {
   }
   let pending = chartHigherStructureInFlight.get(cacheKey);
   if (!pending) {
-    pending = readChartD1Klines(CHART_SYMBOL, higherInterval, 6000, { sync: "0" })
+    pending = readChartSwitchWindow(CHART_SYMBOL, higherInterval, false, { priority: 'background' })
       .then((read) => {
+        const rows = read.freshTail
+          ? mergeDeskRows(read.rows, read.freshTail.rows, read.freshTail.desk.returnedRange || null)
+          : read.rows;
         const pack = {
-          analysis: computeChartStructureFromRows(read.rows, higherInterval, atrPeriod),
+          analysis: computeChartStructureFromRows(rows, higherInterval, atrPeriod),
           desk: read.desk,
-          rows: read.rows,
+          rows,
           interval: higherInterval,
         };
         chartHigherStructureCache.set(cacheKey, { ts: Date.now(), pack });
@@ -1220,12 +1274,14 @@ function pageChart() {
         </div>`).join("");
 
   return html`
+    <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">MARKET STRUCTURE</div><h1>行情工作台</h1><p>先核对价格路径与时间连续性，再阅读指标和结构。</p></div><a class="btn" href="#/news-analysis">带着证据分析 ↗</a></header>
     <div class="chart-desk">
       <div id="chart-empty-desk" class="desk-halt-overlay" hidden>
         <div class="desk-halt-card">
-          <strong>主图停机</strong>
+          <strong>行情暂时读取失败</strong>
           <p class="desk-halt-reason">币安主源未恢复，主图不可当作行情使用。</p>
-          <p>周期、指标、多周期和结构线均不可当行情用。WebSocket OPEN 不等于实时。</p>
+          <p>读取恢复前暂停分析；这不代表云端停机或历史数据被删除。</p>
+          <button type="button" class="btn" id="chart-read-retry">重新读取行情</button>
         </div>
       </div>
       <div class="chart-toolbar">
@@ -1238,7 +1294,7 @@ function pageChart() {
           <button type="button" class="btn chart-sync-btn" id="chart-cloud-sync" data-manual-hint="触发 Worker 同步当前周期 D1，然后重新读取 Cloudflare D1。"
             title="触发 Worker 同步当前周期 D1，然后重新读取 Cloudflare D1。">
             <i class="ph ph-arrow-clockwise"></i>
-            <span>同步D1</span>
+            <span>同步旧版 K 线</span>
           </button>
         </div>
       </div>
@@ -1286,6 +1342,7 @@ function pageChart() {
 }
 
 function disposeChartPage() {
+  clearChartRecovery();
   if (chartReadAbort) chartReadAbort.abort();
   if (chartPollAbort) chartPollAbort.abort();
   chartPollAbort = null;
@@ -1469,6 +1526,8 @@ function initChart() {
     });
   }
 
+  const retryBtn = document.getElementById("chart-read-retry");
+  if (retryBtn) retryBtn.onclick = () => void loadChartData(CHART_SYMBOL, currentInterval, { skipAutoSync: true });
   const syncBtn = document.getElementById("chart-cloud-sync");
   if (syncBtn && !syncBtn.dataset.bound) {
     syncBtn.dataset.bound = "1";
@@ -1480,7 +1539,7 @@ function initChart() {
       try {
         await triggerChartD1Sync(CHART_SYMBOL, interval, "manual");
         if (interval === currentInterval) {
-          await loadChartData(CHART_SYMBOL, interval, { skipAutoSync: true });
+          await loadChartData(CHART_SYMBOL, interval, { skipAutoSync: true, forceFull: true });
         }
       } catch (e) {
         if (statusEl) statusEl.textContent = "同步失败: " + (e && e.message ? e.message : e);
@@ -2030,6 +2089,7 @@ async function runChartHistoryReread(symbol, interval, gen) {
     }
   } catch (error) {
     if (error && error.name === "AbortError") return;
+    if (!chartPageStillCurrent(gen, symbol, interval)) return;
     chartHistoryReread.failures += 1;
     const delay = Math.min(
       CHART_HISTORY_REREAD_MAX_MS,
@@ -2040,15 +2100,19 @@ async function runChartHistoryReread(symbol, interval, gen) {
       renderChartEvidence(symbol, interval, { failure: error && error.message ? error.message : "历史窗口重读失败" });
     }
   } finally {
-    const again = chartHistoryReread.again === true && chartHistoryReread.converged !== true;
-    chartHistoryReread.inFlight = false;
-    chartHistoryReread.again = false;
-    if (again && chartPageStillCurrent(gen, symbol, interval)) {
-      chartHistoryReread.converged = true;
-      chartHistoryReread.nextAttemptAt = 0;
-      void runChartHistoryReread(symbol, interval, gen);
-    } else {
-      chartHistoryReread.converged = false;
+    // An aborted old period can settle after a new period has started its own
+    // history read. Only the current owner may release that read's state.
+    if (chartPageStillCurrent(gen, symbol, interval)) {
+      const again = chartHistoryReread.again === true && chartHistoryReread.converged !== true;
+      chartHistoryReread.inFlight = false;
+      chartHistoryReread.again = false;
+      if (again) {
+        chartHistoryReread.converged = true;
+        chartHistoryReread.nextAttemptAt = 0;
+        void runChartHistoryReread(symbol, interval, gen);
+      } else {
+        chartHistoryReread.converged = false;
+      }
     }
   }
 }
@@ -2272,7 +2336,7 @@ function paintChartFailure(symbol, interval, message, gen) {
   if (statusEl) {
     statusEl.textContent = same
       ? `读取失败 · 仍显示已加载 ${chartOhlcv.length} 根`
-      : `主图停机: ${message}`;
+      : `行情读取失败: ${message}`;
   }
   renderChartEvidence(symbol, interval, { failure: message });
   publishChartEvidence(message);
@@ -2284,6 +2348,8 @@ function paintChartFailure(symbol, interval, message, gen) {
 function clearChartD1Polling() {
   chartD1PollGen += 1;
   chartD1PollInFlight = false;
+  chartPollFailures = 0;
+  chartPollNextAttemptAt = 0;
   if (chartD1PollTimer) {
     clearInterval(chartD1PollTimer);
     chartD1PollTimer = null;
@@ -2304,6 +2370,7 @@ function clearChartD1Polling() {
 }
 
 function pauseChartLiveReads() {
+  if (typeof MtfTiles !== 'undefined' && MtfTiles.cancelReads) MtfTiles.cancelReads();
   const active = !!(chartD1PollTimer || chartD1PollInFlight || chartPollAbort || chartHeadlinePollTimer);
   if (chartD1PollTimer) {
     clearInterval(chartD1PollTimer);
@@ -2322,6 +2389,7 @@ function pauseChartLiveReads() {
 function resumeChartLiveReads() {
   if (!lwChart || !candleSeries) return;
   if (typeof document !== "undefined" && document.hidden) return;
+  chartPollNextAttemptAt = 0;
   if (!chartD1PollTimer) {
     chartD1PollTimer = setInterval(() => queueD1Poll("timer"), CHART_D1_POLL_MS);
   }
@@ -2332,6 +2400,7 @@ function resumeChartLiveReads() {
 function queueD1Poll() {
   if (!lwChart || !candleSeries) return;
   if (chartD1PollInFlight) return;
+  if (Date.now() < chartPollNextAttemptAt) return;
   if (typeof document !== "undefined" && document.hidden) return;
   const symbol = CHART_SYMBOL;
   const interval = currentInterval;
@@ -2344,6 +2413,8 @@ function queueD1Poll() {
   readChartD1Klines(symbol, interval, CHART_D1_POLL_LIMIT, { sync: "0", tail: CHART_D1_POLL_LIMIT, signal })
     .then((read) => {
       if (myGen !== chartD1PollGen || !chartPageStillCurrent(loadGen, symbol, interval)) return;
+      chartPollFailures = 0;
+      chartPollNextAttemptAt = 0;
       acceptChartTail(read, loadGen, symbol, interval);
       refreshMtfAfterMainLoad();
     })
@@ -2351,9 +2422,14 @@ function queueD1Poll() {
       if (error && error.name === "AbortError") return;
       console.warn("[chart] 自动读取 D1 失败", error);
       if (myGen !== chartD1PollGen || !chartPageStillCurrent(loadGen, symbol, interval)) return;
-      renderChartEvidence(symbol, interval, { failure: error && error.message ? error.message : "尾部读取失败" });
+      const delay = Math.min(30000, 2000 * Math.pow(2, Math.min(4, chartPollFailures++)));
+      const denied = [400, 401, 403, 404].includes(error && error.status);
+      chartPollNextAttemptAt = denied ? Infinity : Date.now() + delay;
+      const message = (error && error.message ? error.message : "尾部读取失败")
+        + (denied ? ' · 请检查访问设置后重新读取' : ` · 保留历史，${delay / 1000} 秒后重试`);
+      renderChartEvidence(symbol, interval, { failure: message });
       setChartStatusLine(symbol, interval, lastRenderedCount);
-      publishChartEvidence(error && error.message ? error.message : "尾部读取失败");
+      publishChartEvidence(message);
     })
     .finally(() => {
       if (myGen === chartD1PollGen) chartD1PollInFlight = false;
@@ -2445,6 +2521,8 @@ async function maybeAutoSyncChartD1AfterRead(symbol, interval, loadGen) {
 }
 
 async function loadChartData(symbol, interval, opts = {}) {
+  clearChartRecovery();
+  if (!opts.recovery) chartRecoveryFailures = 0;
   const myGen = ++chartLoadGen;
   lastMtfReloadAt = 0;
   chartHistoryReread.inFlight = false;
@@ -2455,20 +2533,34 @@ async function loadChartData(symbol, interval, opts = {}) {
   const statusEl = document.getElementById("chart-status");
   if (statusEl) statusEl.textContent = `加载 ${symbol} ${interval} 数据…`;
   closeChartWs();
+  closeChartAggTradeWs();
+  stopChartHeadlineRestPoll();
   clearChartD1Polling();
+  if (typeof MtfTiles !== 'undefined' && MtfTiles.cancelReads) MtfTiles.cancelReads();
+  // Never label the previous period's candles as the newly selected period.
+  if (chartCommittedIdentity && chartCommittedIdentity.interval !== interval) {
+    paintChartFailure(symbol, interval, '正在读取所选周期…', myGen);
+  }
+  if (!chartPricePathOpen()) setChartDeskHalt(true, `正在读取 ${interval}，可随时切换周期。`, true);
+  const retry = document.getElementById('chart-read-retry');
+  if (retry) retry.disabled = true;
+  if (statusEl) statusEl.textContent = `加载 ${symbol} ${interval} 数据…`;
   try {
-    const read = await readChartD1Klines(symbol, interval, 6000, { sync: "auto" });
+    const read = await readChartSwitchWindow(symbol, interval, opts.forceFull);
     if (!chartPageStillCurrent(myGen, symbol, interval)) return;
     const desk = read.desk || {};
     const revision = deskRevision(desk);
-    if (responseStale(symbol, interval, revision, "full")) return;
+    if (responseStale(symbol, interval, revision, "full")) throw new Error("历史版本更新中，等待重读");
     const gapReason = desk.gap && desk.gap.reason ? String(desk.gap.reason) : "missing";
     if (desk.pricePathAvailable !== true || !read.rows.length) {
       paintChartFailure(symbol, interval, desk.pricePathAvailable !== true ? gapReason : `desk 无合格 ${interval} 序列`, myGen);
+      scheduleChartRecovery(symbol, interval, myGen);
       return;
     }
     if (!applyCommittedDesk(read, { mode: "full", symbol, interval, preserveViewport: false })) return;
     maybeConfirmChartHistory(symbol, interval, revision);
+    if (read.freshTail) acceptChartTail(read.freshTail, myGen, symbol, interval);
+    chartRecoveryFailures = 0;
     writePersistedInterval(interval);
     restoreChartViewport(symbol, interval, myGen);
     startChartWs(symbol, interval);
@@ -2482,5 +2574,8 @@ async function loadChartData(symbol, interval, opts = {}) {
     if (!chartPageStillCurrent(myGen, symbol, interval)) return;
     console.error("加载图表数据失败:", error);
     paintChartFailure(symbol, interval, error && error.message ? error.message : "desk 读取失败", myGen);
+    if (![400, 401, 403, 404].includes(error && error.status)) scheduleChartRecovery(symbol, interval, myGen);
+  } finally {
+    if (chartPageStillCurrent(myGen, symbol, interval) && retry) retry.disabled = false;
   }
 }

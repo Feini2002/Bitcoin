@@ -82,7 +82,7 @@ try {
   const actual = buildPages(ROOT);
   check("FILES-04 repository artifact exactly matches its asset list", () => assert.deepEqual(list(actual.output), actual.files));
   check("FILES-05 legacy Chinese entry remains a redirect", () => assert.match(fs.readFileSync(path.join(actual.output,"Bit交易决策平台.html"),"utf8"), /index.html/));
-  check("FILES-06 no development directories are shipped", () => assert(actual.files.every(file => file.startsWith("js/") || ["index.html","Bit交易决策平台.html","styles.css","btc.svg"].includes(file))));
+  check("FILES-06 no development directories are shipped", () => assert(actual.files.every(file => file.startsWith("js/") || ["index.html","Bit交易决策平台.html","styles.css","desk-ui.css","btc.svg"].includes(file))));
   console.log("Pages artifact: " + actual.files.length + " runtime files, " + passed + " PASS / 0 FAIL");
 } finally {
   const resolved = path.resolve(fixture);

@@ -38,17 +38,6 @@ function chunkList(rows, size) {
   return out;
 }
 
-function winnerPredicate(alias, other, extra = '') {
-  const closed = (name) => `(CASE WHEN json_extract(${name}.value_json,'$.closed')=1 THEN 1 ELSE 0 END)`;
-  const effective = (name) => `(CASE WHEN ${name}.received_at=${name}.observed_at THEN ${name}.stored_at ELSE ${name}.received_at END)`;
-  return `NOT EXISTS (
-    SELECT 1 FROM finance_dataset_observations ${other}
-    WHERE ${other}.dataset_id=${alias}.dataset_id AND ${other}.observation_key=${alias}.observation_key
-      AND ${other}.time_precision<>'receipt' ${extra}
-      AND (${closed(other)}>${closed(alias)} OR (${closed(other)}=${closed(alias)} AND (
-        ${effective(other)}>${effective(alias)} OR (${effective(other)}=${effective(alias)} AND ${other}.received_at>${alias}.received_at)))))`;
-}
-
 function bumpReset(symbol, interval) {
   return [
     { sql: DESK_HISTORY_DDL, params: [] },
@@ -80,6 +69,7 @@ function canonicalOutside(stepParam) {
 export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, {mutableReceipt=null}={}) {
   const key = deskHistoryKey(id);
   if (!key || !rows?.length) return { before: [], after: [] };
+  const latestOpen = Math.max(...rows.map(row => Date.parse(row.observedAt)).filter(Number.isFinite));
   const before = bumpReset(key.symbol, key.interval);
   for (const part of chunkList(rows, 80)) {
     const payload = JSON.stringify(part.map((row) => ({
@@ -100,7 +90,9 @@ export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, 
               OR p.source_host IS NOT ?6 OR p.ingestion_mode IS NOT ?7 THEN 1 ELSE 0 END
             FROM finance_dataset_observations p
             WHERE p.dataset_id=?5 AND p.observation_key=json_extract(j.value,'$.key') AND p.time_precision<>'receipt'
-              AND ${winnerPredicate('p', 'v')}
+            ORDER BY (CASE WHEN json_extract(p.value_json,'$.closed')=1 THEN 1 ELSE 0 END) DESC,
+              (CASE WHEN p.received_at=p.observed_at THEN p.stored_at ELSE p.received_at END) DESC,
+              p.received_at DESC
             LIMIT 1
           ) IS NOT 0)`,
       params: [key.symbol, key.interval, payload, key.step, key.datasetId, sourceHost || '', ingestionMode || 'cloud-readthrough', mutableReceipt] });
@@ -122,6 +114,14 @@ export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, 
           WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*')`,
       params: [key.symbol, key.interval, key.datasetId] },
   ];
+  if (FINANCE_DATASETS[id]?.kind === 'klines' && Number.isFinite(latestOpen)) {
+    // The initial baseline above discovers pre-existing history once. Subsequent
+    // batches already know their newest open; never rescan every receipt on each
+    // forming-bar write. A delayed receipt cannot move the shared head backwards.
+    after[1] = { sql: `UPDATE desk_history_state SET head_t=?3
+      WHERE symbol=?1 AND interval=?2 AND head_t<?3`,
+      params: [key.symbol, key.interval, latestOpen] };
+  }
   return { before, after };
 }
 
@@ -200,6 +200,8 @@ export function historyBaselineStatement(symbol, interval, datasetId) {
 function observationKeyWalkCteSql() {
   // The receipt index is cheaper in SQLite's estimate but scans/sorts the whole
   // dataset for each key. Force observed-time seeks, including nullable bounds.
+  // Combine the recursive upper bounds: two separate inequalities can make
+  // SQLite seek the static bound, then scan past all newer keys on every step.
   return `WITH RECURSIVE seed AS (
       SELECT observation_key, observed_at FROM finance_dataset_observations INDEXED BY idx_finance_dataset_observed
       WHERE dataset_id=?1 AND time_precision<>'receipt' AND received_at<=?2
@@ -225,23 +227,20 @@ function observationKeyWalkCteSql() {
         AND observed_at=(
           SELECT MAX(observed_at) FROM finance_dataset_observations INDEXED BY idx_finance_dataset_observed
           WHERE dataset_id=?1 AND time_precision<>'receipt' AND received_at<=?2
-            AND observed_at>=COALESCE(?3,'') AND observed_at<COALESCE(?4,'Z')
-            AND (?6=0 OR (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?2)
-            AND observed_at<keys.observed_at)
+            AND observed_at>=COALESCE(?3,'') AND observed_at<MIN(COALESCE(?4,'Z'),keys.observed_at)
+            AND (?6=0 OR (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?2))
       ORDER BY observation_key DESC LIMIT 1),
     (SELECT MAX(observed_at) FROM finance_dataset_observations INDEXED BY idx_finance_dataset_observed
       WHERE dataset_id=?1 AND time_precision<>'receipt' AND received_at<=?2
-        AND observed_at>=COALESCE(?3,'') AND observed_at<COALESCE(?4,'Z')
-        AND (?6=0 OR (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?2)
-        AND observed_at<keys.observed_at),
+        AND observed_at>=COALESCE(?3,'') AND observed_at<MIN(COALESCE(?4,'Z'),keys.observed_at)
+        AND (?6=0 OR (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?2)),
     keys.n+1
     FROM keys
     WHERE keys.n<?5 AND EXISTS (
       SELECT 1 FROM finance_dataset_observations INDEXED BY idx_finance_dataset_observed
       WHERE dataset_id=?1 AND time_precision<>'receipt' AND received_at<=?2
-        AND observed_at>=COALESCE(?3,'') AND observed_at<COALESCE(?4,'Z')
-        AND (?6=0 OR (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?2)
-        AND observed_at<keys.observed_at))`;
+        AND observed_at>=COALESCE(?3,'') AND observed_at<MIN(COALESCE(?4,'Z'),keys.observed_at)
+        AND (?6=0 OR (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?2)))`;
 }
 
 export function observationKeyWalkSql() {
@@ -573,20 +572,24 @@ async function persistMacroDataset(db,id,envelope,ingestionMode,normalized) {
         AND p.value_json=json_extract(j.value,'$.values')
         AND ${macroRevisionSql('p.source_revision_json','p.received_at')}=${macroRevisionSql("json_extract(j.value,'$.sourceRevision')",'?2')})`);
   }
+  // Materialize once and drive joins from the input keys: flattening this CTE
+  // multiplies successor lookup by every stored observation (daily FRED: 1,500).
   queries.unshift({sql:`INSERT INTO finance_dataset_observations
     (dataset_id,observation_key,observed_at,time_precision,received_at,stored_at,source_host,ingestion_mode,source_revision_json,value_json)
-    WITH next_receipts AS (
+    WITH next_receipts AS MATERIALIZED (
       SELECT json_extract(j.value,'$.key') AS observation_key,j.value AS payload,
         (SELECT MIN(m.received_at) FROM finance_dataset_observations m
-          WHERE m.dataset_id=?1 AND m.time_precision='receipt' AND m.received_at>?2
+          WHERE m.dataset_id=?1 AND m.observation_key='@receipt' AND m.time_precision='receipt' AND m.received_at>?2
             AND EXISTS(SELECT 1 FROM json_each(m.value_json,'$.keys') k WHERE k.value=json_extract(j.value,'$.key'))) AS next_at
       FROM json_each(?3) j)
     SELECT ?1,o.observation_key,o.observed_at,o.time_precision,n.next_at,m.stored_at,m.source_host,m.ingestion_mode,o.source_revision_json,o.value_json
-    FROM next_receipts n JOIN finance_dataset_observations m ON m.dataset_id=?1 AND m.observation_key='@receipt' AND m.received_at=n.next_at
-    JOIN finance_dataset_observations o ON o.dataset_id=?1 AND o.observation_key=n.observation_key
+    FROM next_receipts n CROSS JOIN finance_dataset_observations m CROSS JOIN finance_dataset_observations o
+    WHERE n.next_at IS NOT NULL
+      AND m.dataset_id=?1 AND m.observation_key='@receipt' AND m.received_at=n.next_at
+      AND o.dataset_id=?1 AND o.observation_key=n.observation_key
       AND o.received_at=(SELECT MAX(v.received_at) FROM finance_dataset_observations v
         WHERE v.dataset_id=?1 AND v.observation_key=n.observation_key AND v.received_at<=n.next_at)
-    WHERE o.received_at<n.next_at AND (o.value_json<>json_extract(n.payload,'$.values')
+      AND o.received_at<n.next_at AND (o.value_json<>json_extract(n.payload,'$.values')
       OR ${macroRevisionSql('o.source_revision_json','o.received_at')}<>${macroRevisionSql("json_extract(n.payload,'$.sourceRevision')",'?2')})
     ON CONFLICT(dataset_id,observation_key,received_at) DO NOTHING`,params:[id,receivedAt,JSON.stringify(rows)]});
   for(const query of queries.slice(0,-1))query.sql+=' RETURNING observation_key';
@@ -699,6 +702,8 @@ function mapStoredObservation(row, definition) {
 
 // The prepared read can join raw tape, version and state reads in one D1 batch.
 // Only cap+1 distinct in-range keys and one predecessor reach winner selection.
+// Select one ranked rowid per key. Comparing every receipt against all other
+// receipts was quadratic and caused D1 overload even for a 20-candle tail.
 export function prepareBoundedObservations(db, id, {limit=6000, fromMs=null, toMs=null, knownAt=new Date().toISOString(), historical=false, predecessor=true}={}) {
   const definition = FINANCE_DATASETS[id];
   if (!definition) throw new Error('unknown_dataset');
@@ -717,10 +722,13 @@ export function prepareBoundedObservations(db, id, {limit=6000, fromMs=null, toM
       UNION ALL SELECT observation_key, observed_at, n FROM predecessor_key)
     SELECT o.*, k.n AS bounded_position FROM selected_keys k
     CROSS JOIN finance_dataset_observations o
-    WHERE o.dataset_id=?1 AND o.observation_key=k.observation_key
-      AND o.time_precision<>'receipt' AND o.received_at<=?2
-      AND (?6=0 OR (CASE WHEN o.received_at=o.observed_at THEN o.stored_at ELSE o.received_at END)<=?2)
-      AND ${winnerPredicate('o','v', 'AND v.received_at<=?2 AND (?6=0 OR (CASE WHEN v.received_at=v.observed_at THEN v.stored_at ELSE v.received_at END)<=?2)')}
+    WHERE o.rowid=(SELECT v.rowid FROM finance_dataset_observations v
+      WHERE v.dataset_id=?1 AND v.observation_key=k.observation_key
+        AND v.time_precision<>'receipt' AND v.received_at<=?2
+        AND (?6=0 OR (CASE WHEN v.received_at=v.observed_at THEN v.stored_at ELSE v.received_at END)<=?2)
+      ORDER BY (CASE WHEN json_extract(v.value_json,'$.closed')=1 THEN 1 ELSE 0 END) DESC,
+        (CASE WHEN v.received_at=v.observed_at THEN v.stored_at ELSE v.received_at END) DESC,
+        v.received_at DESC LIMIT 1)
     ORDER BY k.n`).bind(id,knownAt,fromIso,toIso,cap+1,historical?1:0,predecessor?1:0);
   return {statement,parse(result) {
     const rows=result.results || [];

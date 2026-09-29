@@ -781,14 +781,20 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     const intervalName = meta.interval || interval || DEFAULT_INTERVAL;
     const step = getIntervalMs(intervalName);
     const latestT = Number(meta.latestT != null ? meta.latestT : NaN);
-    const lastTradeTime = Number(lastSync.last_trade_time != null ? lastSync.last_trade_time : NaN);
+    // The desk contract carries the observation clock separately from receipt time.
+    const desk = meta.desk || null;
+    const lastTradeTime = desk
+      ? Date.parse(desk.observedAt || "")
+      : Number(lastSync.last_trade_time != null ? lastSync.last_trade_time : NaN);
     const reference = Number.isFinite(lastTradeTime) && lastTradeTime > 0
       ? lastTradeTime
       : NaN;
     const ageMs = Number.isFinite(reference) ? Math.max(0, now - reference) : null;
     const latestBarT = latestBar ? Number(latestBar.t) : NaN;
     const latestBarClosed = Number.isFinite(latestBarT) ? now >= latestBarT + step : null;
-    const syncFailed = (lastSync.last_ok != null && Number(lastSync.last_ok) === 0) ||
+    const syncFailed = !!(desk && (desk.collectionStale === true || desk.sourceStale === true ||
+      desk.quality && desk.quality.status === "fail")) ||
+      (lastSync.last_ok != null && Number(lastSync.last_ok) === 0) ||
       (syncResult && syncResult.ok === false);
     const freshLimit = Math.max(45_000, Math.min(step, 2 * 60_000));
     const staleLimit = Math.max(step * 2, 10 * 60_000);
@@ -1689,6 +1695,8 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       this.polling = true;
       const ctrl = new AbortController();
       this.activeAbort = ctrl;
+      let timedOut = false;
+      const requestTimeout = setTimeout(() => { timedOut = true; ctrl.abort(); }, 15000);
       let lastErr = "";
       try {
         let bars = null;
@@ -1763,7 +1771,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
           this.onStatus(source ? `desk (${source})` : "desk polling");
         }
       } catch (e) {
-        if (generation !== this.requestGeneration || this.closedByUser || ctrl.signal.aborted || (e && e.name === "AbortError")) return;
+        if (generation !== this.requestGeneration || this.closedByUser || (!timedOut && (ctrl.signal.aborted || (e && e.name === "AbortError")))) return;
         const rejected = this.hasUnmarkedCache();
         this.authoritative = false;
         this.lastMeta = this.displayMeta({
@@ -1771,11 +1779,12 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
           authoritative: false,
           streamBroken: true,
           rejectedUnmarkedCache: rejected,
-          gap: { reason: "stream_broken" },
+          gap: { reason: timedOut ? "read_timeout" : "stream_broken" },
         });
         this.onBars(this.aggregator.getBars(), this.lastMeta);
-        this.onStatus(rejected ? "断流后未回用无来源标记缓存" : `desk failed: ${e && e.message ? e.message : e}`);
+        this.onStatus(timedOut ? "读取超时，等待下一轮重试" : rejected ? "断流后未回用无来源标记缓存" : `desk failed: ${e && e.message ? e.message : e}`);
       } finally {
+        clearTimeout(requestTimeout);
         if (this.activeAbort === ctrl) this.activeAbort = null;
         if (generation === this.requestGeneration) this.polling = false;
       }

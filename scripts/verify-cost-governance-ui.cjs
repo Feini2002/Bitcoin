@@ -54,8 +54,9 @@ async function main() {
       assert.equal(await page.evaluate(scope=>window.__calls[scope],scope),held,'slow request must not overlap');
       await page.evaluate(()=>{window.__hold=false;window.__release?.();});
       await expect(page.locator(status)).toContainText(route==='heatmap'?'desk 分所':'仅宏观背景');
-      await page.evaluate(()=>location.hash='#/overview');
-      await expect(page.getByRole('heading',{name:'功能清单',exact:true})).toBeVisible();
+      // The overview now owns independent data reads; isolate disposal on a non-fetching route.
+      await page.evaluate(()=>location.hash='#/archive');
+      await expect(page.getByRole('heading',{name:'发言历史库',exact:true})).toBeVisible();
       const disposed=await page.evaluate(scope=>window.__calls[scope],scope);
       await page.clock.runFor(31000);
       await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
@@ -77,7 +78,7 @@ async function main() {
   const result=await page.evaluate(async()=>{
     const calls=[];let phase=0;let rendered=[];
     const rows=(a,b)=>Array.from({length:b-a+1},(_,j)=>({t:(a+j)*300000,o:1,h:2,l:0,c:1}));
-    DataEngine.fetchDesk=async(_scope,params)=>{calls.push(params);return {pricePathAvailable:true,series:phase===0?rows(1,100):phase===1?rows(82,101):params.tail?rows(200,219):rows(120,219)};};
+    DataEngine.fetchDesk=async(_scope,params)=>{calls.push(params);return {pricePathAvailable:true,historyRevision:1,coverageScope:params.tail?'tail':'window',series:phase===0?rows(1,100):phase===1?rows(82,101):params.tail?rows(200,219):rows(120,219)};};
     MtfTiles._open=true;MtfTiles._createTileAt=()=>{};MtfTiles.syncTimeFromMain=()=>{};MtfTiles._getSymbol=()=> 'BTCUSDT';MtfTiles._getMainInterval=()=> '15m';MtfTiles._tfs=['5m'];
     MtfTiles._tiles=[{series:{setData:data=>rendered=data},loadGen:0}];
     await MtfTiles._loadTile(0);const initial=rendered.length;
@@ -88,6 +89,38 @@ async function main() {
   assert.equal(result.initial,100);assert.equal(result.calls[1].tail,20);assert.equal(result.tail.length,101);assert.equal(result.tail.first,300);assert.equal(result.tail.last,30300);
   assert.equal(result.calls.length,4);assert.equal(result.calls[3].tail,undefined);  assert.equal(result.gapStart,36000);
   console.log('PASS MTF: first full load, tail merge preserves history, gap triggers full recovery');
+  const shared=await page.evaluate(async()=>{
+    const calls=[];const rows=Array.from({length:100},(_,i)=>({t:(i+1)*300000,o:1,h:2,l:0,c:1}));
+    const windowDesk={pricePathAvailable:true,historyRevision:5,instrumentId:'BINANCE:USDM:BTCUSDT:PERPETUAL',coverageScope:'window',series:rows};
+    DataEngine.peekChartWindow=()=>windowDesk;
+    DataEngine.fetchDesk=async(_scope,opts)=>{calls.push(opts);return {...windowDesk,coverageScope:'tail',series:rows.slice(-20)};};
+    let rendered=[];MtfTiles._tiles=[{series:{setData:rows=>rendered=rows},loadGen:0}];
+    await MtfTiles._loadTile(0);
+    const reused={calls:calls.slice(),count:rendered.length};
+    // A history revision change must refill before presenting the shared window.
+    MtfTiles._tiles=[{series:{setData:rows=>rendered=rows},loadGen:0}];calls.length=0;
+    DataEngine.fetchDesk=async(_scope,opts)=>{calls.push(opts);return {...windowDesk,historyRevision:6,coverageScope:opts.tail?'tail':'window',series:opts.tail?rows.slice(-20):rows.slice(1)};};
+    await MtfTiles._loadTile(0);
+    return {reused,revisionCalls:calls,countAfterRevision:rendered.length};
+  });
+  assert.equal(shared.reused.calls.length,1);assert.equal(shared.reused.calls[0].tail,20);
+  assert.equal(shared.reused.calls[0].priority,'background');assert.equal(shared.reused.count,100);
+  assert.equal(shared.revisionCalls.length,2);assert.equal(shared.revisionCalls[1].from,300000);assert.equal(shared.countAfterRevision,99);
+  console.log('PASS MTF shares full windows, validates a fresh tail, and applies historical deletions before drawing');
+  const tileCancel=await page.evaluate(async()=>{
+    DataEngine.peekChartWindow=()=>null;
+    const signals=[];
+    DataEngine.fetchDesk=(_scope,opts)=>new Promise((_resolve,reject)=>{
+      signals.push(opts.signal);opts.signal.addEventListener('abort',()=>reject(new DOMException('cancelled','AbortError')),{once:true});
+    });
+    MtfTiles._tiles=[{series:{setData(){}},loadGen:0}];MtfTiles._tfs=['5m'];
+    const first=MtfTiles._loadTile(0);MtfTiles._tfs=['1h'];const second=MtfTiles._loadTile(0);
+    const firstCancelled=signals[0].aborted,secondActive=!signals[1].aborted;
+    MtfTiles._destroyTileChartsOnly();await Promise.all([first,second]);
+    return {firstCancelled,secondActive,closedCancelled:signals[1].aborted};
+  });
+  assert.deepEqual(tileCancel,{firstCancelled:true,secondActive:true,closedCancelled:true});
+  console.log('PASS changing a tile cancels only its old read; closing the panel cancels outstanding reads');
   await page.close();
   await verifyChartWorkbench(browser, origin);
 }
@@ -265,6 +298,10 @@ async function verifyChartWorkbench(browser, origin){
   await waitFor(()=>pending.some(item=>item.record.from));
   const failedFull=pending.splice(pending.findIndex(item=>item.record.from),1)[0];
   await releaseHeld(failedFull, {status:503, contentType:'application/json', body:JSON.stringify({error:'full failed'})});
+  await page.clock.runFor(500);
+  await waitFor(()=>pending.some(item=>item.record.from));
+  const retryFull=pending.splice(pending.findIndex(item=>item.record.from),1)[0];
+  await releaseHeld(retryFull, {status:503, contentType:'application/json', body:JSON.stringify({error:'full retry failed'})});
   await expect(page.locator('#chart-research-evidence')).toContainText('未把失败画成已核实空历史');
   const afterFail=calls.filter(call=>call.from).length;
   const kept=await page.evaluate(()=>({len:chartOhlcv.length, confirmed:DataEngine.readDeskHistory('BTCUSDT','15m').confirmedRevision, pending:DataEngine.readDeskHistory('BTCUSDT','15m').pendingRevision}));
@@ -286,13 +323,14 @@ async function verifyChartWorkbench(browser, origin){
   if(await page.locator('#mtf-toggle').isChecked()) await page.locator('#mtf-toggle').click();
   hold=true;
   state.revision=2;
+  await page.evaluate(()=>DataEngine._chartWindows.clear()); // Keep this out-of-order scenario cold.
   await page.locator('.tf-btn[data-tf="5m"]').click();
   await page.locator('.tf-btn[data-tf="15m"]').click();
   await page.locator('.tf-btn[data-tf="1h"]').click();
   await waitFor(()=>pending.some(item=>item.record.interval==='1h' && !item.record.tail && !item.record.from));
   const hour=pending.splice(pending.findIndex(item=>item.record.interval==='1h' && !item.record.tail && !item.record.from),1)[0];
   await releaseHeld(hour, {contentType:'application/json', body:JSON.stringify(makeChartDesk(NOW,{interval:'1h', bars:24, revision:1, lastClose:4100, verified:false, eligible:false}))});
-  await expect.poll(()=>page.evaluate(()=>chartOhlcv.at(-1).c)).toBe(4100);
+  await expect.poll(()=>page.evaluate(()=>chartOhlcv.at(-1)?.c)).toBe(4100);
   for(const item of pending.splice(0)){
     const body=makeChartDesk(NOW,{interval:item.record.interval||'5m', bars:item.record.interval==='15m'?18:12, revision:1, lastClose:item.record.interval==='15m'?3200:2100, verified:false, eligible:false});
     await releaseHeld(item, {contentType:'application/json', body:JSON.stringify(body)});
@@ -312,8 +350,8 @@ async function verifyChartWorkbench(browser, origin){
   if(afterHigher!==beforeHigher || afterHigher.includes('HIGHER-SHOULD-NOT-STICK')) throw Error('WB-09 higher timeframe wrote main evidence');
   hold=false;
   const beforeLeave=calls.length;
-  await page.locator('#nav').getByRole('link',{name:'概览 Dashboard', exact:true}).click();
-  await expect(page.getByRole('heading',{name:'功能清单', exact:true})).toBeVisible();
+  await page.evaluate(()=>location.hash='#/archive');
+  await expect(page.getByRole('heading',{name:'发言历史库', exact:true})).toBeVisible();
   const surviving=await page.evaluate(()=>DataEngine.readDeskHistory('BTCUSDT','15m').confirmedRevision);
   if(surviving!==2) throw Error('WB-10 lost confirmed revision on leave '+surviving);
   if(JSON.stringify(await page.evaluate(()=>Object.entries(localStorage).map(([key,value])=>key+':'+value))).includes('historyRevision')) throw Error('WB-10 persisted history revision');

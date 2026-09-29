@@ -21,8 +21,6 @@ node_modules/
 .artifacts/
 cloudflare/.cloud-control.lock
 cloudflare/cloud-control-state.json.tmp
-cloudflare/.cloud-control.lock
-cloudflare/cloud-control-state.json.tmp
 .codex/*
 !.codex/skills/
 .codex/skills/*
@@ -38,6 +36,10 @@ dist/
 # Local extract/work copies. Original zips live under docs/research.
 .tmp-*/
 /bitcoin_batch2_execution_ready_*.zip
+
+# Private offline migration copies; never upload to Git or Pages.
+/BTC拷贝.zip
+/BitDesk-PRIVATE-*.zip
 
 # Local, regenerable code index
 .codegraph/

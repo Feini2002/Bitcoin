@@ -204,7 +204,7 @@ const DataEngine = {
       res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法读取舆情报告 latest�?{m}`);
+      throw new Error(`无法读取最新研究报告：${m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -228,7 +228,7 @@ const DataEngine = {
       res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法读取舆情报告 history�?{m}`);
+      throw new Error(`无法读取研究报告历史：${m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -252,7 +252,7 @@ const DataEngine = {
       res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
     } catch (e) {
       const m = e && e.name === "AbortError" ? "请求超时或已取消" : e && e.message ? e.message : String(e);
-      throw new Error(`无法读取舆情报告 item�?{m}`);
+      throw new Error(`无法读取指定研究报告：${m}`);
     } finally {
       clearTimeout(t);
       unsub();
@@ -556,6 +556,133 @@ const DataEngine = {
    * 分析路径只读 /api/desk/{scope}。失败即缺口，禁止回落 /api/d1。
    * scope: chart | orderflow | heatmap | context
    */
+  _deskReads: new Map(),
+  _chartWindows: new Map(),
+  _deskQueue: [],
+  _deskActive: 0,
+  _deskBackgroundActive: 0,
+
+  // Two transports at most; tiles use only one, leaving room for the current
+  // page. Queued work cancelled by a navigation never reaches the Worker/D1.
+  drainDeskQueue() {
+    while (this._deskActive < 2) {
+      let index = this._deskQueue.findIndex(job => job.entry.priority !== 'background');
+      if (index < 0 && !this._deskBackgroundActive) index = 0;
+      if (index < 0 || !this._deskQueue.length) return;
+      const job = this._deskQueue.splice(index, 1)[0];
+      clearTimeout(job.timer);
+      job.entry.ctrl.signal.removeEventListener('abort', job.abort);
+      const background = job.entry.priority === 'background';
+      this._deskActive++;
+      if (background) this._deskBackgroundActive++;
+      Promise.resolve().then(() => job.request(job.entry.ctrl.signal)).then(job.resolve, job.reject).finally(() => {
+        this._deskActive--;
+        if (background) this._deskBackgroundActive--;
+        this.drainDeskQueue();
+      });
+    }
+  },
+
+  queueDeskRead(entry, request) {
+    return new Promise((resolve, reject) => {
+      const job = { entry, request, resolve, reject, abort: null, timer: null };
+      const cancel = error => {
+        clearTimeout(job.timer);
+        entry.ctrl.signal.removeEventListener('abort', job.abort);
+        const index = this._deskQueue.indexOf(job);
+        if (index >= 0) this._deskQueue.splice(index, 1);
+        reject(error);
+      };
+      job.abort = () => cancel(new DOMException('读取已取消', 'AbortError'));
+      if (entry.ctrl.signal.aborted) { job.abort(); return; }
+      entry.ctrl.signal.addEventListener('abort', job.abort, { once: true });
+      job.timer = setTimeout(() => cancel(new Error('数据读取繁忙，请稍后重试')), 12_000);
+      this._deskQueue.push(job);
+      this.drainDeskQueue();
+    });
+  },
+
+  peekChartWindow(symbol, interval) {
+    const entry = this._chartWindows.get(`${this.apiBase()}|${symbol}|${interval}`);
+    return entry && Date.now() - entry.at < 5 * 60_000 ? entry.data : null;
+  },
+
+  // Each consumer owns cancellation. Leaving a page only cancels the transport
+  // when no main chart, tile or other reader still needs that exact response.
+  shareDeskRead(url, signal, request, priority = 'foreground') {
+    if (signal?.aborted) return Promise.reject(new DOMException('读取已取消', 'AbortError'));
+    let entry = this._deskReads.get(url);
+    if (!entry || entry.ctrl.signal.aborted) {
+      const ctrl = new AbortController();
+      entry = { ctrl, readers: 0, settled: false, priority };
+      entry.promise = this.queueDeskRead(entry, request).finally(() => {
+        entry.settled = true;
+        if (this._deskReads.get(url) === entry) this._deskReads.delete(url);
+      });
+      this._deskReads.set(url, entry);
+    } else if (priority !== 'background' && entry.priority === 'background') {
+      // A queued tile may become the main chart after a period switch.
+      entry.priority = 'foreground';
+      this.drainDeskQueue();
+    }
+    entry.readers++;
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const finish = (fn, value) => {
+        if (done) return;
+        done = true;
+        signal?.removeEventListener('abort', abort);
+        entry.readers--;
+        if (!entry.readers && !entry.settled) entry.ctrl.abort();
+        fn(value);
+      };
+      const abort = () => finish(reject, new DOMException('读取已取消', 'AbortError'));
+      signal?.addEventListener('abort', abort, { once: true });
+      entry.promise.then(data => finish(resolve, data), error => finish(reject, error));
+    });
+  },
+
+  async requestDeskJson(url, signal) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const ctrl = new AbortController();
+      const unsub = this.attachAbort(signal, ctrl);
+      const timer = setTimeout(() => ctrl.abort(), 12_000);
+      try {
+        if (signal.aborted) throw new DOMException('读取已取消', 'AbortError');
+        const res = await this.workerFetch(url, { cache: 'no-store', signal: ctrl.signal });
+        if (!res.ok) {
+          const error = new Error(`数据接口 HTTP ${res.status}`);
+          error.status = res.status;
+          // Cancel error bodies; a gateway HTML page must not be rendered as data.
+          await res.body?.cancel();
+          throw error;
+        }
+        const data = await res.json();
+        if (!data || typeof data !== 'object' || !data.schemaVersion) throw new Error('desk 载荷缺少 schemaVersion');
+        return data;
+      } catch (error) {
+        if (signal.aborted) throw new DOMException('读取已取消', 'AbortError');
+        const retryable = ctrl.signal.aborted || error instanceof TypeError || error instanceof SyntaxError
+          || [429, 502, 503, 504].includes(error.status);
+        if (!attempt && retryable) {
+          // Bounded, abortable backoff: at most one transport retry per read.
+          await new Promise((resolve, reject) => {
+            const abort = () => { clearTimeout(wait); reject(new DOMException('读取已取消', 'AbortError')); };
+            const wait = setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, 400);
+            signal.addEventListener('abort', abort, { once: true });
+            if (signal.aborted) abort();
+          });
+          continue;
+        }
+        if (ctrl.signal.aborted) throw new Error('数据读取超时，稍后可重试');
+        throw error;
+      } finally {
+        clearTimeout(timer);
+        unsub();
+      }
+    }
+  },
+
   async fetchDesk(scope, opts = {}) {
     const allowed = ["chart", "orderflow", "heatmap", "context"];
     const name = String(scope || "");
@@ -569,25 +696,19 @@ const DataEngine = {
     if (opts.to != null && String(opts.to) !== "") q.set("to", String(opts.to));
     if (opts.knownAt != null && String(opts.knownAt) !== "") q.set("knownAt", String(opts.knownAt));
     const url = `${this.apiBase()}/api/desk/${encodeURIComponent(name)}${q.toString() ? "?" + q.toString() : ""}`;
-    const ctrl = new AbortController();
-    const unsub = this.attachAbort(opts.signal, ctrl);
-    const timer = setTimeout(() => ctrl.abort(), 30_000);
-    try {
-      const res = await this.workerFetch(url, { cache: "no-store", signal: ctrl.signal });
-      const data = await this.parseWorkerJsonResponse(res, "desk " + name);
-      if (!data || typeof data !== "object" || !data.schemaVersion) {
-        throw new Error("desk 载荷缺少 schemaVersion");
-      }
-      if (typeof opts.onMetadata === "function") opts.onMetadata(data);
-      return data;
-    } catch (error) {
-      if (opts.signal && opts.signal.aborted) throw new DOMException("desk 请求已取消", "AbortError");
-      if (ctrl.signal.aborted) throw new Error("desk 请求超时（30 秒）");
-      throw error;
-    } finally {
-      clearTimeout(timer);
-      unsub();
+    if (opts.signal?.aborted) throw new DOMException('读取已取消', 'AbortError');
+    const data = await this.shareDeskRead(url, opts.signal, signal => this.requestDeskJson(url, signal),
+      opts.priority === 'background' ? 'background' : 'foreground');
+    if (opts.signal?.aborted) throw new DOMException('读取已取消', 'AbortError');
+    if (name === 'chart' && opts.tail == null && opts.from == null && opts.to == null && opts.knownAt == null
+        && data.pricePathAvailable === true && data.coverageScope === 'window' && data.series?.length) {
+      const key = `${this.apiBase()}|${opts.symbol || 'BTCUSDT'}|${opts.interval || '15m'}`;
+      this._chartWindows.delete(key);
+      this._chartWindows.set(key, { at: Date.now(), data });
+      while (this._chartWindows.size > 7) this._chartWindows.delete(this._chartWindows.keys().next().value);
     }
+    if (typeof opts.onMetadata === 'function') opts.onMetadata(data);
+    return data;
   },
 
 

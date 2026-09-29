@@ -50,7 +50,7 @@ function pageSettings() {
       <header class="page-header settings-page-head">
         <div>
           <h1 class="page-title">设置</h1>
-          <div class="page-sub">偏好与云端巡检 · 主题仅在浏览器会话内保存；行情读写经 Cloudflare Worker 绑定的 D1</div>
+          <div class="page-sub">管理阅读外观，核对数据状态。主题保存在当前浏览器，不跨设备同步。</div>
         </div>
         <span class="chip ok settings-theme-chip">当前主题 · ${themeLabel}</span>
       </header>
@@ -73,19 +73,19 @@ function pageSettings() {
           <div class="settings-panel-icon settings-panel-icon--data" aria-hidden="true"><i class="ph ph-database"></i></div>
           <div>
             <h2 class="settings-panel-title">K 线与云端 D1</h2>
-            <p class="settings-panel-desc">Pages 前台连接已部署 Worker；常规写库由 Cron 维护，手动同步会请求 Worker 立即从行情源补写 D1。</p>
+            <p class="settings-panel-desc">先检查四页数据是否新鲜、连续。下方手动同步只维护旧版 K 线表，不会修复四页规范数据的历史缺口。</p>
           </div>
         </div>
         <ul class="settings-fact-list">
           <li><strong>分析读取</strong>四页只读 <code>/api/desk/{chart|orderflow|heatmap|context}</code>；失败即缺口，不回落 <code>/api/d1</code>。</li>
-          <li><strong>已接入</strong>设置页与舆情通道的「已接入」只表示 LLM/报告接口，不是行情权威灯。</li>
+          <li><strong>研究报告</strong>分析在你主动发起的 AI 对话中完成，网站读取保存结果，不配置模型密钥；有报告不代表行情数据健康。</li>
           <li><strong>遗留对照</strong><code>/api/d1/klines</code> 与手动同步仍是运维入口，写的是无 venue 遗留表，不是币安权威带。</li>
           <li><strong>分区</strong>P1 规范观察、P2 足迹、P3 强平桶可进 desk；P5 klines/derivative_timeseries 分析禁读。</li>
           <li><strong>排障</strong>如果出现异常，优先复制下方「异常摘要」发给 Codex；完整 JSON 只用于核对 Worker/D1 原始返回。</li>
         </ul>
         <div class="settings-actions">
-          <button type="button" class="btn primary" id="settings-cloud-sync">立即同步 D1</button>
-          <button type="button" class="btn" id="settings-cloud-status">查看 D1 状态</button>
+          <button type="button" class="btn" id="settings-cloud-sync">同步旧版 K 线表</button>
+          <button type="button" class="btn primary" id="settings-cloud-status">检查数据状态</button>
           <button type="button" class="btn" id="settings-cloud-detail">详细诊断</button>
           <span class="settings-actions-msg" id="settings-cloud-msg"></span>
         </div>

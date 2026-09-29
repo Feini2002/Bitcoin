@@ -2,6 +2,17 @@
   "sourceRoot": "docs/research/bitcoin-upgrade/sources/2026-09-16",
   "routes": [
     {
+      "id":"research-desk", "title":"研究总览、事件与舆情重构及 AI 对话工作流",
+      "keywords":["事件一览","舆情分析","研究总览","无Key分析","报告导入","提示词","前端重构","研究工作台"],
+      "summary":"网站读取研究，AI 对话执行来源核对与分析。十二个模块使用统一 research.v1 协议，CLI 默认只校验，新 ID 写入，不恢复模型服务。",
+      "code":["js/research-protocol.js","js/research-desk.js","js/pages/research-overview.js","scripts/prepare-research.cjs","scripts/import-yuqing-report.cjs","desk-ui.css"],
+      "primary":[{"id":"LOCAL-RESEARCH-DESK"},{"id":"LOCAL-AI-RESEARCH"}],
+      "expand":["V07","V08"],"graph":"ResearchProtocol ResearchDesk",
+      "related":[{"id":"current-plan","when":"核对四页数据及生产运行状态"}],
+      "checks":["npm run verify:research","npm run verify:research-ui","npm run build"],
+      "acceptance":"真实来源与资料时间 → 十二步研究 → JSON 校验预览 → 授权 CLI 保存新版本 → item 读回。旧报告不冒充新判断。"
+    },
+    {
       "id": "binance-plugin",
       "title": "币安插件、MCP 与四页数据核对",
       "keywords": ["币安插件", "Binance插件", "币安MCP", "Binance MCP", "插件对账", "插件补查"],
@@ -199,9 +210,9 @@
     },
     {
       "id": "runtime", "title": "架构、存储、调度与发布",
-      "keywords": ["架构", "存储", "数据库", "D1", "调度", "Cron", "Worker", "部署", "迁移", "回退", "服务", "403", "出口", "封锁", "地域", "反代", "采集位置", "持续采集", "刷新频率", "采集频率", "秒级", "分钟级", "日限额", "VPS", "Vultr", "SSH", "Caddy", "灰云", "egress", "sslip", "出口现状"],
+      "keywords": ["架构", "存储", "数据库", "D1", "调度", "Cron", "Worker", "部署", "迁移", "换电脑", "新电脑", "交接", "回退", "服务", "403", "出口", "封锁", "地域", "反代", "采集位置", "持续采集", "刷新频率", "采集频率", "秒级", "分钟级", "日限额", "VPS", "Vultr", "SSH", "Caddy", "灰云", "egress", "sslip", "出口现状"],
       "summary": "基础采集走 VPS 还是 Cloudflare，先读 LOCAL-COLLECT。刷新频率读 LOCAL-CADENCE。出口接线读 LOCAL-EGRESSCUTOVER；约束读 LOCAL-EGRESSADV；SSH 读 LOCAL-EGRESSVPS。Deribit 期权摘要走 VPS、6 小时一次。Alpha、BLS、GDELT 仍不进时钟，见 LOCAL-QUOTA。",
-      "code": ["cloudflare/wrangler.toml", "cloudflare/wrangler.yuqing.toml", "cloudflare/snapshot/wrangler.snapshot.toml", "cloudflare/kline-live-collector.mjs", "cloudflare/egress/Caddyfile", "cloudflare/finance/egress.mjs", "config/pages-assets.json", "scripts/build-pages.cjs", "scripts/README.md", "scripts/collect-market-local.cjs"],
+      "code": ["docs/operations/development-handoff-2026-09-30.md", "docs/operations/new-computer.md", "cloudflare/wrangler.toml", "cloudflare/wrangler.yuqing.toml", "cloudflare/snapshot/wrangler.snapshot.toml", "cloudflare/kline-live-collector.mjs", "cloudflare/egress/Caddyfile", "cloudflare/finance/egress.mjs", "config/pages-assets.json", "scripts/build-pages.cjs", "scripts/README.md", "scripts/collect-market-local.cjs"],
       "primary": [{"id":"LOCAL-COLLECT"},{"id":"LOCAL-CADENCE"},{"id":"LOCAL-EGRESSCUTOVER"},{"id":"LOCAL-EGRESSADV"},{"id":"LOCAL-EGRESSVPS"},{"id":"LOCAL-EGRESSFIX"},{"id":"LOCAL-EGRESS"},{"id":"LOCAL-PROXYPLAN"}],
       "expand": ["LOCAL-PURCHASE", "LOCAL-QUOTA", "V09", "RES20", "RES21", "RES22"], "graph": "build-pages.cjs",
       "related": [{"id":"snapshot","when":"数据结构及保留变化"},{"id":"llm","when":"模型任务运行方式变化"}],

@@ -126,6 +126,9 @@ export async function refreshFinanceDataset(env, id, {now=Date.now(),forceFull=f
   const definition = FINANCE_DATASETS[id];
   const incremental = datasetSupportsIncremental(id);
   let gap=incremental ? await pendingGap(env.DB,id):null;
+  // Another full refresh may have filled the hole during its retry cooldown.
+  // Reconcile persisted coverage before deferring the upstream request again.
+  if (gap && !skipGap && gap.retryAt>now) gap=await advanceGap(env.DB,id,gap);
   if(gap && !skipGap && !(gap.retryAt>now)) {
     let recovered=0,error=null;
     try {
@@ -224,6 +227,7 @@ export async function syncFinanceDatasetsIfDue(env, now = Date.now()) {
   const picked = pickDatasetsToRefresh(due);
   const results = [];
   for (const item of picked) {
+    const started = Date.now();
     try {
       results.push(await refreshFinanceDataset(env, item.id, {now,forceFull:item.reason==='history_audit'}));
     } catch (error) {
@@ -232,6 +236,9 @@ export async function syncFinanceDatasetsIfDue(env, now = Date.now()) {
         await datasetFailure(env.DB, item.id, 502, message.slice(0, 160));
       } catch (_) {}
       results.push({ id: item.id, ok: false, error: message.slice(0, 160) });
+    } finally {
+      const elapsedMs = Date.now() - started;
+      if (elapsedMs > 2000) console.log(JSON.stringify({event:'finance_collection_slow',dataset:item.id,elapsedMs,ok:results.at(-1)?.ok===true}));
     }
   }
   return {

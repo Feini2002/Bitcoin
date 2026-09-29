@@ -2,14 +2,17 @@
 
 优先通过 package.json 的稳定命令调用。脚本保留现有路径，避免为分类而破坏操作入口。
 
-2026-09-27 当前开发从[四页工作台方案](../docs/research/repository-development-plan-2026-09-27.md)开始；`npm run build` 已包含研究路由完整性、Pages 清理离线回归和云端开关模拟。它们不执行生产删除或暂停/恢复。`verify:research` 可单独核对当前计划的可发现性；生产开关仍用 `cloud:status` / `cloud:pause` / `cloud:resume`，遵从[开关说明](../docs/research/cloudflare-pause-resume-2026-09-27.md)。
+当前开发从[交接记录](../docs/operations/development-handoff-2026-09-30.md)与[四页工作台方案](../docs/research/repository-development-plan-2026-09-27.md)开始；`npm run build` 已包含研究路由、研究协议、共享读取、Pages 清理离线回归和云端开关模拟，不执行生产删除或暂停/恢复。生产开关仍用 `cloud:status` / `cloud:pause` / `cloud:resume`，遵从[开关说明](../docs/research/cloudflare-pause-resume-2026-09-27.md)。
 
 | 用途 | 入口 | 副作用 |
 | --- | --- | --- |
 | 按功能/文件查询研究资料 | node scripts/research-context.cjs 问题；--file ID；--find 关键词 | 只读，输出有数量上限；不自动调用图工具、测试或网络 |
 | 刷新/核对研究资料目录 | node scripts/research-context.cjs --refresh / --check | refresh只写FILE_CATALOG.json；check只读，不执行资料包内容 |
 
-资料目录覆盖本地核验记录、第一批归档与第二批执行包（291份），按「批次＋权威等级」标注：本地核验 > 第一批设计 > 备选参考 > 仅追溯；`90_reference` 与第一批重复，只存指针不重复编目。查询输出直接显示等级，冲突时据此取舍。
+资料目录覆盖本地核验记录、第一批归档与第二批执行包，按「批次＋权威等级」标注：本地核验 > 第一批设计 > 备选参考 > 仅追溯；`90_reference` 与第一批重复，只存指针不重复编目。查询输出直接显示等级，冲突时据此取舍。
+
+| 用途 | 入口 | 副作用 |
+| --- | --- | --- |
 | 离线完整验证 + 网站产物 | npm run build | 仅本地 dist/pages/ |
 | 网站资产构建 | npm run build:pages | 重建可再生 dist/pages/ |
 | 发布边界验证 | npm run verify:pages | 本地固定样例与发布产物 |
@@ -24,7 +27,11 @@
 | 规范数据集线上读回 | node scripts/verify-finance-datasets-live.cjs | 只读Worker/D1，核对32项来源/覆盖及已生成首次样本的逐字段一致性 |
 | 行情/衍生品诊断 | diagnose-klines.cjs、diagnose-derivatives-sync.cjs、baseline-derivatives-prod.cjs | 联网；按脚本实际路径判断写入范围 |
 | 快照远程诊断 | diagnose-market-snapshot-cloud.cjs | 包含 POST 写快照，不能当纯只读检查运行 |
-| 报告导入 | import-yuqing-report.cjs | 远程报告写入，仅在明确授权时使用 |
+| 研究证据准备 | prepare-research.cjs --kind=daily_event 或 --kind=sentiment_analysis | 有界读取现有四页与报告，原始证据写 .artifacts/research/；不调用模型或导入报告 |
+| 研究协议与界面 | npm run verify:research；npm run verify:research-ui | 离线校验、固定数据 Chromium，不生成真实研究 |
+| 报告导入 | import-yuqing-report.cjs | 默认只校验；显式 --local/--remote 才写入新 ID，远程须有明确授权 |
+| 读取与多周期回归 | verify-desk-read.cjs；npm run verify:cost-ui | 离线固定数据与浏览器，不增加采集 |
+| 真实读取测量 | verify-read-performance.cjs，可追加站点根 URL | 真实页面/API 只读，保存本地测量样本，不是稳定性保证 |
 | Pages 发布/清理 | deploy-pages-safe.cjs、prune-pages-deployments.cjs | 上传网站、清理历史部署 |
 | 有界启动 | run-bounded.cjs | 记录父子 PID，按指定秒数停止本次进程树 |
 | 新电脑开发验收 | npm run verify:dev | 本地 Vite 和 Chromium，固定 API 地址，无远程写入 |

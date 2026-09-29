@@ -245,6 +245,7 @@
     },
 
     _destroyTileChartsOnly() {
+      this.cancelReads();
       for (let i = 0; i < this._tiles.length; i++) {
         const t = this._tiles[i];
         if (!t) continue;
@@ -271,9 +272,9 @@
       }
     },
 
-    _tileSignal() {
-      if (!this._abort || this._abort.signal.aborted) this._abort = new AbortController();
-      return this._abort.signal;
+    _tileSignal(tile) {
+      tile.readAbort = new AbortController();
+      return tile.readAbort.signal;
     },
 
     _tileEvidence(interval, desk, rows) {
@@ -316,6 +317,8 @@
       const interval = this._tfs[i];
       const identity = sym + ':' + interval;
       if (t.requestIdentity === identity) return;
+      if (t.readAbort) t.readAbort.abort();
+      t.readAbort = null;
       t.interval = interval;
       t.loadGen += 1;
       const g = t.loadGen;
@@ -363,15 +366,31 @@
       }
       try {
         t.requestIdentity = identity;
-        const signal = this._tileSignal();
+        const signal = this._tileSignal(t);
+        // Reuse a full window already read by the main chart or another tile,
+        // but never draw it before a fresh tail validates its revision/coverage.
+        if ((t.cacheIdentity !== identity || !t.cachedRows || Date.now() - t.fullReadAt >= 60 * 60 * 1000) && DataEngine.peekChartWindow) {
+          const shared = DataEngine.peekChartWindow(sym, interval);
+          if (shared?.historyRevision != null && shared.series?.length) {
+            t.cacheIdentity = identity;
+            t.cachedRows = shared.series;
+            t.confirmedHistoryRevision = Number(shared.historyRevision);
+            t.cacheInstrumentId = shared.instrumentId;
+            t.fullReadAt = Date.now();
+          }
+        }
         const cached = t.cacheIdentity === identity && t.cachedRows && Date.now() - t.fullReadAt < 60 * 60 * 1000
           ? t.cachedRows : null;
-        let desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval, signal, ...(cached ? { tail: 20 } : {}) });
+        let desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval, signal, priority: 'background', ...(cached ? { tail: 20 } : {}) });
         if (g !== t.loadGen || this._tiles[i] !== t) return;
         let fullRead = !cached;
         // A hidden tab can miss more than the tail window. Refill before merging.
-        if (cached && desk.pricePathAvailable && desk.series && desk.series.length && Number(desk.series[0].t) > Number(cached[cached.length - 1].t)) {
-          desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval, signal });
+        if (cached && desk.pricePathAvailable && (!desk.series?.length
+            || desk.coverageScope !== 'tail' || desk.historyRevision == null
+            || Number(desk.series[0].t) > Number(cached[cached.length - 1].t)
+            || Number(desk.series[desk.series.length - 1].t) < Number(cached[cached.length - 1].t)
+            || (t.cacheInstrumentId && desk.instrumentId !== t.cacheInstrumentId))) {
+          desk = await DataEngine.fetchDesk("chart", { symbol: sym, interval, signal, priority: 'background' });
           fullRead = true;
           if (g !== t.loadGen || this._tiles[i] !== t) return;
         }
@@ -394,6 +413,7 @@
         }
         if (t.cacheIdentity !== identity) t.confirmedHistoryRevision = null;
         t.cacheIdentity = identity;
+        t.cacheInstrumentId = desk.instrumentId;
         t.cachedRows = raw;
         if (fullRead) t.fullReadAt = Date.now();
         // Consumption belongs to this tile. Another tile/main chart can read the
@@ -407,7 +427,7 @@
             const to = Number(raw[raw.length - 1].t) + (step > 0 ? step : 1);
             t.rereadInFlight = true;
             try {
-              const again = await DataEngine.fetchDesk("chart", { symbol: sym, interval, from, to, signal });
+              const again = await DataEngine.fetchDesk("chart", { symbol: sym, interval, from, to, signal, priority: 'background' });
               if (g !== t.loadGen || this._tiles[i] !== t || !again || again.pricePathAvailable !== true) return;
               const againRev = again.historyRevision == null ? NaN : Number(again.historyRevision);
               if (!Number.isFinite(againRev) || againRev < revision) return;
@@ -442,6 +462,17 @@
         errEl("加载失败: " + (e && e.message ? e.message : e));
       } finally {
         if (g === t.loadGen) t.requestIdentity = null;
+      }
+    },
+
+    cancelReads() {
+      for (const tile of this._tiles) {
+        if (!tile) continue;
+        if (tile.readAbort) tile.readAbort.abort();
+        tile.readAbort = null;
+        tile.loadGen++;
+        tile.requestIdentity = null;
+        tile.rereadInFlight = false;
       }
     },
 
@@ -556,8 +587,6 @@
     },
 
     dispose() {
-      if (this._abort) this._abort.abort();
-      this._abort = null;
       this._panelBound = false;
       this._detachTimeSync();
       if (this.rafSync) cancelAnimationFrame(this.rafSync);

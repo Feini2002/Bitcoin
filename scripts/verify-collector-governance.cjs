@@ -84,6 +84,16 @@ const progress = () => new Promise(r => setImmediate(r));
   } finally { globalThis.fetch = originalFetch; failure = ''; }
   const st = state();
   let collector = new LiquidationCollector(st, { DB });
+  let staleCloses = 0;
+  const socket = { readyState: WebSocket.OPEN, close() { staleCloses++; } };
+  collector.sources.bybit = { ...collector.emptySource('bybit'),
+    lastMarketMessageAt: now - 600000, lastEventAt: now - 600000, lastHeartbeatAt: now };
+  collector.checkOneStale('bybit', socket, 90000);
+  assert.equal(staleCloses, 0, 'quiet liquidation feed with fresh ticker heartbeat stays connected');
+  collector.sources.bybit.lastHeartbeatAt = now - 600000;
+  collector.checkOneStale('bybit', socket, 90000);
+  assert.equal(staleCloses, 1, 'a genuinely silent connection is still recycled');
+  console.log('PASS liquidation liveness uses newest timestamp; quiet events do not cause reconnect loops');
   collector.ingest(event(open + 10));
   collector.ingest(event(open + 10));
   await st.drain();

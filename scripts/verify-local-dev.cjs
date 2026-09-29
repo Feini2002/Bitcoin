@@ -35,7 +35,7 @@ async function main() {
     : route.fulfill({status:200,contentType:route.request().resourceType()==='script'?'text/javascript':'application/json',body:route.request().resourceType()==='script'?'':'{}'}));
   await page.goto(origin + '/index.html#/overview');
   await expect(page).toHaveTitle('Bit 交易决策平台');
-  await expect(page.getByRole('heading',{name:'功能清单',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'研究总览',exact:true})).toBeVisible();
   assert.deepEqual(await page.evaluate(()=>[window.getBitDataApiBase(),window.getYuqingApiBase()]),[process.env.BIT_DATA_API_BASE,process.env.BIT_YUQING_API_BASE]);
   assert.equal(await page.locator('vite-error-overlay').count(),0);
   assert.deepEqual(errors,[]);

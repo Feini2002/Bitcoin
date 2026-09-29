@@ -1,9 +1,13 @@
 # 文档索引
 
+- [2026-09-30 开发交接](operations/development-handoff-2026-09-30.md)：已完成主线、发布状态、验证证据、剩余边界与新电脑接续顺序。
+- [研究工作台改版](research/product-redesign-2026-09-29.md) 与 [AI 对话研究流程](research/ai-research-workflow.md)：事件/舆情模块及无模型 Key 的研究、预览和显式导入。
+- [行情读取性能修复](research/chart-read-performance-2026-09-30.md)：慢 SQL、请求调度、共享窗口、取消/恢复、真实测量与发布记录。
+- [数据恢复与采集核验](research/workbench-recovery-2026-09-29.md)：恢复后的数据修复与实测，不是长期在线保证。
 - [当前开发方案：四页数据工作台](research/repository-development-plan-2026-09-27.md)：当前执行与进度入口，W1–W4 的依赖、受影响文件、验收和发布边界。
 - [当前架构核对](research/repository-architecture-review-2026-09-27.md)：复用的治理成果、实际链路缺口及旧计划归并。
 - [币安插件与四页工作台复用手册](research/binance-plugin-workbench-research-2026-09-27.md)：当前工具实测、官方与社区来源、数据核对/补查流程及可复制研究指令；接入建议尚未实施。
-- [云端暂停与恢复](research/cloudflare-pause-resume-2026-09-27.md)：2026-09-27 15:55 UTC 已暂停三个 Worker。说「开起来」按 `cloudflare/cloud-control-state.json` 恢复。
+- [云端暂停与恢复](research/cloudflare-pause-resume-2026-09-27.md)：已于 2026-09-29 恢复；当前状态用 `cloud:status` 核对，开关使用固定脚本和保存的恢复记录。
 - [币安连接诊断与修复](research/binance-connectivity-2026-09-16.md)：WebSocket迁移实测、CF REST 403边界与免费采集路径。
 
 - [币安主源工作台数据与改版方案](research/workbench-binance-data-plan-2026-09-16.md)：32个规范数据集、D1验收、金融对抗审查、聚合和图表优化；页面留待下一轮实施。

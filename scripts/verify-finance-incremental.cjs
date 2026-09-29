@@ -182,6 +182,15 @@ function database() {
   sparse=JSON.parse((await readDataset(sparseDb,hourlyId)).state.last_error.split('dataset_history_gap_pending:')[1]);
   assert.equal(sparse.failures,2);assert.equal(sparse.retryAt-now,3600000);
   pass('permanently missing history retries at most every 30 minutes without suppressing the current tail');
+  await persistDataset(sparseDb,hourlyId,envelope(hourlyId,[1,2,3].map(i=>hourPoint(base+i*3600000)),now));
+  let redundantGapCalls=0;
+  await refreshFinanceDataset(sparseEnv,hourlyId,{now:now+1000,dependencies:{fetch:async raw=>{
+    if(new URL(raw).searchParams.has('startTime'))redundantGapCalls++;
+    return Response.json([hourPoint(base+4*3600000)]);
+  }}});
+  assert.equal((await readDataset(sparseDb,hourlyId)).state.last_error,null);
+  assert.equal(redundantGapCalls,0);
+  pass('a full refresh completed during cooldown clears the saved gap from persisted coverage without another historical request');
 
   const live=database(),barTime=base-300000;
   const bar=close=>[barTime,'100','110','90',String(close),'20',barTime+299999,'2000',10,'12','1200'];
@@ -285,6 +294,22 @@ function database() {
   now+=1000;await persistDataset(macroDb,macroId,envelope(macroId,macroData('100','2026-01-15')));
   assert.equal((await readDataset(macroDb,macroId)).observations[0].sourceRevision.realtimeStart,'2026-01-15');
   assert.equal(macroDb.sqlite.prepare("SELECT COUNT(*) AS n FROM finance_dataset_observations WHERE time_precision<>'receipt'").get().n,4);
+  // Real daily-series size: inlining successor lookup used to multiply the
+  // 1,500 input dates by prior observations and stall the shared D1 database.
+  const macroScaleDb=database();let macroKeyVisits=0;
+  macroScaleDb.sqlite.function('measured_macro_key',value=>{
+    if(++macroKeyVisits>30000)throw Error('macro successor lookup expanded quadratically');
+    return JSON.parse(value).key;
+  });
+  const scaleBatch=macroScaleDb.batch.bind(macroScaleDb);
+  macroScaleDb.batch=statements=>scaleBatch(statements.map(s=>s.sql.includes('WITH next_receipts')
+    ? {...s,sql:s.sql.replaceAll("json_extract(j.value,'$.key')",'measured_macro_key(j.value)')} : s));
+  const scaleData={observations:Array.from({length:1500},(_,i)=>({date:new Date(base-i*86400000).toISOString().slice(0,10),value:'1.234',realtime_start:'2026-09-26',realtime_end:'2026-09-26'}))};
+  for(let i=0;i<3;i++)await persistDataset(macroScaleDb,'fred-real10y',envelope('fred-real10y',scaleData,base+i*3600000));
+  assert.equal(macroScaleDb.sqlite.prepare("SELECT COUNT(*) AS n FROM finance_dataset_observations WHERE time_precision<>'receipt'").get().n,1500);
+  assert(macroKeyVisits<=1500*3*2,`successor keys evaluated ${macroKeyVisits} times`);
+  macroScaleDb.sqlite.close();
+  pass('1,500-date macro snapshots materialize successor keys once and keep one equal-valued history version');
   const lateEqualDb=database();now=base;await persistDataset(lateEqualDb,macroId,envelope(macroId,macroData('100')));
   now=base+2000;await persistDataset(lateEqualDb,macroId,envelope(macroId,macroData('200')));
   now=base+1000;await persistDataset(lateEqualDb,macroId,envelope(macroId,macroData('200')));
@@ -427,6 +452,20 @@ function database() {
   } finally {globalThis.fetch=originalFetch;fairnessDb.sqlite.close();}
   pass('eight persistent FRED failures relinquish queue priority; funding/basis and fees keep cadence and recovered sources resume normal refresh');
 
+  const headDb=database();
+  const headOpen=Math.floor(now/300000)*300000;
+  const headBar=t=>[t,100,110,90,105,1,t+299999,100,1,0.5,50];
+  await persistLiveKlineBar(headDb,'5m',headBar(headOpen),'fstream.binance.com','cloud-ws',{closed:false});
+  await persistLiveKlineBar(headDb,'5m',headBar(headOpen+300000),'fstream.binance.com','cloud-ws',{closed:false});
+  await persistLiveKlineBar(headDb,'5m',headBar(headOpen-300000),'fstream.binance.com','cloud-ws',{closed:false});
+  assert.equal(headDb.sqlite.prepare("SELECT head_t t FROM desk_history_state WHERE interval='5m'").get().t,headOpen+300000);
+  const {canonicalHistoryStatements}=await load('dataset-store.mjs');
+  const headUpdate=canonicalHistoryStatements('binance-perp-klines-5m',[{key:String(headOpen),observedAt:new Date(headOpen).toISOString(),values:{}}],'fstream.binance.com','cloud-ws').after[1];
+  const headPlan=headDb.sqlite.prepare('EXPLAIN QUERY PLAN '+headUpdate.sql).all(...headUpdate.params);
+  assert.ok(headPlan.every(row=>!/finance_dataset_observations|SCAN/i.test(row.detail)),JSON.stringify(headPlan));
+  headDb.sqlite.close();
+  pass('live canonical head advances without a history scan; older backfill cannot move the head backwards');
+
   const revDb=database();
   const revStep=300000, revHead=base-base%revStep;
   for(let i=0;i<40;i++) revDb.sqlite.prepare('INSERT INTO klines(symbol,interval,t,o,h,l,c,v) VALUES (?,?,?,?,?,?,?,?)').run('BTCUSDT','5m',revHead-i*revStep,1,2,0,1,1);
@@ -500,8 +539,9 @@ function database() {
   pass('WB-06 single-statement bounded snapshot keeps cap+1, explicit/tail/empty-window predecessor and knownAt winners inside the caller batch');
   const boundedPlan=db.sqlite.prepare('EXPLAIN QUERY PLAN '+preparedTail.statement.sql).all(...preparedTail.statement.values).map(row=>row.detail);
   assert(!boundedPlan.some(detail=>detail.includes('idx_finance_dataset_receipt')),'bounded reads must not sort the whole receipt range to find each observation key');
-  assert(boundedPlan.some(detail=>/SEARCH o .*\(dataset_id=\? AND observation_key=\?/.test(detail)),
+  assert(boundedPlan.some(detail=>/SEARCH v .*\(dataset_id=\? AND observation_key=\?/.test(detail)),
     'winner selection must probe the primary key for each selected key, not scan the dataset first');
+  assert(boundedPlan.some(detail=>/SEARCH o USING INTEGER PRIMARY KEY/.test(detail)), 'read the selected winner once');
   pass('WB-07 bounded assembly avoids the receipt-index sort and drives winners from selected keys; real rows_read is checked by desk-migration --workerd');
   const untimedDb=database();
   for (const [untimedId,data] of [

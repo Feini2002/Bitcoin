@@ -6,6 +6,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const protocol = require('../js/research-protocol.js');
 
 const DEFAULT_DB = "yuqing";
 const DAILY_EVENT_KIND = "daily_event";
@@ -55,7 +56,7 @@ function parseArgs(argv) {
       throw new Error(`Unknown argument: ${arg}`);
     }
   }
-  if (!opts.remote && !opts.local) opts.remote = true;
+  if (!opts.remote && !opts.local) opts.dryRun = true;
   if (opts.remote && opts.local) throw new Error("Choose only one of --remote or --local");
   return opts;
 }
@@ -337,6 +338,11 @@ function readPayload(opts) {
 }
 
 function normalizePayload(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Payload must be an object');
+  if (input.report?.schemaVersion) {
+    const errors = protocol.validate(input);
+    if (errors.length) throw new Error(errors.join('\n'));
+  }
   const generatedAt = String(input.generatedAt || new Date().toISOString());
   const kind = String(input.kind || DAILY_EVENT_KIND);
   if (kind !== DAILY_EVENT_KIND && kind !== "sentiment_analysis") {
@@ -346,8 +352,7 @@ function normalizePayload(input) {
   if (!report) throw new Error("Payload must include report object");
   const isCodexDev =
     input.triggerType === "codex_dev" ||
-    (input.grounding && input.grounding.generator === "codex") ||
-    /codex/i.test(String(report.title || ""));
+    input.grounding?.devImport === true;
   const costEstimate =
     input.costEstimate ||
     (input.grounding && input.grounding.costEstimate) ||
@@ -410,7 +415,7 @@ function toSql(payload) {
     safeJson(payload.sourceErrors, []),
   ].map(sqlString);
   return [
-    "INSERT OR REPLACE INTO yuqing_reports",
+    "INSERT INTO yuqing_reports",
     "(id, kind, report_date, slot, trigger_type, generated_at, status, source_refs_json, grounding_json, market_snapshot_json, report_json, source_errors_json)",
     `VALUES (${values.join(", ")});`,
   ].join("\n");
@@ -420,14 +425,11 @@ function runWrangler(sql, opts) {
   const tmp = path.join(os.tmpdir(), `yuqing-import-${Date.now()}-${process.pid}.sql`);
   fs.writeFileSync(tmp, sql, "utf8");
   try {
-    const args = ["wrangler", "d1", "execute", opts.database, opts.remote ? "--remote" : "--local", "--file", tmp];
-    const res =
-      process.platform === "win32"
-        ? spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", ["npx", ...args].map(windowsCmdArg).join(" ")], {
-            cwd: process.cwd(),
-            stdio: "inherit",
-          })
-        : spawnSync("npx", args, { cwd: process.cwd(), stdio: "inherit" });
+    const root = path.resolve(__dirname, '..');
+    const args = [path.join(root, 'scripts/run-bounded.cjs'), '90', process.execPath,
+      path.join(root, 'node_modules/wrangler/bin/wrangler.js'), 'd1', 'execute', opts.database,
+      opts.remote ? '--remote' : '--local', '--config', path.join(root, 'cloudflare/wrangler.yuqing.toml'), '--file', tmp];
+    const res = spawnSync(process.execPath, args, { cwd: root, stdio: 'inherit', timeout: 110000 });
     if (res.error) throw res.error;
     if (res.status !== 0) throw new Error(`wrangler exited with status ${res.status}`);
   } finally {
@@ -452,9 +454,10 @@ function main() {
   console.log(`Imported ${payload.kind} report ${payload.id} into ${opts.database} (${opts.remote ? "remote" : "local"}).`);
 }
 
-try {
+if (require.main === module) try {
   main();
 } catch (err) {
   console.error(err && err.message ? err.message : String(err));
   process.exit(1);
 }
+module.exports = { parseArgs, normalizePayload, toSql };

@@ -44,7 +44,7 @@ async function main() {
   const failedDeskRequests=[];
   context.engine.workerFetch=async url=>{failedDeskRequests.push(new URL(url).pathname);return new Response(JSON.stringify({error:'fixture service paused'}),{status:503});};
   await assert.rejects(context.engine.fetchDesk('chart'),/503/);
-  check('GOV-12 connected market page preserves desk failure without fallback',()=>assert.deepEqual(failedDeskRequests,['/api/desk/chart']));
+  check('GOV-12 desk failure retries once without a legacy fallback',()=>assert.deepEqual(failedDeskRequests,['/api/desk/chart','/api/desk/chart']));
   context.engine.workerFetch=async()=>new Response(JSON.stringify({klines:[],latestT:0}));
   const empty=await context.engine.fetchKlinesFromD1('BTCUSDT','5m');
   check('GOV-06 empty data is not fabricated',()=>assert.equal(empty.length,0));
@@ -58,6 +58,8 @@ async function main() {
     setBreadcrumb:()=>{},highlightNav:()=>{},
     requestAnimationFrame:fn=>{frameCallbacks.set(++nextFrame,fn);return nextFrame;},cancelAnimationFrame:id=>frameCallbacks.delete(id),
     pagePlaceholder:()=>'',pageAgentPlaceholder:()=>'',PLACEHOLDERS:{},disposeDerivatives:()=>{},
+    pageResearchOverview:()=>'',initResearchOverview:()=>{},disposeResearchOverview:()=>{},
+    ResearchDesk:{scaffold:()=>'',mount:kind=>mounted.push(kind),dispose:()=>{}},
   });
   for(const name of ['pageOverview','pageChart','pageOrderflow','pageHeatmap','pageDerivatives','pageYuqingEvents','pageNews','pageBoardroom','pageEnvAgent','pageCalc','pageSettings']) appContext[name]=()=>name;
   for(const name of ['initChart','initOrderflow','initHeatmap','initDerivatives','initYuqingEvents','initNews','renderEnvCharts','initSettingsPage']) appContext[name]=()=>mounted.push(name);
@@ -65,7 +67,7 @@ async function main() {
   vm.runInContext('render()',appContext);
   appContext.location.hash='#/news';vm.runInContext('render()',appContext);
   for(const fn of frameCallbacks.values()) fn(); frameCallbacks.clear();
-  check('GOV-07 rapid navigation mounts only final route',()=>assert.deepEqual(mounted,['initYuqingEvents']));
+  check('GOV-07 rapid navigation mounts only final route',()=>assert.deepEqual(mounted,['daily_event']));
   appContext.location.hash='#/chart?interval=4h';
   check('GOV-08 query-bearing hash resolves consistently',()=>assert.equal(vm.runInContext('resolveRoute()',appContext),'chart'));
   vm.runInContext('render()',appContext);for(const fn of frameCallbacks.values()) fn();frameCallbacks.clear();

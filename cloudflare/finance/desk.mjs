@@ -103,6 +103,9 @@ function rawTapeBar(row) {
 }
 
 export function nextKlineOpen(interval, open) {
+  // Native Binance 3d history before August 2023 has a different grid. Use
+  // the returned bar's own anchor when checking continuity, not today's grid.
+  if (interval === '3d') return Number(open) + INTERVAL_MS[interval];
   return klineOpenAt(interval, Number(open) + INTERVAL_MS[interval]);
 }
 
@@ -315,9 +318,10 @@ function contractClock(dataset,id,now,{sourceMaxAgeMs=null}={}) {
   const receipt=Date.parse(dataset?.state?.last_success_received_at || latest?.receivedAt || '');
   const refreshMs=Number(dataset?.refreshSeconds || FINANCE_DATASETS[id]?.refreshSeconds || 60)*1000;
   const collectionLimit = sourceMaxAgeMs != null && sourceMaxAgeMs <= 60000 ? Math.max(refreshMs, sourceMaxAgeMs) : refreshMs;
-  const collectionStale=!trusted || dataset?.collectionStale===true || !Number.isFinite(receipt) || receipt>now || now-receipt>collectionLimit;
+  const collectionStale=!trusted || (collectionLimit===refreshMs && dataset?.collectionStale===true)
+    || !Number.isFinite(receipt) || receipt>now || now-receipt>collectionLimit;
   const sourceStale=!trusted || !Number.isFinite(observedAt) || observedAt>now
-    || dataset?.sourceStale===true || (sourceMaxAgeMs!==null && now-observedAt>sourceMaxAgeMs);
+    || (sourceMaxAgeMs===null && dataset?.sourceStale===true) || (sourceMaxAgeMs!==null && now-observedAt>sourceMaxAgeMs);
   return {trusted,latest,observedAt,collectionStale,sourceStale,available:trusted && !collectionStale && !sourceStale};
 }
 
@@ -595,6 +599,18 @@ function footprintDeskBar(row) {
 }
 
 export async function handleDesk(request, env) {
+  const started = Date.now();
+  const metrics = {};
+  const response = await assembleDesk(request, env, metrics);
+  const outgoing = new Response(response.body, response);
+  const timings = [`desk;dur=${Date.now() - started}`];
+  if (metrics.d1 != null) timings.push(`d1;dur=${metrics.d1}`, `sql;dur=${metrics.sql}`, `rows;desc="${metrics.rows}"`);
+  outgoing.headers.set('Server-Timing', timings.join(', '));
+  outgoing.headers.set('Access-Control-Expose-Headers', 'Server-Timing');
+  return outgoing;
+}
+
+async function assembleDesk(request, env, metrics) {
   if (!env || !env.DB) return json({ error: 'D1 binding missing' }, 500);
   const url = new URL(request.url);
   const parts = url.pathname.replace(/\/$/, '').split('/');
@@ -653,7 +669,11 @@ export async function handleDesk(request, env) {
       .bind('BTCUSDT', interval, requestFrom, requestTo, limit));
     const statusIndex = statements.length;
     statements.push(env.DB.prepare('SELECT last_run, last_ok, last_error FROM sync_status WHERE symbol=?1 AND interval=?2').bind('BTCUSDT', interval));
+    const dbStarted = Date.now();
     const batched = await env.DB.batch(statements);
+    metrics.d1 = Date.now() - dbStarted;
+    metrics.sql = batched.reduce((sum, item) => sum + Number(item.meta?.timings?.sql_duration_ms ?? item.meta?.duration ?? 0), 0);
+    metrics.rows = batched.reduce((sum, item) => sum + Number(item.meta?.rows_read || 0), 0);
     const revisionRow = (batched[readIntent === 'window' ? 1 : 0].results || [])[0] || null;
     const tapeResult = batched[readIntent === 'window' ? 2 : 1];
     let tape = knownAt ? [] : tapeRowsFrom(tapeResult).reverse();
@@ -710,7 +730,7 @@ export async function handleDesk(request, env) {
       if (!Number.isFinite(Date.parse(knownAt))) return json({ error: 'invalid_known_at' }, 400);
     }
     const entries = await Promise.all(ids.map(async (id) => [id, await readSummaryQuiet(env.DB, id, knownAt)]));
-    return json(buildContextDesk(Object.fromEntries(entries), now));
+    return json(buildContextDesk(Object.fromEntries(entries), Date.now()));
   }
   if (scope === 'heatmap') {
     const symbol = String(url.searchParams.get('symbol') || 'BTCUSDT').toUpperCase();

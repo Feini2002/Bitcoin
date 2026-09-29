@@ -2,16 +2,16 @@
    路由注册与启动
    ======================================================= */
 const ROUTES = {
-  "overview": { crumbs: ["核心", "概览 Dashboard"], render: pageOverview },
+  "overview": { crumbs: ["研究桌", "研究总览"], render: pageResearchOverview, afterMount: initResearchOverview },
   "premarket": { crumbs: ["核心", "盘前简报"], render: () => pagePlaceholder(PLACEHOLDERS.premarket) },
 
   "chart": { crumbs: ["市场监测", "行情工作台"], render: pageChart, afterMount: initChart },
   "orderflow": { crumbs: ["市场监测", "订单流与足迹图"], render: pageOrderflow, afterMount: initOrderflow },
   "heatmap": { crumbs: ["市场监测", "强平雷达"], render: pageHeatmap, afterMount: initHeatmap },
-  "derivatives": { crumbs: ["市场监测", "衍生品面板"], render: pageDerivatives, afterMount: initDerivatives },
+  "derivatives": { crumbs: ["市场监测", "环境背景"], render: pageDerivatives, afterMount: initDerivatives },
 
-  "news": { crumbs: ["舆情与事件", "事件一览"], render: pageYuqingEvents, afterMount: initYuqingEvents },
-  "news-analysis": { crumbs: ["舆情与事件", "舆情分析"], render: pageNews, afterMount: initNews },
+  "news": { crumbs: ["研究", "事件一览"], render: () => researchLegacyRoute() ? pageYuqingEvents() : ResearchDesk.scaffold('daily_event'), afterMount: () => researchLegacyRoute() ? initYuqingEvents() : ResearchDesk.mount('daily_event') },
+  "news-analysis": { crumbs: ["研究", "舆情分析"], render: () => researchLegacyRoute() ? pageNews() : ResearchDesk.scaffold('sentiment_analysis'), afterMount: () => researchLegacyRoute() ? initNews() : ResearchDesk.mount('sentiment_analysis') },
 
   "boardroom": { crumbs: ["智囊团", "会议室"], render: pageBoardroom },
   "agent-chief": { crumbs: ["智囊团", "首席策略官"], render: () => pageAgentPlaceholder("chief") },
@@ -36,21 +36,23 @@ const ROUTES = {
   "settings": { crumbs: ["系统", "设置"], render: pageSettings, afterMount: initSettingsPage },
 };
 
+function researchLegacyRoute() { return /(?:[?&])legacy=1(?:&|$)/.test(location.hash); }
 function resolveRoute() {
   const h = location.hash.replace(/^#\/?/, "").trim();
   const id = h.split("?")[0];
-  if (!id || !ROUTES[id]) return "chart";
+  if (!id || !ROUTES[id]) return "overview";
   return id;
 }
 
 // 只释放上一个页面；取消尚未执行的挂载，避免快速切页后启动旧订阅。
 const PAGE_DISPOSERS = {
+  overview: () => disposeResearchOverview(),
   chart: () => window.__bitDeskDisposeChart?.(),
   orderflow: () => window.__bitDeskDisposeOrderflow?.(),
   heatmap: () => window.__bitDeskDisposeHeatmap?.(),
   derivatives: () => disposeDerivatives(),
-  news: () => window.__bitDeskDisposeYuqingEvents?.(),
-  "news-analysis": () => window.__bitDeskDisposeNews?.(),
+  news: () => { ResearchDesk.dispose(); window.__bitDeskDisposeYuqingEvents?.(); },
+  "news-analysis": () => { ResearchDesk.dispose(); window.__bitDeskDisposeNews?.(); },
 };
 let mountedPage = null;
 let pendingPageMount = null;
@@ -127,7 +129,7 @@ function init() {
   initMobileNavigation();
   const rawHash = location.hash.replace(/^#\/?/, "").trim();
   if (!rawHash || !ROUTES[rawHash.split("?")[0]]) {
-    history.replaceState(null, "", "#chart");
+    history.replaceState(null, "", "#/overview");
   }
   render();
   window.addEventListener("hashchange", render);

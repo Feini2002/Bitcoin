@@ -3,8 +3,8 @@
   "accountId": "5c7e14191f8b616a07f03f767ec48bb8",
   "zoneId": "3054bed2326bd0cbb301660b2c636c8e",
   "accountSubdomain": "cmw1196466375",
-  "phase": "paused",
-  "verifiedAt": "2026-09-27T15:55:52.231Z",
+  "phase": "active",
+  "verifiedAt": "2026-09-29T04:46:04.529Z",
   "restore": {
     "capturedAt": "2026-09-27T15:53:28.186Z",
     "workers": {
@@ -33,7 +33,7 @@
         ]
       },
       "btc": {
-        "versionId": "696db73c-4f71-4bef-8a5b-ed0801aa632c",
+        "versionId": "e8e58e2f-b4a3-4895-bc43-00ed4f1ee461",
         "crons": [
           "* * * * *"
         ],
@@ -197,5 +197,5 @@
     "versionId": "be22bb8a-0d6b-4ce6-be08-5ce2038fe95c",
     "sha256": "ab8fbee4228b56ea9aada8e86947b76aa64081c42384d8142736300c3b867436"
   },
-  "updatedAt": "2026-09-27T15:55:52.231Z"
+  "updatedAt": "2026-09-29T04:46:04.529Z"
 }

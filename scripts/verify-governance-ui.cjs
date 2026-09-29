@@ -36,7 +36,8 @@ async function main(){
     await page.clock.install({time:NOW});
     await page.goto(origin+'/#/overview');
     await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
-    await expect(page.getByRole('heading',{name:'功能清单',exact:true})).toBeVisible();
+    await expect(page.getByRole('heading',{name:'研究总览',exact:true})).toBeVisible();
+    await page.getByText('查看功能清单、规划与演示',{exact:true}).click();
     await expect(page.getByText('已接入只表示该页连上了接口',{exact:false})).toBeVisible();
     for(const id of ['chart','orderflow','heatmap','derivatives']){
       const card=page.locator('.feature-card[href="#/'+id+'"]');
@@ -92,7 +93,8 @@ async function main(){
   }
   const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'zh-CN',timezoneId:'Asia/Shanghai',colorScheme:'light',deviceScaleFactor:1,reducedMotion:'reduce'});
   context.setDefaultTimeout(8000);
-  let failKlines=false;
+  let failKlines=false, recoveredKlines=false;
+  const recoveryReads=[];
   await context.addInitScript(()=>{
     window.__fixtureSockets=[];
     class FixtureSocket extends EventTarget {
@@ -109,7 +111,9 @@ async function main(){
     if(url.href.includes('lightweight-charts'))return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(libraryPath,'utf8')});
     if(route.request().resourceType()==='script')return route.fulfill({contentType:'text/javascript',body:''});
     if(url.pathname==='/api/desk/chart' || url.pathname.startsWith('/api/desk/')){
+      recoveryReads.push({interval:url.searchParams.get('interval'),tail:url.searchParams.get('tail')});
       if(failKlines)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'fixture service paused'})});
+      if(recoveredKlines)return route.fulfill({contentType:'application/json',body:JSON.stringify(makeChartDesk(NOW,{interval:url.searchParams.get('interval')||'15m',bars:40,revision:1,scope:url.searchParams.get('tail')?'tail':'window',verified:false,eligible:false}))});
       return route.fulfill({contentType:'application/json',body:JSON.stringify({
         schemaVersion:'2026-09-21.1', asKnownMode:'system_observed', scope:'chart',
         pricePathAvailable:false, tradingNarrative:false, series:[], coverage:{available:0,returned:0,truncated:false,needed:480},
@@ -129,7 +133,7 @@ async function main(){
   await page.clock.install({time:NOW});
   await page.goto(origin+'/#/chart');
   await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
-  await expect(page.locator('#chart-status')).toContainText('主图停机');
+  await expect(page.locator('#chart-status')).toContainText('行情读取失败');
   await expect(page.locator('#chart-empty-desk')).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>chartOhlcv.length)).toBe(0);
   await expect(page.locator('#breadcrumb')).toContainText('行情工作台');
@@ -140,15 +144,31 @@ async function main(){
   results.push({id:'UI-CHART-HALT',status:'PASS',flow:'主源缺失 → 全屏停机 → 不把 WS 当实时、不画 P5 混源'});
   failKlines=true;
   await page.reload();
-  await expect(page.locator('#chart-status')).toContainText('主图停机');
+  await expect(page.locator('#chart-status')).toContainText('行情读取失败');
   await expect(page.locator('#chart-empty-desk')).toBeVisible();
   await expect(page.locator('#chart-empty-desk')).toContainText('503');
   await expect.poll(()=>page.evaluate(()=>chartOhlcv.length)).toBe(0);
   results.push({id:'UI-CHART-03',status:'PASS',flow:'desk 失败 → 页面停机，未伪造历史行情'});
   await page.screenshot({path:path.join(OUT,'chart-1440.png'),fullPage:true});
+  await expect(page.getByRole('button',{name:'4h',exact:true})).toBeEnabled();
+  await expect(page.locator('#chart-read-retry')).toBeEnabled();
+  failKlines=false;recoveredKlines=true;
+  await page.clock.runFor(3500);
+  await expect.poll(()=>page.evaluate(()=>chartOhlcv.length)).toBe(40);
+  await expect(page.locator('#chart-empty-desk')).toBeHidden();
+  results.push({id:'UI-CHART-AUTO-RECOVERY',status:'PASS',flow:'首次读取503 → 周期仍可操作 → 自动重读成功 → 恢复真实历史窗口'});
+  await page.getByRole('button',{name:'5m',exact:true}).click();
+  await expect(page.locator('#chart-research-evidence')).toContainText(' · 5m · ');
+  const full15=recoveryReads.filter(r=>r.interval==='15m'&&!r.tail).length;
+  const warmStart=recoveryReads.length;
+  await page.getByRole('button',{name:'15m',exact:true}).click();
+  await expect(page.locator('#chart-research-evidence')).toContainText(' · 15m · ');
+  await expect.poll(()=>page.evaluate(()=>chartOhlcv.length)).toBe(40);
+  if(recoveryReads.filter(r=>r.interval==='15m'&&!r.tail).length!==full15 || !recoveryReads.slice(warmStart).some(r=>r.interval==='15m'&&r.tail==='20'))throw Error('warm switch must validate tail and retain full history without downloading it again');
+  results.push({id:'UI-CHART-WARM-SWITCH',status:'PASS',flow:'15m→5m→15m → 只读取新尾部验证版本，保留40根完整窗口'});
   if(chartErrors.length||consoleErrors.some(message=>!message.includes('503')&&!message.includes('加载图表数据失败')&&!message.includes('主图停机')))throw Error('normal chart errors '+[...chartErrors,...consoleErrors].join(';'));
-  await page.locator('#nav').getByRole('link',{name:'概览 Dashboard',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'功能清单',exact:true})).toBeVisible();
+  await page.locator('#nav').getByRole('link',{name:'研究总览',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'研究总览',exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.__fixtureSockets.filter(s=>s.readyState!==3).length)).toBe(0);
   if(chartErrors.length)throw Error('chart page errors '+chartErrors.join(';'));
   results.push({id:'UI-CHART-05',status:'PASS',flow:'离开行情 → 释放全部行情 WebSocket'});
@@ -368,6 +388,10 @@ async function verifyChartWorkbench(browser, origin){
   await waitFor(()=>pending.some(item=>item.record.from));
   const failedFull=pending.splice(pending.findIndex(item=>item.record.from),1)[0];
   await releaseHeld(failedFull, {status:503, contentType:'application/json', body:JSON.stringify({error:'full failed'})});
+  await page.clock.runFor(500);
+  await waitFor(()=>pending.some(item=>item.record.from));
+  const retryFull=pending.splice(pending.findIndex(item=>item.record.from),1)[0];
+  await releaseHeld(retryFull, {status:503, contentType:'application/json', body:JSON.stringify({error:'full retry failed'})});
   await expect(page.locator('#chart-research-evidence')).toContainText('未把失败画成已核实空历史');
   const afterFail=calls.filter(call=>call.from).length;
   const kept=await page.evaluate(()=>({len:chartOhlcv.length, confirmed:DataEngine.readDeskHistory('BTCUSDT','15m').confirmedRevision, pending:DataEngine.readDeskHistory('BTCUSDT','15m').pendingRevision}));
@@ -389,13 +413,14 @@ async function verifyChartWorkbench(browser, origin){
   if(await page.locator('#mtf-toggle').isChecked()) await page.locator('#mtf-toggle').click();
   hold=true;
   state.revision=2;
+  await page.evaluate(()=>DataEngine._chartWindows.clear()); // This scenario exercises cold reads arriving out of order.
   await page.locator('.tf-btn[data-tf="5m"]').click();
   await page.locator('.tf-btn[data-tf="15m"]').click();
   await page.locator('.tf-btn[data-tf="1h"]').click();
   await waitFor(()=>pending.some(item=>item.record.interval==='1h' && !item.record.tail && !item.record.from));
   const hour=pending.splice(pending.findIndex(item=>item.record.interval==='1h' && !item.record.tail && !item.record.from),1)[0];
   await releaseHeld(hour, {contentType:'application/json', body:JSON.stringify(makeChartDesk(NOW,{interval:'1h', bars:24, revision:1, lastClose:4100, verified:false, eligible:false}))});
-  await expect.poll(()=>page.evaluate(()=>chartOhlcv.at(-1).c)).toBe(4100);
+  await expect.poll(()=>page.evaluate(()=>chartOhlcv.at(-1)?.c)).toBe(4100);
   for(const item of pending.splice(0)){
     const body=makeChartDesk(NOW,{interval:item.record.interval||'5m', bars:item.record.interval==='15m'?18:12, revision:1, lastClose:item.record.interval==='15m'?3200:2100, verified:false, eligible:false});
     await releaseHeld(item, {contentType:'application/json', body:JSON.stringify(body)});
@@ -415,8 +440,9 @@ async function verifyChartWorkbench(browser, origin){
   if(afterHigher!==beforeHigher || afterHigher.includes('HIGHER-SHOULD-NOT-STICK')) throw Error('WB-09 higher timeframe wrote main evidence');
   hold=false;
   const beforeLeave=calls.length;
-  await page.locator('#nav').getByRole('link',{name:'概览 Dashboard', exact:true}).click();
-  await expect(page.getByRole('heading',{name:'功能清单', exact:true})).toBeVisible();
+  // Use a non-fetching destination to isolate disposal; the research overview now reads its own snapshot.
+  await page.evaluate(()=>{location.hash='#/archive';});
+  await expect(page.getByRole('heading',{name:'发言历史库', exact:true})).toBeVisible();
   const surviving=await page.evaluate(()=>DataEngine.readDeskHistory('BTCUSDT','15m').confirmedRevision);
   if(surviving!==2) throw Error('WB-10 lost confirmed revision on leave '+surviving);
   if(JSON.stringify(await page.evaluate(()=>Object.entries(localStorage).map(([key,value])=>key+':'+value))).includes('historyRevision')) throw Error('WB-10 persisted history revision');

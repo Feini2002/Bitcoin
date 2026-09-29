@@ -324,8 +324,8 @@ const PLACEHOLDERS = {
 };
 
 const SETTINGS_FUTURE = [
-  { title: "API Keys", desc: "Binance · Deribit · FRED · CoinGlass · OpenAI 等" },
-  { title: "Agent 配置", desc: "重命名 / 改头像色 / 启用禁用" },
+  { title: "数据连接管理", desc: "来源可用性、授权与额度说明；网站不配置模型 Key" },
+  { title: "研究偏好", desc: "关注资产、观察窗口与个人复核清单" },
   { title: "快捷键", desc: "切页 / 调出追问框 / 召集会议" },
   { title: "数据与备份", desc: "导入导出浏览器离线缓存" },
 ];

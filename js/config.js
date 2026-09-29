@@ -98,7 +98,7 @@ const DATA_PAGE_LABEL = {
 
 const NAV = [
   { group: "核心", items: [
-    { id: "overview", label: "概览 Dashboard", icon: "ph-squares-four" },
+    { id: "overview", label: "研究总览", icon: "ph-squares-four" },
     { id: "premarket", label: "盘前简报", icon: "ph-clock" },
   ]},
   { group: "市场监测", sub: "来源、时间与数据状态见各页", items: [

@@ -342,6 +342,7 @@ function derivAgentLinkHtml(agentId) {
 function pageDerivatives() {
   return html`
     <section class="deriv-desk">
+      <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">CAPITAL &amp; MACRO CONTEXT</div><h1>环境背景</h1><p>将合约资金与宏观条件放在一起阅读，同时保留各自的数据时钟。</p></div><a class="btn" href="#/news">核对相关事件 ↗</a></header>
       <section class="deriv-status-strip" aria-label="环境背景状态">
         <div class="deriv-status-main">
           <span class="deriv-feed-dot" aria-hidden="true"></span>
@@ -771,7 +772,10 @@ function derivFactCard(key, title, lines, card) {
     `接收时间：${fmtDeskMinute(card && card.receivedAt)}`,
     `状态：${status}`,
   ]);
-  return `<article class="desk-clock-card" data-deriv-card="${escapeDerivHtml(key)}"><h4>${escapeDerivHtml(title)}</h4><strong>${escapeDerivHtml(lines[0] || "—")}</strong><ul>${items.map((line) => `<li>${escapeDerivHtml(line)}</li>`).join("")}</ul><span class="${derivStatusClass(status)}">${escapeDerivHtml(status)}</span></article>`;
+  const raw = String(lines[0] || '—');
+  const value = raw.match(/：(-?\d+(?:\.\d+)?)\s+(.*)/);
+  const headline = value ? (/^decimal/.test(value[2]) ? (Number(value[1])*100).toLocaleString('en-US',{maximumFractionDigits:4})+'%'+(value[2].includes('year')?' / 年':' / 本次结算') : Number(value[1]).toLocaleString('en-US',{maximumFractionDigits:2})+' '+value[2]) : raw;
+  return `<article class="desk-clock-card" data-deriv-card="${escapeDerivHtml(key)}"><h4>${escapeDerivHtml(title)}</h4><strong>${escapeDerivHtml(headline)}</strong><ul>${items.map((line) => `<li>${escapeDerivHtml(line)}</li>`).join("")}</ul><span class="${derivStatusClass(status)}">${escapeDerivHtml(status)}</span></article>`;
 }
 
 function derivValueLines(card, lines) {

@@ -2,9 +2,11 @@
 
 [资料总纲](README.md) · [完整主题表](READING_ROUTES.md) · [仓库对应表](REPOSITORY_MAP.md)
 
-**当前开发入口（2026-09-27）：** [四页数据工作台方案](../repository-development-plan-2026-09-27.md)。四页基础数据已可继续开发；云端现为暂停，恢复时说「开起来」。[架构核对](../repository-architecture-review-2026-09-27.md)保存依据。第二批 [EXECUTION_MASTER.md](batch2-execution/EXECUTION_MASTER.md) 仅作历史追溯；第一批归档保持原位。
+**当前开发入口：** [四页数据工作台方案](../repository-development-plan-2026-09-27.md)。云端已于 2026-09-29 恢复，实时状态用 `cloud:status` 核对；本轮依据见[恢复与持续采集核验](../workbench-recovery-2026-09-29.md)。[架构核对](../repository-architecture-review-2026-09-27.md)保存早期依据。第二批 [EXECUTION_MASTER.md](batch2-execution/EXECUTION_MASTER.md) 仅作历史追溯；第一批归档保持原位。
 
 ## 最短使用路径
+
+研究总览、事件一览、舆情分析、模块提示词及无 Key 分析，先读[研究工作台重构记录](../product-redesign-2026-09-29.md)和[AI 对话研究工作流](../ai-research-workflow.md)。使用统一报告协议；网站不恢复模型任务，导入默认只校验，显式保存新 ID。
 
 币安插件、Binance MCP、插件对账或插件补查，先读 [插件与四页工作台复用手册（2026-09-27）](../binance-plugin-workbench-research-2026-09-27.md)。包含实际可调用工具、公开样本和官方/社区来源；研究建议不自动变成开发或生产写入任务。
 

@@ -246,6 +246,13 @@ const neutralDeltaModel = buildOrderflowReadModel([
 assert("read model treats zero delta as neutral", neutralDeltaModel.deltaBias && neutralDeltaModel.deltaBias.side === "neutral", JSON.stringify(neutralDeltaModel.deltaBias));
 assert("read model reports fresh D1 polling", neutralDeltaModel.dataFreshness && neutralDeltaModel.dataFreshness.status === "fresh", JSON.stringify(neutralDeltaModel.dataFreshness));
 
+const deskFreshness = globalThis.FootprintEngine.normalizeOrderflowDataFreshness;
+const liveDesk = { observedAt: new Date(t0).toISOString(), receivedAt: new Date(t0 + 1000).toISOString(), collectionStale: false, sourceStale: false, quality: { status: "pass" } };
+assert("desk observation timestamp drives freshness", deskFreshness({ desk: liveDesk, lastSync: liveDesk.receivedAt, now: t0 + 2000 }, null, "15m").status === "fresh");
+assert("recent receipt cannot hide old desk observations", deskFreshness({ desk: { ...liveDesk, receivedAt: new Date(t0 + 3600000).toISOString() }, now: t0 + 3600000 }, null, "15m").status === "stale");
+assert("missing desk observation stays unknown", deskFreshness({ desk: { ...liveDesk, observedAt: null }, now: t0 + 2000 }, null, "15m").status === "unknown");
+assert("desk stale flag cannot be presented as fresh", deskFreshness({ desk: { ...liveDesk, collectionStale: true }, now: t0 + 2000 }, null, "15m").status !== "fresh");
+
 const staleSfpModel = buildOrderflowReadModel(bullishSfpBars, {
   effectiveTickSize: 5,
   interval: "5m",

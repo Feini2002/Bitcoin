@@ -69,7 +69,7 @@ const BINANCE_MAX_LIMIT_PER_REQUEST = 1500;
 const BYBIT_MAX_LIMIT_PER_REQUEST = 1000;
 const FETCH_TIMEOUT_MS = 8000;
 /** Worker 构建标识（部署后可用于对照线上是否与仓库一致）；仅元数据头，不影响业务语义。 */
-const WORKER_BUILD = "btc-worker/3.11.1-context-clocks";
+const WORKER_BUILD = "btc-worker/3.11.3-recovery";
 const KLINE_RECONCILE_CLOSED_BARS = 24;
 const KLINE_HISTORY_FLOOR_MS = 1567382400000;
 const KLINE_READ_AUTO_SYNC_MIN_MS = 45 * 1000;
@@ -1020,14 +1020,19 @@ async function extendKlineHistoryOnePage(env, symbol, interval) {
   }
   const got = await fetchKlinesFromBinance(env, {
     symbol,
-    interval: "1d",
+    interval,
     limit: 1000,
     endTime: minT - 1,
   });
   if (!got.ok) return { ok: false, symbol, interval, error: got.error || "history extend failed" };
   const older = (got.klines || []).filter((row) => Number(row[0]) < minT);
   if (!older.length) return { ok: true, skipped: true, reason: "exchange_start", minT, count };
-  const rows = interval === "3d" ? bybitListToBinanceKlines(older, "3d").filter((row) => Number(row[0]) < minT) : older;
+  // Preserve the exchange's native grid and OHLCV. Epoch-based daily aggregation
+  // uses a different 3d anchor and must never be inserted into Binance history.
+  if (interval === "3d" && got.source === "bybit-failover") {
+    return { ok: false, symbol, interval, error: "native Binance 3d history required" };
+  }
+  const rows = older;
   if (!rows.length) return { ok: true, skipped: true, reason: "exchange_start", minT, count };
   const persist = await persistKlines(env, symbol, interval, rows);
   return { ok: true, symbol, interval, inserted: persist.inserted, pruned: persist.pruned, minT, count };
@@ -5958,7 +5963,10 @@ export class LiquidationCollector {
   checkOneStale(exchange, ws, staleMs) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const st = this.sources[exchange] || {};
-    const last = Number(st.lastMarketMessageAt || st.lastEventAt || st.lastHeartbeatAt || st.lastTransportAt || st.lastMessageAt || st.connectedAt || 0);
+    // Liquidations can be quiet while subscribed market heartbeats keep arriving.
+    // An old event must not take precedence over newer liveness evidence.
+    const last = Math.max(...[st.lastMarketMessageAt, st.lastEventAt, st.lastHeartbeatAt,
+      st.lastTransportAt, st.lastMessageAt, st.connectedAt].map(value => Number(value) || 0));
     if (!last || Date.now() - last < staleMs) return;
     this.sourceStatus(exchange, {
       status: "error",
@@ -6058,6 +6066,7 @@ export class LiquidationCollector {
 
 export const __footprintTestHooks = {
   syncKlinesOne,
+  extendKlineHistoryOnePage,
   d1QueryLatestMeta,
   persistDerivativePoints,
   syncDerivativesOne,
@@ -6195,7 +6204,12 @@ export default {
       },
       404
     );
-    })();
+    })().catch((error) => {
+      // An uncaught D1/assembly failure otherwise becomes a platform error without
+      // our CORS headers; browsers then lose the status and only show Failed to fetch.
+      console.error('[btc] request failed', error && error.name || 'Error');
+      return json({ error: 'upstream_read_failed', message: '数据接口暂时不可用，请稍后重试', retryable: true }, 503);
+    });
     // Apply request-specific CORS after every route, including errors and streaming reports.
     const outgoing = new Response(response.body, response);
     const vary = outgoing.headers.get("Vary");

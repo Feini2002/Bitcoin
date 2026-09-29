@@ -4,6 +4,10 @@
 
 ## Current Development Entry
 
+- 2026-09-30 换电脑接续先读 [开发交接](docs/operations/development-handoff-2026-09-30.md) 和 [新电脑说明](docs/operations/new-computer.md)。两轮读取性能修复已发布，源码以 Git 为准，不覆盖旧 SOURCE 包；私密文件离线恢复，不进入 Git。
+
+- 2026-09-29 起，研究总览、事件/舆情 UI 与无模型 Key 的 AI 对话分析入口见 [研究工作台重构](docs/research/product-redesign-2026-09-29.md) 和 [AI 研究流程](docs/research/ai-research-workflow.md)。用户要求研究时按 `js/research-protocol.js` 的模块顺序执行；只有本次指令包含保存到网站时才用 CLI 显式 `--remote` 保存新 ID 并读回。网站模型运行仍退役。
+
 - 当前开发调度以 [四页数据工作台方案](docs/research/repository-development-plan-2026-09-27.md) 为入口，当前事实与发现见 [架构核对](docs/research/repository-architecture-review-2026-09-27.md)。W1–W4 已有实现；继续前先核对计划顶部的验收与发布状态，不重新从 W1 开发，也不把本地通过当作生产已上线。
 - 第二批 P00–P10/NEW 编号保留供追溯，不重新执行旧总计划，不恢复已退役模型生成。后续任务完成时更新当前方案中的实现、验证、启用和精确下一步。
 
@@ -70,7 +74,7 @@
 
 ## Cloudflare Pause / Restore Runbook
 
-- 固定入口见 [云端开关说明](docs/research/cloudflare-pause-resume-2026-09-27.md)，恢复记录是 `cloudflare/cloud-control-state.json`。2026-09-27 15:55 UTC 已再次暂停 `btc`、`yuqing`、`market-snapshot`；实际状态始终用 `npm run cloud:status` 核对，不能只读日期判断。
+- 固定入口见 [云端开关说明](docs/research/cloudflare-pause-resume-2026-09-27.md)，恢复记录是 `cloudflare/cloud-control-state.json`。2026-09-29 04:46 UTC 已恢复 `btc`、`yuqing`、`market-snapshot`，五次采样确认实时入库推进；实际状态始终用 `npm run cloud:status` 核对，不能只读日期判断。
 - 用户在本仓库说 **“开起来 / 恢复云端 / 重新启用系统”**，即授权执行 `npm run cloud:resume` 并完成读回、入口健康和行情入库验证，然后继续开发；不要求用户重复提供账号、域名或版本号。只是讨论恢复方案或要求只读预检时不执行开启。
 - 用户说 **“暂停云端 / 关起来”**，执行 `npm run cloud:pause`，包括保存当前正式版本、关闭三个 Worker 的入口/Cron、部署不采集的 BTC 云端维护版本、观察写入停止。用户说 **“查看云端状态 / 看看开着没”**，仅运行 `npm run cloud:status`。
 - 先读取该说明和当前状态。暂停/恢复由固定脚本管理，不再手动改 `wrangler.toml`，也不拿普通 `wrangler deploy` 代替恢复。`npm run cloud:resume -- --dry-run` 只检查恢复点和存储，无云端修改；`npm run verify:cloud-control` 是无网络模拟。
