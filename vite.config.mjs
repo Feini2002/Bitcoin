@@ -1,9 +1,11 @@
 import { defineConfig, loadEnv } from "vite";
 import fullReload from "vite-plugin-full-reload";
+import { agentTeamBridge } from './scripts/agent-team/service.mjs';
+import { createTools } from './scripts/agent-team/tools.mjs';
 
 /**
  * 本地静态前端开发：监听文件变更并全页刷新（经典 script 标签无 ESM HMR）。
- * API 仍走 js/config.js 默认的云端 Worker；D1 仅经由线上 Worker，浏览器不直连。
+ * 事实 API 仍走 js/config.js 默认的云端 Worker；本地研究只在端口绑定成功后取得写所有权。
  */
 export default defineConfig(({ mode }) => {
   const local = loadEnv(mode, process.cwd(), ["BIT_DATA_API_BASE", "BIT_YUQING_API_BASE"]);
@@ -14,14 +16,20 @@ export default defineConfig(({ mode }) => {
   root: ".",
   server: {
     port: 5173,
-    strictPort: false,
-    open: "/index.html",
+    strictPort: true,
+    open: false,
     host: "127.0.0.1",
+    fs: {
+      // 保留 Vite 默认保护，并阻止本地迁移包和出口机记录被静态服务读取。
+      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "**/.codex/**", "**/.local/**", "**/.artifacts/**", "**/BitDesk-PRIVATE-*", "**/BTC拷贝.zip"],
+    },
     headers: {
       "Cache-Control": "no-store",
     },
+    watch: { usePolling: process.platform === 'win32', interval: 300, ignored:['**/.local/**','**/.artifacts/**','**/dist/**','**/.codex/**'] },
   },
   plugins: [
+    agentTeamBridge({toolsFactory:()=>createTools({marketOrigin:overrides.BIT_DATA_API_BASE||'https://btc.feiniwork.com',eventsOrigin:overrides.BIT_YUQING_API_BASE||'https://yuqing.feiniwork.com'})}),
     {
       name: "live-cache-buster",
       transformIndexHtml(html) {
@@ -32,7 +40,7 @@ export default defineConfig(({ mode }) => {
         return updated.replace("<head>", `<head><script>Object.assign(window,${publicConfig});</script>`);
       },
     },
-    fullReload(["index.html", "styles.css", "js/**/*.{js,css}", "btc.svg"], {
+    fullReload(["index.html", "assets/**/*.{css,svg}", "js/**/*.{js,mjs,css}"], {
       delay: 120,
     }),
   ],

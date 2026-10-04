@@ -1,0 +1,87 @@
+{
+  "schema": "bitdesk.publisher-rss-correction.2026-10-04.1",
+  "queriedOn": "2026-10-04",
+  "scope": "已登记CoinDesk RSS规范地址、现有article能力说明及报道读取限额纠偏；无新增来源或远程采集操作",
+  "source": "https://www.coindesk.com/arc/outboundfeeds/rss",
+  "priorRegisteredSource": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+  "observedAt": "2026-10-04T09:05:06.479Z—09:08:07Z",
+  "sourceVersion": "实际HTTP响应；未取得发布方软件版本",
+  "snapshotKind": "本机诊断保留HTTP状态、Location、内容类型、字节数、最新条目时间及错误字段；不冒充完整RSS正文快照",
+  "originalEvidence": ".artifacts/goal-20261003/window3-publisher-rss-diagnosis-20261004.json",
+  "verifiedFacts": [
+    "原地址实际返回308，Location为/arc/outboundfeeds/rss。",
+    "同一发布方规范地址返回200 application/xml，30250字节，最新条目时间为2026-10-03T16:00:00Z。",
+    "原redirect:error读取策略对原跳转地址产生读取拒绝；诊断未观察到TLS原因码。",
+    "Fed RSS实际返回200 text/xml，最新条目时间为2026-10-02T20:45:00Z；选窗无条目不能解释为无市场事件。"
+  ],
+  "applied": {
+    "version": "bitdesk.agent-team.2026-10-04.15",
+    "change": "仅更新已登记CoinDesk RSS为无尾斜杠规范URL",
+    "unchangedContracts": [
+      "禁止自动重定向",
+      "1MiB响应限制",
+      "资料截止与所选窗口过滤",
+      "原RSS条目封存",
+      "摘要与正文、部分覆盖分别标识",
+      "失败原件保留"
+    ]
+  },
+  "limitations": [
+    "历史window3失败原件只记录fetch failed、没有cause，因此不断言历史每次失败的具体网络根因。",
+    "此时间的HTTP成功不保证长期源健康；RSS发布方报道不是独立认证的市场事实，也不是全网事件覆盖。",
+    "诊断四次有限GET没有模型、服务、环境凭据读取、D1写入、部署或恢复采集动作。"
+  ],
+  "code": [
+    "scripts/agent-team/tools.mjs",
+    "tests/integration/verify-agent-selected-context.cjs"
+  ],
+  "articleCorrection": {
+    "observedOn": "2026-10-04",
+    "source": "https://www.coindesk.com/business/2026/10/03/openpayd-targets-year-end-nasdaq-listing-to-fund-u-s-expansion-and-acquisitions",
+    "sourceVersion": "实际HTTP HTML响应；软件版本未知",
+    "verifiedFacts": [
+      "current-9实际工具清单未列已有events/article，模型没有请求article；遗漏导致未调用的因果未证实。",
+      "补说明后隔离官方专员自主请求本轮已发现article，原1MiB上限返回source_too_large，原FAIL_UPSTREAM/insufficient报告保留。",
+      "有限实测HTTP200、完整响应1720176字节，去脚本样式12598字符；原件封存，读取完整HTML不等于完整新闻正文认证。",
+      "仅已登记article使用2MiB上限后，第二次实际HTML1720193字节、12598字符；模型收到原索引对应的10000字符，明确省略2598字符。",
+      "第二真实专员2次官方Codex ChatGPT调用，自主工具请求、original_excerpt回执和最终引用对应，报告limited；主heads/config不变，没有新首席或全队更新。"
+    ],
+    "projectDecision": "普通报道被过小的通用JSON上限误挡，按实际输入只给article 2MiB；RSS/JSON仍1MiB，20秒读取、Node24000字符摘录、模型10000字符投影维持。独立语义prompts.14，不增加工具、权限、预算或产品版本门。",
+    "limitations": [
+      "不是全文、附件、首次传播或历史公开版本",
+      "同篇RSS与HTML不是独立交叉来源",
+      "HTTP成功不是长期健康或外部真实性认证"
+    ],
+    "evidence": [
+      ".artifacts/goal-20261003/events-article-capability-minimal-review-20261004.json",
+      ".artifacts/goal-20261003/events-article-live-ce519172-053d-426b-aacb-46f79e060ee6/result.json",
+      ".artifacts/goal-20261003/events-article-live-ce519172-053d-426b-aacb-46f79e060ee6/publisher-size-measurement.json",
+      ".artifacts/goal-20261003/events-article-live-562c05f4-4a84-47dc-98a4-1e48c7a8783d/result.json"
+    ],
+    "readingCorrection": {
+      "verifiedOn": "2026-10-04",
+      "change": "直接阅读取得的报道文字片段、打开原发布方链接，覆盖及全文未知明确展示；两处时间标签使用条目标示的报道时间，不将已存非RSS条目误称RSS。",
+      "verifiedFacts": [
+        "实际r2保存的12598字符与四态reader逐字一致，原生键盘滚动、来源与导出一致；旧失败两态无正文显示仍是材料不足。",
+        "最终标签真实r2与明确受控非RSS/时间未知场景六例浏览器PASS，六图亲看，原时间值/原件/导出未改变。",
+        "4组实际createTools受控模块/纯render补验证；受控非RSS不是新真实网络、模型或主报告。"
+      ],
+      "evidence": [
+        ".artifacts/goal-20261003/events-article-readable-ui-r2/result.json",
+        ".artifacts/goal-20261003/events-article-caption-final/result.json",
+        ".artifacts/goal-20261003/events-article-caption-final/independent-review.json",
+        ".artifacts/goal-20261003/events-article-capability-minimal-review-20261004.json"
+      ],
+      "limitations": [
+        "网页摘录可能含导航和其他新闻，不是经认证的全文或首次传播时间",
+        "UI受控回放使用实际原件，不代表新的主首席/全队更新"
+      ]
+    }
+  },
+  "validation": [
+    "SC-05控制输入验证实际配置选用规范地址，保留原读取策略；额外重定向/超容量反例独立通过。",
+    "2026-10-04T09:28:18.236Z由现有解析器实际取得5条所选窗口摘要，fullText=false/completeWindow=false；证据 .artifacts/goal-20261003/publisher-canonical-live-v15-r1.json。",
+    "真实narrative-2 run6e727270-eb6b-4cca-95ba-f6f1d9c34f23，锚点10:21:45.982Z、实际接收10:22:41.575Z，events回执581d23fa-2f0d-430a-b260-e2bd7e5d1f02取得5条摘要，discoverySucceeded=true，仍非全文/完整事件覆盖。",
+    "该轮事件岗及首席有限接受、实际审核接受、独立语义复核和32项页面读取通过；所选旧报告仍为provided_unverified，不因同时取得当前RSS而认证旧事件。真实证据 .artifacts/goal-20261003/live-narrative-2/ 和 narrative2-independent-final-review-20261004.json。"
+  ]
+}

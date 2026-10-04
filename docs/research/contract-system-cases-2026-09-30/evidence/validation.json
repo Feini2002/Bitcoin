@@ -1,0 +1,94 @@
+{
+  "queriedOn": "2026-09-30",
+  "timezone": "Asia/Shanghai",
+  "recordedAt": "2026-09-30T14:42:35.899Z",
+  "scope": "研究资料、导航与只读源码反例；采用方案尚未实施",
+  "status": "PASS_LOCAL",
+  "checks": [
+    {
+      "command": "node scripts/research-context.cjs --refresh",
+      "status": "PASS",
+      "supervisorPid": 21168,
+      "childPid": 23536,
+      "exitCode": 0,
+      "files": 314
+    },
+    {
+      "command": "node scripts/research-context.cjs --check",
+      "status": "PASS",
+      "supervisorPid": 11608,
+      "childPid": 10776,
+      "exitCode": 0,
+      "files": 314,
+      "routes": 21,
+      "queryCases": 30,
+      "problems": []
+    },
+    {
+      "command": "source hash / local document links / current source fingerprints",
+      "status": "PASS",
+      "supervisorPid": 15960,
+      "childPid": 21464,
+      "exitCode": 0,
+      "evidence": {
+        "status": "PASS",
+        "checkedAt": "2026-09-30T14:39:51.624Z",
+        "snapshots": 31,
+        "sourceAssets": 2,
+        "localDocuments": 5,
+        "localLinks": 20,
+        "sourceFingerprints": 13,
+        "sourceChanges": [],
+        "errors": []
+      }
+    },
+    {
+      "command": "npm run build",
+      "status": "PASS",
+      "supervisorPid": 3520,
+      "childPid": 24764,
+      "exitCode": 0,
+      "deadlineUtc": "2026-09-30T14:43:07.884Z",
+      "internalHardDeadlineSeconds": 180,
+      "observationMaxSeconds": 30,
+      "runtimeFiles": 39,
+      "includes": "lint, verify:all (offline scenarios and local browser presentation), build:pages",
+      "output": {
+        "localPath": "docs/research/contract-system-cases-2026-09-30/evidence/build-output.txt",
+        "bytes": 44634,
+        "sha256": "ca24755d0dde6ab4efbfe779f101ea43e9c7074d6fdeeedf81dca5312764fca5",
+        "notice": "PowerShell captured text decoded if needed, CRLF normalized to LF; no raw-byte equivalence claim"
+      }
+    }
+  ],
+  "readOnlyCounterexamples": {
+    "status": "REPRODUCED",
+    "supervisorPid": 3268,
+    "childPid": 1724,
+    "exitCode": 0,
+    "localPath": "docs/research/contract-system-cases-2026-09-30/evidence/input-revision-counterexamples.json",
+    "scope": "固定合成输入，调用真实装配函数；不证明现有页面因此漏刷新"
+  },
+  "officialArchive": {
+    "status": "DOCUMENTS_AND_URL_ACCESS_VERIFIED",
+    "supervisorPid": 26712,
+    "childPid": 4652,
+    "exitCode": 0,
+    "localPath": "docs/research/contract-system-cases-2026-09-30/sources/binance-public-data-receipt.json",
+    "zipDownloaded": false,
+    "csvValidated": false,
+    "imported": false
+  },
+  "online": {
+    "status": "NOT_REVERIFIED",
+    "reason": "只读 cloud:status 失败：本机 .env 未恢复，官方 Cloudflare 登录不可用",
+    "supervisorPid": 16916,
+    "childPid": 26988,
+    "exitCode": 1
+  },
+  "candidateApplications": "未安装或运行；未核验实盘收益",
+  "businessChanges": false,
+  "remoteWrites": false,
+  "deployment": "未发布本轮资料或并行任务变更；没有新增运行资源；线上采集与库存未复验",
+  "git": "未 commit、push 或创建 PR"
+}

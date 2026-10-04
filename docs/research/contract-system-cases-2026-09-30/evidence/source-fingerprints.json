@@ -1,0 +1,72 @@
+{
+  "capturedAt": "2026-09-30T14:37:58.681Z",
+  "gitHead": "f9b3d01cd77895d656ca501d266499674c165baa",
+  "notice": "当前工作树源码指纹；目录整理有并行改动，不代表全部文件来自 HEAD；本轮只读业务文件",
+  "files": [
+    {
+      "localPath": "cloudflare/finance/datasets.mjs",
+      "bytes": 16745,
+      "sha256": "124d5fa060ac98a3d72e1561c29ee8acd8ef27a1746565b8c51c51357c894500"
+    },
+    {
+      "localPath": "cloudflare/finance/dataset-store.mjs",
+      "bytes": 48682,
+      "sha256": "6e5e6b585f313147c11677a04a10560f25144203ac72b9b0853e53fa73010bd9"
+    },
+    {
+      "localPath": "cloudflare/finance/dataset-schema.sql",
+      "bytes": 1322,
+      "sha256": "82a52800d7a37856a6c2f3fea35255934e7cbb5b8488a30e8bb6c9e8299396ed"
+    },
+    {
+      "localPath": "cloudflare/finance/scheduler.mjs",
+      "bytes": 14764,
+      "sha256": "a4312ddf3b50e8a4cb5a7626fa713ab6d241902d3555e11db69bc05d9d2890b2"
+    },
+    {
+      "localPath": "cloudflare/finance/desk.mjs",
+      "bytes": 43822,
+      "sha256": "3be979c7d1411699598bc377aa818bd25acb50837a56f27dca461597c6055b39"
+    },
+    {
+      "localPath": "cloudflare/schema.sql",
+      "bytes": 8556,
+      "sha256": "2393833d28869a3da9c6f4f047b20d82c07bc8e0f0063b9b9d1d26e71d7358ba"
+    },
+    {
+      "localPath": "cloudflare/binance-klines-worker.js",
+      "bytes": 259099,
+      "sha256": "eefcd6ca5df4eaa6470424ad4dc0f61fb574ffc56b744560305b41bc161e7b98"
+    },
+    {
+      "localPath": "cloudflare/kline-live-collector.mjs",
+      "bytes": 28651,
+      "sha256": "78e9978c3fe5053bdd96b6729cd73990cedef78a2409089e6c7a6df625e82867"
+    },
+    {
+      "localPath": "js/data-engine.js",
+      "bytes": 43217,
+      "sha256": "c169c197e2ebdd57a9f89c2c51a9b449ad78437e1edbfabe88e6eadc4795441f"
+    },
+    {
+      "localPath": "js/research-desk.js",
+      "bytes": 19658,
+      "sha256": "99fb83cfa8dd8c5e02969a4144a3347fd817637db4f8d16f39a41d273f2558b0"
+    },
+    {
+      "localPath": "js/workbench-evidence.js",
+      "bytes": 8254,
+      "sha256": "a5c4fece031f2bcc468041b3f14b70db0de3b21c3714cd478f69a823a52f1d42"
+    },
+    {
+      "localPath": "js/research-protocol.js",
+      "bytes": 13591,
+      "sha256": "21398ece2eb02b6be6f81a3acbb37d646626b04dd031ba9b1230f7acd38d683e"
+    },
+    {
+      "localPath": "scripts/research/prepare-research.cjs",
+      "bytes": 3042,
+      "sha256": "ff8d09f78b50f4701ae8d6371cabac04920257182108b91c6da79fd8a18fafdc"
+    }
+  ]
+}

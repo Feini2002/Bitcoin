@@ -1,5 +1,5 @@
 // Free/public market-data channels only. No trading, accounts, paid endpoints or scheduled collection.
-export const FINANCE_VERSION = '2026-09-16.3';
+export const FINANCE_VERSION = '2026-09-30.3';
 const text = (value, pattern = '^[A-Za-z0-9_.:-]{1,80}$') => ({ type: 'text', default: value, pattern });
 const num = (value, min, max) => ({ type: 'integer', default: value, min, max });
 const choice = (value, values) => ({ type: 'enum', default: value, values });
@@ -49,8 +49,10 @@ export const FINANCE_PROVIDERS = {
     ticker: op('/api/v2/public/ticker', { instrument_name:text('BTC-PERPETUAL') }),
     book: op('/api/v2/public/get_order_book', { instrument_name:text('BTC-PERPETUAL'), depth:choice('5',['1','5','10','20']) }),
     instruments: op('/api/v2/public/get_instruments', { currency:choice('BTC',['BTC','ETH','USDC','USDT']), kind:choice('option',['option','future','spot']), expired:choice('false',['false']) }),
-    summary: op('/api/v2/public/get_book_summary_by_currency', { currency:choice('BTC',['BTC','ETH']), kind:choice('option',['option','future']) }),
-  }, { market:'instrument-specific', ttl:120 }),
+    summary: op('/api/v2/public/get_book_summary_by_currency', { currency:choice('BTC',['BTC','ETH','USDC']), kind:choice('option',['option','future']) }),
+    'funding-history': op('/api/v2/public/get_funding_rate_history', { instrument_name:choice('BTC-PERPETUAL',['BTC-PERPETUAL']),
+      start_timestamp:num(undefined,0,8640000000000000), end_timestamp:num(undefined,0,8640000000000000) }),
+  }, { market:'instrument-specific', ttl:60 }),
   coinbase: provider('Coinbase', 'exchange', 'https://api.coinbase.com', 'https://docs.cdp.coinbase.com/coinbase-app/advanced-trade-apis/rest-api', {
     ticker: op('/api/v3/brokerage/market/products/{product}/ticker', { product:text('BTC-USD'), limit:num(10,1,100) }),
     product: op('/api/v3/brokerage/market/products/{product}', { product:text('BTC-USD') }),
@@ -148,7 +150,7 @@ export const FINANCE_PROVIDERS = {
   nyfed: provider('纽约联储', 'rates', 'https://markets.newyorkfed.org', 'https://www.newyorkfed.org/markets/data-hub', {
     sofr: op('/api/rates/secured/sofr/last/{count}.json', { count:num(5,1,30) }),
     effr: op('/api/rates/unsecured/effr/last/{count}.json', { count:num(5,1,30) }),
-  }, { ttl:21600, notes:'官方日频参考利率，SOFR 与 EFFR 口径分别保留。' }),
+  }, { ttl:3600, notes:'官方日频参考利率，SOFR 与 EFFR 口径分别保留。缓存不超过规范数据集的一小时刷新周期；观察日期与接收时间分开。' }),
   eurostat: provider('Eurostat', 'macro', 'https://ec.europa.eu', 'https://ec.europa.eu/eurostat/web/user-guides/data-browser/api-data-access/api-introduction', {
     hicp: op('/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_manr', { geo:text('EA20'), coicop:choice('CP00',['CP00']), lastTimePeriod:num(12,1,36), lang:choice('EN',['EN']) }),
   }, { ttl:86400, notes:'欧盟官方免费统计接口，JSON-stat 保留维度/状态；指标修订和统计区变化需消费方解释。' }),

@@ -112,7 +112,7 @@ const NAV = [
     { id: "news-analysis", label: "舆情分析", icon: "ph-chart-donut" },
   ]},
   { group: "智囊团", sub: "分析层 · 员工观点", items: [
-    { id: "boardroom", label: "会议室", icon: "ph-users-three", badge: "默认" },
+    { id: "boardroom", label: "研究室", icon: "ph-users-three" },
     { id: "agent-chief", label: "首席策略官", agentId: "chief" },
     { id: "agent-env", label: "环境评估员", agentId: "env" },
     { id: "agent-flow", label: "盘口流动性官", agentId: "flow" },

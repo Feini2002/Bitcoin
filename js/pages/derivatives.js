@@ -340,30 +340,33 @@ function derivAgentLinkHtml(agentId) {
 }
 
 function pageDerivatives() {
+  const macroView = typeof UserWorkspace !== "undefined" && UserWorkspace.view("derivatives") === "macro";
+  const title = macroView ? "宏观与资金" : "杠杆与定价";
+  const description = macroView ? "按各自频率核对利率、美元与资金背景；参考期与取得时间分别保留。" : "核对持仓、费率与基差的变化；区分账户样本、头部仓位和交易所来源。";
   return html`
     <section class="deriv-desk">
-      <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">CAPITAL &amp; MACRO CONTEXT</div><h1>环境背景</h1><p>将合约资金与宏观条件放在一起阅读，同时保留各自的数据时钟。</p></div><a class="btn" href="#/news">核对相关事件 ↗</a></header>
-      <section class="deriv-status-strip" aria-label="环境背景状态">
+      <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">${macroView ? "MACRO &amp; CAPITAL" : "DERIVATIVES &amp; PRICING"}</div><h1>${title}</h1><p>${description}</p></div><a class="btn" href="#/news">核对相关事件 ↗</a></header>
+      <section class="deriv-status-strip" aria-label="${title}状态">
         <div class="deriv-status-main">
           <span class="deriv-feed-dot" aria-hidden="true"></span>
-          <strong>环境背景</strong>
+          <strong>${title}</strong>
           <span>宏观按日频、周频、月频原频率 · 合约卡片单独标状态 · 未知结算周期不写成固定 8 小时</span>
         </div>
         <div class="deriv-status-actions">
-          <span class="chip warn" id="deriv-live-chip">system_observed</span>
+          <span class="chip warn" id="deriv-live-chip">按取得时点阅读</span>
         </div>
       </section>
-      <p class="muted" id="deriv-research-evidence">宏观按日频、周频、月频展示，不套用行情主图周期。asKnownMode 只能是 system_observed。宏观不能证明交易桌已活。</p>
+      <p class="muted" id="deriv-research-evidence">宏观按日频、周频、月频展示，不套用行情主图周期。资料按系统取得时点保存；公布时刻未知时，不能据此还原当时已知的信息。</p>
       <div class="deriv-toolbar">
         <div class="deriv-action-cluster">
           <button type="button" class="btn" id="deriv-refresh"><i class="ph ph-arrow-clockwise"></i>刷新</button>
           <button type="button" class="btn" data-workbench-export>导出已显示证据</button>
-          <span class="deriv-status" id="deriv-status">准备读取 /api/desk/context...</span>
+          <span class="deriv-status" id="deriv-status">正在读取环境资料…</span>
         </div>
       </div>
       <div class="deriv-kpis" id="deriv-kpis">
         <div class="deriv-kpi"><span>合约状态</span><strong id="deriv-contract-state">等待读取</strong><em id="deriv-contract-note">等待 /api/desk/context</em></div>
-        <div class="deriv-kpi"><span>asKnownMode</span><strong id="deriv-asknown">system_observed</strong><em>不是 publicly_available</em></div>
+        <div class="deriv-kpi"><span>时间口径</span><strong id="deriv-asknown">系统取得时点</strong><em>不等于当时已公开</em></div>
       </div>
       <div id="deriv-read-failure" class="desk-halt-card" hidden></div>
       <section class="desk-freq-group" id="deriv-contract-section">
@@ -710,12 +713,14 @@ function renderDerivativesPayload(_payload, _syncReport = null) {
 }
 function fmtDeskClock(iso) {
   if (!iso) return "未知";
+  if(/^\d{4}-\d{2}-\d{2}$/.test(String(iso)))return String(iso)+'（日期）';
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return "未知";
   return d.toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 function fmtDeskMinute(iso) {
+  if(/^\d{4}-\d{2}-\d{2}$/.test(String(iso)))return String(iso)+'（日期）';
   const n = typeof iso === "number" ? iso : Date.parse(iso);
   if (!Number.isFinite(n) || n <= 0) return "未知";
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -736,7 +741,7 @@ function fmtDeskMinute(iso) {
 }
 
 function fmtDeskPlain(value) {
-  if (value == null || value === "") return "—";
+  if (value == null || typeof value === 'boolean' || typeof value === 'object' || String(value).trim() === "") return "—";
   const n = Number(value);
   if (!Number.isFinite(n)) return "—";
   return Object.is(n, -0) ? "0" : String(n);
@@ -751,6 +756,9 @@ function derivFactStatus(card) {
   const bits = [];
   if (card.sourceStale === true) bits.push("源陈旧");
   if (card.collectionStale === true) bits.push("采集陈旧");
+  if (card.sourceStale !== true && card.sourceStale !== false) bits.push("源时效未知");
+  if (card.collectionStale !== true && card.collectionStale !== false) bits.push("采集时效未知");
+  if (card.quality?.status === 'partial' || card.quality?.status === 'fail') bits.push("覆盖不完整");
   return bits.length ? bits.join(" · ") : "正常";
 }
 
@@ -762,20 +770,33 @@ function fundingIntervalLabel(card) {
   const basis = String(card && card.intervalBasis || "");
   const hours = Number(card && card.fundingIntervalHours);
   if (!basis || basis === "unknown" || !Number.isFinite(hours) || hours <= 0) return "未知";
-  return `${hours} 小时 · ${basis}`;
+  return `${hours} 小时`;
+}
+
+function derivDisplayLine(line){
+  const match=String(line).match(/^(.*)：(-?\d+(?:\.\d+)?)\s+((?:decimal|percent)(?:-[\w-]+)?)$/);
+  if(match){const suffix=match[3].includes('year')?' / 年':match[3].includes('settlement')?' / 本次结算':match[3].includes('1h')?' / 1h':match[3].includes('8h')?' / 8h':'';return match[1]+'：'+(Number(match[2])*(match[3].startsWith('decimal')?100:1)).toLocaleString('en-US',{maximumFractionDigits:8})+'%'+suffix;}
+  return String(line).replaceAll('USD-pegged-supply','美元计价供应').replaceAll('exchange-funding-info','交易所结算信息');
 }
 
 function derivFactCard(key, title, lines, card) {
   const status = derivFactStatus(card);
-  const items = lines.concat([
+  const items = lines.map(derivDisplayLine).concat([
     `观察时间：${fmtDeskMinute(card && card.referencePeriod)}`,
     `接收时间：${fmtDeskMinute(card && card.receivedAt)}`,
     `状态：${status}`,
   ]);
   const raw = String(lines[0] || '—');
   const value = raw.match(/：(-?\d+(?:\.\d+)?)\s+(.*)/);
-  const headline = value ? (/^decimal/.test(value[2]) ? (Number(value[1])*100).toLocaleString('en-US',{maximumFractionDigits:4})+'%'+(value[2].includes('year')?' / 年':' / 本次结算') : Number(value[1]).toLocaleString('en-US',{maximumFractionDigits:2})+' '+value[2]) : raw;
-  return `<article class="desk-clock-card" data-deriv-card="${escapeDerivHtml(key)}"><h4>${escapeDerivHtml(title)}</h4><strong>${escapeDerivHtml(headline)}</strong><ul>${items.map((line) => `<li>${escapeDerivHtml(line)}</li>`).join("")}</ul><span class="${derivStatusClass(status)}">${escapeDerivHtml(status)}</span></article>`;
+  const period=value?.[2]||'';
+  const suffix=period.includes('year')?' / 年':period.includes('per-settlement')?' / 本次结算':period.includes('per-1h')?' / 1h':period.includes('per-8h')?' / 8h':'';
+  const headline = value ? (/^(decimal|percent)/.test(value[2]) ? (Number(value[1])*(value[2].startsWith('decimal')?100:1)).toLocaleString('en-US',{maximumFractionDigits:8})+'%'+suffix : Number(value[1]).toLocaleString('en-US',{maximumFractionDigits:2})+' '+value[2]) : raw;
+  const note = card?.note ? ({
+    premium: '交易所当前报告的费率与已结算资金费分别阅读。',
+    funding: '按实际结算时点阅读；系统取得时间与结算时间分列，周期未知时不作推定。',
+    basis: '基差、基差率和年化率各自独立；缺失值保留为空，不代为换算。',
+  }[key] || card.note) : '';
+  return `<article class="desk-clock-card" data-deriv-card="${escapeDerivHtml(key)}"><h4>${escapeDerivHtml(title)}</h4><strong>${escapeDerivHtml(headline)}</strong><ul>${items.map((line) => `<li>${escapeDerivHtml(line)}</li>`).join("")}</ul><span class="${derivStatusClass(status)}">${escapeDerivHtml(status)}</span>${note?'<p class="muted">'+escapeDerivHtml(note)+'</p>':''}<details data-receipt="${escapeDerivHtml(key)}"><summary>查看原值与来源时钟</summary><pre class="team-raw">${escapeDerivHtml(JSON.stringify(card,null,2))}</pre></details></article>`;
 }
 
 function derivValueLines(card, lines) {
@@ -803,7 +824,7 @@ function contractBasisLines(card) {
   return derivValueLines(card, [
     `基差：${fmtDeskPlain(values.basis)} USDT/BTC`,
     `基差率：${fmtDeskPlain(values.basisRate)} decimal`,
-    `年化基差率：${fmtDeskPlain(values.annualizedBasisRate)} decimal-per-year`,
+    `年化基差率：${values.annualizedBasisRate == null ? "暂无可核对的年化值" : `${fmtDeskPlain(Number(values.annualizedBasisRate) * 100)}% / 年`}`,
   ]);
 }
 
@@ -893,6 +914,7 @@ function derivHeadline(desk, failure) {
   if (statuses.some((text) => text.indexOf("部分缺失") >= 0)) bits.push("部分缺失");
   if (statuses.some((text) => text.indexOf("源陈旧") >= 0)) bits.push("源陈旧");
   if (statuses.some((text) => text.indexOf("采集陈旧") >= 0)) bits.push("采集陈旧");
+  if(statuses.some(text=>text.includes('未知')))bits.push('时效未知');
   if (bits.length === 1) bits.push("正常");
   return bits.join(" · ");
 }
@@ -901,16 +923,38 @@ function renderMacroGroups(desk) {
   const groupsEl = document.getElementById("deriv-freq-groups");
   if (!groupsEl) return;
   const groups = desk && desk.groups || {};
-  const order = ["dailyRates", "weeklyDollarH41", "monthlyCpi", "cryptoBackground", "unofficialVol"];
-  groupsEl.innerHTML = order.map((key) => {
+  const macroView=typeof UserWorkspace!=="undefined"&&UserWorkspace.view("derivatives")==="macro";
+  const order = macroView ? ["dailyRates", "weeklyDollarH41", "monthlyCpi", "cryptoBackground"] : [];
+  const content = order.map((key) => {
     const g = groups[key];
     if (!g) return "";
     const cards = (g.cards || []).map((c) => {
-      const val = c.value != null && c.value !== "" ? escapeDerivHtml(String(c.value)) : "—";
-      return `<article class="desk-clock-card"><h4>${escapeDerivHtml(c.label || c.id)}</h4><strong>${val}</strong><ul><li>参考期：${escapeDerivHtml(fmtDeskClock(c.referencePeriod))}</li><li>公开日：${c.publicAvailableAt ? escapeDerivHtml(fmtDeskClock(c.publicAvailableAt)) : "未知"}</li><li>系统接收：${escapeDerivHtml(fmtDeskClock(c.receivedAt))}</li></ul>${c.note ? `<p class="muted">${escapeDerivHtml(c.note)}</p>` : ""}</article>`;
+      const values=c.values||{},lines=[];
+      const add=(label,value,unit)=>lines.push(label+'：'+fmtDeskPlain(value)+' '+(unit||''));
+      if(c.id==='stablecoin-supply'){
+        for(const coin of values.coins||[])if(['USDT','USDC'].includes(coin.symbol)){add(coin.symbol+' 供应',coin.circulating,'USD-pegged-supply');add(coin.symbol+' 价格',coin.price,'USD');}
+      }else if(c.id==='crypto-breadth'){add('市值',values.marketCap,'USD');add('聚合 24h 成交',values.volume24h,'USD');add('BTC 市值占比',values.btcDominance,'%');}
+      else if(c.id==='btc-fees'){for(const [key,label]of [['fastestFee','最快'],['halfHourFee','半小时'],['hourFee','一小时'],['minimumFee','最低']])add(label,values[key],'sat/vB');}
+      else add('参考值',c.value??values.value??values.percentRate,Object.values(c.units||{})[0]);
+      lines.push('参考期：'+fmtDeskClock(c.referenceDate||c.referencePeriod),'公开可得：'+fmtDeskClock(c.publicAvailableAt));
+      return derivFactCard(c.id,c.label||c.id,lines,c);
     }).join("");
     return `<section class="desk-freq-group"><h3>${escapeDerivHtml(g.title || key)}</h3>${g.planned ? "<p>PLANNED · 非官方波动率本轮不上屏</p>" : ""}${g.residualForbidden ? "<p>禁止 WALCL−TGA−RRP 残差</p>" : ""}<div class="desk-clock-grid">${cards || "<p>无观测</p>"}</div></section>`;
-  }).join("");
+  }).join("")+(macroView?"":renderExternalDerivatives(desk));
+  DeskVisual.replace(groupsEl,content);
+}
+
+function renderExternalDerivatives(desk){
+  const d=desk.comparison?.deribit;
+  let html='<section class="desk-freq-group"><h3>Deribit · BTC 反向永续</h3><p>USD 报价、BTC 结算；持仓 USD 不与 Binance 的 BTC 持仓相加。资金费率按原周期分列。</p>';
+  if(!d)html+='<p>当前数据服务未返回此组，覆盖未知。</p>';
+  else{const v=d.values||{},h=d.hourlyFunding||{},hv=h.values||{};html+='<div class="desk-clock-grid">'+derivFactCard('deribit-perp',d.instrumentId||'Deribit BTC-PERPETUAL',[`标记价：${fmtDeskPlain(v.mark_price)} USD/BTC`,`未平仓名义：${fmtDeskPlain(v.open_interest)} USD`,`当前资金费：${fmtDeskPlain(v.current_funding)} decimal`,`8h 资金费：${fmtDeskPlain(v.funding_8h)} decimal-per-8h`],d)+derivFactCard('deribit-hourly','Deribit 小时资金费',[`1h 资金费：${fmtDeskPlain(hv.interest_1h)} decimal-per-1h`,`8h 资金费：${fmtDeskPlain(hv.interest_8h)} decimal-per-8h`],h)+'</div>';}
+  html+='</section><section class="desk-freq-group"><h3>Deribit · BTC / USDC 期权</h3><p>mark IV 是估值；未采集完整 bid/ask IV 与 Greeks，不能推出 dealer gamma 或 GEX。各结算组独立。</p>';
+  for(const currency of ['BTC','USDC']){const o=desk.options?.[currency];html+='<h4>'+currency+' 结算组</h4>';
+    if(!o){html+='<p>当前数据服务未返回期权覆盖；未补成零。</p>';continue;}
+    html+=derivFactCard('options-'+currency,'期权覆盖',[`已映射：${fmtDeskPlain(o.mapped)} / ${fmtDeskPlain(o.universe)}`,`缺报价：${fmtDeskPlain(o.missingCount)} · 非预期：${fmtDeskPlain(o.unexpectedCount)} · 无效：${fmtDeskPlain(o.invalidCount)}`,`mark IV：${fmtDeskPlain(o.markIvCount)} · bid/ask IV：${fmtDeskPlain(o.bidAskIvCount)} · Greeks：${fmtDeskPlain(o.greeksCount)}`,`元数据接收：${fmtDeskClock(o.metadataReceipt)}`,`报价接收：${fmtDeskClock(o.quoteReceipt)}`],o);
+    for(const smile of(o.smiles||[]).slice(0,3))html+='<details data-receipt="smile-'+currency+'-'+escapeDerivHtml(smile.expiry)+'"><summary>'+escapeDerivHtml(fmtDeskClock(smile.expiry))+' · 已返回行权价 / mark IV</summary><p>最多160点的子集；IV单位%，OI单位BTC，mark价格单位'+currency+'。</p><div class="rd-table-scroll"><table class="rd-table"><thead><tr><th>合约</th><th>行权价 USD</th><th>mark IV %</th><th>OI BTC</th><th>mark '+currency+'</th></tr></thead><tbody>'+(smile.points||[]).map(p=>'<tr><td>'+escapeDerivHtml(p.instrument)+'</td><td>'+fmtDeskPlain(p.strike)+'</td><td>'+fmtDeskPlain(p.markIv)+'</td><td>'+fmtDeskPlain(p.openInterest)+'</td><td>'+fmtDeskPlain(p.markPrice)+'</td></tr>').join('')+'</tbody></table></div></details>';
+  }return html+'</section>';
 }
 
 function renderContextDesk(desk, failure) {
@@ -920,20 +964,20 @@ function renderContextDesk(desk, failure) {
   derivativesReadFailure = failure || null;
   const status = document.getElementById("deriv-status");
   const chip = document.getElementById("deriv-live-chip");
-  const headline = derivHeadline(shown, failure);
+  const headline = derivHeadline(shown,failure).replace('desk context 已返回','环境资料已读取').replaceAll('desk context','环境资料');
   if (status) status.textContent = headline;
   const contract = shown && shown.contract;
   const unavailable = !contract || contract.unavailable === true;
   if (chip) {
     chip.className = failure || headline.indexOf("陈旧") >= 0 || headline.indexOf("部分缺失") >= 0 ? "chip warn" : "chip ok";
-    chip.textContent = failure ? "读取失败" : (unavailable ? (shown && shown.asKnownMode) || "system_observed" : headline.replace(/^desk context 已返回 · /, ""));
+    chip.textContent = failure ? "读取失败" : (unavailable ? "资料覆盖有限" : headline.replace(/^desk context 已返回 · /, ""));
   }
   const stateEl = document.getElementById("deriv-contract-state");
   const noteEl = document.getElementById("deriv-contract-note");
   if (stateEl) stateEl.textContent = failure ? "读取失败" : (unavailable ? "空" : "已返回");
   if (noteEl) noteEl.textContent = failure ? "保留上一次成功展示" : (unavailable ? "仅宏观背景" : "卡片各自标状态");
   const asknown = document.getElementById("deriv-asknown");
-  if (asknown) asknown.textContent = (shown && shown.asKnownMode) || "system_observed";
+  if (asknown) asknown.textContent = shown?.asKnownMode === "publicly_available" ? "公开可得时点" : "系统取得时点";
   const failureEl = document.getElementById("deriv-read-failure");
   if (failureEl) {
     failureEl.hidden = !failure;
@@ -945,8 +989,8 @@ function renderContextDesk(desk, failure) {
   if (emptyEl) emptyEl.hidden = !unavailable || !!failure && !!derivativesShownDesk;
   const contractEl = document.getElementById("deriv-contract-cards");
   const positioningEl = document.getElementById("deriv-positioning-cards");
-  if (contractEl) contractEl.innerHTML = shown ? derivContractCards(contract) : "";
-  if (positioningEl) positioningEl.innerHTML = shown ? derivPositioningCards(contract) : "";
+  if (contractEl) DeskVisual.replace(contractEl,shown ? derivContractCards(contract) : "");
+  if (positioningEl) DeskVisual.replace(positioningEl,shown ? derivPositioningCards(contract) : "");
   if (shown) renderMacroGroups(shown);
   publishDerivativesEvidence(shown, failure);
 }
@@ -968,25 +1012,29 @@ function publishDerivativesEvidence(desk, failure) {
     accounts: "binance-usdm-accounts",
     topPositions: "binance-usdm-top-positions",
   };
+  const macroView=typeof UserWorkspace!=="undefined"&&UserWorkspace.view("derivatives")==="macro";
   const cards = [];
-  ["premium", "funding", "basis"].forEach((id) => {
+  (macroView?[]:["premium", "funding", "basis"]).forEach((id) => {
     if (contract[id]) cards.push(Object.assign({ id, sourceId: sourceById[id] }, contract[id]));
   });
   const positioning = contract.positioning || {};
-  Object.keys(sourceById).forEach((id) => {
+  (macroView?[]:Object.keys(sourceById)).forEach((id) => {
     if (positioning[id]) cards.push(Object.assign({ id, sourceId: sourceById[id] }, positioning[id]));
   });
   const groups = desk.groups || {};
-  Object.keys(groups).forEach((key) => {
+  (macroView?Object.keys(groups).filter(key=>key!=="unofficialVol"):[]).forEach((key) => {
     ((groups[key] && groups[key].cards) || []).forEach((card) => {
       cards.push(Object.assign({ sourceId: "public-macro-displayed" }, card));
     });
   });
+  if(!macroView&&desk.comparison?.deribit)cards.push({...desk.comparison.deribit,id:'deribit-perp',sourceId:'deribit-btc-perp'});
+  if(!macroView&&desk.comparison?.deribit?.hourlyFunding)cards.push({...desk.comparison.deribit.hourlyFunding,id:'deribit-hourly',sourceId:'deribit-btc-perp'});
+  for(const currency of macroView?[]:['BTC','USDC'])if(desk.options?.[currency])cards.push({...desk.options[currency],id:'options-'+currency,sourceId:'deribit-btc-options',values:desk.options[currency]});
   const saved = WorkbenchEvidence.commitDisplayed("derivatives", {
     displayedAt: new Date().toISOString(),
     readAt: desk.asOf || null,
     asOf: desk.asOf || null,
-    parameters: { scope: "context" },
+    parameters: { scope: "context", view: macroView?"macro":"leverage" },
     contentRevision: desk.inputRevision || null,
     cards,
     stale: !!failure,

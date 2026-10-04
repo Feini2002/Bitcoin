@@ -1,0 +1,456 @@
+{
+  "schemaVersion": "bitdesk.case-review.2026-10-03.1",
+  "queriedOn": "2026-10-03",
+  "reviewRecordedAt": "2026-10-02T18:01:46.000Z",
+  "scope": "T3 最小运行方法检索与独立官方案例审查",
+  "risk": "L2：新增运行输入和取证关联；本模块只读本地登记资料，可回改，无模型、网络、持久业务数据或生产修改。",
+  "sourcePolicy": "实际打开官方文档和官方仓库；仅保存每源少于25词的短摘与独立改写，不安装框架、不请求付费API、不复制完整正文。",
+  "snapshotKind": "局部短摘与来源/版本/章节登记；不是完整HTML快照或原始行情响应",
+  "sources": [
+    {
+      "id": "tradingview-range",
+      "title": "TradingView Advanced Charts Datafeed API",
+      "url": "https://www.tradingview.com/charting-library-docs/latest/connecting_data/Datafeed-API/",
+      "version": "Advanced Charts latest，2026-10-03 实际打开",
+      "opened": true,
+      "section": "getBars / Bar order / Correct amount of data / subscribeBars",
+      "rawExcerpt": "The library requires data in the `[from, to)` time range.",
+      "verifiedFacts": [
+        "历史棒按时间升序返回；日/周/月棒使用UTC交易日起点。",
+        "getBars 时间窗右端排除；countBack 可要求窗口以前的棒。",
+        "实时订阅用于更新末棒或新增棒，按产品与周期分别处理；历史修订有单独重置流程。"
+      ],
+      "applicability": "借鉴任务产品、周期、范围与订阅身份贯通，以及真实覆盖和历史修订的显示。",
+      "projectInference": "本项目市场观察起止采用自身契约；不得直接把外部左闭右开和countBack当作本项目封存规则。",
+      "limitations": [
+        "本项目使用Lightweight Charts，未采用Advanced Charts，二者接口契约不可互相冒充。",
+        "已打开文档不代表当前运行或本项目图表接入已验。"
+      ],
+      "adversarialRisk": "把图表显示完整当研究窗完整；将窗口以前的棒混进本轮事实；切周期后晚到数据污染订阅。",
+      "minimalAction": "在T1任务/工具封存的边界测试中核对末棒结束、右端包含、实际覆盖和不支持周期；不迁移图表库。"
+    },
+    {
+      "id": "coinglass-model-liquidation",
+      "title": "CoinGlass Pair Liquidation Heatmap Model3",
+      "url": "https://docs.coinglass.com/reference/liquidation-heatmap-model3",
+      "version": "API v4 / heatmap model3，2026-10-03 实际打开",
+      "opened": true,
+      "section": "Endpoint description / query parameters",
+      "rawExcerpt": "calculated based on market data and liquidation leverage levels",
+      "verifiedFacts": [
+        "端点将市场数据与杠杆强平水平用于计算热力层。",
+        "查询身份要求交易所、交易对和聚合范围。"
+      ],
+      "applicability": "明确区分模型强平层、已观察强平事件及其单位、时间窗和来源。",
+      "projectInference": "本项目已观察强平金额不能升级为未来特定价位的必然清算仓位；模型图也不能证明完整账户仓位。",
+      "limitations": [
+        "没有请求该API、购买订阅或核对其模型误差。",
+        "公开文档没有提供本项目可引用的本轮市场事实或预测正确率。"
+      ],
+      "adversarialRisk": "热力图看起来专业，首席便将计算强平池写成已发生强平；同一模型的多个视图被重复投票。",
+      "minimalAction": "知识检索在强平问题中返回口径差异与未接入声明；若未来扩源，分别登记方法版本、估算身份和观测身份。"
+    },
+    {
+      "id": "binance-book-sequence",
+      "title": "Binance USD-M How to manage a local order book correctly",
+      "url": "https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/websocket-market-streams/How-to-manage-a-local-order-book-correctly",
+      "version": "USD-M WebSocket，页面Last modified October 2, 2026",
+      "opened": true,
+      "originalEntry": "https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/How-to-manage-a-local-order-book-correctly",
+      "section": "Snapshot/diff reconstruction steps 1–9",
+      "rawExcerpt": "each new event's `pu` should be equal to the previous event's `u`",
+      "verifiedFacts": [
+        "官方方法以缓存增量和REST快照拼接订单簿。",
+        "增量序列不衔接需重新初始化；价位数量是绝对数量，零数量删除价位。"
+      ],
+      "applicability": "连续盘口工具应证明快照锚点、增量连续性和重置；可见深度快照可用于当时价差与名义额。",
+      "projectInference": "已有20档快照不具备连续挂撤单资格，工具能力声明应保留这一限制。",
+      "limitations": [
+        "这不是新增连续盘口工具或实际订单簿响应。",
+        "交易所可见簿也不能证明隐性订单、所有交易所流动性或未来清算。"
+      ],
+      "adversarialRisk": "盘口岗从两个离散快照给出挂撤单因果；缺失序列被静默接上后用于判断流动性变化。",
+      "minimalAction": "本轮返回连续性方法；T4只在真实问题要求时加工具，不因文档存在就宣称连续能力。"
+    },
+    {
+      "id": "fred-real-time-vintage",
+      "title": "FRED API Real-Time Periods",
+      "url": "https://fred.stlouisfed.org/docs/api/fred/realtime_period.html",
+      "version": "FRED API real-time period文档，2026-10-03 实际打开",
+      "opened": true,
+      "section": "Introduction",
+      "rawExcerpt": "observation data values can be revised",
+      "verifiedFacts": [
+        "实时期描述信息何时已知直到变更；观测数据可能修订。",
+        "默认查询today版本；ALFRED可选择历史已知实时期。",
+        "realtime_start/realtime_end为日期级闭区间。"
+      ],
+      "applicability": "宏观岗位分别记录参考期、公开资格、数据版本和接收时间；历史复盘使用对应已知版本。",
+      "projectInference": "观察日期早于市场锚点不充分；缺vintage和公布时间时只能说明事后资料，不能宣称严格历史可得。",
+      "limitations": [
+        "日期级实时期不能自动证明精确到秒的公布时刻。",
+        "本轮未发起FRED API查询，也未新增vintage采集。"
+      ],
+      "adversarialRisk": "最新修订值回填旧窗口导致看似精确的事后解释；参考期被当作发布时点。",
+      "minimalAction": "方法回执区分marketAnchor与retrievedAt，标出资料核验晚于市场锚点；T4缺实际vintage资格时明确拒绝严格历史结论。"
+    },
+    {
+      "id": "fed-rss-discovery",
+      "title": "Federal Reserve Board RSS Feeds",
+      "url": "https://www.federalreserve.gov/feeds/feeds.htm",
+      "version": "页面Last Update September 16, 2025；2026-10-03重新核对",
+      "opened": true,
+      "section": "News / Statistics / What is an RSS feed?",
+      "rawExcerpt": "links, headlines, and a brief summary of the feed",
+      "verifiedFacts": [
+        "Fed登记新闻、讲话、统计公告等RSS。",
+        "RSS用于分发链接、标题与简短摘要。"
+      ],
+      "applicability": "把原件发现、原文取得与完整性核验分开，并记录每一步失败。",
+      "projectInference": "单个RSS摘要不足以证明事件完整、传播独立或其导致市场变化。",
+      "limitations": [
+        "未根据该页面宣称本次事件发现完整。",
+        "目录页面更新时间不等于RSS事件发布时间或本次资料新鲜度。"
+      ],
+      "adversarialRisk": "把摘要当读过原文，转载当多个独立来源，公告和价格共时当因果。",
+      "minimalAction": "让知识回执补充发现/原文区别，保留既有已登记article工具和全文未核验声明。"
+    },
+    {
+      "id": "openbb-v4-provider",
+      "title": "OpenBB V4 Provider Extensions",
+      "url": "https://docs.openbb.co/odp/v4/python/developer/extension_types/provider",
+      "version": "官方页面Version v4",
+      "opened": true,
+      "section": "Provider Model / Standard Models / Fetcher",
+      "rawExcerpt": "A provider extension refers to a specific source of data.",
+      "verifiedFacts": [
+        "Provider对应具体来源；共享模型定义公共字段。",
+        "Fetcher分开转换/校验请求、提取来源响应、转换序列化结果。"
+      ],
+      "applicability": "借鉴来源明确与分层变换，将登记请求、原始响应、标准化观察和解释保持可追溯。",
+      "projectInference": "现有Worker/FINANCE_DATASETS架构已具相似边界，优先复用，不安装完整平台。",
+      "limitations": [
+        "这是V4文档，不能据此宣称V5路径或供应商仍有效。",
+        "标准化接口成功不认证原来源真实覆盖或单位一致。"
+      ],
+      "adversarialRisk": "工具统一以后隐藏来源替换和单位差异；把自动类型转换当事实核实。",
+      "minimalAction": "保留来源与产品身份，版本变化需要显式登记和覆盖测试。"
+    },
+    {
+      "id": "openbb-provider-boundary",
+      "title": "OpenBB Python V5 Migration from V4",
+      "url": "https://docs.openbb.co/odp/python/migration-from-v4",
+      "version": "Version v5 / openbb-core 2.0.0",
+      "opened": true,
+      "section": "Removed providers and extensions / Provider-owned namespaces",
+      "rawExcerpt": "V5 is a breaking release.",
+      "verifiedFacts": [
+        "官方迁移页说明V5破坏性升级、部分供应商移除及命令路径变化。",
+        "V5主要由来源包注册自有命名空间，V4共享路径不可直接沿用。"
+      ],
+      "applicability": "新增来源时核对实际版本；来源身份不能被通用UI或路由名吞掉。",
+      "projectInference": "只采用架构原则，不把V4教程命令或平台安装作为本轮运行依赖。",
+      "limitations": [
+        "没有安装OpenBB，迁移页不是本项目待执行升级指令。",
+        "没有核对所有V5接口或资源；仅审查直接相关章节。"
+      ],
+      "adversarialRisk": "旧案例仍可访问便假设当前路径可运行，自动供应商回退替换指定材料。",
+      "minimalAction": "运行知识记录版本V5与V4差别；后续扩源按来源实际契约实施。"
+    },
+    {
+      "id": "tradingagents-independence",
+      "title": "TauricResearch TradingAgents README",
+      "url": "https://github.com/TauricResearch/TradingAgents/blob/v0.5.2/README.md",
+      "version": "v0.5.2固定tag README；2026-10-03实际打开",
+      "opened": true,
+      "section": "TradingAgents Framework / Analyst Team / Current holdings",
+      "rawExcerpt": "The selected analysts work at the same time, each on its own tools",
+      "verifiedFacts": [
+        "README展示独立分析岗位、各自工具与随后研究讨论。",
+        "官方定位research用途，结果受模型、数据和非确定性因素影响。",
+        "未传账户资料与空仓输入有区别，不默认推定用户仓位。"
+      ],
+      "applicability": "独立岗位需实际独立取证和报告；缺账户资料保持未知；固定输入对照有用研究而非角色数量。",
+      "projectInference": "可以借鉴岗位证据职责和保存设置身份；不安装其模型路由、交易/账户链或依赖框架。",
+      "limitations": [
+        "未运行框架或复现其回测，README不能证明BTC研究或预测增量。",
+        "Github star、演示和角色配置不构成研究质量验收。"
+      ],
+      "adversarialRisk": "首席预先写结论再让岗位填栏目；同所数据和转载反复投票；牛熊对话假造分歧。",
+      "minimalAction": "按RES16/RES17记录每岗实际问题、请求、证据新增/遗漏、反证和首席处置；同材料/预算必要时与单首席或模板比较。"
+    },
+    {
+      "id": "fred-walcl-definition",
+      "title": "WALCL 周三资产存量定义",
+      "url": "https://fred.stlouisfed.org/series/WALCL",
+      "version": "FRED WALCL series definition; reviewed 2026-10-03",
+      "opened": true,
+      "section": "official FRED series definition, units, frequency and notes",
+      "retrievalWindow": {
+        "from": "2026-10-02T19:22:37.309Z",
+        "to": "2026-10-02T19:24:44.481Z"
+      },
+      "reviewRecordedAt": "2026-10-02T19:44:07.164Z",
+      "rawExcerpt": "Wednesday Level",
+      "verifiedFacts": [
+        "WALCL 表示美联储总资产的周三时点存量，单位为百万美元；周频参考日期不是公布时刻。"
+      ],
+      "applicability": "保留资产存量、参考期、单位及实际可得时点。与其他系列比较前核对统计定义，不只做单位换算。",
+      "projectInference": "统一美元单位后仍须区分时点存量、周平均和每日操作汇总；不直接相减为同一时点净流动性或BTC资金流",
+      "limitations": [
+        "WTREGEN 是周平均，RRPONTSYD 是每日操作总额，不能直接相减为同一时点净流动性。",
+        "此条仅为系列定义，不含当前观察值，不能证明资金进入BTC。"
+      ],
+      "adversarialRisk": "把频率、参考日期和单位近似一致误当统计定义相同，或者把后验核对的新观察值灌入冻结历史run",
+      "minimalAction": "仅新增方法定义及主张隔离；不同统计类型未对齐时保留未知",
+      "marketValuesIncluded": false
+    },
+    {
+      "id": "fred-wtregen-definition",
+      "title": "WTREGEN TGA 周平均定义",
+      "url": "https://fred.stlouisfed.org/series/WTREGEN",
+      "version": "FRED WTREGEN series definition; reviewed 2026-10-03",
+      "opened": true,
+      "section": "official FRED series definition, units, frequency and notes",
+      "retrievalWindow": {
+        "from": "2026-10-02T19:22:37.309Z",
+        "to": "2026-10-02T19:24:44.481Z"
+      },
+      "reviewRecordedAt": "2026-10-02T19:44:07.165Z",
+      "rawExcerpt": "Week Average",
+      "verifiedFacts": [
+        "WTREGEN 表示美国财政部一般账户的周平均余额，周截至星期三，单位为百万美元；它不是周三单一时点余额。"
+      ],
+      "applicability": "解释TGA时保留周平均定义。检验财政支出或准备金渠道还需相应原始证据及时间对齐，余额变化不能替代资金去向。",
+      "projectInference": "统一美元单位后仍须区分时点存量、周平均和每日操作汇总；不直接相减为同一时点净流动性或BTC资金流",
+      "limitations": [
+        "与WALCL周三存量、RRPONTSYD每日操作总额的统计口径不同，换算同单位后仍不能直接拼成同一时点净流动性。",
+        "此条不含当前观察值，不证明财政支出、准备金改善或BTC资金流。"
+      ],
+      "adversarialRisk": "把频率、参考日期和单位近似一致误当统计定义相同，或者把后验核对的新观察值灌入冻结历史run",
+      "minimalAction": "仅新增方法定义及主张隔离；不同统计类型未对齐时保留未知",
+      "marketValuesIncluded": false
+    },
+    {
+      "id": "fred-rrp-definition",
+      "title": "RRPONTSYD 每日逆回购操作额定义",
+      "url": "https://fred.stlouisfed.org/series/RRPONTSYD",
+      "version": "FRED RRPONTSYD series definition; reviewed 2026-10-03",
+      "opened": true,
+      "section": "official FRED series definition, units, frequency and notes",
+      "retrievalWindow": {
+        "from": "2026-10-02T19:22:37.309Z",
+        "to": "2026-10-02T19:24:44.481Z"
+      },
+      "reviewRecordedAt": "2026-10-02T19:44:07.165Z",
+      "rawExcerpt": "Billions of US Dollars",
+      "verifiedFacts": [
+        "RRPONTSYD 是纽约联储临时公开市场操作中逆回购交易金额的每日汇总，单位为十亿美元，未经季节调整。"
+      ],
+      "applicability": "保留每日操作总额的定义与单位，区分本地后来取得的参考期和新公布冲击。与资产或TGA比较时逐项核对频率、统计类型及可得时点。",
+      "projectInference": "统一美元单位后仍须区分时点存量、周平均和每日操作汇总；不直接相减为同一时点净流动性或BTC资金流",
+      "limitations": [
+        "日频操作额不等于WALCL周三资产存量或WTREGEN周平均余额；同单位不保证同统计口径。",
+        "此条不含实时数值、公布日历或BTC传导证据，不认证市场主张。"
+      ],
+      "adversarialRisk": "把频率、参考日期和单位近似一致误当统计定义相同，或者把后验核对的新观察值灌入冻结历史run",
+      "minimalAction": "仅新增方法定义及主张隔离；不同统计类型未对齐时保留未知",
+      "marketValuesIncluded": false
+    }
+  ],
+  "accessLimitations": [
+    {
+      "url": "https://docs.openbb.co/odp/v4/python/migration-from-v4",
+      "result": "工具不能打开猜测旧路径；随后通过已打开V4页面的实际Migration链接取得官方V5页面，未依赖该失败URL做结论。"
+    }
+  ],
+  "projectBasis": [
+    {
+      "id": "RES16",
+      "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES16_模型工具与多代理的适用边界.md",
+      "date": "2026-09-16",
+      "use": "任务/证据分工、受控工具、材料不当指令、相同预算的研究增量比较"
+    },
+    {
+      "id": "RES17",
+      "path": "docs/research/bitcoin-upgrade/sources/2026-09-16/03_research/RES17_报告质量评价与可观测性.md",
+      "date": "2026-09-16",
+      "use": "数字、引用、时间、遗漏与重复分别核验；不让共同错误来源互相认证"
+    }
+  ],
+  "firstPrinciplesReview": {
+    "task": "帮助用户理解市场变化及可核对解释；方法文档不替代本轮数据，不强迫每岗有结论。",
+    "data": "公开文档是方法；本轮市场主张只能来自身份、时钟、单位和覆盖合格的真实取证。",
+    "independence": "当前静态Prompt已要求同源不多算、无因果补造；独立岗位应由实际工具请求、自己的输入和反证证明。多个岗位共享Binance价格不是多个独立来源。",
+    "value": "14个本地边界测试只证明模块契约；实际研究价值需同材料/预算的真实报告、跨轮新依据与遗漏/因果审查，不能由检索条数或测试名称证明。",
+    "staticPromptConcreteGaps": [
+      "盘口连续性需要快照/增量序列资格",
+      "FRED默认最新修订版本与ALFRED历史已知版本不同",
+      "CoinGlass模型强平层不同于已观察强平",
+      "外部图表半开范围/countBack不等于本项目研究封存范围",
+      "RSS发现摘要与正文核验不同",
+      "OpenBB V4可访问文档不代表V5实际路径"
+    ]
+  },
+  "implementation": {
+    "module": "scripts/agent-team/knowledge.mjs",
+    "registryVersion": "bitdesk.agent-knowledge.2026-10-03.2",
+    "registration": "12条有界方法登记：10条官方文档/仓库、2条现有项目记录；无当前观察值",
+    "interface": "createKnowledgeRetriever({registry?,clock?}).retrieve(role,{question?,domains?,sourceIds?,limit?},{asOf,signal}) -> {registryVersion,registryHash,queryHash,role,kind,marketEvidence,marketAnchor,retrievedAt,status,receipts,coverage,budget,warnings}",
+    "budget": {
+      "maxItems": 3,
+      "maxResultBytes": 8192,
+      "maxQuestionChars": 2000,
+      "maxRegistryBytes": 65536,
+      "networkCalls": 0,
+      "modelCalls": 0
+    },
+    "marketSeparation": "method_knowledge 回执 ok=true、usable=false、marketEvidence=false、usableForMarketClaims=false；仅usableAsMethod指示方法复核状态，不进入市场evidenceIds/numericUnits。",
+    "freshness": "根据真实检索时钟和来源核验期限显示verified/stale/verification_in_future；资料核验晚于市场锚点另列，不伪造历史可得性。",
+    "conflicts": "登记冲突双向保留来源身份/版本/原因；任何一侧被选中都显示needs_review，不自动裁定真伪。",
+    "selection": "按岗位权限硬过滤，再按指定领域/来源与问题关键词排序；指定来源不匹配领域时明确空回执，不回退到另一个原件。",
+    "limitations": [
+      "小型关键词检索，不是全仓语义知识库或全网搜索。",
+      "未在本worker运行真实模型/服务或证明研究质量提升。",
+      "集成、持久封存、知识引用阅读和真实运行归agent_task_core/root验证。",
+      "未修改MD、共享契约、Prompt、UI、package或生产资源。"
+    ]
+  },
+  "validation": {
+    "command": "node scripts/run-bounded.cjs 30 node tests/unit/verify-agent-knowledge.cjs",
+    "result": "PASS",
+    "passed": 14,
+    "failed": 0,
+    "exitCode": 0,
+    "supervisorPid": 15248,
+    "childPid": 29984,
+    "cleanup": "confirmed; 随后精确CIM查询两PID均无存活",
+    "scope": [
+      "岗位/问题/领域匹配",
+      "来源/version/hash/真实局部检索回执",
+      "市场主张硬拒绝",
+      "精确来源权限及未知输入拒绝",
+      "过时/未来核验/锚点时钟",
+      "双向冲突",
+      "文本注入保持数据且0联网",
+      "跨轮快照和输出独立",
+      "3条/完整8KiB预算",
+      "取消"
+    ],
+    "finalMetadataReplay": {
+      "change": "来源核验时间采用真实clock记录2026-10-02T18:01:46.000Z",
+      "passed": 14,
+      "failed": 0,
+      "exitCode": 0,
+      "supervisorPid": 29192,
+      "childPid": 26752,
+      "cleanup": "confirmed"
+    },
+    "initialObservationLimitation": "首次research-context查询得到真实路由结果，但沙箱CIM拒绝导致wrapper cleanup_uncertain；随后获准只读精确CIM核对PID26020/28744均无存活。测试使用可读CIM执行面，没有绕过工具拒绝或按进程名结束。",
+    "macroDefinitionUpdate": {
+      "command": "node scripts/run-bounded.cjs 30 node tests/unit/verify-agent-knowledge.cjs",
+      "passed": 15,
+      "failed": 0,
+      "exitCode": 0,
+      "supervisorPid": 14548,
+      "childPid": 4272,
+      "cleanup": "confirmed",
+      "networkCalls": 0,
+      "modelCalls": 0,
+      "registryVersion": "bitdesk.agent-knowledge.2026-10-03.2",
+      "registryHash": "4cbf1b0829ebc451c1027d2e9c8b995060bdc60f29b6f681c7e4a3ddb2834eda",
+      "retrievalBytes": 5550,
+      "sourceIds": [
+        "fred-rrp-definition",
+        "fred-walcl-definition",
+        "fred-wtregen-definition"
+      ],
+      "processIdentityCheck": {
+        "observedAt": "2026-10-02T19:48:51.812Z",
+        "queriedPids": [
+          14548,
+          4272,
+          25120,
+          7860,
+          12388,
+          26260,
+          26872,
+          29348
+        ],
+        "result": "no exact PID rows"
+      }
+    }
+  },
+  "adversarialGateRecommendations": [
+    {
+      "id": "K1",
+      "risk": "知识回执被当市场事实或条件触发证据",
+      "minimumFix": "独立knowledgeReceipts封存；Prompt与reader明确方法，市场校验继续拒绝usable=false。",
+      "verification": "本单元已证明validateReport拒绝方法回执；集成还需验证首席/岗位没有用其认证市场主张。"
+    },
+    {
+      "id": "K2",
+      "risk": "无变化守卫忽略方法版本变化",
+      "minimumFix": "岗位指纹包含registryVersion/registryHash/所选contentHash；不要包含每次随机回执ID。",
+      "verification": "材料hash重复稳定；版本/资料改变后集成守卫应重新研究。"
+    },
+    {
+      "id": "K3",
+      "risk": "过时/冲突资料仍被流畅改写成确定结论",
+      "minimumFix": "传递freshness/conflicts/warnings，usableAsMethod=false时不认证方法；保留不确定并提出原来源核查。",
+      "verification": "本单元覆盖双向冲突和过期；真实语义审查不能仅用JSON schema通过代替。"
+    },
+    {
+      "id": "K4",
+      "risk": "假Agent与错误因果",
+      "minimumFix": "首轮输入彼此隔离，实际取证请求和岗位反证可查；同源去重；允许零主张，首席不投票。",
+      "verification": "真实报告记录具体新依据/修订/遗漏及替代解释；没有反事实或机制证据时只写候选解释。"
+    }
+  ],
+  "methodDefinitionUpdate": {
+    "registryVersion": "bitdesk.agent-knowledge.2026-10-03.2",
+    "recordedAt": "2026-10-02T19:44:07.165Z",
+    "sourceIds": [
+      "fred-walcl-definition",
+      "fred-wtregen-definition",
+      "fred-rrp-definition"
+    ],
+    "marketEvidence": false,
+    "liveNumericValuesStoredInKnowledge": false,
+    "basis": {
+      "project": "RES12 sections 1/2/5: 对齐不同时间机制与可得版本",
+      "independentReview": ".artifacts/goal-20261003/live-current-2/adversarial-review.json",
+      "reviewSha256": "7b5c8ac966214768bea8599597b36bbe7dd0075043806455372ac1795e155e2c"
+    },
+    "boundary": "仅方法定义/适用性/官方直链；current-1/current-2冻结回执和研究失败状态不改写"
+  },
+  "realStudyCounterexamples": {
+    "current1": {
+      "runId": "665ea342-3e2d-4410-8e4f-c9dd4912698a",
+      "outcome": "FAIL",
+      "chiefAvailable": false,
+      "reason": "model_context_too_large"
+    },
+    "current2": {
+      "runId": "fd304963-2a67-4551-a83c-8ca45e862eae",
+      "outcome": "FAIL",
+      "chiefAvailable": false,
+      "reason": "model_context_too_large",
+      "findings": [
+        {
+          "id": "chief-capacity-repeated",
+          "fact": "current-1和current-2均在chief前model_context_too_large；本轮8实际官方调用、5岗accepted、chiefCandidate=null/audits=[]"
+        },
+        {
+          "id": "condition-registration-latency",
+          "fact": "env19:20:15.392、flow19:21:02.613登记19:15–19:29:59.999Z条件；events19:33:37.097登记时整栏已经结束"
+        },
+        {
+          "id": "advertised-tool-scope-contradiction",
+          "fact": "decisionSchema向所有岗位声明可请求binance-perp-klines-15m，dataset执行守卫仍按ROLES[role].datasets旧集合拒绝deriv/macro"
+        }
+      ],
+      "reviewPath": ".artifacts/goal-20261003/live-current-2/adversarial-review.json"
+    }
+  }
+}

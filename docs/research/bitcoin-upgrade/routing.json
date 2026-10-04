@@ -2,262 +2,1569 @@
   "sourceRoot": "docs/research/bitcoin-upgrade/sources/2026-09-16",
   "routes": [
     {
-      "id":"research-desk", "title":"研究总览、事件与舆情重构及 AI 对话工作流",
-      "keywords":["事件一览","舆情分析","研究总览","无Key分析","报告导入","提示词","前端重构","研究工作台"],
-      "summary":"网站读取研究，AI 对话执行来源核对与分析。十二个模块使用统一 research.v1 协议，CLI 默认只校验，新 ID 写入，不恢复模型服务。",
-      "code":["js/research-protocol.js","js/research-desk.js","js/pages/research-overview.js","scripts/prepare-research.cjs","scripts/import-yuqing-report.cjs","desk-ui.css"],
-      "primary":[{"id":"LOCAL-RESEARCH-DESK"},{"id":"LOCAL-AI-RESEARCH"}],
-      "expand":["V07","V08"],"graph":"ResearchProtocol ResearchDesk",
-      "related":[{"id":"current-plan","when":"核对四页数据及生产运行状态"}],
-      "checks":["npm run verify:research","npm run verify:research-ui","npm run build"],
-      "acceptance":"真实来源与资料时间 → 十二步研究 → JSON 校验预览 → 授权 CLI 保存新版本 → item 读回。旧报告不冒充新判断。"
+      "id": "agent-architecture",
+      "title": "BTC Agent架构、首席与独立岗位研究",
+      "keywords": [
+        "Agent",
+        "Agent 架构",
+        "Agent主线",
+        "首席决策台",
+        "智囊团",
+        "独立岗位",
+        "跨轮记忆",
+        "岗位记忆",
+        "指定窗口",
+        "条件账本",
+        "岗位知识检索",
+        "研究任务隔离",
+        "团队研究",
+        "Agent导航",
+        "运行审核",
+        "独立研究",
+        "首席",
+        "记忆"
+      ],
+      "summary": "当前以Agent架构为主：首席入口、五领域独立取证、三类任务、条件与方法、冻结基线、审核和开发页连接。此前当前/窗口/事件与原件阅读已有技术验收；2026-10-04新用户金融复审发现普通当前材料投影、事件入口分裂、历史语义与研究待办问题，增量A–D已实施、本地build/交互通过，E真实金融验收进行中，精确新结果见补充资料第10节。本地官方Codex额度、自动OFF，准确性优先；历史失败保留，旧云端模型不恢复。",
+      "code": [
+        "js/agent-team/contract.mjs",
+        "js/agent-team/prompts.mjs",
+        "js/agent-team/ui.mjs",
+        "scripts/agent-team/service.mjs",
+        "scripts/agent-team/tools.mjs",
+        "scripts/agent-team/store.mjs",
+        "scripts/agent-team/schedule.mjs",
+        "scripts/agent-team/knowledge.mjs",
+        "js/app.js",
+        "js/user-workspace.js",
+        "js/pages/research-records.js"
+      ],
+      "primary": [
+        {
+          "id": "docs/research/agent-team-product-plan-2026-10-02.md"
+        },
+        {
+          "id": "docs/research/agent-team-implementation-2026-10-02.md"
+        }
+      ],
+      "expand": [
+        "docs/research/first-look-financial-review-2026-10-04.md"
+      ],
+      "graph": "TeamService specialist chiefMaterials TeamStore Presence",
+      "related": [
+        {
+          "id": "market-first-frontend",
+          "when": "核对已整合的配套总架构V2与数据/页面契约；选区/事件协议复用Agent T1"
+        },
+        {
+          "id": "data-architecture-review",
+          "when": "核对当前工具与数据覆盖"
+        },
+        {
+          "id": "current-plan",
+          "when": "核对全系统验收状态"
+        }
+      ],
+      "checks": [
+        "npm run verify:agent-team",
+        "npm run verify:agent-team-ui",
+        "npm run build"
+      ],
+      "acceptance": "精确材料→独立取证→首席与审核→当时版本阅读→新旧观点可查；替身回归不冒充真实模型跨轮，文档查询不启动模型或外部写入。"
+    },
+    {
+      "id": "market-first-frontend",
+      "title": "BTC总架构修改方案V2：数据基础、Agent主线与前端整合",
+      "keywords": [
+        "市场观察优先",
+        "市场优先",
+        "前端模块架构",
+        "前端主方案",
+        "前端重构",
+        "前端整合方案",
+        "工程信息清理",
+        "首席衔接",
+        "总架构 V2",
+        "总纲修改方案",
+        "总架构修改方案"
+      ],
+      "summary": "配套总纲服从Agent主方案：数据消费、专业五视图、前端/共享状态、记录和生命周期已随Agent闭环整合；F3复用T1单协议与专题隔离。固定五入口/市场优先已替代，F/AT工作包按实际证据结算，历史与未选能力保留边界。",
+      "code": [
+        "docs/research/market-first-frontend-master-plan-2026-10-02.md",
+        "js/user-workspace.js",
+        "js/app.js",
+        "js/nav.js",
+        "js/pages/research-records.js",
+        "js/research-v2/desk-adapter.mjs",
+        "scripts/agent-team/service.mjs"
+      ],
+      "primary": [
+        {
+          "id": "docs/research/market-first-frontend-master-plan-2026-10-02.md"
+        }
+      ],
+      "expand": [],
+      "graph": "UserWorkspace captureDesk TeamService ResearchRecords",
+      "related": [
+        {
+          "id": "agent-architecture",
+          "when": "核对当前产品和架构主契约"
+        },
+        {
+          "id": "data-architecture-review",
+          "when": "核对场景覆盖及A/B/C采用边界"
+        },
+        {
+          "id": "research-desk",
+          "when": "核对事件/叙事原件与旧报告兼容"
+        },
+        {
+          "id": "current-plan",
+          "when": "核对W1–W4和全系统验收状态"
+        }
+      ],
+      "checks": [
+        "npm run verify:research"
+      ],
+      "acceptance": "已实施工作包对应实际Agent/数据/页面/记录证据；AT入口动作结果逐项可查，原失败、合成/真实/生产分开；文档查询不启动模型或外部写入。"
+    },
+    {
+      "id": "data-architecture-review",
+      "title": "BTC 合约系统对标与基础数据层复审",
+      "keywords": [
+        "基础数据层",
+        "数据层架构",
+        "数据是否齐全",
+        "合约系统对标",
+        "多Agent架构",
+        "CCXT",
+        "Cryptofeed",
+        "NautilusTrader",
+        "Freqtrade",
+        "Hummingbot",
+        "TradingAgents",
+        "FinRobot",
+        "官方历史归档"
+      ],
+      "summary": "2026-09-30复审保留33项规范集不等于全市场覆盖等历史事实；当前冻结Agent输入、单位/时间/来源及页面整合以2026-10-04两份架构契约和实际验收为准。官方成交归档、连续盘口及跨所扩展按未选能力边界保留，不把旧采用建议或内容版本保护变成新必做任务。",
+      "code": [
+        "docs/research/bitcoin-contract-data-architecture-review-2026-09-30.md",
+        "docs/research/contract-system-cases-2026-09-30/README.md",
+        "docs/research/contract-system-cases-2026-09-30/adoption-plan.md",
+        "docs/research/contract-system-cases-2026-09-30/official-history-archive.md",
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/finance/dataset-store.mjs",
+        "cloudflare/finance/desk.mjs",
+        "scripts/research/prepare-research.cjs"
+      ],
+      "primary": [
+        {
+          "id": "docs/research/bitcoin-contract-data-architecture-review-2026-09-30.md"
+        }
+      ],
+      "expand": [],
+      "graph": "normalizeDataset buildContextDesk buildOrderflowDesk buildHeatmapDesk",
+      "related": [
+        {
+          "id": "current-plan",
+          "when": "选择后续实施范围与核对已完成状态"
+        },
+        {
+          "id": "footprint",
+          "when": "验证官方成交归档与原始回放"
+        },
+        {
+          "id": "extensions",
+          "when": "明确跨所、期权、ETF 或链上研究目标"
+        }
+      ],
+      "checks": [
+        "npm run verify:research",
+        "npm run build"
+      ],
+      "acceptance": "固定官方来源与版本 → 核对当前源码和覆盖 → 保存可复现证据 → 沉淀采用建议；研究导航不启动采集、迁移、模型或 Agent。"
+    },
+    {
+      "id": "research-desk",
+      "title": "研究总览、事件与舆情重构及 AI 对话工作流",
+      "keywords": [
+        "事件一览",
+        "舆情分析",
+        "研究总览",
+        "无Key分析",
+        "报告导入",
+        "提示词",
+        "前端重构",
+        "研究工作台"
+      ],
+      "summary": "此专题记录旧云端报告与人工AI对话导入，十二模块统一research.v1协议，CLI默认只校验、新ID写入；旧云端生成继续退役。当前本地官方额度的TeamService及类型化任务见Agent主方案，两种流程不混同。",
+      "code": [
+        "js/research-protocol.js",
+        "js/research-desk.js",
+        "js/pages/research-overview.js",
+        "scripts/research/prepare-research.cjs",
+        "scripts/research/import-yuqing-report.cjs",
+        "assets/css/desk-ui.css"
+      ],
+      "primary": [
+        {
+          "id": "LOCAL-RESEARCH-DESK"
+        },
+        {
+          "id": "LOCAL-AI-RESEARCH"
+        }
+      ],
+      "expand": [
+        "V07",
+        "V08"
+      ],
+      "graph": "ResearchProtocol ResearchDesk",
+      "related": [
+        {
+          "id": "current-plan",
+          "when": "核对四页数据及生产运行状态"
+        }
+      ],
+      "checks": [
+        "npm run verify:research",
+        "npm run verify:research-ui",
+        "npm run build"
+      ],
+      "acceptance": "真实来源与资料时间 → 十二步研究 → JSON 校验预览 → 授权 CLI 保存新版本 → item 读回。旧报告不冒充新判断。"
     },
     {
       "id": "binance-plugin",
       "title": "币安插件、MCP 与四页数据核对",
-      "keywords": ["币安插件", "Binance插件", "币安MCP", "Binance MCP", "插件对账", "插件补查"],
+      "keywords": [
+        "币安插件",
+        "Binance插件",
+        "币安MCP",
+        "Binance MCP",
+        "插件对账",
+        "插件补查"
+      ],
       "summary": "先区分当前会话工具、官方 Skills Hub、Agent OS 与社区实现。复用公开样本做有界核对和研究；建议尚未接入，不替代连续采集，不恢复模型任务。",
-      "code": ["cloudflare/finance/datasets.mjs", "cloudflare/finance/desk.mjs", "js/workbench-evidence.js", "js/orderflow/footprint-engine.js"],
-      "primary": [{"id": "LOCAL-BINANCE-PLUGIN"}],
+      "code": [
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/finance/desk.mjs",
+        "js/workbench-evidence.js",
+        "js/orderflow/footprint-engine.js"
+      ],
+      "primary": [
+        {
+          "id": "LOCAL-BINANCE-PLUGIN"
+        }
+      ],
       "expand": [],
       "graph": "normalizeDataset handleDesk atomicSnapshot",
       "related": [
-        {"id": "derivatives", "when": "核对持仓量、资金费或多空比例"},
-        {"id": "footprint", "when": "用完整成交窗口核对足迹"},
-        {"id": "snapshot", "when": "基于四页导出追加插件补查"}
+        {
+          "id": "derivatives",
+          "when": "核对持仓量、资金费或多空比例"
+        },
+        {
+          "id": "footprint",
+          "when": "用完整成交窗口核对足迹"
+        },
+        {
+          "id": "snapshot",
+          "when": "基于四页导出追加插件补查"
+        }
       ],
-      "checks": ["npm run verify:research", "npm run lint"],
+      "checks": [
+        "npm run verify:research",
+        "npm run lint"
+      ],
       "acceptance": "固定产品与时间窗 → 留存公开原始响应 → 核对单位、来源、覆盖和差异；查询成功不冒充生产一致性通过。"
     },
     {
-      "id":"current-plan", "title":"当前架构基线与四页工作台开发方案",
-      "keywords":["当前计划","下一步开发","开发方案","仓库治理","架构治理","架构基线","遗留计划","开发进度","四页工作台","总计划"],
-      "summary":"先读2026-09-27当前方案顶部和第9节。W1–W4已有实现与复审加固；接续R1云端恢复验收、R2发布和R3生产采样，不重新开发W1。旧第二批计划仅用于追溯。",
-      "code":["cloudflare/finance/desk.mjs","cloudflare/finance/dataset-store.mjs","js/data-engine.js","js/pages/chart.js","js/pages/derivatives.js","js/features.js"],
-      "primary":[{"id":"LOCAL-NEXT"},{"id":"LOCAL-ARCHITECTURE"},{"id":"LOCAL-CLOUD-CONTROL"}],
-      "expand":["LOCAL-COST-CORRECTNESS","EXECUTION-LOG"], "graph":"handleDesk buildChartDesk readLiveKlineTape fetchDesk",
-      "related":[{"id":"chart-history","when":"实施 W1 来源与覆盖"},{"id":"derivatives","when":"实施合约卡片数据呈现"},{"id":"snapshot","when":"处理证据导出与旧快照兼容"}],
-      "checks":["npm run verify:governance","npm run build"],
-      "acceptance":"当前方案 → 有依据的就绪任务 → 四页来源、时间、窗口与缺口可核对；不重跑已完成治理，不恢复已退役模型。"
+      "id": "current-plan",
+      "title": "当前Agent主方案、配套总架构V2与开发验收",
+      "keywords": [
+        "当前计划",
+        "下一步开发",
+        "开发方案",
+        "仓库治理",
+        "架构治理",
+        "架构基线",
+        "遗留计划",
+        "开发进度",
+        "四页工作台",
+        "总计划"
+      ],
+      "summary": "先读2026-10-04Agent主方案、服从它的总架构V2和实施记录顶部；本轮已选工作包按本地实际证据结算、自动OFF、未部署。W1–W4及旧第二批仅作追溯，不重开旧恢复/发布/生产待办，不把未选扩展变成遗留计划。",
+      "code": [
+        "cloudflare/finance/desk.mjs",
+        "cloudflare/finance/dataset-store.mjs",
+        "js/data-engine.js",
+        "js/pages/chart.js",
+        "js/pages/derivatives.js",
+        "js/features.js"
+      ],
+      "primary": [
+        {
+          "id": "docs/research/agent-team-product-plan-2026-10-02.md"
+        },
+        {
+          "id": "docs/research/market-first-frontend-master-plan-2026-10-02.md"
+        },
+        {
+          "id": "docs/research/agent-team-implementation-2026-10-02.md"
+        }
+      ],
+      "expand": [
+        "LOCAL-NEXT",
+        "LOCAL-ARCHITECTURE",
+        "LOCAL-CLOUD-CONTROL",
+        "LOCAL-COST-CORRECTNESS",
+        "EXECUTION-LOG"
+      ],
+      "graph": "handleDesk buildChartDesk readLiveKlineTape fetchDesk",
+      "related": [
+        {
+          "id": "agent-architecture",
+          "when": "核对独立岗位、任务、基线与本地运行契约"
+        },
+        {
+          "id": "market-first-frontend",
+          "when": "核对数据、页面、记录和生命周期整合"
+        },
+        {
+          "id": "chart-history",
+          "when": "核对历史行情来源与实际覆盖"
+        },
+        {
+          "id": "derivatives",
+          "when": "实施合约卡片数据呈现"
+        },
+        {
+          "id": "snapshot",
+          "when": "处理证据导出与旧快照兼容"
+        }
+      ],
+      "checks": [
+        "npm run verify:governance",
+        "npm run build"
+      ],
+      "acceptance": "Agent主方案→配套总架构V2→真实实施/阅读/构建证据；不重跑旧W1–W4，不恢复旧云端模型，不触发未选发布或扩展。"
     },
     {
-      "id":"workbench-data", "title":"币安主源工作台数据底座与整体方案",
-      "keywords":["行情工作台","工作台方案","数据集","币安主源","聚合数据","金融审查","卡点","空桌","装配","desk","治理"],
-      "summary":"当前开发先读 LOCAL-NEXT；旧工作台方案与空桌治理记录用于方法依据。分析输入走 /api/desk，需区分最新尾部可用与完整历史来源/覆盖。",
-      "code":["cloudflare/finance/datasets.mjs","cloudflare/finance/dataset-store.mjs","cloudflare/finance/dataset-schema.sql","cloudflare/finance/gateway.mjs","scripts/collect-finance-datasets.cjs","scripts/verify-finance-datasets.cjs","scripts/verify-finance-datasets-live.cjs"],
-      "primary":[{"id":"LOCAL-NEXT"},{"id":"LOCAL-DESK"},{"id":"LOCAL-WORKBENCH"}],
-      "expand":[], "graph":"normalizeDataset readDataset handleDatasets",
-      "related":[{"id":"finance-channels","when":"查免费边界和原生通道"},{"id":"chart-history","when":"主图来源或历史迁移"},{"id":"runtime","when":"币安出口或 VPS 反代"},{"id":"snapshot","when":"切换聚合和分析输入"}],
-      "checks":["npm run verify:finance","npm run build"],
-      "acceptance":"固定官方来源 → 按需采集/标记本机首次导入 → D1只读核对；来源、时点、单位、版本和覆盖均明确，不把已有样本冒充持续采集。"
+      "id": "workbench-data",
+      "title": "币安主源工作台数据底座与整体方案",
+      "keywords": [
+        "行情工作台",
+        "工作台方案",
+        "数据集",
+        "币安主源",
+        "聚合数据",
+        "金融审查",
+        "卡点",
+        "空桌",
+        "装配",
+        "desk",
+        "治理"
+      ],
+      "summary": "当前开发先读 LOCAL-NEXT；旧工作台方案与空桌治理记录用于方法依据。分析输入走 /api/desk，需区分最新尾部可用与完整历史来源/覆盖。",
+      "code": [
+        "cloudflare/finance/datasets.mjs",
+        "cloudflare/finance/dataset-store.mjs",
+        "cloudflare/finance/dataset-schema.sql",
+        "cloudflare/finance/gateway.mjs",
+        "scripts/operations/collect-finance-datasets.cjs",
+        "tests/integration/verify-finance-datasets.cjs",
+        "scripts/diagnostics/verify-finance-datasets-live.cjs"
+      ],
+      "primary": [
+        {
+          "id": "LOCAL-NEXT"
+        },
+        {
+          "id": "LOCAL-DESK"
+        },
+        {
+          "id": "LOCAL-WORKBENCH"
+        }
+      ],
+      "expand": [],
+      "graph": "normalizeDataset readDataset handleDatasets",
+      "related": [
+        {
+          "id": "finance-channels",
+          "when": "查免费边界和原生通道"
+        },
+        {
+          "id": "chart-history",
+          "when": "主图来源或历史迁移"
+        },
+        {
+          "id": "runtime",
+          "when": "币安出口或 VPS 反代"
+        },
+        {
+          "id": "snapshot",
+          "when": "切换聚合和分析输入"
+        }
+      ],
+      "checks": [
+        "npm run verify:finance",
+        "npm run build"
+      ],
+      "acceptance": "固定官方来源 → 按需采集/标记本机首次导入 → D1只读核对；来源、时点、单位、版本和覆盖均明确，不把已有样本冒充持续采集。"
     },
     {
-      "id":"finance-channels", "title":"免费金融平台 API 通道",
-      "keywords":["免费API","金融平台","免费通道","finance","API接入","平台接入","限额","额度","每日采集","刷新频率","采集频率"],
-      "summary":"当前每条基础数据走 VPS 还是 Cloudflare，先读 2026-09-22 采集路由。再读限额停采和刷新频率。有额度不能当时钟的项不反复探测。",
-      "code":["cloudflare/finance/registry.mjs","cloudflare/finance/gateway.mjs","cloudflare/finance/store.mjs","cloudflare/finance/schema.sql","cloudflare/finance/scheduler.mjs","cloudflare/kline-live-collector.mjs","cloudflare/binance-klines-worker.js","scripts/verify-finance-channels.cjs","scripts/verify-finance-storage.cjs"],
-      "primary":[{"id":"LOCAL-COLLECT"},{"id":"LOCAL-DESK"},{"id":"LOCAL-QUOTA"},{"id":"LOCAL-CADENCE"},{"id":"LOCAL-CHANNELS"},{"id":"V04","section":"通用时间语义"}],
-      "expand":[], "graph":"handleFinance buildFinanceRequest",
-      "related":[{"id":"collection","when":"新增采集或持久化时另行追踪"}],
-      "checks":["npm run verify:finance","npm run build"],
-      "acceptance":"目录查询 → 固定只读数据接口 → 来源/时间/免费限制明确，缺 Key 与上游限流不伪装为成功。"
+      "id": "finance-channels",
+      "title": "免费金融平台 API 通道",
+      "keywords": [
+        "免费API",
+        "金融平台",
+        "免费通道",
+        "finance",
+        "API接入",
+        "平台接入",
+        "限额",
+        "额度",
+        "每日采集",
+        "刷新频率",
+        "采集频率"
+      ],
+      "summary": "当前每条基础数据走 VPS 还是 Cloudflare，先读 2026-09-22 采集路由。再读限额停采和刷新频率。有额度不能当时钟的项不反复探测。",
+      "code": [
+        "cloudflare/finance/registry.mjs",
+        "cloudflare/finance/gateway.mjs",
+        "cloudflare/finance/store.mjs",
+        "cloudflare/finance/schema.sql",
+        "cloudflare/finance/scheduler.mjs",
+        "cloudflare/kline-live-collector.mjs",
+        "cloudflare/binance-klines-worker.js",
+        "tests/integration/verify-finance-channels.cjs",
+        "tests/integration/verify-finance-storage.cjs"
+      ],
+      "primary": [
+        {
+          "id": "LOCAL-COLLECT"
+        },
+        {
+          "id": "LOCAL-DESK"
+        },
+        {
+          "id": "LOCAL-QUOTA"
+        },
+        {
+          "id": "LOCAL-CADENCE"
+        },
+        {
+          "id": "LOCAL-CHANNELS"
+        },
+        {
+          "id": "V04",
+          "section": "通用时间语义"
+        }
+      ],
+      "expand": [],
+      "graph": "handleFinance buildFinanceRequest",
+      "related": [
+        {
+          "id": "collection",
+          "when": "新增采集或持久化时另行追踪"
+        }
+      ],
+      "checks": [
+        "npm run verify:finance",
+        "npm run build"
+      ],
+      "acceptance": "目录查询 → 固定只读数据接口 → 来源/时间/免费限制明确，缺 Key 与上游限流不伪装为成功。"
     },
     {
-      "id": "chart", "title": "K线图显示、缩放与视口",
-      "keywords": ["K线", "K线图", "图表", "chart", "蜡烛", "缩放", "视口", "十字线", "Lightweight Charts"],
+      "id": "chart",
+      "title": "K线图显示、缩放与视口",
+      "keywords": [
+        "K线",
+        "K线图",
+        "图表",
+        "chart",
+        "蜡烛",
+        "缩放",
+        "视口",
+        "十字线",
+        "Lightweight Charts"
+      ],
       "summary": "主图显示与交互先查页面和图表组件；只有数据或计算语义变化时再扩展到Worker、指标与快照。",
-      "code": ["js/pages/chart.js", "js/chart/indicator-panes.js", "js/chart/mtf-tiles.js", "js/app.js", "index.html", "styles.css"],
-      "primary": [{"id":"V08","section":"市场工作区交互"},{"id":"TOOL057"},{"id":"V04","section":"通用时间语义"}],
-      "expand": ["RES18", "CASE11", "TOOL058"],
+      "code": [
+        "js/pages/chart.js",
+        "js/chart/indicator-panes.js",
+        "js/chart/mtf-tiles.js",
+        "js/app.js",
+        "index.html",
+        "assets/css/styles.css"
+      ],
+      "primary": [
+        {
+          "id": "V08",
+          "section": "市场工作区交互"
+        },
+        {
+          "id": "TOOL057"
+        },
+        {
+          "id": "V04",
+          "section": "通用时间语义"
+        }
+      ],
+      "expand": [
+        "RES18",
+        "CASE11",
+        "TOOL058"
+      ],
       "graph": "initChart restoreChartViewport persistViewportNow",
-      "related": [{"id":"chart-history","when":"涉及周期切换、缺数据、来源或实时更新"},{"id":"indicators","when":"涉及指标数值或叠加线"},{"id":"snapshot","when":"涉及图表结构导出或员工/报告输入"}],
-      "checks": ["npm run lint", "node scripts/verify-indicator-math.cjs", "npm run verify:ui"],
+      "related": [
+        {
+          "id": "chart-history",
+          "when": "涉及周期切换、缺数据、来源或实时更新"
+        },
+        {
+          "id": "indicators",
+          "when": "涉及指标数值或叠加线"
+        },
+        {
+          "id": "snapshot",
+          "when": "涉及图表结构导出或员工/报告输入"
+        }
+      ],
+      "checks": [
+        "npm run lint",
+        "node tests/unit/verify-indicator-math.cjs",
+        "npm run verify:ui"
+      ],
       "acceptance": "#chart → 缩放/切换后 → 图表非空、视口和所选品种周期一致；纯布局不据此重构数据链。"
     },
     {
-      "id": "chart-history", "title": "K线历史、切周期、来源与恢复",
-      "keywords": ["K线历史", "历史K线", "K线加载", "K线不更新", "切周期", "周期切换", "回补", "断线", "6000", "缺口", "D1 K线", "历史数据", "更早数据", "历史", "刷新频率", "直连", "K线直连", "轮询"],
+      "id": "chart-history",
+      "title": "K线历史、切周期、来源与恢复",
+      "keywords": [
+        "K线历史",
+        "历史K线",
+        "K线加载",
+        "K线不更新",
+        "切周期",
+        "周期切换",
+        "回补",
+        "断线",
+        "6000",
+        "缺口",
+        "D1 K线",
+        "历史数据",
+        "更早数据",
+        "历史",
+        "刷新频率",
+        "直连",
+        "K线直连",
+        "轮询"
+      ],
       "summary": "主图读取desk/live tape并合并浏览器WS；排查请求代次、取消、symbol/interval、未收盘秒级写入和断线恢复。",
-      "code": ["js/pages/chart.js", "js/data-engine.js", "js/chart/mtf-tiles.js", "cloudflare/binance-klines-worker.js", "cloudflare/kline-live-collector.mjs", "cloudflare/schema.sql", "js/pages/settings.js"],
-      "primary": [{"id":"LOCAL-COLLECT"},{"id":"LOCAL-CADENCE"},{"id":"LOCAL-EGRESSCUTOVER"},{"id":"V04","section":"通用时间语义"},{"id":"RES07"},{"id":"V08","section":"时间和来源切换"}],
-      "expand": ["RES06", "TOOL024", "TOOL025"],
+      "code": [
+        "js/pages/chart.js",
+        "js/data-engine.js",
+        "js/chart/mtf-tiles.js",
+        "cloudflare/binance-klines-worker.js",
+        "cloudflare/kline-live-collector.mjs",
+        "cloudflare/schema.sql",
+        "js/pages/settings.js"
+      ],
+      "primary": [
+        {
+          "id": "LOCAL-COLLECT"
+        },
+        {
+          "id": "LOCAL-CADENCE"
+        },
+        {
+          "id": "LOCAL-EGRESSCUTOVER"
+        },
+        {
+          "id": "V04",
+          "section": "通用时间语义"
+        },
+        {
+          "id": "RES07"
+        },
+        {
+          "id": "V08",
+          "section": "时间和来源切换"
+        }
+      ],
+      "expand": [
+        "RES06",
+        "TOOL024",
+        "TOOL025"
+      ],
       "graph": "readChartD1Klines fetchDesk readLiveKlineTape",
       "graphNote": "主图权威读口是 DataEngine.fetchDesk(\"chart\")；live tape 新鲜时 Worker 读 klines 表。HTTP /api/d1/klines 仍是运维/兼容读口，不能停在图上的缺边。",
-      "related": [{"id":"chart","when":"核对页面、视口与卸载表现"},{"id":"snapshot","when":"改动OHLCV窗口、来源或历史口径"},{"id":"runtime","when":"涉及D1同步、保留或线上配置"}],
-      "checks": ["node scripts/verify-kline-history.cjs", "node scripts/verify-market-recovery.cjs", "node scripts/verify-indicator-math.cjs", "npm run verify:ui"],
+      "related": [
+        {
+          "id": "chart",
+          "when": "核对页面、视口与卸载表现"
+        },
+        {
+          "id": "snapshot",
+          "when": "改动OHLCV窗口、来源或历史口径"
+        },
+        {
+          "id": "runtime",
+          "when": "涉及D1同步、保留或线上配置"
+        }
+      ],
+      "checks": [
+        "node tests/integration/verify-kline-history.cjs",
+        "node tests/integration/verify-market-recovery.cjs",
+        "node tests/unit/verify-indicator-math.cjs",
+        "npm run verify:ui"
+      ],
       "acceptance": "#chart → 连续切周期/旧请求迟到/断线恢复 → 数据和来源标签对应当前周期，旧请求不覆盖新选择。"
     },
     {
-      "id": "indicators", "title": "指标、关键位与多周期计算",
-      "keywords": ["指标", "EMA", "RSI", "MACD", "ATR", "布林", "关键位", "斐波那契", "Fibonacci", "多周期", "均线"],
+      "id": "indicators",
+      "title": "指标、关键位与多周期计算",
+      "keywords": [
+        "指标",
+        "EMA",
+        "RSI",
+        "MACD",
+        "ATR",
+        "布林",
+        "关键位",
+        "斐波那契",
+        "Fibonacci",
+        "多周期",
+        "均线"
+      ],
       "summary": "区分纯计算、绘制和快照消费；改同一指标时同步追踪图表、多周期、快照和模型输入。",
-      "code": ["js/chart/indicator-math.js", "js/chart/indicator-panes.js", "js/chart/mtf-tiles.js", "js/pages/chart.js", "cloudflare/snapshot/chartStructureSnapshot.mjs"],
-      "primary": [{"id":"V05","section":"方法注册表"},{"id":"V04","section":"数字、精度与单位"},{"id":"RES13"}],
-      "expand": ["TOOL050", "CASE10"], "graph": "applyIndicatorsFromOhlcv applyChartKeyLevelsFromOhlcv",
-      "related": [{"id":"snapshot","when":"指标被快照、员工或舆情输入使用"},{"id":"chart-history","when":"异常来自历史长度、未收盘K线或缺口"}],
-      "checks": ["node scripts/verify-indicator-math.cjs", "npm run verify:market-snapshot", "npm run verify:fib"],
+      "code": [
+        "js/chart/indicator-math.js",
+        "js/chart/indicator-panes.js",
+        "js/chart/mtf-tiles.js",
+        "js/pages/chart.js",
+        "cloudflare/snapshot/chartStructureSnapshot.mjs"
+      ],
+      "primary": [
+        {
+          "id": "V05",
+          "section": "方法注册表"
+        },
+        {
+          "id": "V04",
+          "section": "数字、精度与单位"
+        },
+        {
+          "id": "RES13"
+        }
+      ],
+      "expand": [
+        "TOOL050",
+        "CASE10"
+      ],
+      "graph": "applyIndicatorsFromOhlcv applyChartKeyLevelsFromOhlcv",
+      "related": [
+        {
+          "id": "snapshot",
+          "when": "指标被快照、员工或舆情输入使用"
+        },
+        {
+          "id": "chart-history",
+          "when": "异常来自历史长度、未收盘K线或缺口"
+        }
+      ],
+      "checks": [
+        "node tests/unit/verify-indicator-math.cjs",
+        "npm run verify:market-snapshot",
+        "npm run verify:fib"
+      ],
       "acceptance": "固定OHLCV输入 → 计算与展示 → 前端和相关快照口径一致；仅改实际涉及的指标。"
     },
     {
-      "id": "footprint", "title": "订单流、足迹、CVD与盘口",
-      "keywords": ["足迹", "订单流", "footprint", "orderflow", "CVD", "POC", "VAH", "VAL", "失衡", "盘口"],
+      "id": "footprint",
+      "title": "订单流、足迹、CVD与盘口",
+      "keywords": [
+        "足迹",
+        "订单流",
+        "footprint",
+        "orderflow",
+        "CVD",
+        "POC",
+        "VAH",
+        "VAL",
+        "失衡",
+        "盘口"
+      ],
       "summary": "按逐笔来源→聚合→价位桶→画布→D1/快照追踪，区分真实成交与研究设计中的新增盘口能力。",
-      "code": ["js/pages/orderflow.js", "js/orderflow/footprint-engine.js", "js/orderflow/footprint-canvas.js", "js/data-engine.js", "cloudflare/binance-klines-worker.js"],
-      "primary": [{"id":"V04","section":"足迹与CVD"},{"id":"RES08"},{"id":"TOOL024"}],
-      "expand": ["TOOL023", "TOOL025", "TOOL035"], "graph": "js/orderflow/footprint-engine.js",
-      "related": [{"id":"snapshot","when":"聚合指标被快照使用"},{"id":"chart-history","when":"调整成交历史或恢复窗口"}],
-      "checks": ["npm run verify:footprint", "npm run verify:market-snapshot", "npm run verify:ui"],
+      "code": [
+        "js/pages/orderflow.js",
+        "js/orderflow/footprint-engine.js",
+        "js/orderflow/footprint-canvas.js",
+        "js/data-engine.js",
+        "cloudflare/binance-klines-worker.js"
+      ],
+      "primary": [
+        {
+          "id": "V04",
+          "section": "足迹与CVD"
+        },
+        {
+          "id": "RES08"
+        },
+        {
+          "id": "TOOL024"
+        }
+      ],
+      "expand": [
+        "TOOL023",
+        "TOOL025",
+        "TOOL035"
+      ],
+      "graph": "js/orderflow/footprint-engine.js",
+      "related": [
+        {
+          "id": "snapshot",
+          "when": "聚合指标被快照使用"
+        },
+        {
+          "id": "chart-history",
+          "when": "调整成交历史或恢复窗口"
+        }
+      ],
+      "checks": [
+        "npm run verify:footprint",
+        "npm run verify:market-snapshot",
+        "npm run verify:ui"
+      ],
       "acceptance": "#orderflow → 切窗口/收到成交 → 聚合数值、价位桶与展示匹配。"
     },
     {
-      "id": "liquidations", "title": "强平雷达、热力与压力矩阵",
-      "keywords": ["强平", "清算", "热力", "压力矩阵", "heatmap", "liquidation"],
+      "id": "liquidations",
+      "title": "强平雷达、热力与压力矩阵",
+      "keywords": [
+        "强平",
+        "清算",
+        "热力",
+        "压力矩阵",
+        "heatmap",
+        "liquidation"
+      ],
       "summary": "分开核对方向、价格类型、数量单位、金额和覆盖，不把清算流当完整市场成交。",
-      "code": ["js/pages/heatmap.js", "js/heatmap/liquidation-engine.js", "js/heatmap/pressure-matrix.js", "js/data-engine.js", "cloudflare/binance-klines-worker.js"],
-      "primary": [{"id":"V04","section":"清算：方向"},{"id":"RES09"},{"id":"RES08"}],
-      "expand": ["TOOL024"], "graph": "js/heatmap/liquidation-engine.js",
-      "related": [{"id":"snapshot","when":"清算数据供风控/市场输入使用"},{"id":"derivatives","when":"涉及跨面板风险口径"}],
-      "checks": ["npm run verify:heatmap", "npm run verify:footprint"],
+      "code": [
+        "js/pages/heatmap.js",
+        "js/heatmap/liquidation-engine.js",
+        "js/heatmap/pressure-matrix.js",
+        "js/data-engine.js",
+        "cloudflare/binance-klines-worker.js"
+      ],
+      "primary": [
+        {
+          "id": "V04",
+          "section": "清算：方向"
+        },
+        {
+          "id": "RES09"
+        },
+        {
+          "id": "RES08"
+        }
+      ],
+      "expand": [
+        "TOOL024"
+      ],
+      "graph": "js/heatmap/liquidation-engine.js",
+      "related": [
+        {
+          "id": "snapshot",
+          "when": "清算数据供风控/市场输入使用"
+        },
+        {
+          "id": "derivatives",
+          "when": "涉及跨面板风险口径"
+        }
+      ],
+      "checks": [
+        "npm run verify:heatmap",
+        "npm run verify:footprint"
+      ],
       "acceptance": "#heatmap → 固定清算样本 → 方向、金额、桶窗口和覆盖说明一致。"
     },
     {
-      "id": "derivatives", "title": "衍生品：资金费、持仓、基差",
-      "keywords": ["衍生品", "资金费", "费率", "持仓量", "OI", "基差", "多空比", "derivatives"],
+      "id": "derivatives",
+      "title": "衍生品：资金费、持仓、基差",
+      "keywords": [
+        "衍生品",
+        "资金费",
+        "费率",
+        "持仓量",
+        "OI",
+        "基差",
+        "多空比",
+        "derivatives"
+      ],
       "summary": "先定位现有同步/读取、历史序列和单位，再追踪面板、快照与分析消费。",
-      "code": ["js/pages/derivatives.js", "js/data-engine.js", "cloudflare/binance-klines-worker.js", "cloudflare/schema.sql", "cloudflare/snapshot/marketSnapshotProgram.mjs"],
-      "primary": [{"id":"V04","section":"衍生品序列"},{"id":"RES09"},{"id":"V05","section":"分歧"}],
-      "expand": ["TOOL022", "TOOL062"], "graph": "js/pages/derivatives.js",
-      "related": [{"id":"snapshot","when":"口径或窗口变化"},{"id":"analysis","when":"指标进入解释或风险判断"}],
-      "checks": ["npm run verify:derivatives", "node scripts/verify-market-recovery.cjs"],
+      "code": [
+        "js/pages/derivatives.js",
+        "js/data-engine.js",
+        "cloudflare/binance-klines-worker.js",
+        "cloudflare/schema.sql",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs"
+      ],
+      "primary": [
+        {
+          "id": "V04",
+          "section": "衍生品序列"
+        },
+        {
+          "id": "RES09"
+        },
+        {
+          "id": "V05",
+          "section": "分歧"
+        }
+      ],
+      "expand": [
+        "TOOL022",
+        "TOOL062"
+      ],
+      "graph": "js/pages/derivatives.js",
+      "related": [
+        {
+          "id": "snapshot",
+          "when": "口径或窗口变化"
+        },
+        {
+          "id": "analysis",
+          "when": "指标进入解释或风险判断"
+        }
+      ],
+      "checks": [
+        "npm run verify:derivatives",
+        "node tests/integration/verify-market-recovery.cjs"
+      ],
       "acceptance": "#derivatives → 切历史窗口/源失败 → 正常数值与缺失/过期明确区分。"
     },
     {
-      "id": "snapshot", "title": "快照、证据、导出与报告历史",
-      "keywords": ["快照", "snapshot", "证据", "导出", "报告历史", "reportId", "冻结输入", "bundle"],
+      "id": "snapshot",
+      "title": "快照、证据、导出与报告历史",
+      "keywords": [
+        "快照",
+        "snapshot",
+        "证据",
+        "导出",
+        "报告历史",
+        "reportId",
+        "冻结输入",
+        "bundle"
+      ],
       "summary": "独立市场快照与行情Worker摘要是不同路径；统一输入或改导出时查实际调用方和旧报告读取。",
-      "code": ["cloudflare/snapshot/marketSnapshotProgram.mjs", "cloudflare/snapshot/chartStructureSnapshot.mjs", "cloudflare/snapshot/market-snapshot-worker.mjs", "cloudflare/yuqing/yuqing-worker.js", "js/pages/news.js", "js/pages/events.js"],
-      "primary": [{"id":"V10","section":"Bundle"},{"id":"CONTRACT-MIGRATION"},{"id":"RES19"}],
-      "expand": ["V12", "CASE04"], "graph": "marketSnapshotProgram.mjs chartStructureSnapshot.mjs",
-      "related": [{"id":"indicators","when":"快照含图表计算"},{"id":"llm","when":"结果进入模型上下文"},{"id":"workspace","when":"需要恢复历史页面"}],
-      "checks": ["npm run verify:market-snapshot", "npm run verify:yuqing"],
+      "code": [
+        "cloudflare/snapshot/marketSnapshotProgram.mjs",
+        "cloudflare/snapshot/chartStructureSnapshot.mjs",
+        "cloudflare/snapshot/market-snapshot-worker.mjs",
+        "cloudflare/yuqing/yuqing-worker.js",
+        "js/pages/news.js",
+        "js/pages/events.js"
+      ],
+      "primary": [
+        {
+          "id": "V10",
+          "section": "Bundle"
+        },
+        {
+          "id": "CONTRACT-MIGRATION"
+        },
+        {
+          "id": "RES19"
+        }
+      ],
+      "expand": [
+        "V12",
+        "CASE04"
+      ],
+      "graph": "marketSnapshotProgram.mjs chartStructureSnapshot.mjs",
+      "related": [
+        {
+          "id": "indicators",
+          "when": "快照含图表计算"
+        },
+        {
+          "id": "llm",
+          "when": "结果进入模型上下文"
+        },
+        {
+          "id": "workspace",
+          "when": "需要恢复历史页面"
+        }
+      ],
+      "checks": [
+        "npm run verify:market-snapshot",
+        "npm run verify:yuqing"
+      ],
       "acceptance": "历史reportId → 打开对应证据/页面 → 恢复原输入或明确恢复限制，不偷换latest。"
     },
     {
-      "id": "events", "title": "事件日报、栏目与降噪",
-      "keywords": ["日报", "事件一览", "新闻", "资讯", "头条", "趋势线索", "去重", "工具雷达"],
+      "id": "events",
+      "title": "事件日报、栏目与降噪",
+      "keywords": [
+        "日报",
+        "事件一览",
+        "新闻",
+        "资讯",
+        "头条",
+        "趋势线索",
+        "去重",
+        "工具雷达"
+      ],
       "summary": "news路由对应events.js；栏目改变需要追踪日报模块、保存历史以及二次分析的消费。",
-      "code": ["js/pages/events.js", "js/data-engine.js", "cloudflare/yuqing/yuqing-worker.js", "cloudflare/yuqing/shijian/index.js", "cloudflare/yuqing/yuqing-facts.js"],
-      "primary": [{"id":"V03"},{"id":"RES04"},{"id":"CASE02"}],
-      "expand": ["RES24", "V07"], "graph": "pageYuqingEvents initYuqingEvents",
-      "related": [{"id":"collection","when":"资料数量、来源或更正问题"},{"id":"analysis","when":"日报内容会改变二次分析"},{"id":"llm","when":"改变提示词或调用流程"}],
-      "checks": ["npm run verify:yuqing", "npm run verify:ui"],
+      "code": [
+        "js/pages/events.js",
+        "js/data-engine.js",
+        "cloudflare/yuqing/yuqing-worker.js",
+        "cloudflare/yuqing/shijian/index.js",
+        "cloudflare/yuqing/yuqing-facts.js"
+      ],
+      "primary": [
+        {
+          "id": "V03"
+        },
+        {
+          "id": "RES04"
+        },
+        {
+          "id": "CASE02"
+        }
+      ],
+      "expand": [
+        "RES24",
+        "V07"
+      ],
+      "graph": "pageYuqingEvents initYuqingEvents",
+      "related": [
+        {
+          "id": "collection",
+          "when": "资料数量、来源或更正问题"
+        },
+        {
+          "id": "analysis",
+          "when": "日报内容会改变二次分析"
+        },
+        {
+          "id": "llm",
+          "when": "改变提示词或调用流程"
+        }
+      ],
+      "checks": [
+        "npm run verify:yuqing",
+        "npm run verify:ui"
+      ],
       "acceptance": "#news → 生成/读取日报 → 栏目、流式状态与历史内容一致。"
     },
     {
-      "id": "analysis", "title": "舆情分析、分数与条件判断",
-      "keywords": ["舆情", "分析", "置信度", "FNG", "缺失值", "分数", "情绪", "简报", "判断"],
+      "id": "analysis",
+      "title": "舆情分析、分数与条件判断",
+      "keywords": [
+        "舆情",
+        "分析",
+        "置信度",
+        "FNG",
+        "缺失值",
+        "分数",
+        "情绪",
+        "简报",
+        "判断"
+      ],
       "summary": "news-analysis路由对应news.js；核对程序分数、模型解释、事实池、市场上下文及历史保存。",
-      "code": ["js/pages/news.js", "js/data-engine.js", "cloudflare/yuqing/fenxi/sentiment-logic.js", "cloudflare/yuqing/shijian/temperature.js", "cloudflare/yuqing/yuqing-worker.js"],
-      "primary": [{"id":"V05"},{"id":"VALUE-TESTS"},{"id":"RES14"}],
-      "expand": ["V07", "RES24"], "graph": "marketStateFromLegacy riskRadarFromInputs opportunitiesFromInputs",
-      "related": [{"id":"snapshot","when":"输入或证据身份变化"},{"id":"events","when":"改变日报依赖"},{"id":"llm","when":"改模型解释"}],
-      "checks": ["npm run verify:yuqing", "npm run verify:ui"],
+      "code": [
+        "js/pages/news.js",
+        "js/data-engine.js",
+        "cloudflare/yuqing/fenxi/sentiment-logic.js",
+        "cloudflare/yuqing/shijian/temperature.js",
+        "cloudflare/yuqing/yuqing-worker.js"
+      ],
+      "primary": [
+        {
+          "id": "V05"
+        },
+        {
+          "id": "VALUE-TESTS"
+        },
+        {
+          "id": "RES14"
+        }
+      ],
+      "expand": [
+        "V07",
+        "RES24"
+      ],
+      "graph": "marketStateFromLegacy riskRadarFromInputs opportunitiesFromInputs",
+      "related": [
+        {
+          "id": "snapshot",
+          "when": "输入或证据身份变化"
+        },
+        {
+          "id": "events",
+          "when": "改变日报依赖"
+        },
+        {
+          "id": "llm",
+          "when": "改模型解释"
+        }
+      ],
+      "checks": [
+        "npm run verify:yuqing",
+        "npm run verify:ui"
+      ],
       "acceptance": "#news-analysis → 正常/缺失/过期输入 → 描述、未知和条件与实际证据一致。"
     },
     {
-      "id": "collection", "title": "来源、采集、正文与知识检索",
-      "keywords": ["采集", "来源", "订阅", "RSS", "正文", "抓取", "搜索", "检索", "更正", "论文", "知识库"],
+      "id": "collection",
+      "title": "来源、采集、正文与知识检索",
+      "keywords": [
+        "采集",
+        "来源",
+        "订阅",
+        "RSS",
+        "正文",
+        "抓取",
+        "搜索",
+        "检索",
+        "更正",
+        "论文",
+        "知识库"
+      ],
       "summary": "先核事实池能复用什么；把来源发现、正文版本、事件归并和检索分清，候选不等于默认接入。",
-      "code": ["cloudflare/yuqing/yuqing-facts.js", "cloudflare/yuqing/yuqing-worker.js", "cloudflare/migrations/yuqing", "js/pages/events.js"],
-      "primary": [{"id":"COL01"},{"id":"COL03"},{"id":"RES04"}],
-      "expand": ["RES02", "RES03", "RES05", "RES19", "RES25", "COL05"], "graph": "yuqing-facts.js",
-      "related": [{"id":"events","when":"材料进入日报"},{"id":"snapshot","when":"更正和版本影响旧报告"},{"id":"llm","when":"材料外发或模型抽取"}],
-      "checks": ["npm run verify:yuqing"],
+      "code": [
+        "cloudflare/yuqing/yuqing-facts.js",
+        "cloudflare/yuqing/yuqing-worker.js",
+        "cloudflare/migrations/yuqing",
+        "js/pages/events.js"
+      ],
+      "primary": [
+        {
+          "id": "COL01"
+        },
+        {
+          "id": "COL03"
+        },
+        {
+          "id": "RES04"
+        }
+      ],
+      "expand": [
+        "RES02",
+        "RES03",
+        "RES05",
+        "RES19",
+        "RES25",
+        "COL05"
+      ],
+      "graph": "yuqing-facts.js",
+      "related": [
+        {
+          "id": "events",
+          "when": "材料进入日报"
+        },
+        {
+          "id": "snapshot",
+          "when": "更正和版本影响旧报告"
+        },
+        {
+          "id": "llm",
+          "when": "材料外发或模型抽取"
+        }
+      ],
+      "checks": [
+        "npm run verify:yuqing"
+      ],
       "acceptance": "限定来源材料 → 获取/更新/更正 → 来源和版本可回查，重复转载不增加独立证据数。"
     },
     {
-      "id": "llm", "title": "模型、提示词、流式与设置",
-      "keywords": ["LLM", "模型", "提示词", "Gemini", "流式", "预算", "token", "费用", "多代理", "Agent"],
+      "id": "llm",
+      "title": "模型、提示词、流式与设置",
+      "keywords": [
+        "LLM",
+        "模型",
+        "提示词",
+        "Gemini",
+        "流式",
+        "预算",
+        "token",
+        "费用",
+        "多代理"
+      ],
       "summary": "复用云端Worker适配；设置、上下文、步骤、流式预览、最终报告及历史状态一起定位。",
-      "code": ["cloudflare/yuqing/yuqing-worker.js", "cloudflare/yuqing/shijian", "cloudflare/yuqing/fenxi", "js/pages/settings.js", "js/data-engine.js"],
-      "primary": [{"id":"V07"},{"id":"RES16"},{"id":"RES17"}],
-      "expand": ["V14", "TOOL047"], "graph": "cloudflare/yuqing/yuqing-worker.js",
-      "related": [{"id":"snapshot","when":"模型输入和结果身份"},{"id":"analysis","when":"输出解释或分数变化"},{"id":"evaluation","when":"证明模型增量"}],
-      "checks": ["npm run verify:yuqing"],
+      "code": [
+        "cloudflare/yuqing/yuqing-worker.js",
+        "cloudflare/yuqing/shijian",
+        "cloudflare/yuqing/fenxi",
+        "js/pages/settings.js",
+        "js/data-engine.js"
+      ],
+      "primary": [
+        {
+          "id": "V07"
+        },
+        {
+          "id": "RES16"
+        },
+        {
+          "id": "RES17"
+        }
+      ],
+      "expand": [
+        "V14",
+        "TOOL047"
+      ],
+      "graph": "cloudflare/yuqing/yuqing-worker.js",
+      "related": [
+        {
+          "id": "snapshot",
+          "when": "模型输入和结果身份"
+        },
+        {
+          "id": "analysis",
+          "when": "输出解释或分数变化"
+        },
+        {
+          "id": "evaluation",
+          "when": "证明模型增量"
+        }
+      ],
+      "checks": [
+        "npm run verify:yuqing"
+      ],
       "acceptance": "设置/报告入口 → 模拟成功、流式和失败 → 前端状态与保存结果一致；不恢复退役CLI链路。"
     },
     {
-      "id": "workspace", "title": "导航、工作区、笔记与预警",
-      "keywords": ["导航", "工作区", "共享状态", "笔记", "观点", "预警", "复盘", "路由", "占位", "PLANNED"],
+      "id": "workspace",
+      "title": "导航、工作区、笔记与预警",
+      "keywords": [
+        "导航",
+        "工作区",
+        "共享状态",
+        "笔记",
+        "观点",
+        "预警",
+        "复盘",
+        "路由",
+        "占位",
+        "PLANNED"
+      ],
       "summary": "从路由和成熟度标签出发，核对页面卸载、共享窗口和历史恢复；保留未实施占位。",
-      "code": ["js/app.js", "js/nav.js", "js/config.js", "js/features.js", "js/placeholders.js", "js/agent-views.js"],
-      "primary": [{"id":"V08"},{"id":"RES18"},{"id":"CASE11"}],
-      "expand": ["RES14", "V03"], "graph": "resolveRoute",
-      "related": [{"id":"chart","when":"图表视口和品种联动"},{"id":"snapshot","when":"历史现场恢复"}],
-      "checks": ["npm run verify:governance", "npm run verify:ui"],
+      "code": [
+        "js/app.js",
+        "js/nav.js",
+        "js/config.js",
+        "js/features.js",
+        "js/placeholders.js",
+        "js/agent-views.js"
+      ],
+      "primary": [
+        {
+          "id": "V08"
+        },
+        {
+          "id": "RES18"
+        },
+        {
+          "id": "CASE11"
+        }
+      ],
+      "expand": [
+        "RES14",
+        "V03"
+      ],
+      "graph": "resolveRoute",
+      "related": [
+        {
+          "id": "chart",
+          "when": "图表视口和品种联动"
+        },
+        {
+          "id": "snapshot",
+          "when": "历史现场恢复"
+        }
+      ],
+      "checks": [
+        "npm run verify:governance",
+        "npm run verify:ui"
+      ],
       "acceptance": "入口hash → 导航/返回/离开 → 正确页面身份、状态恢复及资源释放。"
     },
     {
-      "id": "extensions", "title": "期权、宏观、ETF与链上扩展",
-      "keywords": ["期权", "ETF", "宏观", "FRED", "vintage", "稳定币", "链上", "矿工", "Deribit", "催化剂"],
+      "id": "extensions",
+      "title": "期权、宏观、ETF与链上扩展",
+      "keywords": [
+        "期权",
+        "ETF",
+        "宏观",
+        "FRED",
+        "vintage",
+        "稳定币",
+        "链上",
+        "矿工",
+        "Deribit",
+        "催化剂"
+      ],
       "summary": "先确认真实数据链路和研究问题；旧schema或文案不是已接入证据，专题扩展不成为所有简报前置。",
-      "code": ["cloudflare/binance-klines-worker.js", "cloudflare/yuqing/yuqing-facts.js", "cloudflare/snapshot/marketSnapshotProgram.mjs", "js/pages/derivatives.js"],
-      "primary": [{"id":"V06"},{"id":"RES10"},{"id":"RES12"}],
-      "expand": ["RES11", "TOOL026", "TOOL060", "TOOL063", "CASE05"], "graph": "yuqing-facts.js",
-      "related": [{"id":"collection","when":"需要新来源"},{"id":"derivatives","when":"并入现有面板"},{"id":"evaluation","when":"验证研究增量"}],
-      "checks": ["npm run verify:derivatives", "npm run verify:yuqing"],
+      "code": [
+        "cloudflare/binance-klines-worker.js",
+        "cloudflare/yuqing/yuqing-facts.js",
+        "cloudflare/snapshot/marketSnapshotProgram.mjs",
+        "js/pages/derivatives.js"
+      ],
+      "primary": [
+        {
+          "id": "V06"
+        },
+        {
+          "id": "RES10"
+        },
+        {
+          "id": "RES12"
+        }
+      ],
+      "expand": [
+        "RES11",
+        "TOOL026",
+        "TOOL060",
+        "TOOL063",
+        "CASE05"
+      ],
+      "graph": "yuqing-facts.js",
+      "related": [
+        {
+          "id": "collection",
+          "when": "需要新来源"
+        },
+        {
+          "id": "derivatives",
+          "when": "并入现有面板"
+        },
+        {
+          "id": "evaluation",
+          "when": "验证研究增量"
+        }
+      ],
+      "checks": [
+        "npm run verify:derivatives",
+        "npm run verify:yuqing"
+      ],
       "acceptance": "选定专题 → 核实当前管道与样本 → 已有/缺失/拟建明确分开，按实际实现选择测试。"
     },
     {
-      "id": "runtime", "title": "架构、存储、调度与发布",
-      "keywords": ["架构", "存储", "数据库", "D1", "调度", "Cron", "Worker", "部署", "迁移", "换电脑", "新电脑", "交接", "回退", "服务", "403", "出口", "封锁", "地域", "反代", "采集位置", "持续采集", "刷新频率", "采集频率", "秒级", "分钟级", "日限额", "VPS", "Vultr", "SSH", "Caddy", "灰云", "egress", "sslip", "出口现状"],
+      "id": "runtime",
+      "title": "架构、存储、调度与发布",
+      "keywords": [
+        "架构",
+        "存储",
+        "数据库",
+        "D1",
+        "调度",
+        "Cron",
+        "Worker",
+        "部署",
+        "迁移",
+        "换电脑",
+        "新电脑",
+        "交接",
+        "回退",
+        "服务",
+        "403",
+        "出口",
+        "封锁",
+        "地域",
+        "反代",
+        "采集位置",
+        "持续采集",
+        "刷新频率",
+        "采集频率",
+        "秒级",
+        "分钟级",
+        "日限额",
+        "VPS",
+        "Vultr",
+        "SSH",
+        "Caddy",
+        "灰云",
+        "egress",
+        "sslip",
+        "出口现状"
+      ],
       "summary": "基础采集走 VPS 还是 Cloudflare，先读 LOCAL-COLLECT。刷新频率读 LOCAL-CADENCE。出口接线读 LOCAL-EGRESSCUTOVER；约束读 LOCAL-EGRESSADV；SSH 读 LOCAL-EGRESSVPS。Deribit 期权摘要走 VPS、6 小时一次。Alpha、BLS、GDELT 仍不进时钟，见 LOCAL-QUOTA。",
-      "code": ["docs/operations/development-handoff-2026-09-30.md", "docs/operations/new-computer.md", "cloudflare/wrangler.toml", "cloudflare/wrangler.yuqing.toml", "cloudflare/snapshot/wrangler.snapshot.toml", "cloudflare/kline-live-collector.mjs", "cloudflare/egress/Caddyfile", "cloudflare/finance/egress.mjs", "config/pages-assets.json", "scripts/build-pages.cjs", "scripts/README.md", "scripts/collect-market-local.cjs"],
-      "primary": [{"id":"LOCAL-COLLECT"},{"id":"LOCAL-CADENCE"},{"id":"LOCAL-EGRESSCUTOVER"},{"id":"LOCAL-EGRESSADV"},{"id":"LOCAL-EGRESSVPS"},{"id":"LOCAL-EGRESSFIX"},{"id":"LOCAL-EGRESS"},{"id":"LOCAL-PROXYPLAN"}],
-      "expand": ["LOCAL-PURCHASE", "LOCAL-QUOTA", "V09", "RES20", "RES21", "RES22"], "graph": "build-pages.cjs",
-      "related": [{"id":"snapshot","when":"数据结构及保留变化"},{"id":"llm","when":"模型任务运行方式变化"}],
-      "checks": ["npm run verify:pages", "npm run verify:shell", "npm run verify:egress", "npm run build"],
+      "code": [
+        "docs/operations/development-handoff-2026-09-30.md",
+        "docs/operations/new-computer.md",
+        "cloudflare/wrangler.toml",
+        "cloudflare/wrangler.yuqing.toml",
+        "cloudflare/snapshot/wrangler.snapshot.toml",
+        "cloudflare/kline-live-collector.mjs",
+        "cloudflare/egress/Caddyfile",
+        "cloudflare/finance/egress.mjs",
+        "config/pages-assets.json",
+        "scripts/build/build-pages.cjs",
+        "scripts/README.md",
+        "scripts/operations/collect-market-local.cjs"
+      ],
+      "primary": [
+        {
+          "id": "LOCAL-COLLECT"
+        },
+        {
+          "id": "LOCAL-CADENCE"
+        },
+        {
+          "id": "LOCAL-EGRESSCUTOVER"
+        },
+        {
+          "id": "LOCAL-EGRESSADV"
+        },
+        {
+          "id": "LOCAL-EGRESSVPS"
+        },
+        {
+          "id": "LOCAL-EGRESSFIX"
+        },
+        {
+          "id": "LOCAL-EGRESS"
+        },
+        {
+          "id": "LOCAL-PROXYPLAN"
+        }
+      ],
+      "expand": [
+        "LOCAL-PURCHASE",
+        "LOCAL-QUOTA",
+        "V09",
+        "RES20",
+        "RES21",
+        "RES22"
+      ],
+      "graph": "build-pages.cjs",
+      "related": [
+        {
+          "id": "snapshot",
+          "when": "数据结构及保留变化"
+        },
+        {
+          "id": "llm",
+          "when": "模型任务运行方式变化"
+        }
+      ],
+      "checks": [
+        "npm run verify:pages",
+        "npm run verify:shell",
+        "npm run verify:egress",
+        "npm run build"
+      ],
       "acceptance": "明确影响面 → 本地验证/产物检查 → 只包含预期内容；远程操作依当次授权另核实时状态。"
     },
     {
-      "id": "evaluation", "title": "评价、对照、选型与研究价值",
-      "keywords": ["评价", "评估", "对照", "校准", "消融", "选型", "复用", "采购", "价值", "准确率"],
+      "id": "evaluation",
+      "title": "评价、对照、选型与研究价值",
+      "keywords": [
+        "评价",
+        "评估",
+        "对照",
+        "校准",
+        "消融",
+        "选型",
+        "复用",
+        "采购",
+        "价值",
+        "准确率"
+      ],
       "summary": "分开评价数字正确、证据支持、运行正确与使用价值；旧/新材料和模板/模型分别对照。",
-      "code": ["scripts/README.md", "package.json", "scripts/verify-yuqing-reports.cjs", "scripts/verify-market-snapshot-program.cjs"],
-      "primary": [{"id":"V11"},{"id":"VALUE-TESTS"},{"id":"RES24"}],
-      "expand": ["RES13", "RES23", "V02", "CASE10"], "graph": "verify-yuqing-reports.cjs",
-      "related": [{"id":"analysis","when":"评价解释质量"},{"id":"collection","when":"评价来源增量"},{"id":"llm","when":"评价模型收益"}],
-      "checks": ["npm run verify:yuqing", "npm test"],
+      "code": [
+        "scripts/README.md",
+        "package.json",
+        "tests/integration/verify-yuqing-reports.cjs",
+        "tests/integration/verify-market-snapshot-program.cjs"
+      ],
+      "primary": [
+        {
+          "id": "V11"
+        },
+        {
+          "id": "VALUE-TESTS"
+        },
+        {
+          "id": "RES24"
+        }
+      ],
+      "expand": [
+        "RES13",
+        "RES23",
+        "V02",
+        "CASE10"
+      ],
+      "graph": "verify-yuqing-reports.cjs",
+      "related": [
+        {
+          "id": "analysis",
+          "when": "评价解释质量"
+        },
+        {
+          "id": "collection",
+          "when": "评价来源增量"
+        },
+        {
+          "id": "llm",
+          "when": "评价模型收益"
+        }
+      ],
+      "checks": [
+        "npm run verify:yuqing",
+        "npm test"
+      ],
       "acceptance": "固定输入和任务 → 对照输出 → 记录错误、遗漏、时间和成本；语法通过不冒充研究有效。"
     }
   ],
   "examples": [
-    {"query": "币安插件怎么帮助本系统", "expected": "binance-plugin"},
-    {"query": "Binance MCP 插件对账", "expected": "binance-plugin"},
-    {"query": "插件补查历史窗口", "expected": "binance-plugin"},
-    {"query":"仓库治理后下一步开发方案", "expected":"current-plan"},
-    {"query":"四页工作台当前计划", "expected":"current-plan"},
-    {"query":"遗留计划和开发进度", "expected":"current-plan"},
-    {"query":"修改K线图缩放", "expected":"chart"},
-    {"query":"币安403出口封锁", "expected":"runtime"},
-    {"query":"Worker采集持续性问题", "expected":"runtime"},
-    {"query":"K线历史回补", "expected":"chart-history"},
-    {"query":"快速切周期后K线不更新", "expected":"chart-history"},
-    {"query":"K线图拖到左侧没有更早数据", "expected":"chart-history"},
-    {"query":"EMA指标计算", "expected":"indicators"},
-    {"query":"足迹CVD", "expected":"footprint"},
-    {"query":"强平金额", "expected":"liquidations"},
-    {"query":"衍生品资金费", "expected":"derivatives"},
-    {"query":"报告历史reportId", "expected":"snapshot"},
-    {"query":"事件日报栏目", "expected":"events"},
-    {"query":"舆情置信度", "expected":"analysis"},
-    {"query":"RSS订阅采集", "expected":"collection"},
-    {"query":"Gemini模型流式", "expected":"llm"},
-    {"query":"导航PLANNED", "expected":"workspace"},
-    {"query":"期权ETF", "expected":"extensions"},
-    {"query":"秒级刷新频率", "expected":"runtime"},
-    {"query":"VPS出口收口", "expected":"runtime"},
-    {"query":"K线直连", "expected":"chart-history"},
-    {"query":"模型价值对照评估", "expected":"evaluation"}
+    {
+      "query": "Agent 架构 首席 独立研究 记忆 审核 导航",
+      "expected": "agent-architecture"
+    },
+    {
+      "query": "Agent首席研究总架构当前任务与历史记录",
+      "expected": "agent-architecture"
+    },
+    {
+      "query": "智囊团首席决策台跨轮记忆",
+      "expected": "agent-architecture"
+    },
+    {
+      "query": "市场观察优先前端主方案",
+      "expected": "market-first-frontend"
+    },
+    {
+      "query": "基础数据层的数据是否齐全",
+      "expected": "data-architecture-review"
+    },
+    {
+      "query": "对标 Cryptofeed 与 NautilusTrader 的数据层架构",
+      "expected": "data-architecture-review"
+    },
+    {
+      "query": "TradingAgents 多Agent架构和官方历史归档",
+      "expected": "data-architecture-review"
+    },
+    {
+      "query": "币安插件怎么帮助本系统",
+      "expected": "binance-plugin"
+    },
+    {
+      "query": "Binance MCP 插件对账",
+      "expected": "binance-plugin"
+    },
+    {
+      "query": "插件补查历史窗口",
+      "expected": "binance-plugin"
+    },
+    {
+      "query": "仓库治理后下一步开发方案",
+      "expected": "current-plan"
+    },
+    {
+      "query": "四页工作台当前计划",
+      "expected": "current-plan"
+    },
+    {
+      "query": "遗留计划和开发进度",
+      "expected": "current-plan"
+    },
+    {
+      "query": "修改K线图缩放",
+      "expected": "chart"
+    },
+    {
+      "query": "币安403出口封锁",
+      "expected": "runtime"
+    },
+    {
+      "query": "Worker采集持续性问题",
+      "expected": "runtime"
+    },
+    {
+      "query": "K线历史回补",
+      "expected": "chart-history"
+    },
+    {
+      "query": "快速切周期后K线不更新",
+      "expected": "chart-history"
+    },
+    {
+      "query": "K线图拖到左侧没有更早数据",
+      "expected": "chart-history"
+    },
+    {
+      "query": "EMA指标计算",
+      "expected": "indicators"
+    },
+    {
+      "query": "足迹CVD",
+      "expected": "footprint"
+    },
+    {
+      "query": "强平金额",
+      "expected": "liquidations"
+    },
+    {
+      "query": "衍生品资金费",
+      "expected": "derivatives"
+    },
+    {
+      "query": "报告历史reportId",
+      "expected": "snapshot"
+    },
+    {
+      "query": "事件日报栏目",
+      "expected": "events"
+    },
+    {
+      "query": "舆情置信度",
+      "expected": "analysis"
+    },
+    {
+      "query": "RSS订阅采集",
+      "expected": "collection"
+    },
+    {
+      "query": "Gemini模型流式",
+      "expected": "llm"
+    },
+    {
+      "query": "导航PLANNED",
+      "expected": "workspace"
+    },
+    {
+      "query": "期权ETF",
+      "expected": "extensions"
+    },
+    {
+      "query": "秒级刷新频率",
+      "expected": "runtime"
+    },
+    {
+      "query": "VPS出口收口",
+      "expected": "runtime"
+    },
+    {
+      "query": "K线直连",
+      "expected": "chart-history"
+    },
+    {
+      "query": "模型价值对照评估",
+      "expected": "evaluation"
+    },
+    {
+      "query": "总架构 V2 修改方案",
+      "expected": "market-first-frontend"
+    },
+    {
+      "query": "总纲修改方案前端整合",
+      "expected": "market-first-frontend"
+    }
   ]
 }

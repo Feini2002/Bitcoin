@@ -1,5 +1,7 @@
 # 新电脑开发与敏感配置迁移
 
+当前开发状态先读[2026-10-05开发快照](development-handoff-2026-10-05.md)。Git克隆包含源码和验证结论；本机Agent历史原件与设置在.local/agent-team/，如需保留需另行离线迁移，不会随Git自动恢复。
+
 ## 安装和启动
 
 1. 安装 Git 和 Node.js 24（本次使用 24.14.1；版本记录在根目录 .node-version）。
@@ -13,7 +15,7 @@
 
 ## 桌面私密包恢复
 
-2026-09-30 交接使用桌面的 `BitDesk-PRIVATE-2026-09-30.zip` 和同名 SHA-256 文件。复制到新电脑后用 `Get-FileHash -Algorithm SHA256` 比较校验值，再解压到临时目录，按包内 `PRIVATE-RESTORE.md` 操作。压缩包未加密，不能上传 GitHub、Pages 或聊天。
+2026-09-30 交接使用 `BitDesk-PRIVATE-2026-09-30.zip` 和同名 SHA-256 文件。本机整理后原包、校验文件与迁移说明集中放在 `.local/migration/`；复制到新电脑后用 `Get-FileHash -Algorithm SHA256` 比较校验值，再解压到临时目录，按包内 `PRIVATE-RESTORE.md` 操作。压缩包未加密，不能上传 GitHub、Pages 或聊天。
 
 | 包内路径 | 放回新克隆的位置 |
 | --- | --- |
@@ -35,6 +37,7 @@
 - 历史整理曾发现 Gemini Key；该接入现已退役，新电脑无需迁移。
 - 历史查询记录仅供追溯；当前 Gemini Secret 已从 Worker 删除。FINNHUB_API_KEY 如需继续使用，应单独按当前云端配置核对。
 - `.env`、环境变体、.dev.vars、私钥、本地数据库、日志、浏览器产物均被 Git 忽略。Pages 只发布 dist/pages/ 中的明确资产清单，不会上传这些开发文件。
+- 本地 Vite 也拒绝读取 `.codex/`、`.local/`、`BitDesk-PRIVATE-*` 与 `BTC拷贝.zip`；Git 忽略规则与本地 HTTP 访问限制分别验证，避免迁移文件被开发服务器提供给浏览器。
 - 不把密钥改名为 VITE_ 开头的变量；该前缀用于暴露给浏览器的配置。
 - GitHub 与 Wrangler 的登录由各自工具保管，新电脑重新登录；不把 OAuth 缓存、SSH 私钥或 Codex 登录资料拼入 .env。
 - Cloudflare 已部署的加密 Secrets 不能按此文件自动导出。只有保存在旧电脑或密码管理器中的原始值才能迁移；缺失值需要在原服务重新取得或生成。
@@ -51,6 +54,7 @@
 
 - `npm run setup:browser`：首次安装项目 Playwright 对应的 Chromium，不依赖机器上是否安装 Chrome；先于 build。
 - `npm run build`：离线回归和网站产物构建。
+- 研究资料目录的文本大小按统一 LF 换行计数，Windows 的 CRLF 检出不会引发大小误报；原始 ZIP 保持原字节校验。
 - `npm run verify:dev`：开发服务器入口、API 地址注入和 .env 访问隔离。
 - `npm run verify:ui`：固定数据的桌面与移动界面流程。
 - `npm run verify:research-ui`：新版事件/舆情及历史报告兼容、复制、导出与预览验收。

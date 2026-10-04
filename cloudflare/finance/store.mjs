@@ -12,13 +12,22 @@ export function financeChannelKey(provider, operation, parameters) {
 // slot for time-window reads, separate from the latest full/tail snapshot.
 // The gateway still compares the entire parameter set before reusing a slot.
 export function financeSnapshotKey(provider, operation, parameters) {
-  if (Object.hasOwn(parameters, 'startTime') || Object.hasOwn(parameters, 'endTime')) {
+  const windowKeys=['startTime','endTime','start_timestamp','end_timestamp'];
+  if (windowKeys.some(key=>Object.hasOwn(parameters,key))) {
     const identity = { ...parameters };
-    delete identity.startTime;
-    delete identity.endTime;
+    for(const key of windowKeys)delete identity[key];
     return `${financeChannelKey(provider, operation, identity)}&window=history`;
   }
   return financeChannelKey(provider, operation, parameters);
+}
+
+export async function readFinanceOperationCooldown(db, provider, operation, now = Date.now()) {
+  // Existing failed channel rows are also consulted, including legacy window
+  // keys. Changing a window, symbol or page must not bypass provider backoff.
+  const [result]=await db.batch([db.prepare(`SELECT retry_at,last_error,upstream_status,last_http_status
+    FROM finance_channel_state WHERE provider=? AND operation=? AND retry_at>?
+    ORDER BY retry_at DESC LIMIT 1`).bind(provider,operation,new Date(now).toISOString())]);
+  return result.results?.[0] || null;
 }
 
 export async function readFinanceSnapshot(db, key) {

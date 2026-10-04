@@ -2,6 +2,19 @@
    Sidebar 构建（分组折叠状态持久化到 localStorage）
    ======================================================= */
 const NAV_GROUP_STATE_KEY = "bit-platform-nav-groups";
+const WORKSPACE_NAV = [
+  {group:"研究团队",items:[
+    {id:"boardroom",label:"首席决策台",icon:"ph-users-three"},
+    {id:"archive",label:"团队研究历史",icon:"ph-notebook"},
+  ]},
+  {group:"证据工作区",items:[
+    {id:"market",label:"市场数据",icon:"ph-chart-line"},
+    {id:"events",label:"事件资料",icon:"ph-calendar-blank"},
+    {id:"overview",label:"今日资料",icon:"ph-sun"},
+    {id:"records",label:"资料与旧记录",icon:"ph-folder"},
+  ]},
+  {group:"偏好",items:[{id:"settings",label:"设置",icon:"ph-gear"}]},
+];
 
 function loadNavGroupState() {
   try {
@@ -26,12 +39,10 @@ function buildSidebar() {
   const nav = $("#nav");
   nav.innerHTML = "";
   const saved = loadNavGroupState();
-  const activeGroups = NAV.map(group => ({ ...group, items: group.items.filter(item => !["demo", "planned"].includes(FEATURE_STATE_BY_ROUTE[item.id])) })).filter(group => group.items.length);
-  const previewItems = FEATURES.filter(item => ["demo", "planned"].includes(item.state));
-  const groups = [...activeGroups, { group: "规划与演示", sub: "保留原型", items: previewItems }];
+  const groups = WORKSPACE_NAV;
   groups.forEach((grp, gi) => {
     const group = el("div", { class: "nav-group", "data-gi": gi, "data-group": grp.group });
-    const collapsed = saved[grp.group] == null ? grp.group === "规划与演示" : saved[grp.group];
+    const collapsed = grp.group === "研究团队" ? false : !!saved[grp.group];
     if (collapsed) group.classList.add("collapsed");
     const head = el("button", { class: "nav-group-head",
       onclick: () => {
@@ -87,11 +98,12 @@ function setBreadcrumb(crumbs) {
 }
 
 function highlightNav(id) {
-  $$(".nav-item").forEach(n => n.classList.toggle("active", n.getAttribute("data-id") === id));
+  id = ["chart","orderflow","heatmap","derivatives"].includes(id) ? "market" : id === "news" ? "events" : ["boardroom","research","agent-chief","agent-env","agent-flow","agent-deriv","agent-macro","agent-events"].includes(id) ? "boardroom" : id==='research-window' ? (globalThis.UserWorkspace?.query().get('runId')?'records':'boardroom') : ['team-record','news-analysis'].includes(id) ? "records" : id;
+  $$(".nav-item").forEach(n => {const active=n.getAttribute("data-id") === id;n.classList.toggle("active",active);if(active)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
 }
 
 function findNavInfo(id) {
-  for (const g of NAV) for (const it of g.items) if (it.id === id) return { group: g.group, item: it };
+  for (const g of [...WORKSPACE_NAV,...NAV]) for (const it of g.items) if (it.id === id) return { group: g.group, item: it };
   return null;
 }
 

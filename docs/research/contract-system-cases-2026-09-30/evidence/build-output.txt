@@ -1,0 +1,807 @@
+{"supervisorPid":3520,"childPid":24764,"deadline":"2026-09-30T14:43:07.884Z","command":"npm","args":["run","build"]}
+
+> bit-trading-desk@1.0.0 build
+> npm run verify:all && npm run build:pages
+
+
+> bit-trading-desk@1.0.0 verify:all
+> npm run lint && npm test && npm run verify:shell && node tests/integration/verify-derivatives-worker.cjs && npm run verify:yuqing && npm run verify:fib && npm run verify:governance && npm run verify:finance && npm run verify:evidence && npm run verify:presentation && npm run verify:research && npm run verify:pages && npm run verify:cloud-control
+
+
+> bit-trading-desk@1.0.0 lint
+> node scripts/build/check-syntax.cjs
+
+OK syntax cloudflare\access-auth.js
+OK syntax cloudflare\binance-klines-worker.js
+OK syntax cloudflare\btc-maintenance.mjs
+OK syntax cloudflare\finance\dataset-store.mjs
+OK syntax cloudflare\finance\datasets.mjs
+OK syntax cloudflare\finance\desk.mjs
+OK syntax cloudflare\finance\egress.mjs
+OK syntax cloudflare\finance\gateway.mjs
+OK syntax cloudflare\finance\registry.mjs
+OK syntax cloudflare\finance\scheduler.mjs
+OK syntax cloudflare\finance\store.mjs
+OK syntax cloudflare\kline-live-collector.mjs
+OK syntax cloudflare\kline-recovery.mjs
+OK syntax cloudflare\liquidation-recovery.mjs
+OK syntax cloudflare\snapshot\chartStructureSnapshot.mjs
+OK syntax cloudflare\snapshot\market-snapshot-worker.mjs
+OK syntax cloudflare\snapshot\marketSnapshotProgram.mjs
+OK syntax cloudflare\yuqing\fenxi\index.js
+OK syntax cloudflare\yuqing\fenxi\sentiment-logic.js
+OK syntax cloudflare\yuqing\shijian\ai-intel.js
+OK syntax cloudflare\yuqing\shijian\dynamic-briefs.js
+OK syntax cloudflare\yuqing\shijian\github-tools.js
+OK syntax cloudflare\yuqing\shijian\index.js
+OK syntax cloudflare\yuqing\shijian\shared.js
+OK syntax cloudflare\yuqing\shijian\temperature.js
+OK syntax cloudflare\yuqing\shijian\top-stories.js
+OK syntax cloudflare\yuqing\shijian\trend-clues.js
+OK syntax cloudflare\yuqing\yuqing-facts.js
+OK syntax cloudflare\yuqing\yuqing-worker.js
+OK syntax js\agent-views.js
+OK syntax js\app.js
+OK syntax js\banners.js
+OK syntax js\chart\indicator-math.js
+OK syntax js\chart\indicator-panes.js
+OK syntax js\chart\mtf-tiles.js
+OK syntax js\config.js
+OK syntax js\contracts\bit-contracts.js
+OK syntax js\data-engine.js
+OK syntax js\features.js
+OK syntax js\heatmap\liquidation-engine.js
+OK syntax js\heatmap\pressure-matrix.js
+OK syntax js\nav.js
+OK syntax js\orderflow\footprint-canvas.js
+OK syntax js\orderflow\footprint-engine.js
+OK syntax js\pages\boardroom.js
+OK syntax js\pages\calc.js
+OK syntax js\pages\chart.js
+OK syntax js\pages\derivatives.js
+OK syntax js\pages\env-agent.js
+OK syntax js\pages\events.js
+OK syntax js\pages\heatmap.js
+OK syntax js\pages\news.js
+OK syntax js\pages\orderflow.js
+OK syntax js\pages\overview.js
+OK syntax js\pages\research-overview.js
+OK syntax js\pages\settings.js
+OK syntax js\placeholders.js
+OK syntax js\research-desk.js
+OK syntax js\research-protocol.js
+OK syntax js\sparkline.js
+OK syntax js\theme.js
+OK syntax js\utils.js
+OK syntax js\workbench-evidence.js
+OK syntax scripts\build\build-pages.cjs
+OK syntax scripts\build\check-syntax.cjs
+OK syntax scripts\dev\diff-summary.cjs
+OK syntax scripts\dev\run-bounded.cjs
+OK syntax scripts\dev\simulate-cloudflare-governance.cjs
+OK syntax scripts\diagnostics\baseline-derivatives-prod.cjs
+OK syntax scripts\diagnostics\capture-research-review.cjs
+OK syntax scripts\diagnostics\diagnose-binance-ws.cjs
+OK syntax scripts\diagnostics\diagnose-derivatives-sync.cjs
+OK syntax scripts\diagnostics\diagnose-finance-channels.cjs
+OK syntax scripts\diagnostics\diagnose-klines.cjs
+OK syntax scripts\diagnostics\diagnose-market-snapshot-cloud.cjs
+OK syntax scripts\diagnostics\smoke-api.cjs
+OK syntax scripts\diagnostics\verify-cloudflare-governance-live.cjs
+OK syntax scripts\diagnostics\verify-finance-datasets-live.cjs
+OK syntax scripts\diagnostics\verify-governance-correctness-live.cjs
+OK syntax scripts\diagnostics\verify-read-performance.cjs
+OK syntax scripts\operations\cloud-control.cjs
+OK syntax scripts\operations\collect-finance-datasets.cjs
+OK syntax scripts\operations\collect-market-local.cjs
+OK syntax scripts\operations\deploy-pages-safe.cjs
+OK syntax scripts\operations\prune-pages-deployments.cjs
+OK syntax scripts\research-context.cjs
+OK syntax scripts\research\import-yuqing-report.cjs
+OK syntax scripts\research\prepare-research.cjs
+OK syntax scripts\research\research-context.cjs
+OK syntax scripts\run-bounded.cjs
+OK syntax tests\browser\verify-cost-governance-ui.cjs
+OK syntax tests\browser\verify-governance-ui.cjs
+OK syntax tests\browser\verify-local-dev.cjs
+OK syntax tests\browser\verify-research-ui.cjs
+OK syntax tests\browser\verify-yuqing-cloud-ui.cjs
+OK syntax tests\fixtures\market-snapshot-test-utils.cjs
+OK syntax tests\fixtures\research-test-fixtures.cjs
+OK syntax tests\integration\verify-batch2.cjs
+OK syntax tests\integration\verify-cloud-control.cjs
+OK syntax tests\integration\verify-collector-governance.cjs
+OK syntax tests\integration\verify-derivatives-presentation.cjs
+OK syntax tests\integration\verify-derivatives-worker.cjs
+OK syntax tests\integration\verify-desk-assembly.cjs
+OK syntax tests\integration\verify-desk-migration.cjs
+OK syntax tests\integration\verify-desk-read.cjs
+OK syntax tests\integration\verify-egress.cjs
+OK syntax tests\integration\verify-finance-channels.cjs
+OK syntax tests\integration\verify-finance-datasets.cjs
+OK syntax tests\integration\verify-finance-incremental.cjs
+OK syntax tests\integration\verify-finance-storage.cjs
+OK syntax tests\integration\verify-footprint-worker.cjs
+OK syntax tests\integration\verify-governance.cjs
+OK syntax tests\integration\verify-kline-history.cjs
+OK syntax tests\integration\verify-kline-recovery.cjs
+OK syntax tests\integration\verify-liquidation-radar.cjs
+OK syntax tests\integration\verify-market-recovery.cjs
+OK syntax tests\integration\verify-market-snapshot-program.cjs
+OK syntax tests\integration\verify-market-snapshot-worker.cjs
+OK syntax tests\integration\verify-pages-artifact.cjs
+OK syntax tests\integration\verify-pages-prune.cjs
+OK syntax tests\integration\verify-refresh-cadence.cjs
+OK syntax tests\integration\verify-research-protocol.cjs
+OK syntax tests\integration\verify-workbench-evidence.cjs
+OK syntax tests\integration\verify-workbench-review.cjs
+OK syntax tests\integration\verify-yuqing-cloud-only.cjs
+OK syntax tests\integration\verify-yuqing-reports.cjs
+OK syntax tests\unit\verify-fibonacci-stats.cjs
+OK syntax tests\unit\verify-footprint-aggregation.cjs
+OK syntax tests\unit\verify-footprint-timeout.cjs
+OK syntax tests\unit\verify-heatmap-pressure-matrix.cjs
+OK syntax tests\unit\verify-indicator-math.cjs
+OK syntax vite.config.mjs
+
+All 132 syntax checks passed
+
+> bit-trading-desk@1.0.0 test
+> node tests/unit/verify-indicator-math.cjs && npm run verify:market-snapshot && npm run verify:footprint && node tests/integration/verify-kline-history.cjs && node tests/integration/verify-market-recovery.cjs && node tests/integration/verify-batch2.cjs
+
+OK: EMA(3) 末值与手算一致
+OK: 布林上轨末值与手算一致
+OK: RSI 全涨首点应为 100
+OK: ATR 错误实现应对照数据可区分
+OK: ATR 首值含 bar0 的 TR 平均
+OK: MACD 线有点
+OK: MACD 末值为有限数
+OK: VWAP 常量 bar 等于典型价
+OK: 周期区间窗口：5m 与 1d 配置不同
+OK: 未知周期回退到 1d 窗口长度
+OK: 行情工作台上级周期：5m -> 15m
+OK: 行情工作台上级周期：1d -> 3d
+OK: 行情工作台上级周期：1w 无上级
+OK: 5m rangeContext 有效上沿
+OK: 5m rangeContext 窗口目标为 864
+OK: 1d rangeContext 窗口目标为 180
+OK: 长周期区间宽度不小于短周期（同价缩放模拟）
+OK: 结构算法返回 5m windowBars
+OK: 反复触碰箱体上沿胜过孤立长影线
+OK: 孤立长影线进入近极端高点
+OK: 刺穿但收盘未越过缓冲时不是已突破
+OK: 收盘站上上沿但未越过缓冲为待确认
+OK: 收盘越过上沿 + ATR 缓冲后确认上破
+OK: 当前周期上破但上级周期仍压制时标为受压
+OK: 结构算法样本不足稳定返回
+OK: 快照结构与浏览器 swing upper 对齐
+OK: 快照结构与浏览器 swing lower 对齐
+OK: 快照结构与浏览器 state 对齐
+OK: 快照 buildChartHigherContext 对齐
+
+All checks passed
+
+> bit-trading-desk@1.0.0 verify:market-snapshot
+> node tests/integration/verify-market-snapshot-program.cjs && node tests/integration/verify-market-snapshot-worker.cjs
+
+OK chart snapshot scope
+OK chart snapshot version
+OK chart refuses P5 klines as Binance path
+OK chart latest close omitted without authority
+OK chart MTF summary available
+OK chart structure omitted without authority
+OK currentView tier labeled
+OK chart snapshot has no crowding copy
+OK heatmap snapshot scope
+OK heatmap forbids combined totals
+OK heatmap 1h window available
+OK heatmap snapshot has no dominance copy
+OK heatmap snapshot has no squeeze copy
+OK heatmap snapshot has no combined totalNotional
+OK derivatives snapshot scope
+OK derivatives matrix empty until Binance recovers
+OK derivatives contract rows omitted
+OK derivatives snapshot forbids trading narrative
+OK derivatives funding tab omitted
+OK derivatives snapshot has no crowded state
+OK orderflow snapshot scope
+OK orderflow dashboard cards available
+OK orderflow snapshot has no dominance copy
+OK market desk scope
+OK market desk includes four pages
+OK agent llmDataContract
+OK agent input version
+OK env input receives chart
+OK flow input receives orderflow and heatmap
+OK deriv input receives derivatives
+OK risk input limited to heatmap
+OK chief input receives all market pages
+OK desk snapshot does not expose raw footprint levels
+OK market snapshot program
+OK health sees both D1 bindings
+OK GET market desk preview
+OK GET preview does not write snapshot db
+OK POST rejects bad token
+OK POST stores market desk snapshot
+OK snapshot run stored
+OK four pages plus market desk stored
+OK five agent inputs stored
+OK latest market desk returns stored run
+OK latest agent input env
+OK agent env source pages
+OK latest agent input flow
+OK agent flow source pages
+OK latest agent input deriv
+OK agent deriv source pages
+OK latest agent input risk
+OK agent risk source pages
+OK latest agent input chief
+OK agent chief source pages
+OK snapshot run lookup
+OK snapshot run index complete
+OK market snapshot worker
+
+> bit-trading-desk@1.0.0 verify:footprint
+> node tests/unit/verify-footprint-aggregation.cjs && node tests/unit/verify-footprint-timeout.cjs && node tests/integration/verify-footprint-worker.cjs && node tests/integration/verify-liquidation-radar.cjs && node tests/unit/verify-heatmap-pressure-matrix.cjs && node tests/integration/verify-collector-governance.cjs
+
+OK: creates one bar per 5m bucket
+OK: bucket start is aligned
+OK: next trade creates next bucket
+OK: round price to explicit tick
+OK: m=false maps to aggressive buy
+OK: m=true maps to aggressive sell
+OK: delta equals buy minus sell
+OK: volume equals buy plus sell
+OK: POC picks highest total price level
+OK: imbalance marks buy side at 3x threshold
+OK: small side minimum suppresses zero/small imbalance
+OK: second bar keeps sell-only direction
+OK: display rebin merges levels into chosen tick
+OK: display rebin recomputes imbalance after merge
+OK: imbalance analyzer counts buy side
+OK: imbalance analyzer counts sell side
+OK: imbalance analyzer reports latest event
+OK: imbalance analyzer detects longest run
+OK: imbalance analyzer handles empty input
+OK: volume profile picks POC by highest total
+OK: volume profile computes value area bounds
+OK: volume profile reaches 70% coverage
+OK: volume profile keeps buy/sell totals
+OK: volume profile handles empty input
+OK: SFP analyzer confirms bullish sweep and reclaim
+OK: SFP analyzer scores confirmed bullish signal
+OK: SFP analyzer confirms bearish sweep and reclaim
+OK: SFP analyzer does not confirm unreclaimed sweep
+OK: SFP key levels include mixed technical sources
+OK: read model exposes volume profile
+OK: read model exposes imbalance counts
+OK: read model exposes key level state
+OK: read model reuses SFP confirmation
+OK: read model carries human summary
+OK: read model exposes dashboard
+OK: read model exposes non-degraded SFP display
+OK: read model treats zero delta as neutral
+OK: read model reports fresh D1 polling
+OK: desk observation timestamp drives freshness
+OK: recent receipt cannot hide old desk observations
+OK: missing desk observation stays unknown
+OK: desk stale flag cannot be presented as fresh
+OK: stale data degrades read model freshness
+OK: stale data downgrades confirmed SFP display
+OK: stale data adds cautious warning
+
+All checks passed
+PASS footprint stalled read releases poll guard, shows timeout, permits next read and suppresses disposed callbacks
+OK: exports footprint test hooks
+OK: base interval stays 5m
+OK: cloud footprint cap is practical 30d depth
+OK: API read limit supports loaded history
+OK: manual backfill is bounded
+OK: footprint fetch pages sized for backlog drain
+OK: fromId max age stays inside Binance 2-day window
+OK: footprint read auto sync is rate limited
+OK: auto tick resolves to base server tick
+OK: explicit tick is honored
+OK: fresh footprint status skips read auto sync
+OK: stale footprint status enables read auto sync
+OK: recent footprint sync attempt is gated
+OK: fromId inside 2 days is not stale
+OK: fromId older than 46h is stale
+OK: missing last_trade_time is not assumed stale
+OK: parses Binance -4166 JSON as window restricted
+OK: ordinary aggTrades errors are not window restricted
+OK: 15m merge produces two buckets
+OK: first bucket aggregates three 5m rows
+OK: merged OHLC keeps first open
+OK: merged OHLC keeps last close
+OK: merged volume sums buy side
+OK: merged volume sums sell side
+OK: POC recomputes after merge
+
+All worker footprint checks passed
+OK: exports liquidation hooks
+OK: collector subscribes migrated market liquidation stream
+OK: collector probe subscribes migrated combined stream
+OK: probe open is not a market heartbeat
+OK: actual trade advances market heartbeat
+OK: liquidation bucket floors to 5m
+OK: binance forceOrder parses
+OK: binance SELL maps to long liquidation
+OK: binance notional computes price times qty
+OK: bybit allLiquidation parses
+OK: bybit Sell maps to short liquidation
+OK: bybit legacy liquidation parses
+OK: bybit legacy Buy maps to long liquidation
+OK: bucket aggregates long count
+OK: bucket aggregates short count
+OK: bucket tracks max notional
+OK: bucket computes vwap
+OK: active bucket is flagged
+OK: freshness accepts market heartbeat without new liquidation
+OK: freshness exposes active source count
+OK: freshness marks stale market heartbeat as not ok
+OK: freshness rejects transport-only pong
+
+All liquidation radar checks passed
+OK heatmap pressure matrix
+(node:11108) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/123235/Desktop/BTC/cloudflare/binance-klines-worker.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\123235\Desktop\BTC\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS footprint later-page failure/write failure retain cursor; committed-but-lost response replay does not double quantities
+PASS liquidation liveness uses newest timestamp; quiet events do not cause reconnect loops
+PASS liquidation failure, durable restart, duplicate replay, committed-but-lost response
+PASS late event uses full confirmed bucket; old acknowledgement preserves newer version
+PASS cutover seeds existing D1 aggregate once; ordinary market heartbeats never enter recovery
+PASS one earliest alarm; concurrent status/wake share cycle; slow kline REST does not block liquidation receipt
+PASS kline close survives new bar, partial write failure retries, stale forming rejected, in-flight newer version retained
+PASS premium lost acknowledgement reuses actual receipt timestamp
+PASS restart captures old D1 cursor before live overwrite; stale reconcile acknowledgement cannot hide a newer gap
+PASS fast shared alarms do not overlap an in-flight write cycle or bypass its 5s start floor
+PASS three-period concurrency bound; same-period close/forming stay ordered; failed period retries and close never clears new bar
+PASS OI/book run independently of blocked kline writes, concurrent fetches start together, errors never permit overlapping snapshot jobs
+PASS healthy kline traffic cannot mask a missing premium substream
+PASS retired socket/timer/alarm stop; legacy wake/status/restart never reconnect
+PASS Cron checks per-interval health and startup/gap reconciliation; hourly safety window retained
+PASS collector governance: all scenarios
+PASS durable earliest cursor survives restart; old boot receipt and incomplete/failed coverage cannot acknowledge
+PASS each new outage advances generation, repeated stale polls do not; stale responses cannot mutate raw history
+PASS a newer WS row defers acknowledgement conservatively and the next reconciliation converges
+PASS actual sync/DO route keeps WS final across delayed REST close boundary and requests 24 closed bars
+PASS serialized REST correction discards superseded queued forming writes; all bulk receipts prove request-after-close
+PASS bounded raw history reconciliation corrects old closed values and excludes current forming bar
+PASS actual worker same-millisecond concurrent REST responses cannot roll back a newer completed reconciliation
+PASS weekly Monday boundary and Binance 3d one-day offset
+(node:20896) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/123235/Desktop/BTC/cloudflare/binance-klines-worker.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\123235\Desktop\BTC\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[kline backfill] BTCUSDT/5m page=1 rows=1000
+[kline backfill] BTCUSDT/5m page=2 rows=2000
+[kline backfill] BTCUSDT/5m page=3 rows=3000
+[kline backfill] BTCUSDT/5m page=4 rows=4000
+[kline backfill] BTCUSDT/5m page=5 rows=5000
+[kline backfill] BTCUSDT/5m page=6 rows=6000
+PASS history 5m bars=6000 pages=6
+[kline backfill] BTCUSDT/1w page=1 rows=368
+PASS history 1w bars=368 pages=2
+[kline backfill] BTCUSDT/3d page=1 rows=1000
+[kline backfill] BTCUSDT/3d page=2 rows=2000
+[kline backfill] BTCUSDT/3d page=3 rows=2501
+PASS history 3d bars=835 pages=4
+PASS analysis path does not failover to Bybit by default
+PASS scheduled retention keeps exactly 6000 without scanning on every write
+PASS old 3d extension preserves native exchange times and OHLCV without daily reaggregation
+PASS missing values and insufficient history
+(node:25416) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/123235/Desktop/BTC/cloudflare/binance-klines-worker.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\123235\Desktop\BTC\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS WB-04 raw repeat and recovery generation do not rewrite historyRevision
+PASS multi-page footprint and replay volume
+OK CHECK-001
+OK CHECK-002
+OK CHECK-003
+OK CHECK-004
+OK CHECK-005
+OK CHECK-006
+OK CHECK-007
+OK CHECK-008
+OK CHECK-009
+OK CHECK-010
+OK CHECK-011
+OK CHECK-012
+OK CHECK-015
+OK CHECK-016
+OK CHECK-021
+OK CHECK-028
+OK CHECK-029
+OK CHECK-030
+OK CHECK-031
+OK CHECK-032
+OK CHECK-033
+OK CHECK-034
+OK CHECK-035
+OK quote-base-equals-trades
+OK CHECK-012b-session-incomplete
+OK CHECK-013
+OK CHECK-014
+OK CHECK-017
+OK CHECK-018
+OK CHECK-019
+OK CHECK-020
+OK CHECK-022
+OK CHECK-023
+OK CHECK-024
+OK CHECK-025
+OK CHECK-026
+OK CHECK-027
+OK CHECK-036
+OK CHECK-037
+OK CHECK-038
+OK CHECK-039
+OK CHECK-040
+OK missing-vs-zero
+OK CHECK-041
+OK CHECK-042
+OK negative-volume
+OK CHECK-043
+OK CHECK-044
+OK CHECK-045
+OK CHECK-046
+OK CHECK-047
+OK CHECK-048
+OK CHECK-049
+OK CHECK-050
+OK CHECK-051
+OK CHECK-052
+OK CHECK-053
+OK CHECK-054
+OK CHECK-055
+OK CHECK-056
+OK CHECK-057
+OK CHECK-058
+OK CHECK-059
+OK CHECK-060
+OK CHECK-061
+OK CHECK-062
+OK CHECK-063
+OK CHECK-064
+OK CHECK-065
+OK CHECK-066
+OK asof-knowledge-cutoff
+OK pressure-window-no-24h-fallback
+OK liquidation-unknown-not-long
+OK footprint-poc-tie
+OK conflict-reject
+OK model-offline-budget
+mapped_checks 67
+acceptance_catalog 66 unmapped none
+PASS verify-batch2
+
+> bit-trading-desk@1.0.0 verify:shell
+> node scripts/diagnostics/smoke-api.cjs --shell-only
+
+OK shell index.html — references js/app.js
+OK shell js/app.js — present
+OK shell assets/css/styles.css — present
+PASS static shell; remote probe not requested (run verify:api separately)
+OK: bybit stream keeps official fallback URL
+OK: bybit stream origin is a separate prefixed env
+OK: exports derivative retry hooks
+OK: derivatives try primary fapi host first
+OK: derivatives keep alternate direct hosts after primary
+OK: custom FAPI origin is normalized
+OK: direct geo restriction keeps trying alternate hosts
+OK: custom geo restriction stops immediately
+OK: exact Binance ban stops alternate retries
+OK: CloudFront 403 activates existing derivative fallback
+OK: Binance throttle activates existing derivative fallback
+OK: legacy geographic failure still activates fallback
+OK: unrelated parse error does not switch exchanges
+OK: missing proprietary history does not starve scheduled funding and OI
+OK: stale derivative metric may bypass soft cooldown
+OK: stale retry still respects minimum attempt gap
+OK: hard Binance ban is not bypassed by stale retry
+
+All derivative worker checks passed
+
+> bit-trading-desk@1.0.0 verify:yuqing
+> node tests/integration/verify-yuqing-reports.cjs && node tests/integration/verify-yuqing-cloud-only.cjs
+
+PASS yuqing Gemini runtime retired; report history preserved
+PASS retired report generation; historical reports remain readable
+
+> bit-trading-desk@1.0.0 verify:fib
+> node tests/unit/verify-fibonacci-stats.cjs
+
+=========================================
+   Fibonacci Bands 验证脚本 (Walk-forward)  
+=========================================
+正在生成合成测试 K 线数据...
+生成了 500 根日 K 线，开始 Walk-forward 测试...
+
+=========================================
+   验证结果统计
+=========================================
+总评估点数: 388
+Fibonacci 样本反应比例: 42.78%
+随机基准样本反应比例: 30.15%
+-----------------------------------------
+回撤任务样本反应比例: 46.63% (326 样本)
+扩展任务样本反应比例: 22.58% (62 样本)
+-----------------------------------------
+低 ATR 样本反应比例: 42.78% (388 样本)
+高 ATR 样本反应比例: 0.00% (0 样本)
+=========================================
+
+PASS 固定合成样本计算完成；反应比例不是交易胜率，也不构成统计显著性或实盘收益证据。
+
+> bit-trading-desk@1.0.0 verify:governance
+> node tests/integration/verify-governance.cjs
+
+PASS GOV-01 API override is used by data engine
+PASS GOV-02 all navigation entries have explicit maturity
+PASS GOV-11 market-page maturity does not claim runtime availability
+PASS GOV-03 concurrent timeframe metadata stays with consumer
+PASS GOV-04 request cancellation propagates
+PASS GOV-05 service failure preserves status
+PASS GOV-12 desk failure retries once without a legacy fallback
+PASS GOV-06 empty data is not fabricated
+PASS GOV-10 invalid prices do not become zero candles
+PASS GOV-07 rapid navigation mounts only final route
+PASS GOV-08 query-bearing hash resolves consistently
+PASS GOV-09 mounted chart is disposed once
+Governance: 12 PASS, 0 FAIL
+
+> bit-trading-desk@1.0.0 verify:finance
+> node tests/integration/verify-egress.cjs && node tests/integration/verify-finance-channels.cjs && node tests/integration/verify-finance-storage.cjs && node tests/integration/verify-finance-datasets.cjs && node tests/integration/verify-finance-incremental.cjs && node tests/integration/verify-desk-assembly.cjs && node tests/integration/verify-refresh-cadence.cjs
+
+PASS egress origin join, envelope host, and secret header targeting
+PASS FIN-01 all 40 providers / 93 operations build bounded public-data requests
+PASS FIN-02 usdm channels can use BINANCE_FAPI_ORIGIN without changing the recorded venue host later
+PASS FIN-03 catalog exposes capabilities, never secrets or fabricated health
+PASS FIN-04 invalid, duplicate, oversized and unregistered parameters cause zero upstream calls
+PASS FIN-05 account/trading/POST proxy actions are not exposed
+PASS FIN-06 missing free keys/contact configuration fail before making requests
+PASS FIN-07 key injected server-side; source times, strings and raw units retained
+PASS FIN-08 regional restriction reported with no cross-venue fallback or retry
+PASS FIN-09 upstream quota exhaustion preserved
+PASS FIN-10 HTTP 200 provider error payloads are not reported as successful data
+PASS FIN-11 HTML challenges, login pages and empty JSON rejected
+PASS FIN-12 even unexpected upstream credential echo is not returned
+PASS FIN-13 Alpha Vantage quota notices remain diagnosable without disclosing echoed credentials
+PASS FIN-14 Hyperliquid POST is fixed to read-only info type
+PASS FIN-15 RSS returned as labeled native text, not invented JSON observations
+PASS FIN-16 oversized response stops before buffering
+PASS FIN-17 timeout cancels upstream request
+PASS FIN-18 cached response retains original receipt time, saves an upstream call
+PASS FIN-19 real Worker route uses existing Access/CORS and does not need D1
+Finance channels: 19 PASS, 0 FAIL; 93 operation contracts
+(node:18000) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/123235/Desktop/BTC/cloudflare/binance-klines-worker.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\123235\Desktop\BTC\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS FIN-D1-1 large Unicode source payload is stored in bounded rows and read back losslessly
+PASS FIN-D1-2 fresh D1 cache and independent stored endpoint make zero upstream calls
+PASS FIN-D1-3 failure records health without replacing last successful native data
+PASS FIN-D1-4 persisted cooldown prevents another quota-consuming upstream call
+PASS FIN-D1-5 a partial batch failure rolls back chunks and preserves the prior snapshot
+PASS FIN-D1-6 late older response cannot overwrite a newer snapshot or leak unused chunks
+PASS FIN-D1-7 invalid requests and missing storage fail before network calls
+PASS FIN-D1-8 successful upstream with failed D1 write never claims persistence
+PASS FIN-D1-9 HTTP-date Retry-After persists; status distinguishes attempted and stored channels
+Finance D1: 9 PASS, 0 FAIL
+PASS FIN-SET-1 foreign venues and instruments never enter Binance series
+PASS FIN-SET-2 complete candles retain quote/taker fields; network crossing a close boundary cannot confirm it
+PASS FIN-SET-3 basis units remain separate and funding state differs from settlement
+PASS FIN-SET-4 macro missing values remain null while a genuine zero is preserved
+PASS FIN-SET-5 real SQLite preserves changed observations and receipt-time revision lookup
+PASS FIN-SET-6 failure preserves values and bootstrap never claims public release time
+PASS FIN-SET-7 macro observation revisions retain prior missing states
+PASS FIN-SET-8 out-of-order arrival and unchanged values with revised metadata retain correct versions
+PASS FIN-SET-9 stale source observations remain stale and latest options snapshots cannot double-count OI
+PASS FIN-SET-10 dataset reads and invalid parameters never consume upstream quota
+PASS FIN-SET-11 explicit refresh writes raw and normalized data then independently reads D1
+PASS FIN-SET-12 upstream blockers retain only fixed diagnoses and no false successful data
+PASS FIN-SET-13 empty or malformed samples and absent storage cannot claim success
+PASS FIN-SET-14 top trader position ratio maps Binance longAccount fields onto position semantics
+PASS FIN-SET-15 FRED unchanged values skip rewrite; new vintage still inserts
+Finance datasets: 15 PASS, 0 FAIL; 33 curated datasets
+PASS FIN-INC-1 500 observations survive 260 tail receipts and scheduled pruning, including an older-point revision
+PASS FIN-INC-2 cached receipts issue zero writes, conflicting identity is rejected and late arrivals do not overwrite later evidence
+PASS FIN-INC-3 window boundaries are inclusive and identity, bounds and reversed-time validation remain strict
+PASS FIN-INC-4 60 cursor windows use one historical slot, exact parameters gate reuse, current snapshot and repeated raw receipt stay intact
+PASS FIN-INC-5 funding uses real settlement overlap, preserves an irregular new settlement and audits older revisions daily
+PASS FIN-INC-6 descending tail response detects missing intervals and fills them before distinct-point retention
+PASS FIN-INC-7 failed recovery retains its checkpoint across unrelated success/failure until SQL verifies the missing interval
+PASS FIN-INC-8 permanently missing history retries at most every 30 minutes without suppressing the current tail
+PASS FIN-INC-9 a full refresh completed during cooldown clears the saved gap from persisted coverage without another historical request
+PASS FIN-INC-10 explicit exchange close has immutable receipt evidence, late mutable updates cannot replace it and failure propagates
+PASS FIN-INC-11 REST preserves an already confirmed close, but neither elapsed time nor a future close receipt confirms an unknown bar
+PASS FIN-INC-12 bulk REST retains prior exchange close, rejects a request-crossing bar, and stores an official closed 3d bar
+PASS FIN-INC-13 a REST response requested before close cannot inherit proof or displace the later exchange-final price
+PASS FIN-INC-14 premium lost acknowledgement reuses its real receipt without writes; a genuinely new equal-valued receipt stays distinct
+PASS FIN-INC-15 daily audit cannot freeze newer forming WS; explicit historical read excludes overwritten future live state and current desk stays populated
+PASS FIN-INC-16 bounded options cleanup removes complete obsolete snapshots and preserves eight latest snapshots
+PASS FIN-INC-17 1,500-date macro snapshots materialize successor keys once and keep one equal-valued history version
+PASS FIN-INC-18 macro query windows use lightweight receipts, late A-B-A restores its successor, genuine vintage and knownAt remain intact
+PASS FIN-INC-19 macro summary reconstructs lightweight FRED/SOFR receipts, knownAt, query windows and genuine vintages only for receipt keys
+PASS FIN-INC-20 concurrent macro preflights preserve both commit orders and receipt cleanup follows retained observation dates
+PASS FIN-INC-21 all 13 Binance historical datasets measure six logical rows per steady tail and 504 per full audit
+PASS FIN-INC-22 eight persistent FRED failures relinquish queue priority; funding/basis and fees keep cadence and recovered sources resume normal refresh
+PASS FIN-INC-23 live canonical head advances without a history scan; older backfill cannot move the head backwards
+PASS FIN-INC-24 WB-03 old patch, repeat, failed batch, tail refresh and the 21st bar share one history revision
+PASS FIN-INC-25 WB-04 identical canonical receipt does not bump historyRevision and a failed raw batch keeps the prior close
+PASS FIN-INC-26 WB-05 stale/equal mutable batches and mid-batch failure preserve data/revision/persistent scratch; retry bumps once
+PASS FIN-INC-27 WB-06 single-statement bounded snapshot keeps cap+1, explicit/tail/empty-window predecessor and knownAt winners inside the caller batch
+PASS FIN-INC-28 WB-07 bounded assembly avoids the receipt-index sort and drives winners from selected keys; real rows_read is checked by desk-migration --workerd
+PASS FIN-INC-29 WB-08 observed-index seeks retain unknown-source-time fee/stablecoin summaries and historical receipt bounds
+{"measurement":"real SQLite logical changed rows; excludes D1 index amplification","logicalWrites":[{"id":"binance-perp-klines-5m","steadyRows":6,"auditRows":504},{"id":"binance-perp-klines-15m","steadyRows":6,"auditRows":504},{"id":"binance-perp-klines-1h","steadyRows":6,"auditRows":504},{"id":"binance-perp-klines-4h","steadyRows":6,"auditRows":504},{"id":"binance-perp-klines-1d","steadyRows":6,"auditRows":504},{"id":"binance-perp-klines-3d","steadyRows":6,"auditRows":504},{"id":"binance-perp-klines-1w","steadyRows":6,"auditRows":504},{"id":"binance-perp-funding","steadyRows":6,"auditRows":504},{"id":"binance-perp-oi-history","steadyRows":6,"auditRows":504},{"id":"binance-perp-taker","steadyRows":6,"auditRows":504},{"id":"binance-perp-accounts","steadyRows":6,"auditRows":504},{"id":"binance-perp-top-positions","steadyRows":6,"auditRows":504},{"id":"binance-perp-basis","steadyRows":6,"auditRows":504},{"id":"binance-spot-klines-1h","steadyRows":6,"auditRows":504}],"fundingTailFirstSlotRows":5,"expectedSteadyTailRows":6,"formula":"2 observations + 1 dataset state + 1 raw chunk insert + 1 raw state + 1 previous chunk delete","priorFullRows":504,"normalHistoryRows":6,"fullAuditRows":504,"receiptReplayRows":0,"retention":"separate scheduled batches; <=1000 rows/dataset pass, options whole snapshot"}
+Finance incremental: 29 PASS, 0 FAIL
+(node:15968) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/123235/Desktop/BTC/cloudflare/binance-klines-worker.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\123235\Desktop\BTC\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS native historical 3d anchor stays continuous while a real missing bar remains a gap
+PASS context funding event clock, reported and unknown intervals, missed settlement, per-card staleness, stale receipt, and partial availability
+PASS desk assembly identity, stale bootstrap, split liquidations, macro labels, adversarial harden
+PASS WB-01 fresh tail stays visible, conflicting raw values and lookalike hosts stay unverified
+PASS WB-02 interior gap, continuous control, outside gap, 3d, 1w and 600/864 boundary
+PASS WB-03 first full read establishes revision 0 at the existing head
+PASS WB-05 chart responses keep stateScope current
+PASS WB-06 positioning units, partial cards, and separate collection/source staleness
+PASS WB-05 knownAt ignores later receipts; WB-07 summary matches the latest reference period
+PASS bounded tail and summary plans stay on the observed_at index after a 10x history; D1 rows_read 待验; extra observed_at index is one secondary write per observation
+(node:22840) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/123235/Desktop/BTC/cloudflare/binance-klines-worker.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\123235\Desktop\BTC\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS cadence cron reconciles every interval when collector health is unavailable
+PASS live kline WS payload and canonical host
+PASS skipPrune keeps extra live writes until cron prune
+PASS live tape status is preserved only while writes are fresh
+PASS live collector uses USD-M market combined stream
+PASS live kline observation upserts in place
+PASS live premium snapshots insert independently
+PASS expired dataset receipts are hard-deleted
+PASS scheduler keeps a context slot and does not full-refresh live klines every tick
+PASS desk live tape authorizes chart series
+PASS dataset catalog marks automatic collection
+PASS wrangler retains the legacy namespace binding for explicit retirement
+
+> bit-trading-desk@1.0.0 verify:evidence
+> node tests/integration/verify-workbench-evidence.cjs && node tests/integration/verify-workbench-review.cjs && node tests/integration/verify-desk-migration.cjs && node tests/integration/verify-desk-read.cjs
+
+PASS WB-EVIDENCE-1 WB-13 frozen displayed values stay stable and omit trading conclusions
+PASS WB-EVIDENCE-2 WB-13 chart evidence keeps at most 6000 bars
+PASS WB-EVIDENCE-3 WB-14 unknown export purpose keeps metadata and withholds values
+PASS WB-EVIDENCE-4 WB-14 failure without a view stays unavailable; later failure keeps the previous values
+PASS WB-EVIDENCE-5 WB-14 unverified bars keep the open time and withhold OHLC
+PASS WB-EVIDENCE-6 unknown page slots are rejected
+Workbench evidence: 6 PASS
+PASS WB-REVIEW-1 tail export matches the rendered series and latest read, with separate full-window provenance
+PASS WB-REVIEW-2 chart corrections delete missing trailing rows inside the replacement window, preserving newer tail
+PASS WB-REVIEW-3 orderflow retained bars carry a stream failure and recover without masking aggregation gaps
+PASS WB-REVIEW-4 actual chart poll rejection marks retained export stale without inventing a new data read
+PASS WB-REVIEW-5 superseded chart poll failure cannot mark the current export stale
+PASS WB-REVIEW-6 each same-interval tile rereads its own revision exactly once, deleting removed historical bars
+PASS WB-REVIEW-7 older response cannot regress the tile version or displayed values
+PASS WB-REVIEW-8 lagging bounded reread does not confirm a revision and is retried by the next existing poll
+PASS WB-REVIEW-9 superseded tile request cannot commit data or confirm history
+PASS 9 workbench review regressions
+PASS DESK-MIGRATION node:sqlite: old schema upgrade, exact data preservation and idempotence
+PASS DESK-MIGRATION node:sqlite: 800 rows -> 21 newest keys using migrated observed index
+PASS DESK-MIGRATION node:sqlite: 8000 rows -> 21 newest keys using migrated observed index
+PASS DESK-MIGRATION node:sqlite: failure after three executed writes rolls back revision, helper and bar
+PASS DESK-MIGRATION node:sqlite: actual raw/canonical history SQL executes; persistent helper resets between identical batches
+REVIEW real D1 runtime requires the separate --workerd run; SQLite PASS is not D1 compatibility evidence.
+PASS exact-request sharing, independent cancellation, explicit fresh reads, complete-window cache
+PASS leaving the last reader aborts transport and releases registry
+PASS foreground reserved capacity, background serialization, queued cancellation and request promotion
+PASS queue deadline removes expired work without sending a late server request
+PASS transient 503 retries once; denied access is not retried
+PASS stalled responses abort at the deadline, retry once, then release all readers
+PASS switch validates fresh tail; revision change, gap and explicit sync force full history
+PASS failed polling backs off, success restores normal cadence, access errors stop automatic requests
+PASS late completion from the old period cannot release a new history read
+PASS 4,000 receipts: closed-winner correctness, only 2200 version comparisons for tail + predecessor
+[btc] request failed Error
+PASS Worker assembly exceptions return retryable 503 with permitted-origin CORS
+(node:12176) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/123235/Desktop/BTC/cloudflare/binance-klines-worker.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\123235\Desktop\BTC\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> bit-trading-desk@1.0.0 verify:presentation
+> node tests/integration/verify-derivatives-presentation.cjs
+
+{"pid":11152,"origin":"http://127.0.0.1:57285","browser":"147.0.7727.15","deadline":"external run-bounded watchdog"}
+PASS WB-06 normal
+PASS WB-13 derivatives download matches the displayed cards
+PASS WB-12 derivatives 390 width
+PASS WB-06 partial
+PASS WB-06 source stale
+PASS WB-06 collection stale
+PASS positioning absence keeps premium funding and basis
+PASS WB-07 stale card keeps the others
+PASS WB-06 request failure keeps the last desk
+PASS WB-11 derivatives hidden pauses requests
+PASS WB-10 derivatives leave stops requests
+PASS WB-10 late derivatives response does not replace the new visit
+PASS WB-12 heatmap 390 width
+PASS WB-08 liquidation stays split by venue
+PASS research liquidation 7d query, minimum filter, unchanged totals and filtered export
+PASS WB-11 heatmap hidden pauses requests
+PASS WB-10 heatmap leave stops requests
+PASS WB-10 late liquidation range does not replace the new window
+PASS WB-13 liquidation displayed range download
+PASS WB-08 broken footprint ignores unmarked cache and the period control stays usable
+PASS WB-13 footprint displayed aggregation download
+PASS WB-12 orderflow 390 width
+PASS WB-08 incomplete footprint aggregation
+PASS WB-11 orderflow hidden pauses requests
+PASS WB-10 orderflow leave stops requests
+PASS WB-11 late footprint interval does not replace the new period
+PASS verify-derivatives-presentation
+
+> bit-trading-desk@1.0.0 verify:research
+> node scripts/research-context.cjs --check && node tests/integration/verify-research-protocol.cjs
+
+{
+  "status": "PASS",
+  "files": 314,
+  "routes": 21,
+  "queryCases": 30,
+  "problems": []
+}
+PASS research schema, source/time integrity, module instructions, formal AI identity, SQL escaping and collision preservation
+
+> bit-trading-desk@1.0.0 verify:pages
+> node tests/integration/verify-pages-artifact.cjs && node tests/integration/verify-pages-prune.cjs
+
+PASS FILES-01 only declared runtime assets are copied
+PASS FILES-02 rebuilding removes stale output without touching sources
+PASS FILES-03 undeclared entry dependency fails before replacing output
+PASS FILES-07 spaced uppercase resource attributes are checked
+PASS FILES-08 unquoted resource attributes are checked
+PASS FILES-09 copy failure preserves complete previous artifact
+PASS FILES-10 failed replacement restores previous artifact
+PASS FILES-11 successful rebuild installs new content
+PASS FILES-12 replacement and restore failure retain recoverable old artifact
+PASS FILES-04 repository artifact exactly matches its asset list
+PASS FILES-05 legacy Chinese entry remains a redirect
+PASS FILES-06 no development directories are shipped
+Pages artifact: 39 runtime files, 12 PASS / 0 FAIL
+PASS local bounded Wrangler authentication; CLI cancellation/exit 0 cannot count as success
+PASS full 25-row pagination, actual created_on ordering, newest 8/environment, canonical/aliases, read-only dry-run
+PASS recheck protects newly active alias; DELETE force=false; full read-back proves every reported deletion
+PASS explicit deletion batch finishes read-back and reports the remaining backlog
+PASS successful-looking no-op deletion and DELETE failures fail verification instead of reporting success
+PASS production CLI failure handler exits nonzero without printing authentication material
+
+> bit-trading-desk@1.0.0 verify:cloud-control
+> node tests/integration/verify-cloud-control.cjs
+
+PASS 只读恢复预检不打开入口、不唤醒、不保存状态
+PASS 恢复原版本与原入口，保留空 Cron，确认真实写入推进契约
+PASS 发布新版本后暂停保存新恢复点，再恢复不回滚旧代码
+PASS 暂停中域名删除成功但响应丢失：保留恢复点、重试补齐
+PASS 恢复部署成功但响应丢失：重试不重复部署、不丢快照
+PASS 暂停期间出现未知版本或绑定漂移：不覆盖较新工作
+PASS 域名被另一项目占用：不抢占入口
+PASS 接口已开但行情不推进：不报告恢复成功，仍能再次暂停
+PASS 已运行时重复开启仍核验采集，不能只看开关
+PASS 三种真实健康接口契约：快照没有 ok 字段，数据库失败不能误报
+PASS 暂停但仍在写入：不得报告完全暂停
+PASS 空 HTTP 200 DELETE 合法；错误响应不泄露认证或服务端载荷
+PASS 维护模块：两个类取消闹钟，保留数据，不发网络，不执行定时采集
+PASS 只取最新部署，但资源列表读取完整分页
+PASS 状态文件不含变量值，工具无数据删除入口
+All 15 cloud-control scenarios passed (offline, cloud unchanged).
+
+> bit-trading-desk@1.0.0 build:pages
+> node scripts/build/build-pages.cjs
+
+PASS Pages artifact: 39 files -> C:\Users\123235\Desktop\BTC\dist\pages
+{"childPid":24764,"code":0,"signal":null,"stopped":false}

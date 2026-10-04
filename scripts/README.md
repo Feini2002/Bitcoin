@@ -1,6 +1,17 @@
 # 脚本用途
 
-优先通过 package.json 的稳定命令调用。脚本保留现有路径，避免为分类而破坏操作入口。
+优先通过 package.json 的稳定命令调用。2026-09-30 按职责归类实现文件，npm 命令保持不变。
+
+| 目录 | 职责 | 常用入口 |
+| --- | --- | --- |
+| `build/` | 语法检查、组装网站白名单资源 | `npm run lint`、`npm run build:pages` |
+| `dev/` | 有界启动、差异查看、离线费用模拟 | `npm run diff:summary`、`npm run simulate:cloudflare` |
+| `research/` | 查询资料、准备证据、校验及显式导入报告 | `research-context.cjs`、`prepare-research.cjs`、`import-yuqing-report.cjs` |
+| `diagnostics/` | 线上读回、性能测量及专项诊断 | `npm run diagnose`、`npm run verify:api` |
+| `operations/` | 发布、云端开关、专项采集 | `npm run cloud:status` 等；执行前核对授权与副作用 |
+| [../tests/](../tests/README.md) | 离线与浏览器验收、固定样例 | `npm run build`、`npm run verify:ui` |
+
+根目录仅留 `research-context.cjs` 与 `run-bounded.cjs` 两个兼容入口，分别转入 `research/`、`dev/` 实现，已有命令和资料查询方式仍可直接使用。诊断目录不等于只读：包含快照写入等专项工具，下面继续逐项标明副作用。
 
 当前开发从[交接记录](../docs/operations/development-handoff-2026-09-30.md)与[四页工作台方案](../docs/research/repository-development-plan-2026-09-27.md)开始；`npm run build` 已包含研究路由、研究协议、共享读取、Pages 清理离线回归和云端开关模拟，不执行生产删除或暂停/恢复。生产开关仍用 `cloud:status` / `cloud:pause` / `cloud:resume`，遵从[开关说明](../docs/research/cloudflare-pause-resume-2026-09-27.md)。
 

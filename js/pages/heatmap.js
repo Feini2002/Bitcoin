@@ -17,6 +17,7 @@ let heatmapCloudGeneration = 0;
 let heatmapAbort = null;
 let heatmapAppliedWindow = null;
 let heatmapReadFailure = null;
+let heatmapTableResizeObserver = null;
 const HEATMAP_PRESSURE_POLL_MS = 15_000;
 let heatmapPressurePayload = null;
 let heatmapPressureKlines = null;
@@ -169,7 +170,7 @@ function pageHeatmap() {
       <div class="heatmap-status-main">
         <span class="heatmap-feed-dot" aria-hidden="true"></span>
         <strong>${HEATMAP_SYMBOL} 已实现强平</strong>
-        <span>desk 分所桶 · 禁止跨所合计 · 未知来源不得写成 Binance</span>
+        <span>已发生事件 · 各交易所独立观察</span>
       </div>
       <div class="heatmap-status-actions">
         <span class="chip warn" id="hm-live-chip">分所已实现强平</span>
@@ -218,7 +219,7 @@ function pageHeatmap() {
       <div class="heatmap-kpi">
         <span>Binance 已实现强平</span>
         <strong id="hm-kpi-binance">--</strong>
-        <em id="hm-kpi-binance-note">仅当 desk 标了 binance</em>
+        <em id="hm-kpi-binance-note">仅包含已确认 Binance 来源的记录</em>
       </div>
       <div class="heatmap-kpi">
         <span>未知来源</span>
@@ -251,12 +252,12 @@ function pageHeatmap() {
         <div class="heatmap-cloud-card">
           <span>Binance · 过去 1 小时</span>
           <strong id="hm-cloud-binance-1h">--</strong>
-          <em id="hm-cloud-binance-1h-detail">仅 desk 标注 binance 的桶</em>
+          <em id="hm-cloud-binance-1h-detail">仅包含已确认 Binance 来源的记录</em>
         </div>
         <div class="heatmap-cloud-card">
           <span>Binance · 过去 1 天</span>
           <strong id="hm-cloud-binance-1d">--</strong>
-          <em id="hm-cloud-binance-1d-detail">仅 desk 标注 binance 的桶</em>
+          <em id="hm-cloud-binance-1d-detail">仅包含已确认 Binance 来源的记录</em>
         </div>
       </div>
       <details class="heatmap-detail heatmap-cloud-detail">
@@ -289,7 +290,7 @@ function pageHeatmap() {
       <aside class="heatmap-side-rail">
         <section class="heatmap-health-card warn" id="hm-health-card" aria-label="分所说明">
           <div class="card-title">分所说明</div>
-          <strong id="hm-health-status">压力矩阵本轮不上屏</strong>
+          <strong id="hm-health-status">已观察强平</strong>
           <span id="hm-health-note">只展示已发生、已标注交易所的名义金额。禁止合计，禁止把未知来源写成 Binance。</span>
           <div class="heatmap-health-grid">
             <em id="hm-health-market">asKnownMode=system_observed</em>
@@ -430,7 +431,7 @@ function renderHeatmapHealth(snapshot, displaySnapshot) {
   const rows = Number(displaySnapshot && displaySnapshot.cloudWindowRows) || 0;
   const by = hmDeskByExchange() || {};
   const venues = Object.keys(by).filter((ex) => by[ex] && ((by[ex].buckets && by[ex].buckets.length) || by[ex].longNotional || by[ex].shortNotional));
-  setHmText("hm-health-status", "压力矩阵本轮不上屏");
+  setHmText("hm-health-status", "已观察强平");
   setHmText("hm-health-note", "只展示已发生、已标注交易所的名义金额。禁止合计，禁止把未知来源写成 Binance。浏览器推送不是权威路径。");
   setHmText("hm-health-market", hmDeskByExchange() ? hmCoverageNote() : "等待 desk 分所桶");
   setHmText("hm-health-event", snapshot && snapshot.error ? String(snapshot.error).slice(0, 80) : "不以浏览器连接充当在线");
@@ -683,10 +684,10 @@ function renderHeatmapCloudWindows() {
     }
     const s = summarizeCloudBucketsForExchange(ex, ms);
     const total = (Number(s.longNotional) || 0) + (Number(s.shortNotional) || 0);
-    setHmText(`hm-cloud-${ex}-${id}`, fmtHmMoney(total));
+    setHmText(`hm-cloud-${ex}-${id}`, total === 0 ? "已记录 $0" : fmtHmMoney(total));
     setHmText(
       `hm-cloud-${ex}-${id}-detail`,
-      `多 ${fmtHmMoney(s.longNotional)} · 空 ${fmtHmMoney(s.shortNotional)} · ${s.buckets} 桶`
+      `多 ${fmtHmMoney(s.longNotional)} · 空 ${fmtHmMoney(s.shortNotional)} · ${s.buckets} 桶 · 已记录样本，完整性未证明`
     );
   });
 }
@@ -695,6 +696,9 @@ function renderHeatmapBuckets(snapshot) {
   const wrap = document.getElementById("hm-buckets");
   const label = document.getElementById("hm-range-label");
   if (!wrap) return;
+  const tableState = new Map([...wrap.querySelectorAll("[data-hm-scroll]")].map(region => [region.dataset.hmScroll, { left: region.scrollLeft, focused: document.activeElement === region }]));
+  if (heatmapTableResizeObserver) heatmapTableResizeObserver.disconnect();
+  heatmapTableResizeObserver = null;
   const by = hmDeskByExchange();
   if (!by) {
     if (label) label.textContent = "等待 desk 分所桶";
@@ -711,10 +715,32 @@ function renderHeatmapBuckets(snapshot) {
     const g = by[ex];
     const title = ex === "unknown" ? "未知来源（不得写成 Binance）" : ex;
     const rows = hmDisplayedBuckets(g);
+    const plot=DeskVisual.timeSeries((g.buckets||[]).map(row=>({t:Number(row.bucket_start),long:typeof row.long_notional==='number'?row.long_notional:null})),{valueKey:'long',unit:'USDT',intervalMs:300000,title:title+' 多头被强平 · 本所独立纵轴',zeroBase:true,sparseEvents:true})+DeskVisual.timeSeries((g.buckets||[]).map(row=>({t:Number(row.bucket_start),short:typeof row.short_notional==='number'?row.short_notional:null})),{valueKey:'short',unit:'USDT',intervalMs:300000,title:title+' 空头被强平 · 本所独立纵轴',zeroBase:true,sparseEvents:true});
     const total = (Number(g.longNotional)||0)+(Number(g.shortNotional)||0);
     const share = total>0 ? (Number(g.longNotional)||0)/total*100 : 0;
-    return `<div class="heatmap-venue-block"><header><h3>${hmEsc(title)}</h3><span>窗口内 ${Array.isArray(g.buckets) ? g.buckets.length : 0} 个 5m 桶</span></header><div class="hm-venue-totals"><div><span>多头被强平</span><strong>${fmtHmMoney(g.longNotional)}</strong></div><div><span>空头被强平</span><strong>${fmtHmMoney(g.shortNotional)}</strong></div></div><div class="hm-side-bar" aria-label="本所多头强平金额占比 ${share.toFixed(1)}%"><i style="width:${share}%"></i></div><p>下表为筛选后最近 ${rows.length} 个桶（最多 12 个），不改变窗口汇总。金额单位 USDT。</p><div class="rd-table-scroll"><table class="rd-table"><thead><tr><th>北京时间</th><th>多头强平</th><th>空头强平</th><th>观察价区间</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${hmEsc(fmtHmStamp(new Date(Number(row.bucket_start)).toISOString()))}</td><td>${fmtHmMoney(row.long_notional)}</td><td>${fmtHmMoney(row.short_notional)}</td><td>${fmtHmPrice(row.min_price)}–${fmtHmPrice(row.max_price)}</td></tr>`).join('')||'<tr><td colspan="4">没有匹配的已观察桶；不表示没有强平。</td></tr>'}</tbody></table></div></div>`;
+    return `<div class="heatmap-venue-block"><header><h3>${hmEsc(title)}</h3><span>窗口内 ${Array.isArray(g.buckets) ? g.buckets.length : 0} 个 5m 桶</span></header>${plot}<div class="hm-venue-totals"><div><span>多头被强平</span><strong>${fmtHmMoney(g.longNotional)}</strong></div><div><span>空头被强平</span><strong>${fmtHmMoney(g.shortNotional)}</strong></div></div><div class="hm-side-bar" aria-label="本所多头强平金额占比 ${share.toFixed(1)}%"><i style="width:${share}%"></i></div><p>下表为筛选后最近 ${rows.length} 个桶（最多 12 个），不改变窗口汇总。金额单位 USDT。</p><p id="hm-scroll-hint-${ex}" class="hm-scroll-hint" hidden>左右滚动查看空头金额与观察价区间；聚焦表格后可用方向键。</p><div class="rd-table-scroll hm-table-scroll" data-hm-scroll="${ex}" tabindex="-1" role="region" aria-label="${hmEsc(title)} 已观察强平记录" aria-describedby="hm-scroll-hint-${ex}"><table class="rd-table"><thead><tr><th>北京时间</th><th>多头强平</th><th>空头强平</th><th>观察价区间</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${hmEsc(fmtHmStamp(new Date(Number(row.bucket_start)).toISOString()))}</td><td>${fmtHmMoney(row.long_notional)}</td><td>${fmtHmMoney(row.short_notional)}</td><td>${fmtHmPrice(row.min_price)}–${fmtHmPrice(row.max_price)}</td></tr>`).join('')||'<tr><td colspan="4">没有匹配的已观察桶；不表示没有强平。</td></tr>'}</tbody></table></div></div>`;
   }).join("");
+  heatmapTableResizeObserver = new ResizeObserver(() => syncHeatmapTableOverflow(wrap));
+  for (const region of wrap.querySelectorAll("[data-hm-scroll]")) {
+    heatmapTableResizeObserver.observe(region);
+    heatmapTableResizeObserver.observe(region.querySelector("table"));
+  }
+  syncHeatmapTableOverflow(wrap);
+  for (const region of wrap.querySelectorAll("[data-hm-scroll]")) {
+    const previous = tableState.get(region.dataset.hmScroll);
+    if (previous) region.scrollLeft = previous.left;
+    if (previous && previous.focused && region.tabIndex === 0) region.focus({ preventScroll: true });
+  }
+}
+
+function syncHeatmapTableOverflow(wrap) {
+  if (!wrap.isConnected) return;
+  for (const region of wrap.querySelectorAll("[data-hm-scroll]")) {
+    const overflow = region.scrollWidth > region.clientWidth + 1;
+    const hint = document.getElementById(region.getAttribute("aria-describedby"));
+    if (hint) hint.hidden = !overflow;
+    region.tabIndex = overflow ? 0 : -1;
+  }
 }
 
 function hmDisplayedBuckets(group) {
@@ -896,7 +922,7 @@ function refreshHeatmapView(statusText) {
   const chip = document.getElementById("hm-live-chip");
   if (chip) {
     chip.className = hmDeskByExchange() ? "chip warn" : "chip";
-    chip.textContent = hmDeskByExchange() ? "分所已实现强平" : "等待 desk";
+    chip.textContent = hmDeskByExchange() ? "分所已实现强平" : "等待读数";
   }
   if (statusText) {
     setHmText("hm-status", statusText);
@@ -905,13 +931,13 @@ function refreshHeatmapView(statusText) {
     const range = heatmapCloudBuckets && heatmapCloudBuckets._range
       ? heatmapCloudBuckets._range
       : heatmapD1RangeForWindow(currentHeatmapStateFromDom().window);
-    let text = `desk 分所：${keys.join(" / ") || "无"} · 范围 ${range} · 不跟随主图周期`;
+    let text = `已观察 ${keys.join(" / ") || "暂无来源"} · ${range} 窗口`;
     if (heatmapReadFailure && heatmapReadFailure.window === heatmapAppliedWindow) {
       text = `读取失败 · 失败时间 ${fmtHmStamp(heatmapReadFailure.at)} · 陈旧 · ${text}`;
     }
     setHmText("hm-status", text);
   } else {
-    setHmText("hm-status", "等待 /api/desk/heatmap");
+    setHmText("hm-status", "等待强平资料");
   }
   publishHeatmapEvidence();
 }
@@ -1067,6 +1093,8 @@ function initHeatmap() {
 }
 
 function disposeHeatmap() {
+  if (heatmapTableResizeObserver) heatmapTableResizeObserver.disconnect();
+  heatmapTableResizeObserver = null;
   heatmapCloudGeneration += 1;
   heatmapCloudInFlight = false;
   if (heatmapAbort) heatmapAbort.abort();

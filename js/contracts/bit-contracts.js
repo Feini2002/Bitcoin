@@ -301,6 +301,8 @@
     return { read: "allowed", persist: "unknown", modelSend: "unknown", export: "unknown", localDisplayedDownload: "allowed", notes: notes };
   };
   var SOURCE_USAGE = {
+    "deribit-btc-perp":localDisplayed("当前已显示的 Deribit BTC 反向永续及小时资金费，本地下载；USD 名义持仓不与 Binance BTC 持仓相加。"),
+    "deribit-btc-options":localDisplayed("当前已显示的 BTC / USDC 结算期权覆盖与报价子集，本地下载；不宣称完整 Greeks、GEX 或可成交 IV。"),
     "binance-usdm-klines": localDisplayed("用户点击后，只把本页已经显示的公开永续 K 线下载到本地。未核实原始棒不带出 OHLC。export 仍是 unknown，不授权模型外发或第三方上传。"),
     "binance-usdm-ticker": { read: "allowed", persist: "unknown", modelSend: "unknown", export: "unknown", notes: "标题价只读。" },
     "binance-usdm-premium": localDisplayed("本页已显示的币安标记价与报告费率，仅用户本地下载。"),

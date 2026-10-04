@@ -291,11 +291,17 @@ export function classifyReceiptConflict(existing, incoming) {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const wholeSnapshot = id => ['options','option-instruments'].includes(FINANCE_DATASETS[id]?.kind);
 const DATASET_RETENTION_BY_ID = {
   'crypto-breadth': { keep: 4032, maxAgeMs: 14 * DAY_MS },
   'btc-fees': { keep: 10080, maxAgeMs: 7 * DAY_MS },
   'stablecoin-supply': { keep: 2200, maxAgeMs: 90 * DAY_MS },
   'deribit-btc-options': { keep: 8, maxAgeMs: 7 * DAY_MS },
+  'deribit-usdc-btc-options': { keep: 8, maxAgeMs: 7 * DAY_MS },
+  'deribit-btc-option-instruments': { keep: 8, maxAgeMs: 7 * DAY_MS },
+  'deribit-usdc-btc-option-instruments': { keep: 8, maxAgeMs: 7 * DAY_MS },
+  'deribit-btc-perp-ticker': { keep: 1440, maxAgeMs: DAY_MS },
+  'deribit-btc-perp-funding': { keep: 720, maxAgeMs: 30 * DAY_MS },
 };
 
 export function datasetRetention(id) {
@@ -313,7 +319,7 @@ export function datasetRetention(id) {
 export async function pruneDatasetObservations(db, id, keep, batchSize = 1000) {
   const cap = Math.max(1, Number(keep) || 1);
   // Options are whole received snapshots, not individual option contracts.
-  if (FINANCE_DATASETS[id]?.kind === 'options') {
+  if (wholeSnapshot(id)) {
     const res = await db.prepare(`DELETE FROM finance_dataset_observations
       WHERE dataset_id=?1 AND received_at=(
         SELECT received_at FROM finance_dataset_observations WHERE dataset_id=?1
@@ -350,7 +356,7 @@ export async function pruneDatasetByAge(db, id, maxAgeMs, now = Date.now()) {
   const age = Number(maxAgeMs) || 0;
   if (age <= 0) return 0;
   const cutoff = new Date(now - age).toISOString();
-  if (FINANCE_DATASETS[id]?.kind === 'options') {
+  if (wholeSnapshot(id)) {
     const res = await db.prepare(`DELETE FROM finance_dataset_observations
       WHERE dataset_id=?1 AND received_at=(SELECT MIN(received_at)
         FROM finance_dataset_observations WHERE dataset_id=?1 AND received_at < ?2)`)
@@ -620,7 +626,7 @@ export async function readDataset(db,id,options={}) {
   const {limit=1000,knownAt=new Date().toISOString(),historical=Object.hasOwn(options,'knownAt')}=options;
   const definition=FINANCE_DATASETS[id];
   if(!definition)throw new Error('unknown_dataset');
-  const snapshotOnly=definition.kind==='options';
+  const snapshotOnly=wholeSnapshot(id);
   let selection=`o.dataset_id=?1 AND o.time_precision<>'receipt' AND o.received_at<=?2
     AND o.received_at=(SELECT MAX(v.received_at) FROM finance_dataset_observations v
       WHERE v.dataset_id=o.dataset_id ${snapshotOnly?'':'AND v.observation_key=o.observation_key'} AND v.received_at<=?2)`;
@@ -754,9 +760,11 @@ export async function readDatasetSummary(db, id, options={}) {
     db.prepare('SELECT * FROM finance_dataset_state WHERE dataset_id=?1').bind(id).all(),
     readMacroReceipt(db,id,definition,knownAt),
   ]);
-  const state = metadata.results?.[0] || null;
+  const currentState = metadata.results?.[0] || null;
+  // Current poll status is not evidence of health at an earlier knowledge cutoff.
+  const state = historical ? null : currentState;
   const observations = bounded.observations.map(row=>applyMacroReceipt(row,macroReceipt));
-  const collectionStale = !state?.last_success_received_at || Date.now() - Date.parse(state.last_success_received_at) > definition.refreshSeconds * 1000;
+  const collectionStale = historical ? null : !state?.last_success_received_at || Date.now() - Date.parse(state.last_success_received_at) > definition.refreshSeconds * 1000;
   const latestObserved = Math.max(...observations.map((row) => Date.parse(row.observedAt) || 0), 0);
   const sourceLagSeconds = latestObserved ? Math.max(0, (Date.parse(knownAt) - latestObserved) / 1000) : null;
   const intervals = {'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400,'1w':604800};

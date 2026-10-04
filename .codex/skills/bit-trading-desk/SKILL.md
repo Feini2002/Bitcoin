@@ -1,6 +1,6 @@
 ---
 name: bit-trading-desk
-description: Project-specific workflow for the Bit Trading Desk / crypto data monitoring system. Use when Codex modifies, reviews, diagnoses, or plans work in this repository, especially files under js/, scripts/, cloudflare/, index.html, styles.css, or when handling PLANNED placeholders, market data APIs, indicator math, footprint/orderflow, Binance/Deribit/FRED/Yahoo data, Cloudflare workers, or static Pages-hosted frontend behavior.
+description: Project-specific workflow for the Bit Trading Desk / crypto data monitoring system. Use when Codex modifies, reviews, diagnoses, or plans work in this repository, especially files under js/, scripts/, cloudflare/, index.html, assets/css/styles.css, or when handling PLANNED placeholders, market data APIs, indicator math, footprint/orderflow, Binance/Deribit/FRED/Yahoo data, Cloudflare workers, or static Pages-hosted frontend behavior.
 ---
 
 # Bit Trading Desk
@@ -13,7 +13,7 @@ This repository uses Codex only. Read AGENTS.md for project constraints; retired
 
 ## Repository Map
 
-- `index.html`, `styles.css`: main shell and shared UI styling.
+- `index.html`, `assets/css/styles.css`: main shell and shared UI styling.
 - `js/app.js`, `js/nav.js`, `js/config.js`, `js/data-engine.js`: app shell, navigation, config, data orchestration and Worker-facing `fetch` calls.
 - `js/pages/`: feature pages such as overview, chart, orderflow, news, settings, calculator, environment agent, boardroom.
 - `js/chart/`: chart widgets, multi-timeframe tiles, indicator panes, indicator math.
@@ -60,7 +60,7 @@ Choose the smallest useful verification set:
 
 - Deployment gate: this system is fully deployed; after modifying any repository content, run `npm.cmd run build` before deployment. In this static app, `build` is the full verification gate (`verify:all`).
 - Server/data path changes: `npm run verify:api` for static-shell checks plus deployed Worker `/api/d1/status` (default origin aligns with `js/config.js`; override with `BITDESK_SMOKE_ORIGIN` if needed), and `npm run diagnose` for Binance vs Worker `/api/d1/klines` reachability (see `BITDESK_KLINE_API_BASE`).
-- Indicator math changes: `node scripts/verify-indicator-math.cjs`.
+- Indicator math changes: `node tests/unit/verify-indicator-math.cjs`.
 - Footprint/orderflow changes: `npm run verify:footprint`.
 - Frontend UI changes: inspect the affected route on production Pages (`https://bitcoin.feiniwork.com/`) when practical.
 - Cloudflare worker/schema changes: validate syntax/config in the checked-out repo before suggesting deployment.

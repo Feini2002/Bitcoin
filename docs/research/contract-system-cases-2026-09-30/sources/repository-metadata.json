@@ -1,0 +1,248 @@
+{
+  "queriedOn": "2026-09-30",
+  "timezone": "Asia/Shanghai",
+  "notice": "GitHub公开元数据快照；Star不是收益或质量证明；SHA仅冻结本轮研究，不是建议安装的发布版本",
+  "repositories": [
+    {
+      "url": "https://github.com/ccxt/ccxt",
+      "apiUrl": "https://api.github.com/repos/ccxt/ccxt",
+      "full_name": "ccxt/ccxt",
+      "stargazers_count": 44217,
+      "forks_count": 8878,
+      "pushed_at": "2026-09-30T07:40:30Z",
+      "created_at": "2017-05-14T15:41:56Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "headCommit": {
+        "sha": "80ca1ef6d89dc632fc63da8396fe4e317f12e3ac",
+        "date": "2026-09-30T07:40:25Z",
+        "message": "[Automated changes] JS files"
+      }
+    },
+    {
+      "url": "https://github.com/bmoscon/cryptofeed",
+      "apiUrl": "https://api.github.com/repos/bmoscon/cryptofeed",
+      "full_name": "bmoscon/cryptofeed",
+      "stargazers_count": 2913,
+      "forks_count": 766,
+      "pushed_at": "2026-09-28T21:24:40Z",
+      "created_at": "2017-12-16T12:35:23Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "other",
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "url": null,
+        "node_id": "MDc6TGljZW5zZTA="
+      },
+      "headCommit": {
+        "sha": "6cbd9b959f104fe970791d32444a2ef13ddacc2f",
+        "date": "2026-09-28T21:24:39Z",
+        "message": "Add changelog entry for version 3.0.2"
+      }
+    },
+    {
+      "url": "https://github.com/nautechsystems/nautilus_trader",
+      "apiUrl": "https://api.github.com/repos/nautechsystems/nautilus_trader",
+      "full_name": "nautechsystems/nautilus_trader",
+      "stargazers_count": 29525,
+      "forks_count": 3916,
+      "pushed_at": "2026-09-30T06:45:26Z",
+      "created_at": "2018-06-25T06:26:16Z",
+      "archived": false,
+      "default_branch": "develop",
+      "license": {
+        "key": "lgpl-3.0",
+        "name": "GNU Lesser General Public License v3.0",
+        "spdx_id": "LGPL-3.0",
+        "url": "https://api.github.com/licenses/lgpl-3.0",
+        "node_id": "MDc6TGljZW5zZTEy"
+      },
+      "headCommit": {
+        "sha": "2249c98829ea1f8d2598b3319c04371e145d5f8f",
+        "date": "2026-09-30T06:40:43Z",
+        "message": "Add shared-table catalog paths and typed coverage rows"
+      }
+    },
+    {
+      "url": "https://github.com/freqtrade/freqtrade",
+      "apiUrl": "https://api.github.com/repos/freqtrade/freqtrade",
+      "full_name": "freqtrade/freqtrade",
+      "stargazers_count": 54950,
+      "forks_count": 11380,
+      "pushed_at": "2026-09-29T17:08:47Z",
+      "created_at": "2017-05-17T23:48:53Z",
+      "archived": false,
+      "default_branch": "develop",
+      "license": {
+        "key": "gpl-3.0",
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "node_id": "MDc6TGljZW5zZTk="
+      },
+      "headCommit": {
+        "sha": "f6a7b767a31720b2f34059dd7b166b28abef3f09",
+        "date": "2026-09-29T05:23:36Z",
+        "message": "fix: remove coinex from online tests"
+      }
+    },
+    {
+      "url": "https://github.com/hummingbot/hummingbot",
+      "apiUrl": "https://api.github.com/repos/hummingbot/hummingbot",
+      "full_name": "hummingbot/hummingbot",
+      "stargazers_count": 20276,
+      "forks_count": 4973,
+      "pushed_at": "2026-09-28T10:50:41Z",
+      "created_at": "2019-04-02T21:41:52Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "headCommit": {
+        "sha": "9af100d6822da7d2d0291a906c730ef172284ee2",
+        "date": "2026-09-22T08:53:54Z",
+        "message": "Merge pull request #8467 from hummingbot/staging"
+      }
+    },
+    {
+      "url": "https://github.com/TauricResearch/TradingAgents",
+      "apiUrl": "https://api.github.com/repos/TauricResearch/TradingAgents",
+      "full_name": "TauricResearch/TradingAgents",
+      "stargazers_count": 109306,
+      "forks_count": 20988,
+      "pushed_at": "2026-09-29T06:15:10Z",
+      "created_at": "2024-12-28T03:31:08Z",
+      "archived": false,
+      "default_branch": "main",
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "headCommit": {
+        "sha": "8b22d43d01d9ddda5d686d093d5385884622f3de",
+        "date": "2026-09-29T06:15:09Z",
+        "message": "Merge pull request `docs: TradingAgents v0.5.2 release` #1450"
+      }
+    },
+    {
+      "url": "https://github.com/Tucsky/aggr",
+      "apiUrl": "https://api.github.com/repos/Tucsky/aggr",
+      "full_name": "Tucsky/aggr",
+      "stargazers_count": 1146,
+      "forks_count": 314,
+      "pushed_at": "2026-05-06T10:57:34Z",
+      "created_at": "2021-04-24T19:14:01Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "gpl-3.0",
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "node_id": "MDc6TGljZW5zZTk="
+      },
+      "headCommit": {
+        "sha": "41c1609ea3ac7c2dcf12ffba94ac78027e1c0012",
+        "date": "2026-05-03T17:38:49Z",
+        "message": "fix(binance-futures): restore liquidations #443 #444"
+      }
+    },
+    {
+      "url": "https://github.com/AI4Finance-Foundation/FinRobot",
+      "apiUrl": "https://api.github.com/repos/AI4Finance-Foundation/FinRobot",
+      "full_name": "AI4Finance-Foundation/FinRobot",
+      "stargazers_count": 8113,
+      "forks_count": 1370,
+      "pushed_at": "2026-09-28T11:24:54Z",
+      "created_at": "2024-02-27T02:30:30Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "headCommit": {
+        "sha": "2717499b8e30f242640af08c4ad9afd1113c2d45",
+        "date": "2026-09-28T11:24:51Z",
+        "message": "docs: lead with decision intelligence and the four-part principle"
+      }
+    },
+    {
+      "url": "https://github.com/jesse-ai/jesse",
+      "apiUrl": "https://api.github.com/repos/jesse-ai/jesse",
+      "full_name": "jesse-ai/jesse",
+      "stargazers_count": 8605,
+      "forks_count": 1252,
+      "pushed_at": "2026-09-28T21:17:43Z",
+      "created_at": "2018-11-09T10:38:44Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "headCommit": null
+    },
+    {
+      "url": "https://github.com/QuantConnect/Lean",
+      "apiUrl": "https://api.github.com/repos/QuantConnect/Lean",
+      "full_name": "QuantConnect/Lean",
+      "stargazers_count": 21827,
+      "forks_count": 5270,
+      "pushed_at": "2026-09-29T21:10:46Z",
+      "created_at": "2014-11-28T04:20:19Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "headCommit": null
+    },
+    {
+      "url": "https://github.com/TheFourGreatErrors/alpha-rptr",
+      "apiUrl": "https://api.github.com/repos/TheFourGreatErrors/alpha-rptr",
+      "full_name": "TheFourGreatErrors/alpha-rptr",
+      "stargazers_count": 706,
+      "forks_count": 85,
+      "pushed_at": "2026-06-19T10:10:21Z",
+      "created_at": "2020-08-17T21:49:21Z",
+      "archived": false,
+      "default_branch": "master",
+      "license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "headCommit": null
+    }
+  ]
+}

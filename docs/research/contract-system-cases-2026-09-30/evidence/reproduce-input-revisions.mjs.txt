@@ -1,0 +1,11 @@
+// 本轮固定合成输入实验原文；从仓库根目录运行，只导入当前纯装配函数，无网络和业务写入。
+import { buildHeatmapDesk, buildOrderflowDesk, buildContextDesk } from './cloudflare/finance/desk.mjs';
+import { FINANCE_DATASETS } from './cloudflare/finance/datasets.mjs';
+const now = Date.parse('2026-09-30T08:30:00Z');
+const liq={exchange:'binance',bucket_start:now-300000,long_notional:100,short_notional:50,long_count:1,short_count:1};
+const h1=buildHeatmapDesk([liq],now),h2=buildHeatmapDesk([{...liq,long_notional:1000}],now);
+const status={last_ok:1,last_trade_time:now-1000,last_run:now};
+const o1=buildOrderflowDesk(status,[{t:now-300000,delta:10,volume:100}],now),o2=buildOrderflowDesk(status,[{t:now-300000,delta:-40,volume:150}],now);
+const ds=(value)=>({id:'fred-dgs2',collectionStale:false,sourceStale:false,observations:[{observedAt:'2026-09-29T00:00:00Z',receivedAt:'2026-09-30T08:00:00Z',storedAt:'2026-09-30T08:00:01Z',sourceHost:'api.stlouisfed.org',values:{value}}]});
+const c1=buildContextDesk({'fred-dgs2':ds(4)},now),c2=buildContextDesk({'fred-dgs2':ds(5)},now);
+console.log(JSON.stringify({datasets:Object.keys(FINANCE_DATASETS).length,revisionCounterexamples:[{scope:'heatmap',sameRevision:h1.inputRevision===h2.inputRevision,before:h1.byExchange.binance.longNotional,after:h2.byExchange.binance.longNotional},{scope:'orderflow',sameRevision:o1.inputRevision===o2.inputRevision,before:o1.series[0].delta,after:o2.series[0].delta},{scope:'context',sameRevision:c1.inputRevision===c2.inputRevision,before:c1.groups.dailyRates.cards[0].value,after:c2.groups.dailyRates.cards[0].value}]},null,2));

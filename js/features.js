@@ -9,9 +9,9 @@ const FEATURE_STATE_BY_ROUTE = {
   overview: "local", settings: "connected",
   chart: "connected", orderflow: "connected", heatmap: "connected", derivatives: "connected",
   news: "connected", "news-analysis": "connected",
-  boardroom: "demo", calc: "demo", "agent-chief": "demo", "agent-env": "demo",
-  "agent-flow": "demo", "agent-deriv": "demo", "agent-risk": "demo",
-  premarket: "planned", archive: "planned", templates: "planned", draft: "planned", positions: "planned",
+  boardroom: "local", calc: "demo", "agent-chief": "local", "agent-env": "local",
+  "agent-flow": "local", "agent-deriv": "local", "agent-macro": "local", "agent-events": "local", "agent-risk": "demo", "boardroom-demo": "demo",
+  premarket: "planned", archive: "local", templates: "planned", draft: "planned", positions: "planned",
   journal: "planned", "daily-review": "planned", perf: "planned", patterns: "planned",
   "data-vault": "planned", playbook: "planned",
 };
@@ -24,7 +24,7 @@ function featureInfo(id) {
 function renderFeatureNotice(id) {
   const info = featureInfo(id);
   if (!info || id === "chart" || FEATURE_STATE_BY_ROUTE[id] === "local") return "";
-  if (FEATURE_STATE_BY_ROUTE[id] === "connected") return '<details class="feature-notice feature-notice--compact" data-testid="feature-notice"><summary>数据与使用说明</summary><div class="feature-notice-body"><span>' + info.note + '</span><a href="#/overview">研究总览</a></div></details>';
+  if (FEATURE_STATE_BY_ROUTE[id] === "connected") return '';
   return '<aside class="feature-notice" data-testid="feature-notice"><strong>' + info.label + '</strong><span>' + info.note + '</span><a href="#/overview">功能清单</a></aside>';
 }
 function renderDemoPreview(content) {

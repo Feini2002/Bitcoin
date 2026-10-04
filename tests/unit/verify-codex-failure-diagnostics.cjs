@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict'),fs=require('node:fs');
+(async()=>{
+ const {publicExecutionFailure,runStructured}=await import('../../scripts/research/codex-provider.mjs');
+ assert.equal(publicExecutionFailure({type:'item.completed',item:{type:'error',message:'Code Mode is unavailable'}}),null);
+ assert.equal(publicExecutionFailure({type:'turn.completed',usage:{}}),null);
+ const failure=publicExecutionFailure({type:'turn.failed',error:{message:'Connection closed at https://example.com/secret?token=hidden; retry exhausted',code:'stream_closed'}});
+ assert.equal(failure.type,'turn.failed');assert.equal(failure.code,'stream_closed');assert.match(failure.message,/Connection closed/);assert(!failure.message.includes('hidden'));assert(failure.message.length<=300);
+ const schema={type:'object',properties:{ok:{type:'boolean'}},required:['ok'],additionalProperties:false},authCheck=async()=>({available:true,auth:'chatgpt'}),events=[];
+ await assert.rejects(runStructured('diagnostic fixture',schema,{authCheck,onEvent:e=>events.push(e),execute:async(args,options)=>{options.onEvent({type:'item.completed',item:{id:'notice',type:'error',message:'Code Mode is unavailable'}});options.onEvent({type:'error',message:'stream interrupted'});options.onEvent({type:'turn.failed',error:{message:'stream closed',code:'stream_closed'}});return {code:1};}}),error=>{assert.equal(error.code,'CODEX_EXECUTION_FAILED');assert.equal(error.providerDiagnostic.message,'stream closed');assert.equal(error.providerDiagnostic.exitCode,1);return true;});
+ assert(events.some(e=>e.diagnostic?.message==='stream closed'));assert(!events.some(e=>e.diagnostic?.message?.includes('Code Mode')));
+ const success=await runStructured('diagnostic fixture',schema,{authCheck,execute:async(args,options)=>{options.onEvent({type:'item.completed',item:{id:'notice',type:'error',message:'Code Mode is unavailable'}});options.onEvent({type:'turn.completed',usage:{}});fs.writeFileSync(args[args.indexOf('--output-last-message')+1],JSON.stringify({ok:true}));return {code:0};}});
+ assert.deepEqual(success.output,{ok:true});
+ await assert.rejects(runStructured('diagnostic fixture',schema,{authCheck,execute:async()=>({code:1})}),error=>{assert.equal(error.providerDiagnostic.message,null,'unknown failure stays unknown');return true;});
+ const {TeamService}=await import('../../scripts/agent-team/service.mjs'),service=Object.create(TeamService.prototype);
+ service.clock=()=>Date.parse('2026-10-05T00:00:00Z');service.auth=async()=>({available:true,auth:'synthetic'});service.presence={state:()=> 'present'};service.store={journal:{runs:[]},saveJournal(){},write(){}};service.persist=()=>{};
+ service.provider=async(p,s,options)=>{options.onEvent({type:'turn.failed',diagnostic:failure});throw Object.assign(Error('execution failed'),{code:'CODEX_EXECUTION_FAILED',providerDiagnostic:{...failure,exitCode:1}});};
+ const row={id:'diagnostic-fixture',calls:0,config:{maxCalls:20,dailyCalls:100,timezone:'Asia/Shanghai'},callDays:{}},job={row,controller:new AbortController(),started:performance.now(),trace:[]};service.store.journal.runs.push(row);
+ await assert.rejects(service.model(job,'test','fixture',schema),/execution failed/);assert.equal(job.trace[0].providerDiagnostic.code,'stream_closed');assert.equal(job.trace[0].providerDiagnostic.exitCode,1);assert.equal(service.store.journal.paused,undefined,'ordinary execution failure is not an invented auth or quota pause');
+ console.log('PASS actual terminal diagnostics vs benign tool notices, success despite notice, unknown cause preservation and durable failed-call metadata; pure fixtures, no model calls');
+})().catch(error=>{console.error(error.stack);process.exitCode=1;});

@@ -1,0 +1,45 @@
+{
+  "queriedOn": "2026-10-02",
+  "purpose": "本地开发版智囊团的官方模型执行与浏览器存在性方案核验",
+  "snapshotKind": "公开 HTML 正文的局部原文摘录；不是完整网页或整站快照",
+  "limitations": [
+    "文档支持能力不等于本机版本、认证、额度和真实运行已通过",
+    "OpenAI developers 旧入口跳转至官方 learn.chatgpt.com；Markdown 响应工具读取不支持，改读 HTML",
+    "页面隐藏不等于关闭；连接存在也不能证明客户端仍在执行"
+  ],
+  "sources": [
+    {
+      "url": "https://learn.chatgpt.com/docs/non-interactive-mode",
+      "originalEntry": "https://developers.openai.com/codex/noninteractive",
+      "rawExcerpt": "--output-schema",
+      "verifiedFact": "官方非交互 CLI 文档包含结构化输出及复用本地认证说明",
+      "inference": "复用当前 CLI，加 Node 结构化只读工具回合；需另做本机能力验证"
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/auth",
+      "originalEntry": "https://developers.openai.com/codex/auth",
+      "rawExcerpt": "forced_login_method",
+      "verifiedFact": "文档区分 ChatGPT 登录与 API Key 使用方式",
+      "inference": "本任务只允许核实的 ChatGPT 登录，不能用 API Key 补足额度"
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/codex-sdk",
+      "originalEntry": "https://developers.openai.com/codex/sdk",
+      "rawExcerpt": "codex mcp-server",
+      "verifiedFact": "当前 SDK 文档说明旧 MCP server 命令移除",
+      "inference": "不采用旧 API Key + MCP 教程；首版复用已经存在的官方 CLI 入口"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API",
+      "rawExcerpt": "Timers such as setTimeout() are throttled in background/inactive tabs to help improve performance.",
+      "verifiedFact": "后台页面计时器可能节流",
+      "inference": "模型节奏由 Node 决定；存在性需要客户端确认，不能依靠前端定时器"
+    },
+    {
+      "url": "https://developer.chrome.com/docs/web-platform/page-lifecycle-api",
+      "rawExcerpt": "frozen",
+      "verifiedFact": "页面生命周期包含冻结与丢弃状态",
+      "inference": "方案采用租约失效暂停，不能承诺后台或睡眠期间永远运行"
+    }
+  ]
+}

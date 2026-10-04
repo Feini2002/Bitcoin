@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "bitdesk.runtime-case-review.v1",
+  "queriedOn": "2026-10-04",
+  "scope": "本机 Windows 研究进程观察与 cleanup_uncertain 恢复；不是新方案或生产授权",
+  "facts": [
+    "current-6 的开发服务与浏览器监督均因进程观察失败停止；保存的终态为 cleanup_uncertain，不能报告研究成功。",
+    "2026-10-04T05:37:13.140Z 的独立稀疏进程查询核对了 21 个原身份：原代均已退出，两个 PID 已由不同出生时间的进程复用，不执行终止。",
+    "既有每棵树分别避免重叠，但不同树每两秒各查询完整 CIM 元数据；单次失败即可触发全局停止。原错误没有完整超时字段，不能把 WMI 负载或五秒超时定为已证实根因。"
+  ],
+  "sources": [
+    {
+      "url": "https://learn.microsoft.com/en-us/powershell/module/cimcmdlets/get-ciminstance?view=powershell-5.1",
+      "title": "Microsoft Learn Get-CimInstance",
+      "opened": true,
+      "version": "PowerShell 5.1",
+      "verifiedFacts": ["Property 限定检索的属性，缩小实例数据量；输出仍显式选择 PID、父 PID 和 CreationDate。", "OperationTimeoutSec 默认零使用服务端默认，不能代替整个 Node 子进程的时间上限。"],
+      "projectInference": "仅检索身份所需元数据；同 Node 执行器共享正在进行的查询，已完成查询不缓存。"
+    },
+    {
+      "url": "https://nodejs.org/api/child_process.html",
+      "title": "Node.js Child process",
+      "opened": true,
+      "version": "当次最新网页返回 v26.10.0；本机是 v24.18.0，版本差异明确保留",
+      "verifiedFacts": ["execFile timeout 发送 killSignal，默认 SIGTERM。", "killed 只表示已发送终止信号，不能单独证明进程退出。"],
+      "localVersionEvidence": ".artifacts/goal-20261003/node24-execfile-facts.json",
+      "localVerifiedFact": "本机 v24.18.0 内置 child_process 源码在 close 事件调用 execFile exithandler。SHA-256 040a0305526268ada5937f6eadbe5cc8c8250639a963cf642b914d375a324afd。",
+      "projectInference": "只有 execFile 已经 settled 且错误明确为 timeout 的查询允许一次重查；权限、非零退出、输出上限、损坏 JSON 不重查，不返回旧身份表。",
+      "limits": ["latest-v24.x 和 v24.0.0 的指定版本网页当次不可访问；以本机实现核对 close 回调，不能把最新版页面当成本机版本证据。"]
+    }
+  ],
+  "implementation": ["scripts/dev/process-tree.mjs", "scripts/dev/run-bounded.cjs", "scripts/research/codex-provider.mjs", "scripts/agent-team/store.mjs", "scripts/agent-team/service.mjs", "js/agent-team/ui.mjs"],
+  "verification": ["tests/unit/verify-agent-process-observation.cjs", "tests/unit/verify-agent-cleanup-recovery.cjs", "真实设置页单次恢复、原身份与耐久审计核对；历史失败与报告不改写。"],
+  "limits": ["一次查询重查仍失败时保留硬暂停；不以旧快照冒充退出。", "恢复只核对记录的精确原身份，不按 PID 或进程名终止，不开启自动研究、不清空失败。", "这是已核验资料与本轮修订记录；真实浏览器和后续模型验收另记实际终态。"]
+}

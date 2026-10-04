@@ -39,6 +39,7 @@ export function mergeDocumentVersion(prev, next) {
 }
 
 export function eventDedupeKey(item) {
+  if(item?.url){try{const url=new URL(item.url);url.hash='';for(const key of [...url.searchParams.keys()])if(/^utm_|^(fbclid|gclid)$/.test(key))url.searchParams.delete(key);return `${String(item.source||'')}|url|${url.href}`;}catch{}}
   const title = String((item && item.title) || "").trim().toLowerCase().replace(/\s+/g, " ");
   const source = String((item && item.source) || "");
   const published = item && (item.publishedAt || item.officialAt || "");
@@ -50,6 +51,14 @@ async function sha256Short(input) {
   const h = await crypto.subtle.digest("SHA-256", buf);
   return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 26);
 }
+function sourceRaw(text){try{return JSON.parse(text||'{}');}catch{return {raw:text};}}
+function contentProjection(row,raw){
+  const sourceContent={...raw};
+  for(const key of ['source','title','link','url','pub','rssItemXml','contentDigest','contentSha256','dedupeKey','version','previousId','previousDigest','publishedAt','receivedAt'])delete sourceContent[key];
+  const sorted=value=>Array.isArray(value)?value.map(sorted):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,sorted(value[key])])):value;
+  return JSON.stringify(sorted({title:row.title,identity:eventDedupeKey(row),summary:row.summary||'',publishedAt:row.publishedAt??null,sourceContent}));
+}
+async function contentSha256(text){const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)));return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');}
 
 function xmlText(el, tag) {
   const re = new RegExp(`<${tag}[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?</${tag}>`, "i");
@@ -61,6 +70,7 @@ function xmlText(el, tag) {
   }
   return t.replace(/<[^>]+>/g, "").trim();
 }
+function xmlRaw(el,tag){return new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\/${tag}>`,'i').exec(el)?.[1]||'';}
 
 async function parseRssItems(xml, source, category) {
   const items = [];
@@ -68,42 +78,45 @@ async function parseRssItems(xml, source, category) {
   let m;
   while ((m = re.exec(xml))) {
     const block = m[1];
+    if(new TextEncoder().encode(block).byteLength>256*1024)throw Error('RSS original item exceeds local 256KB limit');
     const title = xmlText(block, "title");
     const link = xmlText(block, "link");
     const pub = xmlText(block, "pubDate");
     if (!title) continue;
-    let publishedAt = Date.now();
+    let publishedAt = null;
     if (pub) {
       const t = Date.parse(pub);
       if (!Number.isNaN(t)) publishedAt = t;
     }
     const url = link || "";
-    const hid = await sha256Short(`rss:${source}:${url}:${title}:${publishedAt}`);
+    const hid = await sha256Short(`rss:${source}:${url}:${title}:${pub}`);
     items.push({
       id: `rss:${hid}`,
       source,
       sourceType: "rss",
       category,
       title: title.slice(0, 500),
-      summary: "",
+      summary: (xmlText(block,'description')||xmlText(block,'content:encoded')).slice(0,800),
       url: url || null,
       publishedAt,
       fetchedAt: Date.now(),
       severity: "mid",
       confidence: 0.65,
-      rawJson: JSON.stringify({ source, title, link: url, pub }),
+      rawJson: JSON.stringify({ source, title, link: url, pub,description:xmlText(block,'description'),contentEncoded:xmlText(block,'content:encoded'),descriptionRaw:xmlRaw(block,'description'),contentEncodedRaw:xmlRaw(block,'content:encoded'),rssItemXml:block }),
     });
   }
   return items;
 }
 
 export async function fetchCoinDeskRss() {
-  const res = await fetchWithTimeout(COINDESK_RSS, {
-    headers: { Accept: "application/rss+xml, application/xml, text/xml, */*" },
-  });
-  if (!res.ok) throw new Error(`CoinDesk RSS HTTP ${res.status}`);
-  const xml = await res.text();
-  return parseRssItems(xml, "CoinDesk", "Crypto");
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),FETCH_TIMEOUT_SOURCES_MS);
+  try{
+    const res=await fetch(COINDESK_RSS,{signal:ctrl.signal,headers:{Accept:'application/rss+xml, application/xml, text/xml, */*'}});
+    if(!res.ok)throw Error(`CoinDesk RSS HTTP ${res.status}`);
+    const reader=res.body?.getReader(),decoder=new TextDecoder();let xml='',bytes=0;
+    if(reader){try{while(true){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>2*1024*1024){await reader.cancel();throw Error('RSS body exceeds local 2MB limit');}xml+=decoder.decode(part.value,{stream:true});}xml+=decoder.decode();}finally{reader.releaseLock();}}
+    return await parseRssItems(xml,'CoinDesk','Crypto');
+  }finally{clearTimeout(timer);}
 }
 
 export async function fetchFinnhubEconomicCalendar(env) {
@@ -267,19 +280,27 @@ export async function pruneOldItems(db, days = 7) {
   await db.prepare(`DELETE FROM yuqing_snapshots WHERE captured_at < ?`).bind(cutoffIso).run();
 }
 
-async function insertItemsBatch(db, rows) {
+export async function insertItemsBatch(db, rows) {
   if (!rows.length) return { attempted: 0, changes: 0 };
   const stmt = db.prepare(
     `INSERT OR IGNORE INTO yuqing_items (id, source, source_type, category, title, summary, url, published_at, fetched_at, severity, confidence, raw_json)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   let changes = 0;
+  const errors=[];
   for (const r of rows) {
     if (!r.id) continue;
     try {
+      const key=eventDedupeKey(r),raw=sourceRaw(r.rawJson),projection=contentProjection(r,raw),digest=await contentSha256(projection);
+      const prior=await db.prepare(`SELECT id,source,title,summary,url,published_at,raw_json FROM yuqing_items WHERE (source = ? AND ((url = ? AND url IS NOT NULL) OR CASE WHEN json_valid(raw_json) THEN json_extract(raw_json,'$.dedupeKey') ELSE NULL END = ?)) OR id = ? ORDER BY fetched_at DESC, id DESC LIMIT 1`).bind(r.source,r.url||null,key,r.id).first();
+      const previous=sourceRaw(prior?.raw_json);
+      if(prior&&contentProjection({source:prior.source,title:prior.title,summary:prior.summary,url:prior.url,publishedAt:prior.published_at},previous)===projection)continue;
+      const version=prior?(Number(previous.version)||1)+1:1;
+      const versionId=prior?`${r.id}:v:${version}:${digest.slice(0,26)}`:r.id;
+      const versionRaw=JSON.stringify({...raw,contentDigest:r.contentDigest||documentContentDigest({title:r.title,url:r.url,summary:r.summary}),contentSha256:digest,dedupeKey:key,version,previousId:prior?.id||null,previousDigest:previous.contentSha256||previous.contentDigest||null,publishedAt:r.publishedAt??null,receivedAt:r.fetchedAt??null});
       const out = await stmt
         .bind(
-          r.id,
+          versionId,
           r.source,
           r.sourceType,
           r.category,
@@ -290,20 +311,13 @@ async function insertItemsBatch(db, rows) {
           r.fetchedAt != null ? Number(r.fetchedAt) : Date.now(),
           r.severity || "mid",
           r.confidence != null ? Number(r.confidence) : null,
-          (function attachVersionRaw(row) {
-            let parsed = {};
-            try { parsed = row.rawJson ? JSON.parse(row.rawJson) : {}; } catch (_) { parsed = { raw: row.rawJson }; }
-            parsed.contentDigest = row.contentDigest || parsed.contentDigest || documentContentDigest({ title: row.title, url: row.url, summary: row.summary });
-            parsed.dedupeKey = row.dedupeKey || parsed.dedupeKey || eventDedupeKey(row);
-            parsed.version = row.version || parsed.version || 1;
-            return JSON.stringify(parsed);
-          })(r),
+          versionRaw,
         )
         .run();
       changes += out && out.meta && out.meta.changes != null ? Number(out.meta.changes) : 0;
-    } catch (_) {}
+    } catch (error) {errors.push({id:r.id,message:String(error?.message||error)});}
   }
-  return { attempted: rows.length, changes };
+  return { attempted: rows.length, changes,errors };
 }
 
 export async function insertSnapshotRow(db, snapshotJson, sourceErrors) {
@@ -383,6 +397,7 @@ export async function ingestFactPool(env, hooks) {
   let insertResult = { attempted: 0, changes: 0 };
   try {
     insertResult = await insertItemsBatch(db, unique);
+    for(const error of insertResult.errors||[])ingestErrors.push({step:'item_version_insert',...error});
   } catch (e) {
     ingestErrors.push({ step: "items_insert", message: String(e && e.message ? e.message : e) });
   }

@@ -1,0 +1,59 @@
+{
+  "queriedAt": "2026-09-30T09:22:00.874Z",
+  "metadata": {
+    "full_name": "binance/binance-public-data",
+    "ref": "master",
+    "commitSha": null,
+    "commitResolution": "GitHub metadata API returned 403; commit connector unavailable"
+  },
+  "files": [
+    {
+      "repo": "binance/binance-public-data",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/binance/binance-public-data/master/README.md",
+      "localPath": "docs/research/contract-system-cases-2026-09-30/sources/binance--binance-public-data--README.md.txt",
+      "accessedAt": "2026-09-30T09:21:58.920Z",
+      "ok": true,
+      "ref": "master",
+      "commitSha": null
+    },
+    {
+      "repo": "binance/binance-public-data",
+      "path": "python/README.md",
+      "url": "https://raw.githubusercontent.com/binance/binance-public-data/master/python/README.md",
+      "localPath": "docs/research/contract-system-cases-2026-09-30/sources/binance--binance-public-data--python__README.md.txt",
+      "accessedAt": "2026-09-30T09:21:59.976Z",
+      "ok": true,
+      "ref": "master",
+      "commitSha": null
+    },
+    {
+      "repo": "binance/binance-public-data",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/binance/binance-public-data/master/LICENSE",
+      "ok": false,
+      "error": "HTTP 404 https://raw.githubusercontent.com/binance/binance-public-data/master/LICENSE",
+      "ref": "master",
+      "commitSha": null
+    }
+  ],
+  "probes": [
+    {
+      "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BTCUSDT/BTCUSDT-aggTrades-2024-07-04.zip",
+      "method": "HEAD",
+      "accessedAt": "2026-09-30T09:21:59.976Z",
+      "status": 200,
+      "contentLength": "22832921",
+      "body": null
+    },
+    {
+      "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BTCUSDT/BTCUSDT-aggTrades-2024-07-04.zip.CHECKSUM",
+      "method": "GET",
+      "accessedAt": "2026-09-30T09:21:59.977Z",
+      "status": 200,
+      "contentLength": "99",
+      "body": "f7feb5ae9d11f9451ac558163061ec0bb5c34fdf31bb0964461040bba68d4c66  BTCUSDT-aggTrades-2024-07-04.zip\n"
+    }
+  ],
+  "limitations": "Only metadata, documentation, checksum text and ZIP HEAD were read. ZIP bytes and CSV rows were not downloaded or verified; checksum is not proof of semantic completeness."
+}

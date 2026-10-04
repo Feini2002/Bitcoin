@@ -17,7 +17,7 @@ const analysisState = {
 };
 
 const analysisModuleRegistry = [
-  { key: "riskRegime", label: "资金风险温度", hint: "Risk-On / Risk-Off 资金面状态", planned: false },
+  { key: "riskRegime", label: "资金风险温度", hint: "历史 Risk-On / Risk-Off 分类", planned: false },
   { key: "hardDataMatrix", label: "硬数据校验矩阵", hint: "价格、衍生品、强平、宏观代理", planned: false },
   { key: "narrativeValidation", label: "叙事定价验证", hint: "只验证可被资金跟随的事件", planned: false },
   { key: "catalystCalendar", label: "精准催化剂时间轴", hint: "只渲染确定 timestamp", planned: true },
@@ -287,7 +287,7 @@ function renderCalendar(report) {
         </div>
         <div class="news-calendar-score">
           <strong>${Number(event.impactScore) || 0}</strong>
-          <span>置信 ${trust}%</span>
+          <span>旧稿评分 ${event.confidence == null ? "未知" : trust+"%"} · 未校准</span>
           ${url}
         </div>
       </div>`;
@@ -415,21 +415,23 @@ function analysisRegimeMeta(row) {
   const q = analysisQuality(row);
   const hasReport = !!(row && row.report);
   const marketOk = analysisPricePathOk(row) && (q.marketSnapshotOk === true || analysisMarketSnapshot(row).ok === true);
-  const rawScore = Number(state.score);
+  const rawScore = state.score == null || state.score === "" ? NaN : Number(state.score);
   const score = Number.isFinite(rawScore) ? Math.max(0, Math.min(100, Math.round(rawScore))) : null;
   let code = "PENDING";
   if (hasReport) {
-    if (!marketOk) code = "DATA_GAP";
+    if (score == null) code = "UNRATED";
+    else if (!marketOk) code = "DATA_GAP";
     else if (score != null && score >= 66) code = "RISK_ON";
     else if (score != null && score <= 42) code = "RISK_OFF";
     else code = "RISK_NEUTRAL";
   }
   const labels = {
-    PENDING: "等待报告",
+    PENDING: "等待历史报告",
+    UNRATED: "旧稿评分未知",
     DATA_GAP: "数据缺口",
-    RISK_ON: "Risk-On 确认中",
-    RISK_OFF: "Risk-Off 警戒",
-    RISK_NEUTRAL: "中性验证",
+    RISK_ON: "旧稿 Risk-On 分类",
+    RISK_OFF: "旧稿 Risk-Off 分类",
+    RISK_NEUTRAL: "旧稿中性分类",
   };
   return {
     code,
@@ -526,22 +528,22 @@ function renderAnalysisRiskTemperature(row) {
       <div class="news-panel-head daily-module-head">
         <div>
           <span class="news-section-kicker">资金风险温度</span>
-          <h3>Risk-On / Risk-Off 资金面状态</h3>
-          <p class="daily-module-subtitle">顶部 Gauge 只看真实市场切片与风险偏好，不再复用事件页的信息热度。</p>
+          <h3>历史 Risk-On / Risk-Off 分类</h3>
+          <p class="daily-module-subtitle">旧稿分类与评分未经本系统校准，不作为当前风险判断。</p>
         </div>
       </div>
       <div class="daily-temperature-body analysis-risk-body">
         <div class="daily-temperature-score analysis-risk-score" aria-label="资金风险温度 ${meta.score == null ? "待验证" : `${meta.score} 分`}">
-          <strong>${meta.score == null ? "--" : meta.score}</strong>
+          <strong>${meta.score == null ? "未知" : meta.score}</strong>
           <span>/ 100</span>
         </div>
         <div class="daily-temperature-main">
-          <p class="daily-temperature-summary">${analysisEscapeHtml(meta.summary)}</p>
+          <p class="daily-temperature-summary">本区保留旧报告分类；旧执行已退役。当前判断请进入首席决策台，原解释保留在历史原件中。</p>
           <div class="daily-temperature-meta analysis-risk-meta">
             <span class="daily-temp-meta-info"><b>macro_regime</b>${analysisEscapeHtml(meta.code)}</span>
             <span class="${meta.marketOk ? "daily-temp-meta-ok" : "daily-temp-meta-warn"}"><b>market_snapshot_ok</b>${meta.marketOk ? "true" : "false"}</span>
             <span><b>状态</b>${analysisEscapeHtml(meta.label)}</span>
-            <span><b>置信</b>${pctText(meta.confidence)}</span>
+            <span><b>资格</b>旧稿评分未校准</span>
           </div>
           <div class="analysis-anchor-grid">
             ${rows
@@ -716,7 +718,7 @@ function analysisCalendarRows(row) {
       startsAtUtc: "",
       precision: "planned",
       sourceName: "PLANNED",
-      confidence: 0,
+      confidence: null,
       impactScore: 0,
       assets: ["CPI", "FOMC", "代币解锁"],
       why: "本模块只渲染确定 timestamp；没有外部结构化时间时保持空框架。",
@@ -749,7 +751,7 @@ function renderAnalysisCalendar(row) {
         </div>
         <div class="news-calendar-score">
           <strong>${Number(event.impactScore) || "--"}</strong>
-          <span>置信 ${trust}%</span>
+          <span>旧稿评分 ${event.confidence == null ? "未知" : trust+"%"} · 未校准</span>
           <span>${analysisEscapeHtml(event.sourceName || "来源待定")}</span>
         </div>
       </div>`;
@@ -858,14 +860,14 @@ function renderAnalysisAiPremium(row) {
           title: "等待科技叙事进入资金面复核",
           relevance: "AI/科技新闻只有在风险偏好或资金流出现同向变化时，才提升为市场变量。",
           watch: "等待事件一览 AI 情报站和市场快照同时可用。",
-          confidence: 0,
+          confidence: null,
         },
       ];
   return safeItems
     .map(
       (item) => `<article class="daily-ai-card analysis-ai-card">
         <h4>${analysisEscapeHtml(item.title || "科技叙事")}</h4>
-        <span class="daily-ai-date">置信：${pctText(Number(item.confidence || 0) * 100)}</span>
+        <span class="daily-ai-date">旧稿评分：${item.confidence == null ? "未知" : pctText(Number(item.confidence) * 100)} · 未校准</span>
         <p><strong>叙事</strong>${analysisEscapeHtml(item.relevance || "等待叙事摘要。")}</p>
         <p><strong>验证点</strong>${analysisEscapeHtml(item.watch || "等待资金面确认。")}</p>
       </article>`,
@@ -1086,7 +1088,7 @@ function renderYuqingReport(row) {
             <strong>${analysisEscapeHtml(subLine)}</strong>
             <span class="daily-report-trigger-tz">Asia/Shanghai</span>
           </div>
-          <p>世界新闻与真实金融数据的交叉验证器：只把可被资金面确认的叙事传给下游 Agent。</p>
+          <p>历史叙事报告 · 原稿日期见上方。本轮未重新核实，旧评分未校准；旧模型执行已退役。当前研究请进入首席决策台。</p>
         </div>
       </div>
       <div class="news-command-actions">

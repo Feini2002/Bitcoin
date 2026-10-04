@@ -1,0 +1,45 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const {DatabaseSync}=require('node:sqlite');
+(async()=>{
+  const {readDatasetSummary}=await import('../../cloudflare/finance/dataset-store.mjs');
+  const {buildContextDesk}=await import('../../cloudflare/finance/desk.mjs');
+  const sqlite=new DatabaseSync(':memory:');
+  sqlite.exec(fs.readFileSync('cloudflare/finance/dataset-schema.sql','utf8'));
+  const insert=sqlite.prepare(`INSERT INTO finance_dataset_observations
+    (dataset_id,observation_key,observed_at,time_precision,received_at,stored_at,source_host,ingestion_mode,value_json)
+    VALUES(?,?,?,?,?,?,?,?,?)`);
+  const put=(id,key,observed,receipt,values)=>insert.run(id,key,observed,observed?'millisecond':'unknown',receipt,receipt,'fapi.binance.com','scheduled',JSON.stringify(values));
+  for(const time of ['04:00','12:00'])put('binance-perp-funding',time,'2026-09-30T'+time+':00.000Z','2026-09-30T17:59:00.000Z',{fundingRate:0.0001});
+  put('binance-perp-premium','quote','2026-09-30T17:59:55.000Z','2026-09-30T17:59:55.000Z',{markPrice:83000,lastFundingRate:0.0001,nextFundingTime:'2026-09-30T20:00:00.000Z'});
+  put('binance-perp-funding-info','2026-09-30T17:30:00.000Z',null,'2026-09-30T17:30:00.000Z',{adjustmentReported:true,record:{symbol:'BTCUSDT',fundingIntervalHours:8}});
+  put('binance-perp-funding-info','2026-09-30T17:59:00.000Z',null,'2026-09-30T17:59:00.000Z',{adjustmentReported:true,record:{symbol:'BTCUSDT',fundingIntervalHours:4}});
+  const db={prepare(sql){return {args:[],bind(...args){this.args=args;return this;},async all(){return {results:sqlite.prepare(sql).all(...this.args)};},async first(){return sqlite.prepare(sql).get(...this.args)||null;}};}};
+  const ids=['binance-perp-premium','binance-perp-funding','binance-perp-funding-info'];
+  const load=async cutoff=>Object.fromEntries(await Promise.all(ids.map(async id=>[id,await readDatasetSummary(db,id,{knownAt:cutoff})])));
+  const cutoff='2026-09-30T18:00:00.000Z';
+  const datasets=await load(cutoff),meta=datasets['binance-perp-funding-info'];
+  assert.equal(meta.observations.length,1);
+  assert.equal(meta.observations[0].observedAt,null);
+  assert.equal(meta.observations[0].values.record.fundingIntervalHours,4);
+  assert.equal(meta.state,null,'current collector health is excluded from historical summary');
+  const first=buildContextDesk(datasets,Date.parse(cutoff));
+  assert.equal(first.contract.funding.fundingIntervalHours,4);
+  assert.equal(first.contract.funding.sourceStale,true,'missing 16:00 settlement cannot be hidden by older 8h spacing');
+  assert.equal(first.contract.funding.reason,'latest_scheduled_settlement_missing');
+  console.log('PASS receipt-known/source-time-unknown metadata survives SQL cutoff; 4h schedule detects missing settlement');
+  const earlier=await readDatasetSummary(db,'binance-perp-funding-info',{knownAt:'2026-09-30T17:55:00.000Z'});
+  assert.equal(earlier.observations[0].values.record.fundingIntervalHours,8,'future configuration receipt excluded');
+  put('binance-perp-funding-info','2026-09-30T18:00:00.000Z',null,'2026-09-30T18:00:00.000Z',{adjustmentReported:true,record:{symbol:'BTCUSDT',fundingIntervalHours:4,adjustedFundingRateCap:0.01}});
+  const second=buildContextDesk(await load(cutoff),Date.parse(cutoff));
+  assert.notEqual(first.inputRevision,second.inputRevision,'selected schedule receipt/content belongs to context lineage');
+  assert.equal(second.contract.funding.fundingSchedule.sourceObservedAt,null);
+  assert.equal(second.contract.funding.fundingSchedule.receivedAt,cutoff);
+  assert.ok(second.contract.funding.fundingSchedule.contentHash);
+  put('binance-perp-funding-info','2026-09-30T18:05:00.000Z',null,'2026-09-30T18:05:00.000Z',{adjustmentReported:true,record:{symbol:'BTCUSDT',fundingIntervalHours:1}});
+  const third=buildContextDesk(await load(cutoff),Date.parse(cutoff));
+  assert.equal(second.inputRevision,third.inputRevision,'later metadata cannot change already-selected cutoff content');
+  sqlite.close();
+  console.log('PASS schedule provenance changes content revision; future receipt stays excluded');
+})().catch(error=>{console.error(error);process.exitCode=1;});

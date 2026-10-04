@@ -2,15 +2,21 @@
   "files": [
     "index.html",
     "Bit交易决策平台.html",
-    "styles.css",
-    "desk-ui.css",
-    "btc.svg"
+    "assets/css/styles.css",
+    "assets/css/desk-ui.css",
+    "assets/css/research-team.css",
+    "assets/css/agent-team.css",
+    "assets/css/user-workspace.css",
+    "assets/icons/btc.svg",
+    "js/vendor/lightweight-charts-LICENSE.txt",
+    "js/vendor/lightweight-charts-NOTICE.txt"
   ],
   "directories": [
     {
       "path": "js",
       "extensions": [
-        ".js"
+        ".js",
+        ".mjs"
       ]
     }
   ]

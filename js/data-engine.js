@@ -557,6 +557,7 @@ const DataEngine = {
    * scope: chart | orderflow | heatmap | context
    */
   _deskReads: new Map(),
+  _deskArtifacts: new WeakMap(),
   _chartWindows: new Map(),
   _deskQueue: [],
   _deskActive: 0,
@@ -657,8 +658,11 @@ const DataEngine = {
           await res.body?.cancel();
           throw error;
         }
-        const data = await res.json();
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        if (bytes.byteLength > 4 * 1024 * 1024) throw new Error('desk 载荷超过读取上限');
+        const data = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
         if (!data || typeof data !== 'object' || !data.schemaVersion) throw new Error('desk 载荷缺少 schemaVersion');
+        this._deskArtifacts.set(data, { bytes, url, receivedAt: new Date().toISOString(), status: res.status });
         return data;
       } catch (error) {
         if (signal.aborted) throw new DOMException('读取已取消', 'AbortError');
@@ -681,6 +685,11 @@ const DataEngine = {
         unsub();
       }
     }
+  },
+
+  readDeskArtifact(data) {
+    const artifact = this._deskArtifacts.get(data);
+    return artifact ? { ...artifact, bytes: new Uint8Array(artifact.bytes) } : null;
   },
 
   async fetchDesk(scope, opts = {}) {

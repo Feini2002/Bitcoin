@@ -2,11 +2,13 @@
 
 [资料总纲](README.md) · [完整主题表](READING_ROUTES.md) · [仓库对应表](REPOSITORY_MAP.md)
 
-**当前开发入口：** [四页数据工作台方案](../repository-development-plan-2026-09-27.md)。云端已于 2026-09-29 恢复，实时状态用 `cloud:status` 核对；本轮依据见[恢复与持续采集核验](../workbench-recovery-2026-09-29.md)。[架构核对](../repository-architecture-review-2026-09-27.md)保存早期依据。第二批 [EXECUTION_MASTER.md](batch2-execution/EXECUTION_MASTER.md) 仅作历史追溯；第一批归档保持原位。
+**2026-10-04 当前产品主线：** Agent 架构、首席、独立岗位、跨轮记忆与审核，先读[Agent 架构主方案](../agent-team-product-plan-2026-10-02.md)及[实施验收](../agent-team-implementation-2026-10-02.md)，或查询 `node scripts/research-context.cjs "Agent 架构"`。本地新执行器只在开发版使用官方登录额度；旧云端模型及旧窗口执行接口仍退役；新的类型化current/window/narrative由同一Agent执行器处理。下面数据开发与旧 AI 对话说明是各自专题，不能覆盖当前 Agent 主线。
+
+**当前开发入口：** [Agent主方案](../agent-team-product-plan-2026-10-02.md) → [配套总架构V2](../market-first-frontend-master-plan-2026-10-02.md) → [实施与验收](../agent-team-implementation-2026-10-02.md)。本轮已选工作包以本地实际成果结算，自动OFF；不从旧发布/恢复待办重开任务。[四页数据方案](../repository-development-plan-2026-09-27.md)、[架构核对](../repository-architecture-review-2026-09-27.md)及第二批[执行总纲](batch2-execution/EXECUTION_MASTER.md)只作有日期的依据和追溯。用户另问云端状态/开关时再按专用说明执行。
 
 ## 最短使用路径
 
-研究总览、事件一览、舆情分析、模块提示词及无 Key 分析，先读[研究工作台重构记录](../product-redesign-2026-09-29.md)和[AI 对话研究工作流](../ai-research-workflow.md)。使用统一报告协议；网站不恢复模型任务，导入默认只校验，显式保存新 ID。
+研究总览、事件一览、舆情分析、模块提示词及无 Key 分析，先读[研究工作台重构记录](../product-redesign-2026-09-29.md)和[AI 对话研究工作流](../ai-research-workflow.md)。此处是旧云端报告/人工导入工作流，统一报告协议、旧生成仍退役，导入默认只校验、显式保存新ID；新本地团队研究及Prompt用上方Agent契约。
 
 币安插件、Binance MCP、插件对账或插件补查，先读 [插件与四页工作台复用手册（2026-09-27）](../binance-plugin-workbench-research-2026-09-27.md)。包含实际可调用工具、公开样本和官方/社区来源；研究建议不自动变成开发或生产写入任务。
 
@@ -44,7 +46,7 @@ Cloudflare 费用治理、断线补缺、收盘写入顺序或宏观修订去重
 
 ## 文件级目录怎样维护
 
-- [routing.json](routing.json)保存功能路由的关键词、首读资料、章节、代码起点、条件关联和已有验证命令，是查询结果的来源；当前开发路由为 `current-plan`。
+- [routing.json](routing.json)保存功能路由的关键词、首读资料、章节、代码起点、条件关联和已有验证命令，是查询结果的来源；当前产品首读为 `agent-architecture` 与 `market-first-frontend`；`current-plan`汇总同一两份文档及验收，旧四页计划仅用于追溯。
 - [FILE_CATALOG.json](FILE_CATALOG.json)保存资料用途摘要、批次、权威等级和Markdown章节行号。文件数以 `--check` 为准；它由程序读取，不建议整个放入对话上下文。旧第二批总任务/日志标为历史，当前方案可通过 `--file LOCAL-NEXT` 获取。
 - 编目范围：本地核验记录5份（`docs/research/*.md`）、第一批219份归档＋2份仓库基线、第二批自有文件63份（`00_current`/`01_execution`/`02_contracts`/`03_validation`/`04_evidence`/`05_release`/`99_history`＋总任务与日志）、原始ZIP。第二批的`90_reference`与第一批逐路径完全重复，只保留指针，不重复编目。
 - 权威等级：本地核验 > 第一批设计 > 备选参考 > 仅追溯；查询输出直接标注。冲突时按此顺序取舍，并在记录中写明依据；等级只表示可信度排序，不表示已授权执行。

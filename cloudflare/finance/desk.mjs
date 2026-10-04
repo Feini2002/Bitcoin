@@ -1,8 +1,11 @@
-import { prepareBoundedObservations, readDatasetSummary, historyBaselineStatement } from './dataset-store.mjs';
+import { prepareBoundedObservations, readDatasetSummary, readDataset, historyBaselineStatement } from './dataset-store.mjs';
 import { FINANCE_DATASETS } from './datasets.mjs';
 import { klineOpenAt } from '../kline-recovery.mjs';
+import identity from '../../js/content-identity.js';
+import { readAggregateAsKnown } from './aggregate-evidence.mjs';
+import { optionCoverage } from './options-coverage.mjs';
 
-export const DESK_SCHEMA_VERSION = '2026-09-27.1';
+export const DESK_SCHEMA_VERSION = '2026-09-30.3';
 export const DESK_SCOPES = ['chart', 'orderflow', 'heatmap', 'context'];
 export const FORBIDDEN_COPY = [
   'DXY', '已接入', '主链路达标', '拥挤', '占优', '挤压', '清算池',
@@ -149,11 +152,17 @@ export function buildChartDeskFromTape(tape, interval, now = Date.now()) {
   });
 }
 
-function inputRevision(parts) {
-  const text = JSON.stringify(parts);
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
-  return (h >>> 0).toString(16);
+const REVISION_ENVELOPE_KEYS = new Set(['inputRevision', 'inputRevisionMethod', 'generatedAt', 'readAt', 'sourceLagSeconds', 'asOf']);
+function revisionContent(value) {
+  // These are this desk's own envelope fields. Native payloads can use the
+  // same names for real source versions or timestamps, so never strip them
+  // recursively from observations, values, lineage or evidence.
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !REVISION_ENVELOPE_KEYS.has(key)));
+}
+
+export function withContentRevision(desk) {
+  return { ...desk, inputRevisionMethod: 'desk-content.v3/' + identity.methodVersion,
+    inputRevision: identity.contentId(revisionContent(desk)) };
 }
 
 function quality(status, reason) {
@@ -165,18 +174,6 @@ function sanitizeDeskReason(reason) {
   if (!raw) return null;
   if (/<!DOCTYPE|<html|Cloudflare|Access Denied|error code:/i.test(raw)) return 'upstream_html_error';
   return raw.replace(/\s+/g, ' ').slice(0, 80);
-}
-
-function chartEvidence(series, inWindowGaps) {
-  return {
-    series: series.map((bar) => ({
-      t: bar.t, o: bar.o, h: bar.h, l: bar.l, c: bar.c, v: bar.v,
-      quoteVolume: bar.quoteVolume, trades: bar.trades, takerBuyBase: bar.takerBuyBase, takerBuyQuote: bar.takerBuyQuote,
-      origin: bar.origin, sourceVerification: bar.sourceVerification, effectiveReceivedAt: bar.effectiveReceivedAt,
-      closed: bar.closed, finality: bar.finality, closureBasis: bar.closureBasis,
-    })),
-    inWindowGaps,
-  };
 }
 
 export function finishChartDesk({
@@ -231,7 +228,7 @@ export function finishChartDesk({
   }
   const venue = !clearStale && (authoritative || auth.ok || visible.some((bar) => bar.sourceVerification === 'verified')) ? 'binance-usdm' : null;
   const verifiedCount = visible.filter((bar) => bar.sourceVerification === 'verified').length;
-  return {
+  return withContentRevision({
     schemaVersion: DESK_SCHEMA_VERSION,
     asOf,
     asKnownMode: 'system_observed',
@@ -267,14 +264,13 @@ export function finishChartDesk({
     units: { price: 'USDT/BTC', baseVolume: 'BTC', quoteVolume: 'USDT' },
     baselineAt: null,
     windowEligible: false,
-    inputRevision: inputRevision(chartEvidence(visible, inWindowGaps)),
     quality: quality(status, reason),
     pricePathAvailable,
     tradingNarrative: false,
     interval,
     series: visible,
     gap: status === 'fail' ? { reason } : (inWindowGaps.length ? { reason: 'in_window_gap' } : null),
-  };
+  });
 }
 
 export function buildChartDesk(dataset, interval, now = Date.now()) {
@@ -295,8 +291,13 @@ function clockCard(id, label, dataset, extra = {}) {
     label,
     datasetId: id,
     referencePeriod: latest ? latest.observedAt : null,
+    referenceDate: latest?.timePrecision === 'day' ? latest.observedAt?.slice(0, 10) : null,
+    provider: latest?.sourceRevision?.provider || dataset?.provider || FINANCE_DATASETS[id]?.provider || null,
     publicAvailableAt: latest ? latest.publicAvailableAt : null,
     receivedAt: latest ? latest.receivedAt : dataset && dataset.state ? dataset.state.last_success_received_at : null,
+    effectiveReceivedAt: latest?.effectiveReceivedAt ?? latest?.receivedAt ?? null,
+    storedAt: latest?.storedAt ?? null,
+    sourceRevision: latest?.sourceRevision ?? null,
     units: extra.units || (dataset && dataset.fields ? dataset.fields : {}),
     value: extra.value != null ? extra.value : values.value,
     values,
@@ -328,10 +329,11 @@ function contractClock(dataset,id,now,{sourceMaxAgeMs=null}={}) {
 function fundingClock(dataset,premium,premiumClock,info,now) {
   const clock=contractClock(dataset,'binance-perp-funding',now);
   const infoLatest=info?.observations?.[0];
-  const infoReceipt=Date.parse(info?.state?.last_success_received_at || infoLatest?.receivedAt || '');
+  const infoReceipt=Date.parse(infoLatest?.receivedAt || '');
   const reportedHours=Number(infoLatest?.values?.record?.fundingIntervalHours);
-  const infoFresh=info?.ok!==false && !!infoLatest && binanceHostOk(infoLatest.sourceHost)
-    && infoLatest.ingestionMode!=='local-bootstrap' && info?.collectionStale!==true
+  const infoTrusted=info?.ok!==false && !!infoLatest && binanceHostOk(infoLatest.sourceHost)
+    && infoLatest.ingestionMode!=='local-bootstrap';
+  const infoFresh=infoTrusted && info?.collectionStale!==true
     && Number.isFinite(infoReceipt) && infoReceipt<=now
     && now-infoReceipt<=Number(info?.refreshSeconds || FINANCE_DATASETS['binance-perp-funding-info'].refreshSeconds)*1000;
   const prior=dataset?.observations?.find(row=>Date.parse(row.observedAt)<clock.observedAt);
@@ -340,6 +342,30 @@ function fundingClock(dataset,premium,premiumClock,info,now) {
     : Number.isFinite(observedSpacing) && observedSpacing>0 ? observedSpacing:null;
   const intervalBasis=infoFresh && Number.isFinite(reportedHours) && reportedHours>0 ? 'exchange-funding-info'
     : intervalMs ? 'observed-settlement-spacing; not a guaranteed future interval':'unknown';
+  // Funding configuration has no exchange observation timestamp. Keep its
+  // actual receipt and selected content without inventing an effective date.
+  // A cap or schedule correction must change the frozen context version even
+  // when the selected interval remains the same.
+  const scheduleContent=infoLatest ? {
+    datasetId:'binance-perp-funding-info',
+    sourceObservedAt:infoLatest.observedAt ?? null,
+    receivedAt:infoLatest.receivedAt ?? null,
+    effectiveReceivedAt:infoLatest.effectiveReceivedAt ?? infoLatest.receivedAt ?? null,
+    storedAt:infoLatest.storedAt ?? null,
+    publicAvailableAt:infoLatest.publicAvailableAt ?? null,
+    sourceHost:infoLatest.sourceHost ?? null,
+    ingestionMode:infoLatest.ingestionMode ?? null,
+    sourceRevision:infoLatest.sourceRevision ?? null,
+    values:infoLatest.values ?? {},
+  }:null;
+  const fundingSchedule=scheduleContent ? {...scheduleContent,
+    contentHash:identity.contentId(scheduleContent),
+    sourceTimeKnown:Number.isFinite(Date.parse(scheduleContent.sourceObservedAt || '')),
+    trusted:infoTrusted,collectionStale:!infoFresh,
+    reportedIntervalHours:Number.isFinite(reportedHours) && reportedHours>0 ? reportedHours:null,
+    usedForInterval:intervalBasis==='exchange-funding-info',
+    effectiveFrom:null,effectiveFromBasis:'exchange_effective_time_not_provided',
+  }:null;
   const next= premiumClock.available ? Date.parse(premium?.observations?.[0]?.values?.nextFundingTime || ''):NaN;
   let sourceStale=clock.sourceStale ? true:null,reason=clock.sourceStale?'invalid_settlement_observation':null;
   // fundingTime is a settled event, not a continuously changing quote. Source
@@ -356,7 +382,7 @@ function fundingClock(dataset,premium,premiumClock,info,now) {
   }
   return {...clock,sourceStale,available:clock.trusted && !clock.collectionStale && sourceStale!==true,
     nextFundingTime:Number.isFinite(next)?new Date(next).toISOString():null,
-    fundingIntervalHours:intervalMs ? intervalMs/3600000:null,intervalBasis,
+    fundingIntervalHours:intervalMs ? intervalMs/3600000:null,intervalBasis,fundingSchedule,
     sourceFreshnessBasis:'settled event; collection receipt and settlement schedule are separate',
     freshnessReason:reason || (sourceStale===null?'settlement_schedule_not_verified':null)};
 }
@@ -367,7 +393,8 @@ function contractCard(id,label,dataset,clock,note) {
     unavailable:!clock.trusted,
     reason:!clock.trusted?'binance_cloud_path_missing':clock.collectionStale?'collection_stale':clock.freshnessReason || (clock.sourceStale?'source_stale':null),
     ...(clock.intervalBasis?{nextFundingTime:clock.nextFundingTime,fundingIntervalHours:clock.fundingIntervalHours,
-      intervalBasis:clock.intervalBasis,sourceFreshnessBasis:clock.sourceFreshnessBasis}:{}),
+      intervalBasis:clock.intervalBasis,fundingSchedule:clock.fundingSchedule,
+      sourceFreshnessBasis:clock.sourceFreshnessBasis}:{}),
   };
 }
 
@@ -399,7 +426,12 @@ export function buildContextDesk(datasets, now = Date.now()) {
     accounts: positioningCard('binance-perp-accounts', get('binance-perp-accounts'), now, {label:'全账户多空比', period:'1h', sample:'all-accounts', sourceMaxAgeMs:7200000, units:{longAccount:'fraction', shortAccount:'fraction', longShortRatio:'ratio'}, note:'样本为全部账户'}),
     topPositions: positioningCard('binance-perp-top-positions', get('binance-perp-top-positions'), now, {label:'头部持仓多空比', period:'1h', sample:'top-positions', sourceMaxAgeMs:7200000, units:{longPosition:'fraction', shortPosition:'fraction', longShortRatio:'ratio'}, note:'样本为头部持仓'}),
   };
-  return {
+  const deribit = get('deribit-btc-perp-ticker');
+  const deribitLatest = deribit?.observations?.[0];
+  const deribitReceipt = deribitLatest?.effectiveReceivedAt || deribitLatest?.receivedAt || null;
+  const deribitTrusted = !!deribitLatest && deribitLatest.sourceHost === 'www.deribit.com';
+  const deribitStale = !deribitReceipt || now-Date.parse(deribitReceipt)>120000;
+  return withContentRevision({
     schemaVersion: DESK_SCHEMA_VERSION,
     asOf,
     asKnownMode: 'system_observed',
@@ -414,10 +446,6 @@ export function buildContextDesk(datasets, now = Date.now()) {
     units: {},
     baselineAt: null,
     windowEligible: false,
-    inputRevision: inputRevision({ scope: 'context', contractReady,
-      premium: premium?.observations?.[0]?.observedAt || null,
-      funding: funding?.observations?.[0]?.observedAt || null,
-      basis: basis?.observations?.[0]?.observedAt || null }),
     quality: quality(contractComplete ? 'pass' : 'warn', contractComplete ? null : contractReady?'binance_contract_partial':'binance_contract_unavailable'),
     pricePathAvailable: false,
     tradingNarrative: false,
@@ -428,6 +456,26 @@ export function buildContextDesk(datasets, now = Date.now()) {
       basis: contractCard('binance-perp-basis','永续基差三字段',basis,basisClock,'basis / basisRate / annualizedBasisRate 独立，空为 null'),
       positioning,
     } : { unavailable: true, reason: 'binance_cloud_path_missing', positioning },
+    comparison: {
+      combinedOpenInterestTotalsAllowed: false,
+      deribit: { ...clockCard('deribit-btc-perp-ticker','Deribit BTC 反向永续',deribitTrusted?deribit:null),
+        instrumentId:'DERIBIT:BTC-PERPETUAL',marketType:'inverse-perpetual',settlementCurrency:'BTC',quoteCurrency:'USD',
+        units:FINANCE_DATASETS['deribit-btc-perp-ticker'].fields,unavailable:!deribitTrusted,collectionStale:deribitStale,
+        sideBasis:'venue-reported-open-contracts',fundingMethod:'continuous-payment',
+        hourlyFunding:clockCard('deribit-btc-perp-funding','Deribit 小时资金费',get('deribit-btc-perp-funding')) },
+      bybit: {status:'outside-normalized-collection',note:'旧按需通道缓存不能证明持续采集；OI 保留双边/单边与产品单位。'},
+      okx: {status:'outside-normalized-collection',note:'旧按需通道缓存不能证明持续采集；OI 需张/币/USD 和合约元数据。'},
+    },
+    options: {
+      BTC:optionCoverage(get('deribit-btc-option-instruments'),get('deribit-btc-options'),'BTC',now),
+      USDC:optionCoverage(get('deribit-usdc-btc-option-instruments'),get('deribit-usdc-btc-options'),'USDC',now),
+    },
+    externalCoverage: [
+      {id:'historical-full-depth',status:'unavailable',condition:'历史全档盘口需已有原始留存或已获授权的历史源。当前 REST20 档不能回补。'},
+      {id:'all-liquidation-events',status:'sampled',condition:'币安每秒最后强平快照不是全量；空桶不能证明无事件。'},
+      {id:'etf-net-subscription',status:'missing',condition:'发行人 BTC 持仓与份额披露不同于实际每日净申购；估算须单列。'},
+      {id:'exchange-labelled-netflow',status:'missing',condition:'尚无已验证免费完整交易所标签源；普通链上活动不能代替净流。'},
+    ],
     groups: {
       dailyRates: {
         title: '日终利率（CMT / SOFR，非可成交）',
@@ -470,13 +518,14 @@ export function buildContextDesk(datasets, now = Date.now()) {
         note: 'Yahoo VIX/MOVE 保持 unofficial；MOVE 不得伪日内；Deribit 默认 PLANNED',
       },
     },
-  };
+  });
 }
 
 export function buildHeatmapDesk(rows, now = Date.now()) {
   const asOf = new Date(now).toISOString();
   const byExchange = {};
-  for (const row of rows || []) {
+  const orderedRows = (rows || []).slice().sort((a, b) => String(a.exchange).localeCompare(String(b.exchange)) || Number(a.bucket_start) - Number(b.bucket_start) || String(a.symbol || '').localeCompare(String(b.symbol || '')));
+  for (const row of orderedRows) {
     const ex = String(row.exchange || 'unknown').toLowerCase();
     const key = ex === 'binance' || ex === 'bybit' ? ex : 'unknown';
     if (!byExchange[key]) byExchange[key] = { exchange: key, buckets: [], longNotional: 0, shortNotional: 0, longCount: 0, shortCount: 0 };
@@ -487,7 +536,7 @@ export function buildHeatmapDesk(rows, now = Date.now()) {
     g.longCount += Number(row.long_count) || 0;
     g.shortCount += Number(row.short_count) || 0;
   }
-  return {
+  return withContentRevision({
     schemaVersion: DESK_SCHEMA_VERSION,
     asOf,
     asKnownMode: 'system_observed',
@@ -502,24 +551,36 @@ export function buildHeatmapDesk(rows, now = Date.now()) {
     units: { notional: 'USDT' },
     baselineAt: null,
     windowEligible: false,
-    inputRevision: inputRevision({ scope: 'heatmap', exchanges: Object.keys(byExchange) }),
     quality: quality(Object.keys(byExchange).length ? 'pass' : 'warn', Object.keys(byExchange).length ? null : 'no_liquidation_buckets'),
     pricePathAvailable: false,
     tradingNarrative: false,
     combinedTotalsForbidden: true,
     byExchange,
     note: '已实现强平 5m 桶，分所展示；币安 forceOrder 与 Bybit 全量流覆盖不可比，禁止比笔数。',
-  };
+  });
 }
 
 export function buildOrderflowDesk(status, bars, now = Date.now()) {
+  const clock = value => value == null || value === '' ? NaN : typeof value==='number' || /^\d+$/.test(String(value)) ? Number(value) : Date.parse(value);
+  const bounded = value => Number.isFinite(value) && value>0 && value<=now;
+  const suppliedBars=bars || [];
+  const futureRows=suppliedBars.filter(bar=>clock(bar.t)>now || ['receivedAt','effectiveReceivedAt','storedAt','updated_at']
+    .some(key=>clock(bar[key])>now));
+  bars = suppliedBars.filter(bar=>bounded(clock(bar.t)) && !futureRows.includes(bar))
+    .map(bar => ({ ...bar, levels: footprintLevels(bar.levels ?? bar.levels_json).sort((a, b) => a.price - b.price),
+      finality:Number(bar.t)+300000<=now?'time_elapsed_only':'forming' })).sort((a, b) => Number(a.t) - Number(b.t));
   const asOf = new Date(now).toISOString();
   const lastOk = Number(status && status.last_ok) === 1;
   const lastError = status && status.last_error ? String(status.last_error) : '';
-  const latestT = Number(status && status.last_trade_time) || (bars && bars.length ? Number(bars[bars.length - 1].t) : 0);
-  const fresh = lastOk && latestT > 0 && (now - latestT) < 15 * 60 * 1000;
+  const tradeTime=clock(status?.last_trade_time),attemptTime=clock(status?.last_run);
+  const receiptTime=clock(status?.receivedAt ?? status?.received_at);
+  const futureStatus=[tradeTime,attemptTime,receiptTime].some(value=>value>now);
+  const latestT = bounded(tradeTime) ? tradeTime : !futureStatus && bars.length ? Number(bars[bars.length - 1].t) : 0;
+  const fresh = !futureStatus && lastOk && bounded(latestT) && (now - latestT) < 15 * 60 * 1000;
   const ok = fresh && Array.isArray(bars) && bars.length > 0;
-  return {
+  const failure=futureStatus?'orderflow_status_after_cutoff':futureRows.length && !bars.length?'orderflow_rows_after_cutoff'
+    :sanitizeDeskReason(lastError) || 'footprint_not_authoritative';
+  return withContentRevision({
     schemaVersion: DESK_SCHEMA_VERSION,
     asOf,
     asKnownMode: 'system_observed',
@@ -531,28 +592,35 @@ export function buildOrderflowDesk(status, bars, now = Date.now()) {
     ingestionMode: 'aggtrade-collector',
     sourceHost: ok ? 'fstream.binance.com' : null,
     observedAt: latestT ? new Date(latestT).toISOString() : null,
-    receivedAt: status && status.last_run ? new Date(Number(status.last_run)).toISOString() : null,
+    receivedAt: bounded(receiptTime) ? new Date(receiptTime).toISOString() : null,
+    collectorAttemptAt: bounded(attemptTime) ? new Date(attemptTime).toISOString() : null,
     storedAt: null,
     publicAvailableAt: null,
     collectionStale: !fresh,
     sourceStale: !fresh,
-    coverage: { available: ok ? bars.length : 0, returned: ok ? bars.length : 0, truncated: false, needed: null },
+    coverage: { available: ok ? bars.length : 0, returned: ok ? bars.length : 0, truncated: false, needed: null,
+      excludedFutureRows:futureRows.length, eventCompleteness:'not-guaranteed' },
     units: { volume: 'BTC' },
     baselineAt: null,
     windowEligible: false,
-    inputRevision: inputRevision({ scope: 'orderflow', latestT, lastOk }),
-    quality: quality(ok ? 'pass' : 'fail', ok ? null : (sanitizeDeskReason(lastError) || 'footprint_not_authoritative')),
+    historicalEligibility:{eligible:false,reason:'aggregate_revisions; raw-event receipt and continuous sequence coverage not proven'},
+    quality: quality(ok ? 'pass' : 'fail', ok ? null : failure),
     pricePathAvailable: false,
     tradingNarrative: false,
     venueNote: 'footprint_bars 无交易所列；采集器仅币安 aggTrade。失败或过期则主画布空。Delta 是 aggTrade 主动量近似，不是逐笔 CVD。',
     series: ok ? bars : [],
-    gap: ok ? null : { reason: sanitizeDeskReason(lastError) || 'footprint_not_authoritative' },
-  };
+    gap: ok ? null : { reason: failure },
+  });
 }
 
 async function readSummaryQuiet(db, id, knownAt) {
   try { return await readDatasetSummary(db, id, knownAt ? {knownAt} : {}); }
   catch { return { ok: false, id, observations: [], collectionStale: true, sourceStale: null, state: null }; }
+}
+
+async function readOptionSnapshotQuiet(db,id,knownAt) {
+  try { return await readDataset(db,id,{limit:4000,...(knownAt?{knownAt,historical:true}:{historical:false})}); }
+  catch { return {ok:false,id,observations:[],coverage:{truncated:false},state:null}; }
 }
 
 function tapeRowsFrom(result) {
@@ -587,6 +655,7 @@ function footprintDeskBar(row) {
   const sellVol = Number(row.sell_vol) || levels.reduce((sum, level) => sum + level.sellVol, 0);
   return {
     t: Number(row.t),
+    updated_at: row.updated_at ?? null,
     o: Number(row.o), h: Number(row.h), l: Number(row.l), c: Number(row.c),
     open: Number(row.o), high: Number(row.h), low: Number(row.l), close: Number(row.c),
     buyVol, sellVol, buy_vol: buyVol, sell_vol: sellVol,
@@ -616,7 +685,22 @@ async function assembleDesk(request, env, metrics) {
   const parts = url.pathname.replace(/\/$/, '').split('/');
   const scope = parts[3] || '';
   if (!DESK_SCOPES.includes(scope)) return json({ error: 'unknown_desk_scope', supported: DESK_SCOPES }, 400);
-  const now = Date.now();
+  const requestNow = Date.now();
+  let knownAt = null;
+  if (url.searchParams.has('knownAt') || url.searchParams.has('known_at')) {
+    const a = url.searchParams.get('knownAt'), b = url.searchParams.get('known_at');
+    if ((a && b && Date.parse(a) !== Date.parse(b)) || !Number.isFinite(Date.parse(a || b || '')))
+      return json({ error: 'invalid_known_at' }, 400);
+    if (Date.parse(a || b) > requestNow) return json({ error: 'future_known_at' }, 400);
+    knownAt = new Date(Date.parse(a || b)).toISOString();
+  }
+  const now = knownAt ? Date.parse(knownAt) : requestNow;
+  const finishRead = (desk, extra = {}) => withContentRevision({ ...desk, ...extra,
+    knowledgeCutoff: knownAt,
+    cutoff: { requested: knownAt, applied: !!knownAt && extra.journal?.available !== false,
+      basis: knownAt ? 'system-retained-version-at-cutoff' : 'current-read',
+      publicAvailabilityReconstructed: false },
+  });
   if (scope === 'chart') {
     const symbolParam = url.searchParams.get('symbol');
     const symbol = symbolParam == null || symbolParam.trim() === '' ? 'BTCUSDT' : symbolParam.trim().toUpperCase();
@@ -642,16 +726,12 @@ async function assembleDesk(request, env, metrics) {
       tail = Number(rawTail);
       if (!Number.isInteger(tail) || tail < 2 || tail > 200) return json({ error: 'invalid_tail' }, 400);
     }
-    let knownAt = null;
-    if (url.searchParams.has('knownAt') || url.searchParams.has('known_at')) {
-      knownAt = url.searchParams.get('knownAt') || url.searchParams.get('known_at');
-      if (!Number.isFinite(Date.parse(knownAt))) return json({ error: 'invalid_known_at' }, 400);
-    }
     const readIntent = hasFrom ? 'window' : (tail ? 'tail' : 'window');
     const limit = readIntent === 'tail' ? tail : 6000;
     const datasetId = `binance-perp-klines-${interval}`;
     const statements = [];
-    if (readIntent === 'window') statements.push(env.DB.prepare(historyBaselineStatement('BTCUSDT', interval, datasetId).sql).bind(...historyBaselineStatement('BTCUSDT', interval, datasetId).params));
+    const includeBaseline = readIntent === 'window' && !knownAt;
+    if (includeBaseline) statements.push(env.DB.prepare(historyBaselineStatement('BTCUSDT', interval, datasetId).sql).bind(...historyBaselineStatement('BTCUSDT', interval, datasetId).params));
     statements.push(env.DB.prepare('SELECT head_t, history_revision FROM desk_history_state WHERE symbol=?1 AND interval=?2').bind('BTCUSDT', interval));
     statements.push(env.DB.prepare(`SELECT t,o,h,l,c,v FROM klines WHERE symbol=?1 AND interval=?2
       AND (?3 IS NULL OR t>=?3) AND (?4 IS NULL OR t<?4) ORDER BY t DESC LIMIT ?5`).bind('BTCUSDT', interval, requestFrom, requestTo, limit + 1));
@@ -674,8 +754,8 @@ async function assembleDesk(request, env, metrics) {
     metrics.d1 = Date.now() - dbStarted;
     metrics.sql = batched.reduce((sum, item) => sum + Number(item.meta?.timings?.sql_duration_ms ?? item.meta?.duration ?? 0), 0);
     metrics.rows = batched.reduce((sum, item) => sum + Number(item.meta?.rows_read || 0), 0);
-    const revisionRow = (batched[readIntent === 'window' ? 1 : 0].results || [])[0] || null;
-    const tapeResult = batched[readIntent === 'window' ? 2 : 1];
+    const revisionRow = (batched[includeBaseline ? 1 : 0].results || [])[0] || null;
+    const tapeResult = batched[includeBaseline ? 2 : 1];
     let tape = knownAt ? [] : tapeRowsFrom(tapeResult).reverse();
     const tapeTruncated = tape.length > limit;
     if (tapeTruncated) tape = tape.slice(tape.length - limit);
@@ -702,19 +782,19 @@ async function assembleDesk(request, env, metrics) {
       series = series.slice(series.length - limit);
       truncated = true;
     }
-    const unresolvedGap = unresolvedFromState((batched[stateIndex].results || [])[0]);
+    const unresolvedGap = knownAt ? null : unresolvedFromState((batched[stateIndex].results || [])[0]);
     const status = (batched[statusIndex].results || [])[0] || null;
     const lastRun = Number(status && status.last_run) || 0;
     const last = series.length ? series[series.length - 1] : null;
     const step = INTERVAL_MS[interval];
-    const authoritative = !!(status && Number(status.last_ok) === 1 && lastRun && now - lastRun <= LIVE_TAPE_FRESH_MS
+    const authoritative = !knownAt && !!(status && Number(status.last_ok) === 1 && lastRun && now - lastRun <= LIVE_TAPE_FRESH_MS
       && last && now - last.t <= step * 2 && !/bybit|okx/i.test(String(status.last_error || '')));
-    return json(finishChartDesk({
+    return json(finishRead(finishChartDesk({
       interval, now, series, predecessor, truncated, unresolvedGap,
-      readIntent, requestFrom, requestTo, tail, historyRevision: Number(revisionRow?.history_revision || 0),
-      headT: revisionRow ? Number(revisionRow.head_t) : null, authoritative,
-      dataset: { id: datasetId, collectionStale: !authoritative, sourceStale: null, observations: [] },
-    }));
+      readIntent, requestFrom, requestTo, tail, historyRevision: knownAt ? null : Number(revisionRow?.history_revision || 0),
+      headT: knownAt ? null : revisionRow ? Number(revisionRow.head_t) : null, authoritative,
+      dataset: { id: datasetId, collectionStale: knownAt ? null : !authoritative, sourceStale: null, observations: [] },
+    }), knownAt ? { stateScope: 'historical collector health not reconstructed', historyRevision: null, headT: null } : {}));
   }
   if (scope === 'context') {
     const ids = [
@@ -723,36 +803,52 @@ async function assembleDesk(request, env, metrics) {
       'fred-dgs2', 'fred-dgs10', 'fred-real10y', 'fred-breakeven10y', 'nyfed-sofr',
       'fred-dollar', 'fred-fed-assets', 'fred-tga', 'fred-rrp', 'fred-cpi',
       'stablecoin-supply', 'crypto-breadth', 'btc-fees',
+      'deribit-btc-perp-ticker','deribit-btc-perp-funding',
     ];
-    let knownAt = null;
-    if (url.searchParams.has('knownAt') || url.searchParams.has('known_at')) {
-      knownAt = url.searchParams.get('knownAt') || url.searchParams.get('known_at');
-      if (!Number.isFinite(Date.parse(knownAt))) return json({ error: 'invalid_known_at' }, 400);
-    }
     const entries = await Promise.all(ids.map(async (id) => [id, await readSummaryQuiet(env.DB, id, knownAt)]));
-    return json(buildContextDesk(Object.fromEntries(entries), Date.now()));
+    const optionEntries=await Promise.all(['deribit-btc-option-instruments','deribit-btc-options','deribit-usdc-btc-option-instruments','deribit-usdc-btc-options']
+      .map(async id=>[id,await readOptionSnapshotQuiet(env.DB,id,knownAt)]));
+    return json(finishRead(buildContextDesk(Object.fromEntries([...entries,...optionEntries]), now),
+      { stateScope: knownAt ? 'retained observations; historical poll health not reconstructed' : 'current' }));
   }
   if (scope === 'heatmap') {
     const symbol = String(url.searchParams.get('symbol') || 'BTCUSDT').toUpperCase();
     const rangeMs = { '24h': 86400000, '7d': 7 * 86400000, '30d': 30 * 86400000 }[String(url.searchParams.get('range') || '24h')] || 86400000;
     const from = now - rangeMs;
+    if (knownAt) {
+      const retained = await readAggregateAsKnown(env.DB, scope, symbol, { knownAt, from, to: now, limit: 20000 });
+      const desk = buildHeatmapDesk(retained.rows, now);
+      return json(finishRead(desk, { ...retained.evidence, requestWindow: { symbol, from, to: now },
+        quality: quality('warn', retained.rows.length ? 'sampled_liquidation_coverage' : retained.reason),
+        coverage: { ...desk.coverage, truncated: retained.truncated, eventCompleteness: 'not-guaranteed', journal: retained.evidence.journal } }));
+    }
     const { results } = await env.DB.prepare(
       `SELECT symbol, exchange, bucket_start, long_notional, short_notional, long_count, short_count, max_notional, max_side, min_price, max_price, vwap_price
          FROM liquidation_5m_buckets WHERE symbol = ?1 AND bucket_start >= ?2 ORDER BY bucket_start ASC`
     ).bind(symbol, from).all();
-    return json(buildHeatmapDesk(results || [], now));
+    return json(finishRead(buildHeatmapDesk(results || [], now), { requestWindow: { symbol, from, to: now },
+      coverage: { available: (results || []).length, returned: (results || []).length, truncated: false, needed: null, eventCompleteness: 'not-guaranteed' } }));
   }
   if (scope === 'orderflow') {
     const symbol = String(url.searchParams.get('symbol') || 'BTCUSDT').toUpperCase();
+    if (knownAt) {
+      const retained = await readAggregateAsKnown(env.DB, scope, symbol, { knownAt, limit: 240 });
+      const bars = retained.rows.map(footprintDeskBar);
+      const desk = buildOrderflowDesk(retained.status, bars, now);
+      return json(finishRead(desk, { ...retained.evidence,
+        gap: bars.length ? desk.gap : { reason: retained.reason },
+        quality: bars.length ? desk.quality : quality('fail', retained.reason),
+        coverage: { ...desk.coverage, truncated: retained.truncated, journal: retained.evidence.journal } }));
+    }
     const status = await env.DB.prepare(
       'SELECT last_run, last_trade_id, last_trade_time, last_count, last_ok, last_error FROM footprint_sync_status WHERE symbol = ?1'
     ).bind(symbol).first();
     const { results } = await env.DB.prepare(
-      `SELECT t, o, h, l, c, buy_vol, sell_vol, delta, volume, poc_price, levels_json FROM footprint_bars
+      `SELECT t, o, h, l, c, buy_vol, sell_vol, delta, volume, poc_price, levels_json, updated_at FROM footprint_bars
         WHERE symbol = ?1 AND interval = '5m' ORDER BY t DESC LIMIT 240`
     ).bind(symbol).all();
     const bars = (results || []).slice().reverse().map(footprintDeskBar);
-    return json(buildOrderflowDesk(status, bars, now));
+    return json(finishRead(buildOrderflowDesk(status, bars, now)));
   }
   return json({ error: 'unknown_desk_scope' }, 400);
 }

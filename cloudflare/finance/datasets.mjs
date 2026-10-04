@@ -46,8 +46,18 @@ export const FINANCE_DATASETS = {
   'stablecoin-supply':dataset('defillama','stablecoins',{},'context','stablecoins',3600,{circulating:'USD-pegged-supply',price:'USD'},'USDT/USDC供应和价格分开，不把供应变化直接当BTC买盘或资金净流入。'),
   'crypto-breadth':dataset('coingecko','global',{},'context','global',300,{marketCap:'USD',volume24h:'USD',btcDominance:'percent'},'CoinGecko聚合口径，非Binance成交量；需来源署名。'),
   'btc-fees':dataset('mempool','fees',{},'context','fees',60,{fastestFee:'sat/vB',halfHourFee:'sat/vB',hourFee:'sat/vB',minimumFee:'sat/vB'},'网络拥堵和费用背景，不能据此推断交易所净流入。'),
-  'deribit-btc-options':dataset('deribit','summary',{currency:'BTC',kind:'option'},'context','options',21600,
-    {mark_iv:'percent',open_interest:'native-contract-units'},'保存原生期权摘要；mark IV不是可成交报价，不伪造25delta偏斜、庄家GEX或方向概率。'),
+  'deribit-btc-options':dataset('deribit','summary',{currency:'BTC',kind:'option'},'context','options',600,
+    {mark_iv:'percent',open_interest:'BTC',mark_price:'BTC'},'币本位 BTC 期权摘要；元数据独立对账。mark IV不是可成交报价，摘要不含完整 Greeks，不推庄家GEX或方向。'),
+  'deribit-usdc-btc-options':dataset('deribit','summary',{currency:'USDC',kind:'option'},'context','options',600,
+    {mark_iv:'percent',open_interest:'BTC',mark_price:'USDC'},'USDC 结算中的 BTC 标的期权，和币本位分组。不能把币种、报价、合约数量混算。'),
+  'deribit-btc-option-instruments':dataset('deribit','instruments',{currency:'BTC',kind:'option',expired:'false'},'context','option-instruments',3600,
+    {strike:'USD/BTC',contract_size:'BTC',creation_timestamp:'millisecond',expiration_timestamp:'millisecond'},'当前有效币本位 BTC 期权元数据快照；首次接收前的生命周期未知，不是历史完整链。'),
+  'deribit-usdc-btc-option-instruments':dataset('deribit','instruments',{currency:'USDC',kind:'option',expired:'false'},'context','option-instruments',3600,
+    {strike:'USD/BTC',contract_size:'BTC',creation_timestamp:'millisecond',expiration_timestamp:'millisecond'},'当前 USDC 结算 BTC 标的期权元数据；仅保留 BTC 标的，和币本位独立。'),
+  'deribit-btc-perp-ticker':dataset('deribit','ticker',{instrument_name:'BTC-PERPETUAL'},'comparison','deribit-ticker',60,
+    {open_interest:'USD',mark_price:'USD/BTC',index_price:'USD/BTC',current_funding:'decimal',funding_8h:'decimal'},'Deribit BTC 反向永续独立对照；OI 单位 USD，资金费连续计付，不能冒充币安离散结算事件。'),
+  'deribit-btc-perp-funding':dataset('deribit','funding-history',{instrument_name:'BTC-PERPETUAL'},'comparison','deribit-funding',3600,
+    {interest_1h:'decimal',interest_8h:'decimal',index_price:'USD/BTC'},'滚动24小时小时资金费历史；1h/8h 平均费率和交易所离散结算记录不同，不直接逐点相加。'),
 };
 
 export function datasetSupportsIncremental(id) {
@@ -68,6 +78,8 @@ function validateDatasetParameters(id, parameters) {
       || Number(parameters[key])>8640000000000000) throw new Error('dataset_parameter_mismatch');
   }
   if (parameters.startTime !== undefined && parameters.endTime !== undefined && Number(parameters.startTime)>Number(parameters.endTime)) throw new Error('dataset_parameter_mismatch');
+  if (d.kind==='deribit-funding' && (!['start_timestamp','end_timestamp'].every(key=>/^\d+$/.test(String(parameters[key]))&&Number.isSafeInteger(Number(parameters[key])))
+    || Number(parameters.end_timestamp)<=Number(parameters.start_timestamp) || Number(parameters.end_timestamp)-Number(parameters.start_timestamp)>48*3600000)) throw new Error('dataset_parameter_mismatch');
 }
 
 export function datasetRequest(id, origin='https://finance.internal', window={}) {
@@ -75,6 +87,7 @@ export function datasetRequest(id, origin='https://finance.internal', window={})
   if(!definition)throw new Error('unknown_dataset');
   if (Object.keys(window).some(key => !['limit','startTime','endTime'].includes(key))) throw new Error('dataset_parameter_mismatch');
   const parameters={...definition.parameters,...window};
+  if (definition.kind==='deribit-funding') { parameters.end_timestamp=String(Date.now()); parameters.start_timestamp=String(Number(parameters.end_timestamp)-24*3600000); }
   validateDatasetParameters(id,parameters);
   const url=new URL(`/api/finance/${definition.provider}/${definition.operation}`,origin);
   for(const [key,value] of Object.entries(parameters))url.searchParams.set(key,value);
@@ -82,7 +95,7 @@ export function datasetRequest(id, origin='https://finance.internal', window={})
 }
 
 export function datasetCatalog() {
-  return {version:'2026-09-21.1',primaryVenue:'Binance',primaryInstrument:'BTCUSDT',primaryMarket:'USDⓈ-M perpetual',
+  return {version:'2026-09-30.2',primaryVenue:'Binance',primaryInstrument:'BTCUSDT',primaryMarket:'USDⓈ-M perpetual',
     automaticCollection:true,frontendConnected:true,
     datasets:Object.entries(FINANCE_DATASETS).map(([id,d])=>({id,...d,
       readPath:`/api/finance/datasets/${id}`,refreshPath:`/api/finance/datasets/${id}/refresh`,refreshMethod:'POST'})),
@@ -92,6 +105,29 @@ export function datasetCatalog() {
 const number = value => value===null || value===undefined || typeof value==='boolean' || String(value).trim()==='' || value==='.' ? null : Number.isFinite(Number(value))?Number(value):null;
 const at = value => Number.isFinite(Number(value)) && Number(value)>0 ? new Date(Number(value)).toISOString() : null;
 const numeric = (row,keys) => Object.fromEntries(keys.map(key=>[key,number(row[key])]));
+
+export function deribitOptionGroup(row, currency, {metadata=false} = {}) {
+  if (!['BTC','USDC'].includes(currency)) throw new Error('dataset_option_currency_unsupported');
+  if (!row || typeof row !== 'object') throw new Error('dataset_invalid_option_instrument');
+  const name=String(row.instrument_name || '');
+  const btcCandidate=/^BTC(?:-|_)/.test(name) || row.base_currency==='BTC' || row.underlyingCurrency==='BTC';
+  if (!btcCandidate) return false; // USDC responses legitimately contain other underlyings.
+  const match=/^(BTC|BTC_USDC)-(\d{1,2}[A-Z]{3}\d{2})-(\d+(?:\.\d+)?)-([CP])$/.exec(name);
+  if (!match || !(Number(match[3])>0)) throw new Error('dataset_invalid_option_instrument');
+  const settlement=match[1]==='BTC'?'BTC':'USDC';
+  if (settlement!==currency) throw new Error('dataset_instrument_group_mismatch');
+  for (const key of ['settlement_currency','settlementCurrency'])
+    if (row[key] != null && row[key]!==settlement) throw new Error('dataset_option_settlement_mismatch');
+  for (const key of ['base_currency','underlyingCurrency'])
+    if (row[key] != null && row[key]!=='BTC') throw new Error('dataset_option_underlying_mismatch');
+  if (row.kind != null && row.kind!=='option') throw new Error('dataset_option_kind_mismatch');
+  if (metadata && (row.base_currency!=='BTC' || row.kind!=='option' || row.settlement_currency!==settlement))
+    throw new Error('dataset_option_metadata_incomplete');
+  if (row.option_type != null && row.option_type!==(match[4]==='C'?'call':'put')) throw new Error('dataset_option_type_mismatch');
+  if (metadata && (row.expiration_timestamp==null || !Number.isFinite(Number(row.expiration_timestamp))
+    || row.strike==null || Number(row.strike)!==Number(match[3]))) throw new Error('dataset_invalid_option_instrument');
+  return true;
+}
 
 export function normalizeDataset(id,envelope) {
   const d=FINANCE_DATASETS[id];
@@ -172,7 +208,31 @@ export function normalizeDataset(id,envelope) {
       add(data.data.updated_at,at(Number(data.data.updated_at)*1000),{marketCap:number(data.data.total_market_cap?.usd),volume24h:number(data.data.total_volume?.usd),btcDominance:number(data.data.market_cap_percentage?.btc)}); break;
     case 'fees': add(receivedAt,null,numeric(data,['fastestFee','halfHourFee','hourFee','minimumFee'])); break;
     case 'options': if(!Array.isArray(data.result))throw new Error('dataset_invalid_options');
-      for(const r of data.result) if(/^BTC-/.test(r.instrument_name))add(r.instrument_name+'@'+receivedAt,at(r.creation_timestamp),r); break;
+      for(const r of data.result) if(deribitOptionGroup(r,d.parameters.currency))add(r.instrument_name+'@'+receivedAt,at(r.creation_timestamp),
+        {...r,underlyingCurrency:'BTC',settlementCurrency:d.parameters.currency,openInterestUnit:'BTC',sideBasis:'venue-reported-open-contracts'},'millisecond',
+        {provider:'deribit',operation:'summary',settlementCurrency:d.parameters.currency,parser:'deribit-options.v3'}); break;
+    case 'option-instruments': if(!Array.isArray(data.result))throw new Error('dataset_invalid_option_instruments');
+      for(const r of data.result) if(deribitOptionGroup(r,d.parameters.currency,{metadata:true})) {
+        add(r.instrument_name+'@'+receivedAt,null,{...r,underlyingCurrency:'BTC',settlementCurrency:r.settlement_currency},'unknown',
+          {provider:'deribit',operation:'instruments',scope:'current active BTC options',parser:'deribit-instruments.v2'});
+      } break;
+    case 'deribit-ticker': {
+      const r=data.result;
+      if(!r || r.instrument_name!==d.parameters.instrument_name)throw new Error('dataset_instrument_mismatch');
+      if(number(r.open_interest)===null || number(r.open_interest)<0 || !at(r.timestamp))throw new Error('dataset_invalid_deribit_ticker');
+      add(r.timestamp,at(r.timestamp),{...r,...numeric(r,['open_interest','mark_price','index_price','last_price','current_funding','funding_8h']),
+        instrumentId:'DERIBIT:BTC-PERPETUAL',marketType:'inverse-perpetual',settlementCurrency:'BTC',quoteCurrency:'USD',underlyingCurrency:'BTC',
+        openInterestUnit:'USD',sideBasis:'venue-reported-open-contracts',fundingMethod:'continuous-payment'},'millisecond',
+        {provider:'deribit',operation:'ticker',parser:'deribit-ticker.v1'});
+    } break;
+    case 'deribit-funding': if(!Array.isArray(data.result))throw new Error('dataset_invalid_deribit_funding');
+      for(const r of data.result) {
+        if(!at(r.timestamp)||number(r.interest_1h)===null||number(r.interest_8h)===null)throw new Error('dataset_invalid_deribit_funding');
+        if(Number(r.timestamp)<Number(envelope.parameters.start_timestamp)||Number(r.timestamp)>Number(envelope.parameters.end_timestamp))throw new Error('dataset_window_mismatch');
+        add(r.timestamp,at(r.timestamp),{...numeric(r,['index_price','prev_index_price','interest_1h','interest_8h']),
+          instrumentId:'DERIBIT:BTC-PERPETUAL',fundingMethod:'continuous-payment; hourly history',period:'1h'},'millisecond',
+          {provider:'deribit',operation:'funding-history',parser:'deribit-funding.v1'});
+      } break;
     default:throw new Error('dataset_unknown_adapter');
   }
   if(!rows.length)throw new Error('dataset_empty');

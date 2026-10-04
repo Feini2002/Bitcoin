@@ -163,10 +163,10 @@ function pageOrderflow() {
     .map((v) => `<option value="${v}" ${v === s.tickSize ? "selected" : ""}>${v === "auto" ? "Auto" : v + " USDT"}</option>`)
     .join("");
   const visibleOptions = [16, 24, 32, 48, 64]
-    .map((v) => `<option value="${v}" ${v === s.visibleBars ? "selected" : ""}>${v} bars</option>`)
+    .map((v) => `<option value="${v}" ${v === s.visibleBars ? "selected" : ""}>${v} 根</option>`)
     .join("");
   const loadOptions = [120, 240]
-    .map((v) => `<option value="${v}" ${v === s.loadBars ? "selected" : ""}>${v} bars</option>`)
+    .map((v) => `<option value="${v}" ${v === s.loadBars ? "selected" : ""}>${v} 根</option>`)
     .join("");
 
   return html`
@@ -174,20 +174,20 @@ function pageOrderflow() {
       <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">ORDER FLOW</div><h1>订单流与足迹</h1><p>观察主动成交在哪些价位聚集，区分量的方向与价格的响应。</p></div><a class="btn" href="#/news-analysis">复核市场叙事 ↗</a></header>
       <div id="orderflow-empty-desk" class="desk-halt-overlay" hidden>
         <div class="desk-halt-card">
-          <strong>足迹停机</strong>
-          <p class="desk-halt-reason">desk 足迹未确认，主画布不可当作盘口使用。</p>
-          <p>WebSocket OPEN 不等于实时。Delta 只是 aggTrade 主动量近似，不是 CVD。</p>
+          <strong>成交资料暂不可用</strong>
+          <p class="desk-halt-reason">当前没有可靠的成交资料，请稍后重试。</p>
+          <p>主动量差值为成交方向的近似，不能视为逐笔累计量。</p>
         </div>
       </div>
       <div class="orderflow-data-strip">
         <div class="orderflow-data-main">
           <span class="orderflow-feed-dot"></span>
           <strong>BTCUSDT 永续</strong>
-          <span>来源周期 5m，显示周期可为 5m/15m/1h/4h。Delta 为 aggTrade 主动量近似，不是逐笔 CVD。</span>
+          <span>BTC 数量 · USDT 价格 · 主动买卖量差值为近似读数。</span>
         </div>
         <div class="orderflow-data-meta">
           <button type="button" class="btn" data-workbench-export>导出已显示证据</button>
-          <span class="chip warn" id="of-live-chip">等待 desk</span>
+          <span class="chip warn" id="of-live-chip">等待读数</span>
           <a class="owner-link orderflow-owner-link" href="#/agent-flow" title="查看 盘口流动性官 的演示原型">
             <span class="owner-dot" style="background:var(--agent-flow)">盘</span>
             <span>盘口流动性官</span>
@@ -235,15 +235,16 @@ function pageOrderflow() {
       </div>
 
       <div class="orderflow-kpis orderflow-kpis--compact">
-        <div class="orderflow-kpi"><span>最新 Bar 时间</span><strong id="of-kpi-time">--</strong></div>
-        <div class="orderflow-kpi"><span>Delta</span><strong id="of-kpi-delta">--</strong></div>
-        <div class="orderflow-kpi"><span>最新 Bar 档内 POC</span><strong id="of-kpi-poc">--</strong></div>
-        <div class="orderflow-kpi"><span>失衡价位数</span><strong id="of-kpi-imb">--</strong></div>
+        <div class="orderflow-kpi"><span>可视末棒时间</span><strong id="of-kpi-time">--</strong></div>
+        <div class="orderflow-kpi"><span>可视末棒 Delta (BTC)</span><strong id="of-kpi-delta">--</strong></div>
+        <div class="orderflow-kpi"><span>可视末棒档内 POC</span><strong id="of-kpi-poc">--</strong></div>
+        <div class="orderflow-kpi"><span>可视末棒失衡数</span><strong id="of-kpi-imb">--</strong></div>
       </div>
 
       <div class="orderflow-main-grid">
         <div class="orderflow-canvas-col">
           <div class="orderflow-canvas-wrap">
+            <div class="team-actions"><button class="btn" id="of-first">最早</button><button class="btn" id="of-prev">前一屏</button><button class="btn" id="of-next">后一屏</button><button class="btn" id="of-latest">最近</button></div>
             <canvas id="of-footprint-canvas"></canvas>
             <div class="orderflow-tooltip" id="of-footprint-tip"></div>
           </div>
@@ -256,7 +257,7 @@ function pageOrderflow() {
             </div>
           </div>
           <div class="orderflow-rail-section">
-            <div class="orderflow-rail-title">最新 Bar 主动成交</div>
+            <div class="orderflow-rail-title">可视末棒主动成交</div>
             <div class="orderflow-rail-split-kpi">
               <div class="orderflow-rail-split-cell">
                 <span>主动买</span>
@@ -300,7 +301,7 @@ function setOrderflowDeskHalt(halted, reason) {
       const clean = /<!DOCTYPE|<html|Access Denied/i.test(raw)
         ? "主源缺口：upstream_html_error"
         : raw.replace(/\s+/g, " ").trim().slice(0, 80);
-      reasonEl.textContent = clean || "desk 足迹未确认，主画布不可当作盘口使用。";
+      reasonEl.textContent = clean || "当前没有可靠的成交资料，请稍后重试。";
     }
   }
   document.querySelectorAll("#of-visible-bars, #of-tick-size, #of-load-bars, #of-imbalance-toggle, #of-vp-toggle, #of-clear-cache").forEach((el) => {
@@ -315,6 +316,7 @@ function publishOrderflowEvidence() {
   const meta = orderflowMeta || {};
   const stale = meta.authoritative !== true || meta.streamBroken === true;
   const gaps = meta.gap ? [meta.gap] : [];
+  if(meta.displayInterval&&meta.displayInterval!==selected){WorkbenchEvidence.commitFailure('orderflow',{at:new Date().toISOString(),message:'显示周期切换中，保留原周期证据'});return;}
   if (meta.aggregationIncomplete) gaps.push({ reason: "incomplete_aggregation" });
   if (!orderflowBars.length) {
     WorkbenchEvidence.commitFailure("orderflow", { at: new Date().toISOString(), message: "足迹没有可展示的棒" });
@@ -325,7 +327,8 @@ function publishOrderflowEvidence() {
     displayedAt: new Date().toISOString(),
     readAt: desk.asOf || null,
     asOf: desk.asOf || null,
-    parameters: { symbol: ORDERFLOW_SYMBOL, sourceInterval: "5m", displayInterval: selected },
+    parameters: { symbol: ORDERFLOW_SYMBOL, sourceInterval: "5m", displayInterval: selected,requestedBars:readOrderflowState().visibleBars },
+    window:orderflowCanvasMeta?{startIndex:orderflowCanvasMeta.startIndex,endIndex:orderflowCanvasMeta.endIndex,displayed:orderflowCanvasMeta.visibleBars,capacity:orderflowCanvasMeta.capacity,scrollFromRight:orderflowCanvasMeta.scrollFromRight}:null,
     contentRevision: desk.inputRevision || null,
     gaps,
     authoritative: meta.authoritative === true,
@@ -336,16 +339,19 @@ function publishOrderflowEvidence() {
       message: meta.gap && meta.gap.reason ? String(meta.gap.reason) : "footprint_not_authoritative",
     } : null,
     units: { volume: "BTC" },
-    bars: orderflowBars.slice(-240).map((bar) => ({
+    finalityPolicy:'源closed/finality保留；仅时间已过不等于交易所确认；聚合缺组成棒为incomplete',
+    bars: getOrderflowVisibleStudyBars().map((bar) => ({
       t: bar.t, o: bar.o, h: bar.h, l: bar.l, c: bar.c,
       buyVol: bar.buyVol, sellVol: bar.sellVol, delta: bar.delta, volume: bar.volume,
+      closed:bar.closed,finality:bar.finality,
     })),
     aggregationIncomplete: !!(orderflowMeta && orderflowMeta.aggregationIncomplete),
   });
 }
 
 function updateOrderflowStats(statusText) {
-  const latest = orderflowBars.length ? orderflowBars[orderflowBars.length - 1] : null;
+  const visible=getOrderflowVisibleStudyBars();
+  const latest = visible.length ? visible[visible.length - 1] : null;
   const freshness = getOrderflowFreshness(latest);
   const statusEl = document.getElementById("of-status");
   const chip = document.getElementById("of-live-chip");
@@ -355,7 +361,7 @@ function updateOrderflowStats(statusText) {
   const displayInterval = readOrderflowState().interval;
   if (statusEl) {
     const count = orderflowBars.length;
-    const bits = [`${statusText || "Cloud D1 polling"} · ${count} bars`, `来源 ${sourceInterval}`, `显示 ${displayInterval}`];
+    const bits = [`${displayInterval} · ${count} 根`, freshness.label];
     if (incomplete) bits.push(`不完整 · ${orderflowMeta.aggregationDetail || "缺组成棒"}`);
     if (rejectedCache) bits.push("断流后未回用无来源标记缓存");
     statusEl.textContent = bits.join(" · ");
@@ -385,7 +391,7 @@ function updateOrderflowStats(statusText) {
     if (orderflowMeta && orderflowMeta.displayInterval) parts.push(`显示聚合周期 ${orderflowMeta.displayInterval}`);
     if (orderflowMeta && orderflowMeta.authoritative) parts.push(freshness.label);
     else parts.push("desk 足迹未确认，主画布空");
-    parts.push(`可视 ${state.visibleBars} bars`);
+    parts.push(`请求 ${state.visibleBars} 根，实际显示 ${visible.length} 根，屏幕容量 ${orderflowCanvasMeta?.capacity??'待测'} 根。`);
     evidenceEl.textContent = parts.join(" ");
   }
   const aggEl = document.getElementById("of-side-agg");
@@ -942,6 +948,17 @@ function renderOrderflowSfpStudy(bars, model) {
   `;
 }
 
+function renderOrderflowVisibleScope() {
+  const meta = orderflowCanvasMeta;
+  const bars = meta && Array.isArray(meta.visibleBarsData) ? meta.visibleBarsData : [];
+  const first = bars[0], last = bars[bars.length - 1];
+  if (!first || !last || !Number.isSafeInteger(first.t) || !Number.isSafeInteger(last.t)) return '<p class="orderflow-window-scope">判断所用可视范围尚未取得。</p>';
+  const tick = Number(meta.effectiveTickSize);
+  const forming = bars.some(bar => bar.closed === false || bar.finality === "forming");
+  const time = value => new Date(value).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false });
+  return `<p id="of-visible-scope" class="orderflow-window-scope" data-first-open="${first.t}" data-last-open="${last.t}" data-count="${bars.length}" data-tick="${Number.isFinite(tick) && tick > 0 ? tick : ""}">判断所用可视棒 · ${bars.length} 根 · 价格档 ${Number.isFinite(tick) && tick > 0 ? fmtOfPrice(tick) + " USDT" : "未知"}<br>棒开盘（北京时间）：${time(first.t)} → ${time(last.t)}<br>${forming ? "含形成中棒；不代表完整闭合窗口。" : "收盘状态保留来源标记；完整窗口仍需核对。"}</p>`;
+}
+
 function renderOrderflowRailInsight(bars, model) {
   if (!bars || !bars.length) {
     return '<div class="orderflow-rail-placeholder">等待当前可视足迹数据...</div>';
@@ -962,6 +979,7 @@ function renderOrderflowRailInsight(bars, model) {
           <span class="orderflow-rail-card-label">当前窗口判断</span>
           <strong>${dashboard.primary || "等待当前窗口读数"}</strong>
           ${dashboard.latest ? `<span class="orderflow-rail-card-sub">${dashboard.latest}</span>` : ""}
+          ${renderOrderflowVisibleScope()}
         </div>
         <div class="orderflow-rail-card">
           <span class="orderflow-rail-card-label">关键位观察</span>
@@ -1034,6 +1052,7 @@ function renderOrderflowRailInsight(bars, model) {
         <span class="orderflow-rail-card-label">当前窗口判断</span>
         <strong>${model && model.summary ? model.summary.primary : levelsShort}</strong>
         ${model && model.summary && model.summary.latest ? `<span class="orderflow-rail-card-sub">${model.summary.latest}</span>` : ""}
+        ${renderOrderflowVisibleScope()}
       </div>
       <div class="orderflow-rail-card">
         <span class="orderflow-rail-card-label">成交结构</span>
@@ -1193,10 +1212,12 @@ function applyOrderflowState(next) {
   const oldTickSize = orderflowStream ? orderflowStream.tickSize : null;
   const oldLoadBars = orderflowStream ? orderflowStream.maxBars : null;
   const intervalChanged = next.interval !== oldInterval;
+  if(intervalChanged){orderflowBars=[];orderflowMeta=null;orderflowCanvasMeta=null;if(orderflowCanvas)orderflowCanvas.setData([]);}
   writeOrderflowState(next);
   if (orderflowCanvas) {
     orderflowCanvas.setOptions({
       maxBars: next.visibleBars,
+      intervalMs:({ '5m':300000,'15m':900000,'1h':3600000,'4h':14400000 }[next.interval]||300000),
       showImbalance: next.showImbalance,
       showVpLevels: next.showVpLevels,
       tickSize: next.tickSize,
@@ -1293,6 +1314,7 @@ function initOrderflow() {
 
   orderflowCanvas = new FootprintCanvas(canvas, {
     maxBars: state.visibleBars,
+    intervalMs:({ '5m':300000,'15m':900000,'1h':3600000,'4h':14400000 }[state.interval]||300000),
     showImbalance: state.showImbalance,
     showVpLevels: state.showVpLevels,
     tickSize: state.tickSize,
@@ -1300,8 +1322,10 @@ function initOrderflow() {
     onRenderMeta: (meta) => {
       orderflowCanvasMeta = meta || null;
       updateOrderflowStats(orderflowStream ? orderflowStream.statusText() : "Cloud D1 polling");
+      publishOrderflowEvidence();
     },
   });
+  for(const [id,move]of [['of-first',()=>orderflowBars.length],['of-prev',()=>orderflowCanvas.displayCapacity],['of-next',()=>-orderflowCanvas.displayCapacity],['of-latest',()=>-orderflowBars.length]])document.getElementById(id)?.addEventListener('click',()=>orderflowCanvas?.pan(move()));
   orderflowStream = new FootprintEngine.FootprintStream({
     symbol: ORDERFLOW_SYMBOL,
     interval: state.interval,

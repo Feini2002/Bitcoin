@@ -4,11 +4,13 @@
 
 ## Current Development Entry
 
-- 2026-09-30 换电脑接续先读 [开发交接](docs/operations/development-handoff-2026-09-30.md) 和 [新电脑说明](docs/operations/new-computer.md)。两轮读取性能修复已发布，源码以 Git 为准，不覆盖旧 SOURCE 包；私密文件离线恢复，不进入 Git。
+- 2026-10-04 当前产品与本地架构以 [Agent 主方案](docs/research/agent-team-product-plan-2026-10-02.md) 为首读，[总架构 V2](docs/research/market-first-frontend-master-plan-2026-10-02.md) 服从它；实际迭代/失败/验证见 [实施记录](docs/research/agent-team-implementation-2026-10-02.md)。首席默认、五领域独立研究、数据证据工作区与专题任务已接入本地开发版。继续前核对这三份当前状态，不从旧四页或第二批总计划重新开发。
+
+- 2026-10-05 换电脑接续先读 [当前开发快照](docs/operations/development-handoff-2026-10-05.md) 和 [新电脑说明](docs/operations/new-computer.md)。Agent .27/P22与金融修复A–D本地build通过，窗口/事件真研究通过，修后当前市场整队E未完成；精确状态以实施记录顶部为准。两轮读取性能修复已发布；源码以Git为准，不覆盖旧SOURCE包，本机研究历史和私密文件离线恢复，不进入Git。[旧交接](docs/operations/development-handoff-2026-09-30.md)保留历史背景。
 
 - 2026-09-29 起，研究总览、事件/舆情 UI 与无模型 Key 的 AI 对话分析入口见 [研究工作台重构](docs/research/product-redesign-2026-09-29.md) 和 [AI 研究流程](docs/research/ai-research-workflow.md)。用户要求研究时按 `js/research-protocol.js` 的模块顺序执行；只有本次指令包含保存到网站时才用 CLI 显式 `--remote` 保存新 ID 并读回。网站模型运行仍退役。
 
-- 当前开发调度以 [四页数据工作台方案](docs/research/repository-development-plan-2026-09-27.md) 为入口，当前事实与发现见 [架构核对](docs/research/repository-architecture-review-2026-09-27.md)。W1–W4 已有实现；继续前先核对计划顶部的验收与发布状态，不重新从 W1 开发，也不把本地通过当作生产已上线。
+- [四页数据工作台方案](docs/research/repository-development-plan-2026-09-27.md) 和 [架构核对](docs/research/repository-architecture-review-2026-09-27.md) 是已有数据引擎及历史阶段依据。W1–W4 已实现，不重新从 W1 开发，不把本地通过当作生产上线。
 - 第二批 P00–P10/NEW 编号保留供追溯，不重新执行旧总计划，不恢复已退役模型生成。后续任务完成时更新当前方案中的实现、验证、启用和精确下一步。
 
 ## Context First
@@ -41,8 +43,9 @@
 
 ## LLM Execution
 
-- 自动、手动和流式模型报告生成已退役，旧生成/模型通道接口按现有契约返回 410；历史报告和事实数据继续读取。不得按旧计划恢复云端模型或本机 Codex CLI 任务队列。
-- Codex 对话用于用户主动发起的开发、研究和分析，不是网站运行依赖。需要把人工整理的报告保存到网站时，复用独立的报告导入脚本，并遵守远程 D1 写入授权边界。
+- 旧云端自动、手动和流式模型生成继续退役，旧接口返回 410，历史报告和事实数据继续读取，不按旧计划恢复云端执行或旧本机任务队列。
+- 用户已明确选定的新本地 Agent 服务由开发页调用官方 Codex CLI 的 ChatGPT 登录额度，模型步骤只走该渠道；首席/岗位/审核共用单服务，默认自动 OFF，仅页面打开期间按用户设置运行。它与旧云端生成、人工报告导入分开。本地通过不授权部署、远程写入或开启计划。
+- Codex 对话继续用于开发和主动研究。需要把人工报告保存到网站时复用独立导入脚本，远程 D1 写入按当次授权处理。
 - 修改 LLM 功能时，同步检查 Worker/API、模型设置、上下文来源、报告结构、D1 读写、历史展示和前端流式反馈，保留现有已接入与预留模块的业务契约。
 - 历史报告和已存在的迁移记录保留；退役任务表与旧执行设置不再参与运行，不因代码清理自动删除远程数据。
 
@@ -50,7 +53,7 @@
 
 - `npm run build` 运行全量本地验证并生成 `dist/pages/`，发布仅使用该目录。
 - 通用改动后运行 `npm run lint`。
-- 指标数学或行情图表改动后运行 `node scripts/verify-indicator-math.cjs`。
+- 指标数学或行情图表改动后运行 `node tests/unit/verify-indicator-math.cjs`。
 - 足迹图、订单流或 Cloudflare footprint 改动后运行 `npm run verify:footprint`。
 - Worker/静态壳相关改动后运行 `npm run verify:api`（默认探测已部署行情 Worker `/api/d1/status`，可用 `BITDESK_SMOKE_ORIGIN` 覆盖根 URL）；需要探测 Binance 与 `BITDESK_KLINE_API_BASE` 指向的行情 Worker `/api/d1/klines` 时再运行 `npm run diagnose`。
 - 改动跨多个区域时运行 `npm run verify:all`。
@@ -86,8 +89,8 @@
 
 ## Pages Custom Domain Cache
 
-- 本项目自定义域名是 `https://bitcoin.feiniwork.com/`。前端、静态资源、页面入口、样式或关键 JS 改动后，部署 Pages 前必须同步更新 `index.html` 中受影响资源的 `?v=` 版本号，避免自定义域名、浏览器或边缘缓存继续加载旧 `styles.css` / JS。
-- 如果只是恢复、替换或修补 `styles.css`、`js/pages/*.js`、`js/app.js`、`js/config.js`、图表入口或其他由 `index.html` 引入的静态文件，也必须提升对应资源版本号；不要只部署文件本体。
+- 本项目自定义域名是 `https://bitcoin.feiniwork.com/`。前端、静态资源、页面入口、样式或关键 JS 改动后，部署 Pages 前必须同步更新 `index.html` 中受影响资源的 `?v=` 版本号，避免自定义域名、浏览器或边缘缓存继续加载旧 `assets/css/styles.css` / JS。
+- 如果只是恢复、替换或修补 `assets/css/styles.css`、`js/pages/*.js`、`js/app.js`、`js/config.js`、图表入口或其他由 `index.html` 引入的静态文件，也必须提升对应资源版本号；不要只部署文件本体。
 - Pages 部署后必须核验 `https://bitcoin.feiniwork.com/` 返回的 `index.html` 已包含新 `?v=`，并至少检查受影响 hash 页面；若自定义域名和 `*.pages.dev` 内容不一致，优先排查 Pages production 指针、Cloudflare 缓存和浏览器缓存。
 
 ## Reporting

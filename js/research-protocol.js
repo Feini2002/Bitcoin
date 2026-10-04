@@ -45,6 +45,7 @@
       if(!s.title||!s.publisher||!safeUrl(s.url))err('来源 '+s.id+' 需要标题、发布者和有效 http(s) URL');
       if(!iso(s.accessedAt))err('来源 '+s.id+' 缺少访问时间');
       if(s.publishedAt!==null&&!iso(s.publishedAt))err('来源发布时间未知请填 null');
+      if(iso(s.publishedAt)&&Date.parse(s.publishedAt)>Date.parse(r.asOf))err('来源发布时间不能晚于资料截止时间');
       if(!['primary','media','social','market_data'].includes(s.type))err('来源类型必须为 primary/media/social/market_data');
     }
     const refs=(item,label)=>{
@@ -61,6 +62,8 @@
       if(e.timePrecision==='exact'&&!iso(e.occurredAt))err('精确事件时间必须带时区');
       if(e.timePrecision==='date'&&!dateOnly(e.occurredAt))err('日期级事件应为有效 YYYY-MM-DD');
       if(e.timePrecision==='unknown'&&e.occurredAt!==null)err('未知事件时间必须为 null');
+      if(key==='events'&&e.timePrecision==='exact'&&iso(e.occurredAt)&&Date.parse(e.occurredAt)>Date.parse(r.asOf))err('未来事件应放入 catalysts，不能作为已发生事实');
+      if(key==='events'&&e.timePrecision==='date'&&dateOnly(e.occurredAt)&&e.occurredAt>r.asOf.slice(0,10))err('未来日期事件应放入 catalysts');
       refs(e,key+' '+(e.id||''));
     }
     const fields={checks:['metric','observation','interpretation','asOf'],narratives:['id','title','claim','support','counterEvidence','pricing','status'],scenarios:['name','trigger','confirmation','invalidation','implication'],watchlist:['question','condition']};
@@ -85,14 +88,14 @@
     return ['请在当前 AI 对话中完成'+title+'，不配置或索取模型 API Key，不启动网站模型任务。',
       '先读取本仓库 AGENTS.md、docs/research/ai-research-workflow.md 和 js/research-protocol.js，以实际 schema 为准。用户关注：'+(context.focus||'BTC，最近 24 小时事件及未来 7 天催化剂；分析以可验证数据为限。'),
       context.reportId?'当前参考报告 ID：'+context.reportId+'。先核对其资料截止时间，不把旧报告当当前事实。':'尚未指定上游报告，先读取网站现有报告并核对时间。',
-      '可运行 node scripts/prepare-research.cjs --kind='+kind+' 收集只读市场证据，读取命令返回的文件。资料或工具不可访问时写明缺口，不能用记忆填当前数据。',
+      '可运行 node scripts/research/prepare-research.cjs --kind='+kind+' 收集只读市场证据，读取命令返回的文件。资料或工具不可访问时写明缺口，不能用记忆填当前数据。',
       ...selected.map((m,i)=>(i+1)+'. '+m.title+'：'+m.prompt+' 输出：'+m.output+'。'),
       '输出要求：'+(moduleId?'这是单模块复核；返回证据与建议，不自动覆盖已有完整报告。':'依下方结构生成独立 JSON 文件。所有非空研究条目都必须引用 sources 中存在的 sourceIds；sources 字段：id/title/url/publisher/type(primary|media|social|market_data)/publishedAt(未知null)/accessedAt。'),
       '事件字段：id/title/category/status(confirmed|reported|unverified)/occurredAt/timePrecision(exact|date|unknown)/summary/transmission/watch/sourceIds；catalysts 使用相同结构。',
       'checks 字段：metric/observation/interpretation/asOf/sourceIds。narratives 字段：id/title/claim/support/counterEvidence/pricing/status(supported|contested|untested)/sourceIds。',
       'scenarios 字段：name/trigger/confirmation/invalidation/implication/sourceIds。watchlist 字段：question/condition/sourceIds。没有证据的集合可以为空，写明 limitations。严禁伪造精确概率、来源、价格、日期和全市场舆情统计。',
       JSON.stringify(template(kind),null,2),
-      '完成后使用 node scripts/import-yuqing-report.cjs <文件> --dry-run 校验。若本次用户指令包含保存到网站，校验通过后使用既有导入脚本 --remote 保存新 ID，再通过报告 item 读回核对；不要覆盖旧报告。未授权保存时只交付 JSON 和结论。'].join('\n\n');
+      '完成后使用 node scripts/research/import-yuqing-report.cjs <文件> --dry-run 校验。若本次用户指令包含保存到网站，校验通过后使用既有导入脚本 --remote 保存新 ID，再通过报告 item 读回核对；不要覆盖旧报告。未授权保存时只交付 JSON 和结论。'].join('\n\n');
   }
   const api={VERSION,modules,validate,prompt,template,safeUrl};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;

@@ -443,11 +443,11 @@ function mergeDailyStreamEvent(evt) {
 
 function dailyStreamModuleLabel(module, streamKey = "") {
   const key = String(streamKey || module || "").trim();
-  if (key === "topStories.primary") return "今日头条 · 主线";
-  if (key === "topStories.wire") return "今日头条 · 快讯";
+  if (key === "topStories.primary") return "历史头条 · 主线";
+  if (key === "topStories.wire") return "历史头条 · 快讯";
   const m = String(module || "").trim();
-  if (m === "temperature") return "当前信息温度";
-  if (m === "topStories") return "今日头条";
+  if (m === "temperature") return "历史信息温度（旧稿评分，未校准）";
+  if (m === "topStories") return "历史头条";
   if (m === "dynamicBriefs") return "动态速览";
   if (m === "aiIntel") return "AI 情报站";
   if (m === "githubTools") return "GitHub 工具雷达";
@@ -780,17 +780,17 @@ function renderDailyTemperature(row) {
   const assetMovesHtml = renderDailyAssetMoves(temp);
   const liveHtml = renderDailyLiveStreamCards("temperature", row);
   return `
-    <section class="news-panel span-12 daily-module-panel daily-module-temperature daily-brief-temperature${dailyModuleStateClass("temperature", row)}" ${dailyModuleStateAttrs("temperature", row)} style="view-transition-name: daily-temperature;" aria-label="当前信息温度">
+    <section class="news-panel span-12 daily-module-panel daily-module-temperature daily-brief-temperature${dailyModuleStateClass("temperature", row)}" ${dailyModuleStateAttrs("temperature", row)} style="view-transition-name: daily-temperature;" aria-label="历史信息温度（旧稿评分，未校准）">
       <div class="news-panel-head daily-module-head">
-        <h3>当前信息温度</h3>
+        <h3>历史信息温度（旧稿评分，未校准）</h3>
       </div>
       <div class="daily-temperature-body">
-        <div class="daily-temperature-score" aria-label="当前信息温度 ${n} 分">
+        <div class="daily-temperature-score" aria-label="历史信息温度（旧稿评分，未校准） ${n} 分">
           <strong>${n}</strong>
           <span>/ 100</span>
         </div>
         <div class="daily-temperature-main">
-          <p class="daily-temperature-summary">${dailyEscapeHtml(temp.summary || "当前信息温度中性，可正常阅读各类来源信息。")}</p>
+          <p class="daily-temperature-summary">${dailyEscapeHtml(temp.summary || "历史信息温度（旧稿评分，未校准）中性，可正常阅读各类来源信息。")}</p>
           ${details.length ? `<div class="daily-temperature-meta">${details.map((x) => `<span class="daily-temp-meta-${dailyEscapeHtml(x.tone)}"><b>${dailyEscapeHtml(x.label)}</b>${dailyEscapeHtml(x.value)}</span>`).join("")}</div>` : ""}
           ${assetMovesHtml}
           ${liveHtml}
@@ -852,14 +852,14 @@ function renderDailyTopStory(story, idx = 0) {
       <div class="news-story-body">
         <div class="daily-story-header">
           <div class="news-story-meta">
-            <span class="news-story-category">${dailyEscapeHtml(item.category || "今日头条")}</span>
+            <span class="news-story-category">${dailyEscapeHtml(item.category || "历史头条")}</span>
             <span>${dailyEscapeHtml(item.occurredAt || "近期")} · ${dailyEscapeHtml(item.duration || "正在持续")}</span>
             ${sourceTag}
           </div>
           <span class="daily-story-index">${String(idx + 1).padStart(2, "0")}</span>
         </div>
         <h3 class="daily-story-title">${parseMarkdownInline(item.title || "暂无头条")}</h3>
-        <div class="daily-story-section daily-story-section--fact"><b>事实锁定</b><span>${parseMarkdownInline(item.fact || "等待事实池补充。")}</span></div>
+        <div class="daily-story-section daily-story-section--fact"><b>旧稿事实陈述 · 未重新核实</b><span>${parseMarkdownInline(item.fact || "等待事实池补充。")}</span></div>
         <div class="daily-story-matrix">
           <div class="daily-story-section daily-story-section--structure"><b>结构拆解</b><div class="daily-column-lines">${structureHtml}</div></div>
           <div class="daily-story-section daily-story-section--impact"><b>传导预判</b><div class="daily-column-lines">${impactsHtml}</div></div>
@@ -1180,7 +1180,7 @@ function renderDailyTrend(row) {
         <h4>${dailyEscapeHtml(t.title || "日报线索合成")}</h4>
         <p>${parseMarkdownInline(summary)}<br><span class="muted-text">方法：${dailyEscapeHtml(methodLine)}；${dailyEscapeHtml(searchLine)}。</span></p>
       </div>`,
-      renderDailyTrendBlock("世界新闻主线", t.worldNews, "ok", "等待今日头条与动态速览形成更明确的世界新闻主线。"),
+      renderDailyTrendBlock("世界新闻主线", t.worldNews, "ok", "等待历史头条与动态速览形成更明确的世界新闻主线。"),
       renderDailyTrendBlock("科技扩散脉冲", t.techPulse, "info", "等待 AI 情报站或 GitHub 工具雷达提供可落地的科技线索。"),
       renderDailyTrendBlock("轻量金融背景", t.financeBackdrop, "info", "金融信息只作为阅读背景，不输出交易方向。"),
       renderDailyTrendBlock("叙事裂缝", t.contradictions, "warn", "暂无明显叙事裂缝；继续等待来源互相印证。"),
@@ -1412,7 +1412,7 @@ function renderDailySettingsChrome() {
           </div>
           <div class="daily-settings-group">
             ${mkToggle("dashboard", "信息温度", v.dashboard, "visibility")}
-            ${mkToggle("news", "今日头条", v.news, "visibility")}
+            ${mkToggle("news", "历史头条", v.news, "visibility")}
             ${mkToggle("timeline", "动态速览", v.timeline, "visibility")}
             ${mkToggle("ai", "AI 情报站", v.ai, "visibility")}
             ${mkToggle("githubTools", "GitHub 工具雷达", v.githubTools, "visibility")}
@@ -1459,7 +1459,7 @@ function renderDailyReportHeader(r) {
         </button>
       </div>
     </div>
-    ${scanStatusHtml}`;
+    <section class="rd-caution">历史报告 · ${dailyEscapeHtml(dailyFormatTriggeredSearchAt(r && r.generatedAt ? r.generatedAt : null))}。以下是旧稿原文与未校准评分，本轮未重新核实，不作为当前市场判断。<a href="#/boardroom">打开首席决策台 →</a></section>${scanStatusHtml}`;
 }
 
 function dailyPanelClass(span, name, extra = "", moduleKey = name, row = dailyActiveReport()) {
@@ -1491,8 +1491,8 @@ function renderDailyReportGrid(r) {
       <section class="${dailyPanelClass(showTimeline ? 7 : 12, "news", showTimeline ? "daily-balanced-panel" : "daily-expanded-panel", "topStories", r)}" ${dailyModuleStateAttrs("topStories", r)} style="view-transition-name: daily-news;">
         <div class="news-panel-head daily-module-head">
           <div>
-            <span class="news-section-kicker">今日头条</span>
-            <h3>高价值事件拆解</h3>
+            <span class="news-section-kicker">历史头条</span>
+            <h3>历史事件拆解 · 本轮未重新核实</h3>
             <p class="daily-module-subtitle">把单条事件拆成事实、结构与资产传导，而不是只看标题。</p>
           </div>
         </div>

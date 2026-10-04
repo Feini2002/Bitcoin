@@ -1,0 +1,17 @@
+{
+  "verifiedOn": "2026-09-30",
+  "kind": "synthetic_inputs_real_current_functions",
+  "businessCodeChanged": false,
+  "source": "cloudflare/finance/desk.mjs",
+  "supervisorPid": 3268,
+  "childPid": 1724,
+  "exitCode": 0,
+  "datasetCount": 33,
+  "counterexamples": [
+    {"scope":"heatmap","before":100,"after":1000,"field":"byExchange.binance.longNotional","sameRevision":true},
+    {"scope":"orderflow","before":10,"after":-40,"field":"series[0].delta","sameRevision":true},
+    {"scope":"context","before":4,"after":5,"field":"groups.dailyRates.cards[0].value","sameRevision":true}
+  ],
+  "interpretation": "这些inputRevision不能单独证明完整内容未变。本轮未证明现有页面漏刷新或报告已经使用错误数据。",
+  "productionHealthVerified": false
+}

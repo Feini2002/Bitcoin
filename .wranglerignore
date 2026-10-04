@@ -4,6 +4,7 @@
 .codex-bridge.env
 .env
 .env.*
+.local/
 .dev.vars*
 .wrangler/
 .pages-dist-*/

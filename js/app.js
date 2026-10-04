@@ -2,7 +2,11 @@
    路由注册与启动
    ======================================================= */
 const ROUTES = {
-  "overview": { crumbs: ["研究桌", "研究总览"], render: pageResearchOverview, afterMount: initResearchOverview },
+  "overview": { crumbs: ["工作台", "今日"], render: pageResearchOverview, afterMount: initResearchOverview },
+  "market": {}, "events": {}, "research": {},
+  "records": { crumbs: ["工作台", "记录"], render: pageResearchRecords, afterMount: initResearchRecords },
+  "research-window": { crumbs: ["研究团队", "指定问题研究"], render: pageResearchTeam, afterMount: initResearchTeam },
+  "team-record": { crumbs: ["记录", "岗位研究"], render: pageTeamRecord, afterMount: initTeamRecord },
   "premarket": { crumbs: ["核心", "盘前简报"], render: () => pagePlaceholder(PLACEHOLDERS.premarket) },
 
   "chart": { crumbs: ["市场监测", "行情工作台"], render: pageChart, afterMount: initChart },
@@ -13,13 +17,16 @@ const ROUTES = {
   "news": { crumbs: ["研究", "事件一览"], render: () => researchLegacyRoute() ? pageYuqingEvents() : ResearchDesk.scaffold('daily_event'), afterMount: () => researchLegacyRoute() ? initYuqingEvents() : ResearchDesk.mount('daily_event') },
   "news-analysis": { crumbs: ["研究", "舆情分析"], render: () => researchLegacyRoute() ? pageNews() : ResearchDesk.scaffold('sentiment_analysis'), afterMount: () => researchLegacyRoute() ? initNews() : ResearchDesk.mount('sentiment_analysis') },
 
-  "boardroom": { crumbs: ["智囊团", "会议室"], render: pageBoardroom },
-  "agent-chief": { crumbs: ["智囊团", "首席策略官"], render: () => pageAgentPlaceholder("chief") },
-  "agent-env": { crumbs: ["智囊团", "环境评估员"], render: pageEnvAgent, afterMount: renderEnvCharts },
-  "agent-flow": { crumbs: ["智囊团", "盘口流动性官"], render: () => pageAgentPlaceholder("flow") },
-  "agent-deriv": { crumbs: ["智囊团", "衍生品情报官"], render: () => pageAgentPlaceholder("deriv") },
+  "boardroom": { crumbs: ["智囊团", "首席决策台"], render: () => pageAgentTeam('chief'), afterMount: initAgentTeam },
+  "boardroom-demo": { crumbs: ["规划与演示", "旧会议示例"], render: pageBoardroom },
+  "agent-chief": { crumbs: ["智囊团", "首席策略官"], render: () => pageAgentTeam('chief'), afterMount: initAgentTeam },
+  "agent-env": { crumbs: ["智囊团", "环境评估员"], render: () => pageAgentTeam('env'), afterMount: initAgentTeam },
+  "agent-flow": { crumbs: ["智囊团", "盘口流动性官"], render: () => pageAgentTeam('flow'), afterMount: initAgentTeam },
+  "agent-deriv": { crumbs: ["智囊团", "衍生品情报官"], render: () => pageAgentTeam('deriv'), afterMount: initAgentTeam },
+  "agent-macro": { crumbs: ["智囊团", "宏观研究员"], render: () => pageAgentTeam('macro'), afterMount: initAgentTeam },
+  "agent-events": { crumbs: ["智囊团", "事件与舆情研究员"], render: () => pageAgentTeam('events'), afterMount: initAgentTeam },
   "agent-risk": { crumbs: ["智囊团", "风控官"], render: () => pageAgentPlaceholder("risk") },
-  "archive": { crumbs: ["智囊团", "发言历史库"], render: () => pagePlaceholder(PLACEHOLDERS.archive) },
+  "archive": { crumbs: ["智囊团", "研究历史"], render: () => pageAgentTeam('archive'), afterMount: initAgentTeam },
 
   "calc": { crumbs: ["交易执行", "仓位与风险计算器"], render: pageCalc },
   "templates": { crumbs: ["交易执行", "策略模板库"], render: () => pagePlaceholder(PLACEHOLDERS.templates) },
@@ -33,20 +40,29 @@ const ROUTES = {
 
   "data-vault": { crumbs: ["系统", "数据池"], render: () => pagePlaceholder(PLACEHOLDERS["data-vault"]) },
   "playbook": { crumbs: ["系统", "知识库 Playbook"], render: () => pagePlaceholder(PLACEHOLDERS.playbook) },
-  "settings": { crumbs: ["系统", "设置"], render: pageSettings, afterMount: initSettingsPage },
+  "settings": { crumbs: ["系统", "设置"], render: pageSettings, afterMount: () => {initSettingsPage();initAgentTeamSettings();} },
 };
 
 function researchLegacyRoute() { return /(?:[?&])legacy=1(?:&|$)/.test(location.hash); }
 function resolveRoute() {
   const h = location.hash.replace(/^#\/?/, "").trim();
   const id = h.split("?")[0];
-  if (!id || !ROUTES[id]) return "overview";
+  if (id === "market") { const view = UserWorkspace.query().get('view'); return ['orderflow','heatmap'].includes(view) ? view : ['leverage','macro'].includes(view) ? 'derivatives' : 'chart'; }
+  if (id === "events") return "news";
+  if (id === "research") return UserWorkspace.query().get('view')==='window' ? 'research-window' : UserWorkspace.query().get('view')==='narratives' ? 'news-analysis' : 'boardroom';
+  if (!id || !ROUTES[id]) return "boardroom";
   return id;
 }
 
 // 只释放上一个页面；取消尚未执行的挂载，避免快速切页后启动旧订阅。
 const PAGE_DISPOSERS = {
+  boardroom: () => disposeAgentTeam(),
+  'research-window': () => disposeResearchTeam(),
+  'team-record': () => disposeTeamRecord(),
+  'agent-chief': () => disposeAgentTeam(), 'agent-env': () => disposeAgentTeam(), 'agent-flow': () => disposeAgentTeam(), 'agent-deriv': () => disposeAgentTeam(), 'agent-macro': () => disposeAgentTeam(), 'agent-events': () => disposeAgentTeam(), archive: () => disposeAgentTeam(),
   overview: () => disposeResearchOverview(),
+  records: () => disposeResearchRecords(),
+  settings: () => {disposeUserSettings();disposeAgentTeam();},
   chart: () => window.__bitDeskDisposeChart?.(),
   orderflow: () => window.__bitDeskDisposeOrderflow?.(),
   heatmap: () => window.__bitDeskDisposeHeatmap?.(),
@@ -66,13 +82,15 @@ function render() {
   const outlet = $("#outlet");
 
   outlet.style.animation = "none";
-  const content = route.render();
+  const market = ["chart","orderflow","heatmap","derivatives"].includes(id);
+  const research = ['boardroom','research-window','news-analysis','agent-chief','agent-env','agent-flow','agent-deriv','agent-macro','agent-events'].includes(id);
+  const content = market ? UserWorkspace.marketShell(id, route.render()) : research ? UserWorkspace.researchShell(id,route.render()) : route.render();
   outlet.innerHTML = renderFeatureNotice(id) + (FEATURE_STATE_BY_ROUTE[id] === "demo" ? renderDemoPreview(content) : content);
   disableDemoControls(outlet);
   void outlet.offsetWidth;
   outlet.style.animation = "";
 
-  setBreadcrumb(route.crumbs);
+  setBreadcrumb(market ? ["证据工作区", Object.fromEntries(UserWorkspace.views)[UserWorkspace.view(id)]] : id === "news" ? ["证据工作区","事件资料"] : route.crumbs);
   highlightNav(id);
 
   if (typeof route.afterMount === "function") {
@@ -80,6 +98,7 @@ function render() {
       pendingPageMount = null;
       mountedPage = id;
       route.afterMount();
+      if (market) UserWorkspace.mountMarket(id);
     });
   }
   attachPageEvents();
@@ -124,12 +143,13 @@ function tickClock() {
 }
 
 function init() {
+  initAgentTeamPresence();
   initTheme();
   buildSidebar();
   initMobileNavigation();
   const rawHash = location.hash.replace(/^#\/?/, "").trim();
   if (!rawHash || !ROUTES[rawHash.split("?")[0]]) {
-    history.replaceState(null, "", "#/overview");
+    history.replaceState(null, "", "#/boardroom");
   }
   render();
   window.addEventListener("hashchange", render);

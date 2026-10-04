@@ -47,3 +47,6 @@ dist/
 # Retired editor configuration
 .cursor/
 .cursorrules
+
+# Private local backups and migration packages; never publish.
+.local/

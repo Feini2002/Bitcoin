@@ -70,7 +70,7 @@
     const lo = Math.min(...prices);
     const hi = Math.max(...prices);
     const range = Math.max(1, hi - lo);
-    const targetRows = Math.max(30, Math.min(45, Math.floor(plotH / 16)));
+    const targetRows = Math.max(8, Math.min(30, Math.floor(plotH / 18)));
     const baseTick = detectBaseTick(bars);
     for (const tick of AUTO_TICKS) {
       if (tick < baseTick) continue;
@@ -128,14 +128,17 @@
       this.scrollFromRight = 0;
       this.hitCells = [];
       this.lastEffectiveTick = null;
+      this.displayCapacity = this.maxBars;
       this._wheelHandler = (e) => {
-        if (!this.bars.length || this.bars.length <= this.maxBars) return;
+        if (!this.bars.length || this.bars.length <= this.displayCapacity) return;
         e.preventDefault();
-        const maxOffset = Math.max(0, this.bars.length - this.maxBars);
         const delta = Math.sign(Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY);
-        this.scrollFromRight = Math.max(0, Math.min(maxOffset, this.scrollFromRight + delta));
-        this.render();
+        this.pan(delta);
       };
+      this._keyHandler = e => {const actions={ArrowLeft:1,ArrowRight:-1,PageUp:this.displayCapacity,PageDown:-this.displayCapacity,Home:this.bars.length,End:-this.bars.length};if(Object.hasOwn(actions,e.key)){e.preventDefault();this.pan(actions[e.key]);}};
+      this._downHandler = e => {if(e.pointerType==='touch'){this.touchX=e.clientX;canvas.setPointerCapture?.(e.pointerId);}this.handlePointerMove(e);};
+      this._touchMoveHandler = e => {if(e.pointerType==='touch'&&this.touchX!=null&&Math.abs(e.clientX-this.touchX)>=45){this.pan(e.clientX>this.touchX?1:-1);this.touchX=e.clientX;}this.handlePointerMove(e);};
+      this._upHandler = ()=>{this.touchX=null;};
       this._moveHandler = (e) => this.handlePointerMove(e);
       this._leaveHandler = () => this.hideTooltip();
       this.ro = null;
@@ -144,6 +147,12 @@
         canvas.addEventListener("wheel", this._wheelHandler, { passive: false });
         canvas.addEventListener("mousemove", this._moveHandler);
         canvas.addEventListener("mouseleave", this._leaveHandler);
+        canvas.addEventListener('keydown',this._keyHandler);
+        canvas.addEventListener('pointerdown',this._downHandler);
+        canvas.addEventListener('pointermove',this._touchMoveHandler);
+        canvas.addEventListener('pointerup',this._upHandler);
+        canvas.addEventListener('pointercancel',this._upHandler);
+        canvas.tabIndex=0;canvas.style.touchAction='pan-y';canvas.setAttribute('aria-label','成交足迹：左右方向键回看，Home 最早，End 最近；手机可横向拖动');
       }
       if (canvas && typeof ResizeObserver !== "undefined") {
         this.ro = new ResizeObserver(() => this.resize());
@@ -162,6 +171,7 @@
         try { this.canvas.removeEventListener("wheel", this._wheelHandler); } catch (_) {}
         try { this.canvas.removeEventListener("mousemove", this._moveHandler); } catch (_) {}
         try { this.canvas.removeEventListener("mouseleave", this._leaveHandler); } catch (_) {}
+        for(const [event,handler]of [['keydown',this._keyHandler],['pointerdown',this._downHandler],['pointermove',this._touchMoveHandler],['pointerup',this._upHandler],['pointercancel',this._upHandler]])this.canvas.removeEventListener(event,handler);
       }
       this.canvas = null;
       this.ctx = null;
@@ -173,6 +183,7 @@
       if (opts.showImbalance != null) this.showImbalance = !!opts.showImbalance;
       if (opts.showVpLevels != null) this.showVpLevels = !!opts.showVpLevels;
       if (opts.tickSize != null) this.tickSize = opts.tickSize || "auto";
+      if(opts.intervalMs)this.opts.intervalMs=opts.intervalMs;
       if (opts.tooltipEl !== undefined) this.tooltipEl = opts.tooltipEl;
       if (typeof opts.onRenderMeta === "function") this.onRenderMeta = opts.onRenderMeta;
       this.render();
@@ -180,10 +191,12 @@
 
     setData(bars) {
       this.bars = Array.isArray(bars) ? bars.slice() : [];
-      const maxOffset = Math.max(0, this.bars.length - this.maxBars);
+      const maxOffset = Math.max(0, this.bars.length - this.displayCapacity);
       this.scrollFromRight = Math.max(0, Math.min(maxOffset, this.scrollFromRight));
       this.render();
     }
+
+    pan(delta){this.scrollFromRight=Math.max(0,Math.min(Math.max(0,this.bars.length-this.displayCapacity),this.scrollFromRight+delta));this.render();}
 
     resize() {
       if (!this.canvas || !this.ctx) return;
@@ -216,10 +229,12 @@
       const w = Math.max(320, Math.floor(rect.width || 0));
       const h = Math.max(320, Math.floor(rect.height || 0));
       const ctx = this.ctx;
-      const maxOffset = Math.max(0, this.bars.length - this.maxBars);
+      const capacity=Math.max(1,Math.floor((w-86)/90));
+      this.displayCapacity=Math.min(this.maxBars,capacity);
+      const maxOffset = Math.max(0, this.bars.length - this.displayCapacity);
       this.scrollFromRight = Math.max(0, Math.min(maxOffset, this.scrollFromRight));
       const end = this.bars.length - this.scrollFromRight;
-      const start = Math.max(0, end - this.maxBars);
+      const start = Math.max(0, end - this.displayCapacity);
       const rawBars = this.bars.slice(start, end);
 
       if (!rawBars.length) {
@@ -230,7 +245,7 @@
 
       const leftW = 78;
       const bottomH = 34;
-      const topH = 24;
+      const topH = 46;
       const plotW = Math.max(120, w - leftW - 8);
       const plotH = Math.max(160, h - topH - bottomH);
       const rebinned = global.FootprintEngine && typeof global.FootprintEngine.rebinDisplayBars === "function"
@@ -259,7 +274,7 @@
       const rowH = Math.max(12, Math.min(24, plotH / Math.max(1, prices.length)));
       const contentH = rowH * prices.length;
       const y0 = topH + Math.max(0, plotH - contentH);
-      const barW = Math.max(16, Math.min(118, plotW / Math.max(1, bars.length)));
+      const barW = plotW / Math.max(1, bars.length);
       const cellGap = 2;
       const imbW = this.showImbalance ? 10 : 2;
       const dataW = Math.max(12, barW - imbW - cellGap * 3);
@@ -371,7 +386,7 @@
           }
 
           if (rowH >= 16 && barW >= 54) {
-            ctx.font = barW >= 74 ? "10px ui-monospace, SFMono-Regular, Consolas, monospace" : "9px ui-monospace, SFMono-Regular, Consolas, monospace";
+            ctx.font = "12px ui-monospace, SFMono-Regular, Consolas, monospace";
             ctx.textBaseline = "middle";
             ctx.fillStyle = "rgba(248,250,252,0.92)";
             ctx.textAlign = "center";
@@ -398,6 +413,8 @@
             y: yForPrice(close),
             close,
             delta: Number(bar.delta) || 0,
+            t:Number(bar.t),
+            closed:bar.closed,finality:bar.finality,
           };
         })
         .filter(Boolean);
@@ -409,7 +426,8 @@
         ctx.shadowBlur = 8;
         ctx.beginPath();
         closePoints.forEach((point, idx) => {
-          if (idx === 0) ctx.moveTo(point.x, point.y);
+          const intervalMs=Number(this.opts.intervalMs)||300000;
+          if (idx === 0||point.closed===false||closePoints[idx-1].closed===false||point.t-closePoints[idx-1].t!==intervalMs) ctx.moveTo(point.x, point.y);
           else ctx.lineTo(point.x, point.y);
         });
         ctx.stroke();
@@ -418,7 +436,8 @@
           ctx.fillStyle = point.delta >= 0 ? "rgba(16,185,129,0.92)" : "rgba(239,68,68,0.92)";
           ctx.beginPath();
           ctx.arc(point.x, point.y, barW >= 44 ? 3.2 : 2.4, 0, Math.PI * 2);
-          ctx.fill();
+          if(point.closed===true&&point.finality==='exchange_confirmed')ctx.fill();
+          else{ctx.strokeStyle=point.closed===false?'rgba(251,191,36,.95)':'rgba(148,163,184,.95)';ctx.stroke();}
         }
         const latest = closePoints[closePoints.length - 1];
         ctx.strokeStyle = "rgba(248,250,252,0.55)";
@@ -433,7 +452,7 @@
         ctx.font = "10px ui-monospace, SFMono-Regular, Consolas, monospace";
         ctx.textAlign = "right";
         ctx.textBaseline = "bottom";
-        ctx.fillText(`Now ${fmtPrice(latest.close)}`, w - 10, latest.y - 3);
+        ctx.fillText(`${this.scrollFromRight?'回看末棒':'最近棒'} ${fmtPrice(latest.close)}`, w - 10, latest.y - 3);
         ctx.restore();
       }
 
@@ -468,13 +487,22 @@
       ctx.font = "12px system-ui, -apple-system, Segoe UI, sans-serif";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText(`左卖右买 · 底部为净主动量 · 黄线POC / 蓝线价值区 · 价格档 ${fmtPrice(rebinned.tick)}`, leftW, 12);
+      ctx.fillText(w<520?`左卖右买 BTC · 档 ${fmtPrice(rebinned.tick)} USDT`:`左卖右买 BTC · 底部净主动量 BTC · 黄线POC / 蓝线价值区 · 价格档 ${fmtPrice(rebinned.tick)} USDT`, leftW, 12);
       if (this.scrollFromRight > 0) {
         ctx.textAlign = "right";
         ctx.fillText(`回看 ${this.scrollFromRight} 根`, w - 10, 12);
       }
+      ctx.fillStyle = "rgba(148,163,184,.95)";
+      ctx.font = "10px system-ui, -apple-system, Segoe UI, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(w < 520 ? "空心：未闭合 / 时间已过 / 未核实" : "空心点：未闭合 / 仅时间已过 / 状态未知", leftW, 28);
       this.onRenderMeta({
         effectiveTickSize: rebinned.tick,
+        requestedBars:this.maxBars,
+        capacity,
+        startIndex:start,
+        endIndex:end,
         visibleBars: bars.length,
         totalBars: this.bars.length,
         scrollFromRight: this.scrollFromRight,

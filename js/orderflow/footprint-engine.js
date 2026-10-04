@@ -96,7 +96,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     const lo = Math.min(...prices);
     const hi = Math.max(...prices);
     const range = Math.max(1, hi - lo);
-    const targetRows = Math.max(30, Math.min(45, Math.floor((Number(plotH) || 640) / 16)));
+    const targetRows = Math.max(8, Math.min(30, Math.floor((Number(plotH) || 640) / 18)));
     const baseTick = detectBaseTick(bars);
     for (const tick of DISPLAY_AUTO_TICKS) {
       if (tick < baseTick) continue;
@@ -1243,6 +1243,8 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       volume: buyVol + sellVol,
       pocPrice,
       levels,
+      closed:bar.closed===true?true:bar.closed===false?false:null,
+      finality:typeof bar.finality==='string'?bar.finality:'unknown',
     };
   }
 
@@ -1355,8 +1357,10 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 
   const FOOTPRINT_SOURCE_INTERVAL = "5m";
 
-  function mergeFootprintGroup(rows, bucket) {
+  function mergeFootprintGroup(rows, bucket, complete=true) {
     const ordered = rows.slice().sort((a, b) => Number(a.t) - Number(b.t));
+    const closed=ordered.some(r=>r.closed===false||r.finality==='forming')?false:complete&&ordered.every(r=>r.closed===true)?true:null;
+    const finality=closed===false?'forming':!complete?'incomplete':ordered.every(r=>r.finality==='exchange_confirmed')?'exchange_confirmed':ordered.every(r=>r.finality==='time_elapsed_only')?'time_elapsed_only':'unknown';
     let open = null;
     let high = -Infinity;
     let low = Infinity;
@@ -1376,7 +1380,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     if (!Number.isFinite(high)) high = close;
     if (!Number.isFinite(low)) low = close;
     if (levels.length) {
-      return recomputeBar({ t: bucket, open: open, high: high, low: low, close: close, levels: levels }, {
+      return recomputeBar({ t: bucket, open: open, high: high, low: low, close: close, levels: levels,closed,finality }, {
         imbalanceRatio: IMBALANCE_RATIO,
         imbalanceMinSmall: IMBALANCE_MIN_SMALL,
       });
@@ -1399,6 +1403,8 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       volume: buyVol + sellVol,
       pocPrice: null,
       levels: [],
+      closed,
+      finality,
     };
   }
 
@@ -1417,14 +1423,18 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     const bars = [];
     let incomplete = false;
     let detail = `组成 ${expected}/${expected}`;
+    const gaps=[];let previousBucket=null;const displayMs=getIntervalMs(displayName);
     for (const [bucket, rows] of [...groups.entries()].sort((a, b) => a[0] - b[0])) {
+      if(previousBucket!==null&&bucket-previousBucket>displayMs){gaps.push({from:previousBucket+displayMs,to:bucket-displayMs,missing:Math.round((bucket-previousBucket)/displayMs)-1});incomplete=true;}
+      previousBucket=bucket;
       const seen = new Set(rows.map((row) => bucketStart(Number(row.t), sourceName)));
       if (seen.size < expected) {
         incomplete = true;
         detail = `组成 ${seen.size}/${expected}`;
       }
-      bars.push(mergeFootprintGroup(rows, bucket));
+      bars.push(mergeFootprintGroup(rows, bucket,seen.size===expected));
     }
+    if(gaps.length)detail+=` · 缺 ${gaps.reduce((sum,gap)=>sum+gap.missing,0)} 个完整展示桶`;
     return {
       bars: bars,
       incomplete: incomplete,
@@ -1432,6 +1442,7 @@ const DISPLAY_AUTO_TICKS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
       sourceInterval: sourceName,
       displayInterval: displayName,
       expected: expected,
+      gaps,
     };
   }
 

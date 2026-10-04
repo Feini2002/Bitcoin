@@ -1,0 +1,3 @@
+// Synthetic method records for boundary tests. They are not official source facts.
+const record=(id,patch={})=>({id,title:'SYNTHETIC '+id,url:'https://fred.stlouisfed.org/docs/api/fred/realtime_period.html',version:'synthetic.1',verifiedAt:'2026-10-01T00:00:00.000Z',maxAgeDays:30,sourceKind:'official_documentation',publisherUpdatedAt:null,conflicts:[],roles:['env'],domains:['chart'],priority:5,keywords:['synthetic'],statement:'合成方法，不能当行情证据。',application:'验证有界登记检索。',limitations:['仅供测试。'],...patch});
+module.exports={record,registry:(...entries)=>({version:'synthetic.agent-knowledge.1',entries})};

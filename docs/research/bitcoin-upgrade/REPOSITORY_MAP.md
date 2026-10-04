@@ -65,14 +65,14 @@
 ### 输入、报告存储与历史恢复
 
 - 定位：舆情Worker、[舆情迁移目录](../../../cloudflare/migrations/yuqing/)、[快照Worker](../../../cloudflare/snapshot/market-snapshot-worker.mjs)、[快照schema](../../../cloudflare/snapshot/schema.sql)、事件/分析页的reportId读取。
-- 关联：生成时实际输入、流式预览与最终结果、历史链接、旧格式读取、来源引用、保留和导出。人工报告导入入口为 [import-yuqing-report.cjs](../../../scripts/import-yuqing-report.cjs)，本轮未调用。
+- 关联：生成时实际输入、流式预览与最终结果、历史链接、旧格式读取、来源引用、保留和导出。人工报告导入入口为 [import-yuqing-report.cjs](../../../scripts/research/import-yuqing-report.cjs)，本轮未调用。
 - 对应资料：卷10/12、终审契约迁移、F-02/F-03/F-06。包内 `research_schema.proposed.sql` 是参考草案，不是本仓库迁移记录。
 
 <a id="llm"></a>
 
 ### 云端模型、提示词与设置
 
-- 定位：[settings.js](../../../js/pages/settings.js)、共享请求层、舆情Worker、shijian/fenxi模块及其提示词、[现有云端专用回归](../../../scripts/verify-yuqing-cloud-only.cjs)。
+- 定位：[settings.js](../../../js/pages/settings.js)、共享请求层、舆情Worker、shijian/fenxi模块及其提示词、[现有云端专用回归](../../../tests/integration/verify-yuqing-cloud-only.cjs)。
 - 关联：模型设置、实际上下文、来源、流式反馈、失败与重试、费用记录、D1结果及历史展示。当前网站分析使用云端Worker；资料包的Codex提示词不会恢复已退役的本机CLI通道。
 - 对应资料：卷07、RES16/17、F-07；真实模型效果与费用需在未来相应任务中实测，不由合成样例证明。
 
@@ -96,7 +96,7 @@
 
 ### 运行、存储与发布
 
-- 定位：[行情配置](../../../cloudflare/wrangler.toml)、[舆情配置](../../../cloudflare/wrangler.yuqing.toml)、[独立快照配置](../../../cloudflare/snapshot/wrangler.snapshot.toml)、[出口 Caddy](../../../cloudflare/egress/Caddyfile)、[Pages资产清单](../../../config/pages-assets.json)、[构建器](../../../scripts/build-pages.cjs)。
+- 定位：[行情配置](../../../cloudflare/wrangler.toml)、[舆情配置](../../../cloudflare/wrangler.yuqing.toml)、[独立快照配置](../../../cloudflare/snapshot/wrangler.snapshot.toml)、[出口 Caddy](../../../cloudflare/egress/Caddyfile)、[Pages资产清单](../../../config/pages-assets.json)、[构建器](../../../scripts/build/build-pages.cjs)。
 - 关联：调度生命周期、存储和保留、迁移兼容、前端资源版本、部署面、回退；币安出站现经东京反代，运行现状以 [接线现状](../binance-egress-vps-cutover-2026-09-21.md) 为准。
 - 对应资料：卷09/10/12、RES20/21；现有说明见[仓库布局](../../architecture/repository-layout.md)、[脚本索引](../../../scripts/README.md)。
 

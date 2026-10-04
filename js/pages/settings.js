@@ -42,88 +42,7 @@ function settingsThemeOptions(current) {
     .join("");
 }
 
-function pageSettings() {
-  const current = getTheme();
-  const themeLabel = current === "dark" ? "深色" : "浅色";
-  return html`
-    <div class="settings-shell">
-      <header class="page-header settings-page-head">
-        <div>
-          <h1 class="page-title">设置</h1>
-          <div class="page-sub">管理阅读外观，核对数据状态。主题保存在当前浏览器，不跨设备同步。</div>
-        </div>
-        <span class="chip ok settings-theme-chip">当前主题 · ${themeLabel}</span>
-      </header>
-
-      <section class="settings-panel">
-        <div class="settings-panel-head">
-          <div class="settings-panel-icon" aria-hidden="true"><i class="ph ph-paint-brush"></i></div>
-          <div>
-            <h2 class="settings-panel-title">外观</h2>
-            <p class="settings-panel-desc">切换后立即生效；未登录云，不与账号绑定。</p>
-          </div>
-        </div>
-        <div class="theme-segment" id="themePicker" role="radiogroup" aria-label="界面配色">
-          ${settingsThemeOptions(current)}
-        </div>
-      </section>
-
-      <section class="settings-panel">
-        <div class="settings-panel-head">
-          <div class="settings-panel-icon settings-panel-icon--data" aria-hidden="true"><i class="ph ph-database"></i></div>
-          <div>
-            <h2 class="settings-panel-title">K 线与云端 D1</h2>
-            <p class="settings-panel-desc">先检查四页数据是否新鲜、连续。下方手动同步只维护旧版 K 线表，不会修复四页规范数据的历史缺口。</p>
-          </div>
-        </div>
-        <ul class="settings-fact-list">
-          <li><strong>分析读取</strong>四页只读 <code>/api/desk/{chart|orderflow|heatmap|context}</code>；失败即缺口，不回落 <code>/api/d1</code>。</li>
-          <li><strong>研究报告</strong>分析在你主动发起的 AI 对话中完成，网站读取保存结果，不配置模型密钥；有报告不代表行情数据健康。</li>
-          <li><strong>遗留对照</strong><code>/api/d1/klines</code> 与手动同步仍是运维入口，写的是无 venue 遗留表，不是币安权威带。</li>
-          <li><strong>分区</strong>P1 规范观察、P2 足迹、P3 强平桶可进 desk；P5 klines/derivative_timeseries 分析禁读。</li>
-          <li><strong>排障</strong>如果出现异常，优先复制下方「异常摘要」发给 Codex；完整 JSON 只用于核对 Worker/D1 原始返回。</li>
-        </ul>
-        <div class="settings-actions">
-          <button type="button" class="btn" id="settings-cloud-sync">同步旧版 K 线表</button>
-          <button type="button" class="btn primary" id="settings-cloud-status">检查数据状态</button>
-          <button type="button" class="btn" id="settings-cloud-detail">详细诊断</button>
-          <span class="settings-actions-msg" id="settings-cloud-msg"></span>
-        </div>
-        <div id="settings-cloud-summary" class="cloud-status-summary"></div>
-        <div id="settings-desk-health" class="cloud-status-summary"></div>
-        <div class="cloud-diagnostics-actions" id="settings-cloud-tools" hidden>
-          <button type="button" class="btn" data-copy-cloud="diagnostic"><i class="ph ph-copy"></i><span>复制异常摘要</span></button>
-          <button type="button" class="btn" data-copy-cloud="raw"><i class="ph ph-brackets-curly"></i><span>复制完整 JSON</span></button>
-          <span>不用截图表格；复制摘要就能带上 Worker、周期、错误和下一步线索。</span>
-        </div>
-        <details class="cloud-status-raw">
-          <summary>完整 JSON（机器排障用）</summary>
-          <p>一般不用手看这里；当需要对照 Worker/D1 原始字段时，点上面的「复制完整 JSON」。</p>
-          <pre id="settings-cloud-output"></pre>
-        </details>
-      </section>
-
-      <section class="settings-panel settings-panel--muted">
-        <div class="settings-panel-head">
-          <div class="settings-panel-icon settings-panel-icon--planned" aria-hidden="true"><i class="ph ph-lightbulb"></i></div>
-          <div>
-            <h2 class="settings-panel-title">路线图</h2>
-            <p class="settings-panel-desc">以下模块仍在规划中，当前版本占位展示。</p>
-          </div>
-        </div>
-        <div class="future-list future-list--settings">
-          ${SETTINGS_FUTURE.map(f => `
-            <div class="future-item">
-              <h4>${f.title}</h4>
-              <p>${f.desc}</p>
-              <span class="coming">PLANNED</span>
-            </div>
-          `).join("")}
-        </div>
-      </section>
-    </div>
-  `;
-}
+function pageSettings(){const current=getTheme();return '<div class="settings-shell"><header class="page-header"><div><h1 class="page-title">设置</h1><p>外观与资料读取状态。</p></div><span class="chip settings-theme-chip">当前主题 · '+(current==='dark'?'深色':'浅色')+'</span></header><section class="settings-panel"><h2>外观</h2><p>主题保存在当前浏览器。</p><div class="theme-segment" id="themePicker" role="radiogroup" aria-label="界面配色">'+settingsThemeOptions(current)+'</div></section><section class="settings-panel"><h2>资料读取</h2><p>各类资料使用独立的观察周期；单页异常只影响相应的判断。</p><button class="btn" id="settings-read-check">检查读取状态</button><div id="settings-read-status" role="status"></div></section><section class="settings-panel"><h2>记录与备份</h2><p>本机记录保存在当前浏览器。研究页和报告页可以导出原始文件，用于备份和跨设备阅读。</p><a class="btn" href="#/records">打开记录 →</a></section></div>';}
 
 function escapeHtml(value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, (ch) => ({
@@ -501,7 +420,7 @@ async function copySettingsText(text) {
   }
 }
 
-function initSettingsPage() {
+function initLegacySettingsPage() {
 
   const syncBtn = document.getElementById("settings-cloud-sync");
   const statusBtn = document.getElementById("settings-cloud-status");
@@ -667,3 +586,7 @@ function initSettingsPage() {
     });
   }
 }
+
+let userSettingsCleanup=null;
+function disposeUserSettings(){userSettingsCleanup?.();userSettingsCleanup=null;}
+function initSettingsPage(){disposeUserSettings();const ctrl=new AbortController(),button=document.getElementById('settings-read-check'),out=document.getElementById('settings-read-status');if(!button)return;let serial=0;userSettingsCleanup=()=>{ctrl.abort();++serial;};button.addEventListener('click',async()=>{const ticket=++serial;button.disabled=true;out.textContent='正在读取资料…';const rows=await Promise.all([['chart','价格与结构'],['orderflow','成交'],['heatmap','强平'],['context','杠杆与宏观']].map(async([scope,label])=>{try{const data=await DataEngine.fetchDesk(scope,{interval:scope==='chart'?'15m':scope==='orderflow'?'5m':undefined,range:'24h',signal:ctrl.signal});const unavailable=data.quality?.status==='fail'||scope==='chart'&&data.pricePathAvailable!==true;const issue=data.sourceStale||data.collectionStale||data.quality?.status==='warn';return '<p><strong>'+label+'</strong> · '+(unavailable?'本次资料不足':issue?'可读取，部分资料需核对':'已读取；时效见对应页面')+' · '+escapeHtml(ResearchDesk.time(data.asOf))+'</p>';}catch{return '<p><strong>'+label+'</strong> · 暂时无法读取，请重试。</p>';}}));if(ctrl.signal.aborted||ticket!==serial)return;out.innerHTML=rows.join('');button.disabled=false;},{signal:ctrl.signal});}

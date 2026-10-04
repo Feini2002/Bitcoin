@@ -172,7 +172,7 @@ const WorkbenchEvidence = {
       generatedAt: generatedAt || null,
       methodVersion: WORKBENCH_EVIDENCE_METHOD,
       atomicSnapshot: false,
-      captureNote: "各页 readAt 彼此独立，这不是一次数据库原子快照。",
+      captureNote: "generatedAt/displayedAt 采用浏览器本机时钟；asOf/readAt 保留资料接口声明时钟，两者未核验同步，不能仅按先后排序判断未来数据。各页读取彼此独立，这不是一次数据库原子快照。",
       pages: workbenchEvidenceClone(workbenchEvidenceState.slots),
     };
   },

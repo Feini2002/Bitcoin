@@ -1,8 +1,9 @@
 import { FINANCE_PROVIDERS, FINANCE_EXCLUSIONS, FINANCE_VERSION } from './registry.mjs';
-import { financeChannelKey, financeSnapshotKey, readFinanceSnapshot, persistFinanceSnapshot, persistFinanceFailure, financeStorageStatus } from './store.mjs';
+import { financeChannelKey, financeSnapshotKey, readFinanceSnapshot, readFinanceOperationCooldown, persistFinanceSnapshot, persistFinanceFailure, financeStorageStatus } from './store.mjs';
 import { FINANCE_DATASETS, datasetCatalog, datasetRequest } from './datasets.mjs';
 import { persistDataset, datasetFailure, readDataset, datasetStates } from './dataset-store.mjs';
 import { remapProviderBase, joinEgress, envelopeHost, egressRequestHeaders } from './egress.mjs';
+import { datasetCoverage, collectionState } from './coverage.mjs';
 
 const MAX_BYTES = 4 * 1024 * 1024;
 const TIMEOUT_MS = 12000;
@@ -15,7 +16,8 @@ export function financeCatalog(env = {}) {
     version:FINANCE_VERSION,
     mode:env.FINANCE_D1_ENABLED==='true' ? 'on-demand-d1-cache' : 'on-demand-read-only',
     storage:{enabled:env.FINANCE_D1_ENABLED==='true', retention:'latest-success-per-parameter-set', readPath:'/api/finance/stored/{provider}/{operation}', statusPath:'/api/finance/status'},
-    automaticCollection:true,
+    automaticCollection:false,
+    automaticDatasetStatus:'/api/finance/datasets',
     billing:'Upstream free-plan quotas still apply. Cloudflare paid usage is accepted for Workers/D1 background writes.',
     providers:Object.entries(FINANCE_PROVIDERS).map(([id,p]) => ({
       id, name:p.name, category:p.category, market:p.market || 'see-native-payload', cost:p.cost, docs:p.docs,
@@ -175,7 +177,15 @@ async function handleFinanceUpstream(request, env = {}, ctx = {}, dependencies =
   if(cache) {
     try {
       const hit=await cache.match(cacheKey);
-      if(hit){const result=await hit.json();result.cache={hit:true,ttlSeconds:p.ttl};return reply(result);}
+      if(hit){
+        const result=await hit.json(),receipt=Date.parse(result.receivedAt || '');
+        const age=Date.now()-receipt;
+        if(result.ok===true && result.version===FINANCE_VERSION && result.provider===providerId && result.operation===operation
+          && Number.isFinite(receipt) && age>=0 && age<p.ttl*1000
+          && financeChannelKey(providerId,operation,result.parameters || {})===financeChannelKey(providerId,operation,values)) {
+          result.cache={hit:true,layer:'edge',ttlSeconds:p.ttl,ageSeconds:age/1000};return reply(result);
+        }
+      }
     } catch (_) { /* Cache unavailability must not turn a public read into a false data failure. */ }
   }
   const controller=new AbortController();
@@ -241,7 +251,12 @@ export async function handleFinance(request, env = {}, ctx = {}, dependencies = 
   }
   if(!env.DB)return reply({ok:false,error:'finance_storage_unavailable'},503);
   if(status) {
-    try{return reply({ok:true,version:FINANCE_VERSION,automaticCollection:true,...await financeStorageStatus(env.DB)});}
+    try{
+      const stored=await financeStorageStatus(env.DB);
+      return reply({ok:true,version:FINANCE_VERSION,automaticCollection:false,automaticDatasetStatus:'/api/finance/datasets',
+        collectionMode:'on-demand-cache',...stored,
+        entries:stored.entries.map(entry=>({...entry,coverage:collectionState(FINANCE_PROVIDERS[entry.provider],entry,Date.now(),{mode:'on-demand-cache'})}))});
+    }
     catch(_){return reply({ok:false,error:'finance_storage_unavailable'},503);}
   }
   if(parts.length!==(stored?6:5))return reply({ok:false,error:'unknown_channel'},404);
@@ -259,12 +274,16 @@ export async function handleFinance(request, env = {}, ctx = {}, dependencies = 
   if (record.envelope && financeChannelKey(providerId,operation,record.envelope.parameters)
     !== financeChannelKey(providerId,operation,built.values)) record={state:record.state,envelope:null};
   if(stored) return record.envelope ? storedResponse(record,ttl,true) : reply({ok:false,error:'snapshot_not_found'},404);
-  if(record.envelope?.version===FINANCE_VERSION && Date.now()-Date.parse(record.state.received_at)<ttl*1000) return storedResponse(record,ttl,true);
-  if(record.state?.retry_at && Date.parse(record.state.retry_at)>Date.now()) {
-    return reply({ok:false,provider:providerId,operation,error:record.state.last_error,
-      upstreamStatus:record.state.upstream_status, retryAt:record.state.retry_at,
-      cooldown:true, storedAvailable:!!record.envelope},record.state.last_http_status,
-      {'Retry-After':String(Math.ceil((Date.parse(record.state.retry_at)-Date.now())/1000))});
+  const receiptAge=Date.now()-Date.parse(record.state?.received_at || '');
+  if(record.envelope?.version===FINANCE_VERSION && Number.isFinite(receiptAge) && receiptAge>=0 && receiptAge<ttl*1000) return storedResponse(record,ttl,true);
+  let cooldown;
+  try {cooldown=await readFinanceOperationCooldown(env.DB,providerId,operation);}
+  catch(_){return reply({ok:false,error:'finance_storage_unavailable'},503);}
+  if(cooldown) {
+    return reply({ok:false,provider:providerId,operation,error:cooldown.last_error,
+      upstreamStatus:cooldown.upstream_status, retryAt:cooldown.retry_at,
+      cooldown:true,cooldownScope:'provider-operation', storedAvailable:!!record.envelope},cooldown.last_http_status,
+      {'Retry-After':String(Math.max(1,Math.ceil((Date.parse(cooldown.retry_at)-Date.now())/1000)))});
   }
   const attemptedAt=new Date().toISOString();
   // D1 is the shared cache. Avoid edge hits hiding a changed source or storage result.
@@ -304,7 +323,7 @@ async function handleDatasets(request,env,ctx,dependencies) {
   if(!/^\d+$/.test(limit)||Number(limit)<1||Number(limit)>1000||!/^\d{4}-\d{2}-\d{2}T/.test(knownAt)||!Number.isFinite(Date.parse(knownAt)))return reply({ok:false,error:'invalid_dataset_parameter'},400);
   if(env.FINANCE_D1_ENABLED!=='true'||!env.DB)return reply({ok:false,error:'finance_storage_unavailable'},503);
   try {
-    if(parts.length===4)return reply({ok:true,...datasetCatalog(),states:await datasetStates(env.DB)});
+    if(parts.length===4){const states=await datasetStates(env.DB);return reply({ok:true,...datasetCatalog(),states,coverage:datasetCoverage(FINANCE_DATASETS,states)});}
     if(refresh) {
       const upstream=await handleFinance(datasetRequest(id,url.origin),env,ctx,dependencies);
       const envelope=await upstream.json();

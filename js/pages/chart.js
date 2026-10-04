@@ -634,6 +634,16 @@ function updateChartKeyLevelPanel(analysis) {
   `;
 }
 
+function chartReferenceAxisLabelsVisible() {
+  const host = document.getElementById("chart-container");
+  return !host || host.getBoundingClientRect().width >= 600;
+}
+
+function syncChartReferenceAxisLabels() {
+  const visible = chartReferenceAxisLabelsVisible();
+  for (const line of chartKeyPriceLines) line.applyOptions({ axisLabelVisible: visible });
+}
+
 function drawChartStructurePriceLines(analysis) {
   clearChartKeyPriceLines();
   if (!analysis || !Number.isFinite(Number(analysis.currentPrice)) || !candleSeries) return;
@@ -648,7 +658,7 @@ function drawChartStructurePriceLines(analysis) {
         color,
         lineWidth: 1,
         lineStyle: style,
-        axisLabelVisible: true,
+        axisLabelVisible: chartReferenceAxisLabelsVisible(),
         title,
       }));
     } catch (e) {
@@ -1274,13 +1284,13 @@ function pageChart() {
         </div>`).join("");
 
   return html`
-    <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">MARKET STRUCTURE</div><h1>行情工作台</h1><p>先核对价格路径与时间连续性，再阅读指标和结构。</p></div><a class="btn" href="#/news-analysis">带着证据分析 ↗</a></header>
+    <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">MARKET STRUCTURE</div><h1>价格与结构</h1><p>BTCUSDT 永续 · 价格路径、指标与多周期结构。</p></div><a class="btn" href="#/news-analysis">带着证据分析 ↗</a></header>
     <div class="chart-desk">
       <div id="chart-empty-desk" class="desk-halt-overlay" hidden>
         <div class="desk-halt-card">
           <strong>行情暂时读取失败</strong>
           <p class="desk-halt-reason">币安主源未恢复，主图不可当作行情使用。</p>
-          <p>读取恢复前暂停分析；这不代表云端停机或历史数据被删除。</p>
+          <p>读取恢复前，暂不据此判断当前走势。</p>
           <button type="button" class="btn" id="chart-read-retry">重新读取行情</button>
         </div>
       </div>
@@ -1291,11 +1301,6 @@ function pageChart() {
         <div class="chart-action-cluster">
           <span class="chart-live-status" id="chart-status"></span>
           <button type="button" class="btn" data-workbench-export>导出已显示证据</button>
-          <button type="button" class="btn chart-sync-btn" id="chart-cloud-sync" data-manual-hint="触发 Worker 同步当前周期 D1，然后重新读取 Cloudflare D1。"
-            title="触发 Worker 同步当前周期 D1，然后重新读取 Cloudflare D1。">
-            <i class="ph ph-arrow-clockwise"></i>
-            <span>同步旧版 K 线</span>
-          </button>
         </div>
       </div>
 
@@ -1475,6 +1480,7 @@ function initChart() {
     if (entries.length === 0 || entries[0].target !== container) return;
     const newRect = entries[0].contentRect;
     lwChart.applyOptions({ height: newRect.height, width: newRect.width });
+    syncChartReferenceAxisLabels();
   });
   chartResizeObserver.observe(container);
 
@@ -1587,8 +1593,16 @@ function setChartStatusLine(symbol, interval, nBars) {
      * 最后一根往往是进行中的 K：Date.now() - openTime 会在 0～一个周期之间波动，
      * 与是否刚点「同步」无关；同步只保证库里已有这根 K，不会改变它的开盘时刻。
      */
-    const withinBar = Number.isFinite(intervalMs) && intervalMs > 0 && st >= 0 && st <= intervalMs;
-    d1TimeHint = withinBar ? `末根开盘 ${human}（本根未收盘）` : `末根开盘 ${human}`;
+    const lastRow = chartOhlcv.length ? chartOhlcv[chartOhlcv.length - 1] : null;
+    const latestRow = lastRow && lastRow.t === meta.latestT ? lastRow : null;
+    const finality = latestRow ? String(latestRow.finality || "") : "";
+    const declaredClosed = latestRow && (latestRow.closed === true || (latestRow.closed !== false && (finality === "closed" || finality === "exchange_confirmed")));
+    const declaredForming = latestRow && (latestRow.closed === false || (latestRow.closed !== true && finality === "forming"));
+    const withinBar = Number.isFinite(intervalMs) && intervalMs > 0 && st >= 0 && st < intervalMs;
+    const barState = declaredClosed
+      ? (barIsVerifiedClosed(latestRow) ? "（已确认收盘）" : "（来源标记已收盘，来源未核实）")
+      : declaredForming || withinBar ? "（本根未收盘）" : "";
+    d1TimeHint = `末根开盘 ${human}${barState}`;
   }
 
   const wsShort = chartWsStateShort();
@@ -1617,7 +1631,7 @@ function setChartStatusLine(symbol, interval, nBars) {
     `D1 只读轮询 ${Math.round(CHART_D1_POLL_MS / 1000)}s`,
     backend ? `${backend} Worker` : "",
   ].filter(Boolean);
-  const summaryLine = parts.join(" · ");
+  const summaryLine = `${symbol} 永续 · ${interval} · ${d1TimeHint}${chartDeskPayload?.pricePathAvailable ? "" : " · 价格路径暂不可用"}`;
   statusEl.textContent = summaryLine;
   statusEl.title = summaryLine;
 
