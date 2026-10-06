@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "pollIntervalMs": 300000,
+  "analyticsLagMinutes": 5,
+  "windowMinutes": 15,
+  "lookbackMinutes": 60,
+  "rowsReadPerWindow": 1000000,
+  "rowsReadPerDay": 100000000,
+  "spikeRatio": 5,
+  "spikeBaselineRows": 100000,
+  "queryMinCalls": 20,
+  "queryMinRows": 100000,
+  "queryMeanRows": 1000,
+  "scanToReturnRatio": 100,
+  "queryLimit": 20
+}

@@ -10,7 +10,7 @@ const UserWorkspace = (() => {
   const copy = value => JSON.parse(JSON.stringify(value));
   function query(){return new URLSearchParams(location.hash.split('?')[1] || '');}
   function view(route){const requested=query().get('view');return route==='derivatives' ? (requested==='macro'?'macro':'leverage') : route;}
-  function marketShell(route, content){const selected=view(route);return `<div class="user-market" data-market-view="${esc(selected)}"><nav class="user-view-tabs" aria-label="市场视图">${views.map(([id,label])=>`<a href="#/market?view=${id}" ${selected===id?'aria-current="page"':''}>${label}</a>`).join('')}</nav>${content}</div>`;}
+  function marketShell(route, content){const selected=view(route);return `<div class="user-market" data-market-view="${esc(selected)}"><nav class="user-workspace-tabs" aria-label="市场与事件"><a href="#/market" aria-current="page">行情</a><a href="#/events">消息</a><a href="#/overview">市场概览</a></nav><nav class="user-view-tabs" aria-label="市场视图">${views.map(([id,label])=>`<a href="#/market?view=${id}" ${selected===id?'aria-current="page"':''}>${label}</a>`).join('')}</nav>${content}</div>`;}
   function researchShell(route,content){if(!['research-window','news-analysis'].includes(route))return content;const selected=route==='research-window'?'window':'narratives';return `<nav class="user-view-tabs" aria-label="研究与资料视图"><a href="#/boardroom">返回首席决策台</a>${[['window','指定问题研究'],['narratives','叙事资料与历史']].map(([id,label])=>`<a href="#/research?view=${id}" ${selected===id?'aria-current="page"':''}>${label}</a>`).join('')}</nav>${content}`;}
   function read(){return copy(selection);}
   function update(values){selection={...selection,...values};return read();}
@@ -39,6 +39,8 @@ const UserWorkspace = (() => {
     for(const id of ['chart','of','hm','deriv']){
       const note=root.querySelector('#'+id+'-research-evidence');if(note){const details=document.createElement('details');details.className='user-evidence-note';details.innerHTML='<summary>来源、范围与使用边界</summary>';note.before(details);details.append(note);}
     }
+    const domain={chart:'env',orderflow:'flow',heatmap:'deriv',leverage:'deriv',macro:'macro'}[view(route)];
+    const link=document.createElement('a');link.className='user-domain-link';link.href='#/agent-'+domain;link.textContent='阅读此领域的独立研究 →（另有资料截止）';root.querySelector('.rd-page-head')?.after(link);
     root.querySelectorAll('.owner-link').forEach(node=>node.remove());
   }
   function readable(value){

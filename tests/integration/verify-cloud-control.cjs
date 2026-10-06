@@ -12,6 +12,7 @@ global.fetch = () => { throw Error('Real network forbidden in cloud-control test
 
 function fixture() {
   const state = copy(seed), saved = [], calls = [], probes = [];
+  delete state.costIncident; // Legacy lifecycle fixtures; incident behavior is tested separately.
   state.phase = 'paused';
   const live = { workers: copy(state.restore.workers), domains: [], routes: state.restore.routes.map((r, i) => ({ ...r, id: 'route-' + i, script: null })) };
   live.workers.btc.versionId = state.maintenance.versionId;
@@ -77,6 +78,12 @@ function fixture() {
 async function run() {
   let passed = 0;
   async function test(name, fn) { await fn(); passed++; console.log('PASS ' + name); }
+  await test('已确认异常计费的旧版本不能恢复，预检也不得误报可恢复', async () => {
+    const f=fixture();f.state.costIncident=copy(seed.costIncident);
+    await assert.rejects(f.controller.resume(true),/异常计费/);
+    await assert.rejects(f.controller.resume(),/异常计费/);
+    assert.equal(f.calls.length,0);assert.equal(f.saved.length,0);
+  });
   await test('只读恢复预检不打开入口、不唤醒、不保存状态', async () => {
     const f = fixture(); const before = copy(f.state);
     assert.equal((await f.controller.resume(true)).ready, true);

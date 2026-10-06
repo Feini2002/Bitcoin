@@ -1,5 +1,6 @@
 import { FINANCE_DATASETS, normalizeDataset } from './datasets.mjs';
 import { KLINE_STEPS } from '../kline-recovery.mjs';
+import { measuredBatch } from './d1-cost.mjs';
 
 export const DESK_HISTORY_DDL = `CREATE TABLE IF NOT EXISTS desk_history_state (
   symbol TEXT NOT NULL,
@@ -16,20 +17,14 @@ const BUMP_DDL = `CREATE TABLE IF NOT EXISTS _desk_hist_bump (
   PRIMARY KEY (symbol, interval)
 )`;
 
-function bindQueries(db, queries) {
-  return queries.map((query) => db.prepare(query.sql).bind(...query.params));
-}
-
 export function deskHistoryKey(id) {
   const definition = FINANCE_DATASETS[id];
-  if (!definition) return null;
-  if (definition.kind === 'klines') {
-    const interval = definition.parameters.interval;
-    return { symbol: definition.parameters.symbol || 'BTCUSDT', interval, step: KLINE_STEPS[interval] || 0, datasetId: id };
-  }
-  const symbol = definition.parameters.symbol || definition.parameters.pair || definition.parameters.currency || id;
-  const period = definition.parameters.interval || definition.parameters.period;
-  return { symbol, interval: id, step: KLINE_STEPS[period] || 0, datasetId: id };
+  // The only consumer is the Binance USD-M chart. Other products keep their
+  // own observations/gap state, not an unrelated chart-cache revision.
+  if (definition?.kind !== 'klines' || definition.provider !== 'binance-usdm') return null;
+  const interval = definition.parameters.interval;
+  if (!KLINE_STEPS[interval]) return null;
+  return { symbol: definition.parameters.symbol, interval, step: KLINE_STEPS[interval], datasetId: id };
 }
 
 function chunkList(rows, size) {
@@ -66,7 +61,27 @@ function canonicalOutside(stepParam) {
         ORDER BY observed_at DESC LIMIT 20) x), h.head_t + 1))))`;
 }
 
-export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, {mutableReceipt=null}={}) {
+// Two indexed seeks: immutable WS receipts after the request, then the single
+// mutable slot. CASE over every receipt would make this guard grow with V.
+function newerWebsocketSql(dataset,key,observed,cutoff) {
+  return `(EXISTS (SELECT 1 FROM finance_dataset_observations ws
+    WHERE ws.dataset_id=${dataset} AND ws.observation_key=${key} AND ws.ingestion_mode='cloud-ws' AND ws.received_at>${cutoff})
+    OR EXISTS (SELECT 1 FROM finance_dataset_observations ws
+      WHERE ws.dataset_id=${dataset} AND ws.observation_key=${key} AND ws.received_at=${observed}
+        AND ws.ingestion_mode='cloud-ws' AND ws.stored_at>${cutoff}))`;
+}
+
+export function winningReceiptExistsSql(dataset,keys,receipt) {
+  return `EXISTS (SELECT 1 FROM json_each(${keys}) k JOIN finance_dataset_observations w ON w.rowid=(
+    SELECT p.rowid FROM finance_dataset_observations p WHERE p.dataset_id=${dataset} AND p.observation_key=CAST(k.value AS TEXT)
+      AND p.dataset_id GLOB 'binance-perp-klines-*' AND p.time_precision<>'receipt'
+      AND json_extract(p.value_json,'$.supersededByWs') IS NOT 1
+    ORDER BY (CASE WHEN json_extract(p.value_json,'$.closed')=1 THEN 1 ELSE 0 END) DESC,
+      (CASE WHEN p.received_at=p.observed_at THEN p.stored_at ELSE p.received_at END) DESC,p.received_at DESC LIMIT 1)
+    WHERE (CASE WHEN w.received_at=w.observed_at THEN w.stored_at ELSE w.received_at END)=${receipt})`;
+}
+
+export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, {mutableReceipt=null, receipt=mutableReceipt, requestStartedAt=null}={}) {
   const key = deskHistoryKey(id);
   if (!key || !rows?.length) return { before: [], after: [] };
   const latestOpen = Math.max(...rows.map(row => Date.parse(row.observedAt)).filter(Number.isFinite));
@@ -75,7 +90,9 @@ export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, 
     const payload = JSON.stringify(part.map((row) => ({
       key: String(row.key),
       open: Date.parse(row.observedAt),
+      observedAt: row.observedAt,
       valuesJson: JSON.stringify(row.values),
+      closed: row.values.closed === true ? 1 : 0,
     })));
     before.push({ sql: `UPDATE _desk_hist_bump SET bump=1
       WHERE symbol=?1 AND interval=?2 AND bump=0 AND EXISTS (
@@ -85,26 +102,40 @@ export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, 
             SELECT 1 FROM finance_dataset_observations rejected
             WHERE rejected.dataset_id=?5 AND rejected.observation_key=json_extract(j.value,'$.key')
               AND rejected.received_at=rejected.observed_at AND rejected.stored_at>=?8))
+          AND (?9 IS NULL OR COALESCE((
+            SELECT NOT ((CASE WHEN json_extract(newer.value_json,'$.closed')=1 THEN 1 ELSE 0 END)>json_extract(j.value,'$.closed')
+              OR ((CASE WHEN json_extract(newer.value_json,'$.closed')=1 THEN 1 ELSE 0 END)=json_extract(j.value,'$.closed')
+                AND (CASE WHEN newer.received_at=newer.observed_at THEN newer.stored_at ELSE newer.received_at END)>?9))
+            FROM finance_dataset_observations newer
+            WHERE newer.dataset_id=?5 AND newer.observation_key=json_extract(j.value,'$.key')
+              AND newer.dataset_id GLOB 'binance-perp-klines-*' AND newer.time_precision<>'receipt'
+              AND json_extract(newer.value_json,'$.supersededByWs') IS NOT 1
+            ORDER BY (CASE WHEN json_extract(newer.value_json,'$.closed')=1 THEN 1 ELSE 0 END) DESC,
+              (CASE WHEN newer.received_at=newer.observed_at THEN newer.stored_at ELSE newer.received_at END) DESC,
+              newer.received_at DESC LIMIT 1),1))
+          AND (?10 IS NULL OR NOT ${newerWebsocketSql('?5',"json_extract(j.value,'$.key')","json_extract(j.value,'$.observedAt')",'?10')})
           AND (
             SELECT CASE WHEN p.value_json IS NOT json_extract(j.value,'$.valuesJson')
               OR p.source_host IS NOT ?6 OR p.ingestion_mode IS NOT ?7 THEN 1 ELSE 0 END
             FROM finance_dataset_observations p
             WHERE p.dataset_id=?5 AND p.observation_key=json_extract(j.value,'$.key') AND p.time_precision<>'receipt'
+              AND p.dataset_id GLOB 'binance-perp-klines-*'
+              AND json_extract(p.value_json,'$.supersededByWs') IS NOT 1
             ORDER BY (CASE WHEN json_extract(p.value_json,'$.closed')=1 THEN 1 ELSE 0 END) DESC,
               (CASE WHEN p.received_at=p.observed_at THEN p.stored_at ELSE p.received_at END) DESC,
               p.received_at DESC
             LIMIT 1
           ) IS NOT 0)`,
-      params: [key.symbol, key.interval, payload, key.step, key.datasetId, sourceHost || '', ingestionMode || 'cloud-readthrough', mutableReceipt] });
+      params: [key.symbol, key.interval, payload, key.step, key.datasetId, sourceHost || '', ingestionMode || 'cloud-readthrough', mutableReceipt, receipt, requestStartedAt] });
   }
   before.push(bumpIncrement(key.symbol, key.interval));
   const after = [
     { sql: `INSERT INTO desk_history_state(symbol, interval, head_t, history_revision)
         SELECT ?1, ?2, COALESCE((SELECT MAX(CAST(observation_key AS INTEGER)) FROM finance_dataset_observations
           WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*'), 0), 0
-        WHERE NOT EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2)
-          AND EXISTS (SELECT 1 FROM finance_dataset_observations
-            WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*')`,
+        WHERE CASE WHEN EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2) THEN 0
+          ELSE EXISTS (SELECT 1 FROM finance_dataset_observations
+            WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*') END`,
       params: [key.symbol, key.interval, key.datasetId] },
     { sql: `UPDATE desk_history_state SET head_t=(
           SELECT MAX(CAST(observation_key AS INTEGER)) FROM finance_dataset_observations
@@ -116,11 +147,15 @@ export function canonicalHistoryStatements(id, rows, sourceHost, ingestionMode, 
   ];
   if (FINANCE_DATASETS[id]?.kind === 'klines' && Number.isFinite(latestOpen)) {
     // The initial baseline above discovers pre-existing history once. Subsequent
-    // batches already know their newest open; never rescan every receipt on each
-    // forming-bar write. A delayed receipt cannot move the shared head backwards.
-    after[1] = { sql: `UPDATE desk_history_state SET head_t=?3
-      WHERE symbol=?1 AND interval=?2 AND head_t<?3`,
-      params: [key.symbol, key.interval, latestOpen] };
+    // batches seek only their input keys. The head must come from persisted
+    // observations, never an input row which its acceptance rule rejected.
+    after[1] = { sql: `UPDATE desk_history_state SET head_t=(
+        SELECT MAX(CAST(j.value AS INTEGER)) FROM json_each(?5) j WHERE EXISTS (
+          SELECT 1 FROM finance_dataset_observations WHERE dataset_id=?4 AND observation_key=CAST(j.value AS TEXT)))
+      WHERE symbol=?1 AND interval=?2 AND head_t<?3 AND EXISTS (
+        SELECT 1 FROM finance_dataset_observations WHERE dataset_id=?4
+          AND observation_key IN (SELECT value FROM json_each(?5)) AND CAST(observation_key AS INTEGER)>head_t)`,
+      params: [key.symbol, key.interval, latestOpen, id, JSON.stringify(rows.map(row => String(row.key)))] };
   }
   return { before, after };
 }
@@ -149,8 +184,8 @@ export function rawKlineHistoryStatements(symbol, interval, rows) {
   const after = [
     { sql: `INSERT INTO desk_history_state(symbol, interval, head_t, history_revision)
         SELECT ?1, ?2, COALESCE((SELECT MAX(t) FROM klines WHERE symbol=?1 AND interval=?2), 0), 0
-        WHERE NOT EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2)
-          AND EXISTS (SELECT 1 FROM klines WHERE symbol=?1 AND interval=?2)`,
+        WHERE CASE WHEN EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2) THEN 0
+          ELSE EXISTS (SELECT 1 FROM klines WHERE symbol=?1 AND interval=?2) END`,
       params: [symbol, interval] },
     { sql: `UPDATE desk_history_state SET head_t=(SELECT MAX(t) FROM klines WHERE symbol=?1 AND interval=?2)
         WHERE symbol=?1 AND interval=?2 AND head_t < (SELECT MAX(t) FROM klines WHERE symbol=?1 AND interval=?2)`,
@@ -189,11 +224,11 @@ export function historyBaselineStatement(symbol, interval, datasetId) {
       SELECT MAX(CAST(observation_key AS INTEGER)) AS v FROM finance_dataset_observations
       WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*'
     )), 0), 0
-    WHERE NOT EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2)
-      AND (
+    WHERE CASE WHEN EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2) THEN 0
+      ELSE (
         EXISTS (SELECT 1 FROM klines WHERE symbol=?1 AND interval=?2)
         OR EXISTS (SELECT 1 FROM finance_dataset_observations
-          WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*'))`,
+          WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*')) END`,
     params: [symbol, interval, datasetId] };
 }
 
@@ -262,22 +297,30 @@ export function datasetWriteQueries(id,envelope,ingestionMode='cloud-readthrough
        source_host, ingestion_mode, source_revision_json, value_json)
       SELECT ?1, json_extract(j.value,'$.key'), json_extract(j.value,'$.observedAt'),
         json_extract(j.value,'$.timePrecision'), ?2, ?3, ?4, ?5,
-        json_extract(j.value,'$.sourceRevision'), json_extract(j.value,'$.values')
+        json_extract(j.value,'$.sourceRevision'), ${deskHistoryKey(id) && ingestionMode === 'cloud-readthrough' ? `CASE WHEN ${newerWebsocketSql('?1',"json_extract(j.value,'$.key')","json_extract(j.value,'$.observedAt')",'?7')}
+          THEN json_set(json_extract(j.value,'$.values'),'$.supersededByWs',json('true'))
+          ELSE json_extract(j.value,'$.values') END` : "json_extract(j.value,'$.values')"}
       FROM json_each(?6) j
       WHERE 1
-      ON CONFLICT(dataset_id,observation_key,received_at) DO NOTHING`,
-      params:[id,normalized.receivedAt,storedAt,normalized.sourceHost,ingestionMode,JSON.stringify(chunk)]});
+      ON CONFLICT(dataset_id,observation_key,received_at) ${deskHistoryKey(id) ? `DO UPDATE SET
+        value_json=NULL WHERE json_remove(finance_dataset_observations.value_json,'$.supersededByWs'${ingestionMode==='cloud-readthrough' ? ",'$.finality','$.closureBasis'" : ''})
+          IS NOT json_remove(excluded.value_json,'$.supersededByWs'${ingestionMode==='cloud-readthrough' ? ",'$.finality','$.closureBasis'" : ''})
+          OR finance_dataset_observations.source_revision_json IS NOT excluded.source_revision_json` : 'DO NOTHING'}`,
+      // value_json is NOT NULL. A racing, conflicting immutable identity must
+      // abort the entire transaction; an identical replay performs no update.
+      params:[id,normalized.receivedAt,storedAt,normalized.sourceHost,ingestionMode,JSON.stringify(chunk),
+        ...(deskHistoryKey(id) && ingestionMode === 'cloud-readthrough' ? [envelope.requestedAt || normalized.receivedAt] : [])]});
   }
   queries.push({sql:`INSERT INTO finance_dataset_state
     (dataset_id,attempted_at,last_http_status,last_success_received_at,last_success_stored_at,last_ingestion_mode,row_count)
-    VALUES (?1,?2,200,?3,?2,?4,?5)
+    SELECT ?1,?2,200,?3,?2,?4,?5 WHERE ${deskHistoryKey(id) ? winningReceiptExistsSql('?1','?6','?3') : '1'}
     ON CONFLICT(dataset_id) DO UPDATE SET attempted_at=excluded.attempted_at,last_http_status=200,
       last_error=CASE WHEN finance_dataset_state.last_error LIKE 'dataset_history_gap_pending:%' THEN finance_dataset_state.last_error ELSE NULL END,
       last_success_received_at=excluded.last_success_received_at,last_success_stored_at=excluded.last_success_stored_at,
       last_ingestion_mode=excluded.last_ingestion_mode,row_count=excluded.row_count
     WHERE finance_dataset_state.last_success_received_at IS NULL
       OR excluded.last_success_received_at>finance_dataset_state.last_success_received_at`,
-    params:[id,storedAt,normalized.receivedAt,ingestionMode,rows.length]});
+    params:[id,storedAt,normalized.receivedAt,ingestionMode,rows.length,...(deskHistoryKey(id)?[JSON.stringify(rows.map(row=>row.key))]:[])]});
   return {queries,normalized};
 }
 
@@ -328,6 +371,17 @@ export async function pruneDatasetObservations(db, id, keep, batchSize = 1000) {
     return Number(res?.meta?.changes) || 0;
   }
   const batch = Math.max(1, Math.min(1000, Number(batchSize) || 1000));
+  if (deskHistoryKey(id)) {
+    // Find the cap-th distinct time through index seeks, then delete a bounded
+    // slice below it. Never GROUP BY every historical receipt on each prune.
+    const query={sql:`${observationKeyWalkCteSql()}
+      DELETE FROM finance_dataset_observations WHERE rowid IN (
+        SELECT rowid FROM finance_dataset_observations INDEXED BY idx_finance_dataset_observed
+        WHERE dataset_id=?1 AND observed_at<(SELECT observed_at FROM keys WHERE n=?5)
+        LIMIT ?7)`,params:[id,'9999-12-31T23:59:59.999Z',null,null,cap,0,batch],tag:'kline-retention'};
+    const [result]=await measuredBatch(db,[query],{operation:'retention',dataset:id});
+    return Number(result?.meta?.changes ?? result?.results?.length) || 0;
+  }
   const res = await db.prepare(
     `DELETE FROM finance_dataset_observations
       WHERE rowid IN (SELECT rowid FROM finance_dataset_observations
@@ -400,10 +454,10 @@ export async function persistLiveSnapshot(db, id, data, sourceHost, ingestionMod
   return persistDataset(db, id, envelope, mode);
 }
 
-export async function persistLiveKlineBar(db, interval, kline, sourceHost, ingestionMode = 'cloud-ws', options = {}) {
+export async function liveKlineWritePlan(db, interval, kline, sourceHost, ingestionMode = 'cloud-ws', options = {}) {
   const id = `binance-perp-klines-${interval}`;
   const definition = FINANCE_DATASETS[id];
-  if (!definition) return 0;
+  if (!definition) throw new Error('unknown_kline_interval');
   const receivedAt = options.receivedAt || new Date().toISOString();
   const envelope = {
     ok: true,
@@ -411,7 +465,7 @@ export async function persistLiveKlineBar(db, interval, kline, sourceHost, inges
     operation: definition.operation,
     parameters: definition.parameters,
     source: { host: sourceHost || 'fstream.binance.com' },
-    requestedAt: receivedAt,
+    requestedAt: options.requestStartedAt || receivedAt,
     receivedAt,
     data: [kline],
   };
@@ -425,6 +479,7 @@ export async function persistLiveKlineBar(db, interval, kline, sourceHost, inges
   if (options.closed === null && ingestionMode === 'cloud-readthrough') {
     const confirmed = await db.prepare(`SELECT received_at FROM finance_dataset_observations
       WHERE dataset_id=?1 AND observation_key=?2 AND received_at<=?3
+        AND dataset_id GLOB 'binance-perp-klines-*'
         AND (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?3
         AND json_extract(value_json,'$.finality')='exchange_closed' LIMIT 1`)
       .bind(id,row.key,receivedAt).all();
@@ -442,57 +497,66 @@ export async function persistLiveKlineBar(db, interval, kline, sourceHost, inges
       WHERE dataset_id=?1 AND observation_key=?2 AND received_at=?3`).bind(id,row.key,receivedAt).all();
     if (result.results?.length) {
     if (JSON.stringify(JSON.parse(result.results[0].value_json)) !== JSON.stringify(row.values)) throw new Error('dataset_identity_content_conflict');
-      return 0;
+      return { queries: [], rows: [], id, receivedAt };
     }
     const {queries} = datasetWriteQueries(id,envelope,mode,[row]);
-    const history = canonicalHistoryStatements(id, [row], normalized.sourceHost, mode);
-    await db.batch(bindQueries(db, [...history.before, ...queries, ...history.after]));
-    return 1;
+    const history = canonicalHistoryStatements(id, [row], normalized.sourceHost, mode, {receipt:receivedAt});
+    return { queries: [...history.before, ...queries, ...history.after], rows:[row], id, receivedAt };
   }
   // Check the mutable upsert's acceptance condition in the same transaction as
   // the revision bump; a delayed/replayed receipt must not invalidate history.
-  const history = canonicalHistoryStatements(id, [row], normalized.sourceHost, mode, {mutableReceipt:receivedAt});
-  await db.batch([
-    ...bindQueries(db, history.before),
-    db.prepare(`INSERT INTO finance_dataset_observations
+  const history = canonicalHistoryStatements(id, [row], normalized.sourceHost, mode, {
+    mutableReceipt:receivedAt, requestStartedAt:mode==='cloud-readthrough' ? envelope.requestedAt : null,
+  });
+  const queries = [
+    ...history.before,
+    {sql:`INSERT INTO finance_dataset_observations
       (dataset_id, observation_key, observed_at, time_precision, received_at, stored_at,
        source_host, ingestion_mode, source_revision_json, value_json)
-      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)
+      SELECT ?1,?2,?3,?4,?5,?6,?7,?8,?9,?10
+      WHERE ?11 IS NULL OR NOT ${newerWebsocketSql('?1','?2','?3','?11')}
       ON CONFLICT(dataset_id,observation_key,received_at) DO UPDATE SET
         value_json=excluded.value_json, stored_at=excluded.stored_at,
         source_host=excluded.source_host, ingestion_mode=excluded.ingestion_mode
-      WHERE excluded.stored_at>finance_dataset_observations.stored_at`)
-      .bind(
+      WHERE excluded.stored_at>finance_dataset_observations.stored_at`, params:[
         id, String(row.key), row.observedAt, row.timePrecision, liveReceipt, storedAt,
         normalized.sourceHost, mode,
         row.sourceRevision ? JSON.stringify(row.sourceRevision) : null,
-        JSON.stringify(row.values)
-      ),
-    db.prepare(`INSERT INTO finance_dataset_state
+        JSON.stringify(row.values), mode==='cloud-readthrough' ? envelope.requestedAt : null,
+      ]},
+    {sql:`INSERT INTO finance_dataset_state
       (dataset_id,attempted_at,last_http_status,last_success_received_at,last_success_stored_at,last_ingestion_mode,row_count)
-      VALUES (?1,?2,200,?3,?2,?4,1)
+      SELECT ?1,?2,200,?3,?2,?4,1 WHERE ${winningReceiptExistsSql('?1','?5','?3')}
       ON CONFLICT(dataset_id) DO UPDATE SET attempted_at=excluded.attempted_at,last_http_status=200,
         last_error=CASE WHEN finance_dataset_state.last_error LIKE 'dataset_history_gap_pending:%' THEN finance_dataset_state.last_error ELSE NULL END,
         last_success_received_at=excluded.last_success_received_at,last_success_stored_at=excluded.last_success_stored_at,
         last_ingestion_mode=excluded.last_ingestion_mode
       WHERE finance_dataset_state.last_success_received_at IS NULL
-        OR excluded.last_success_received_at>finance_dataset_state.last_success_received_at`)
-      .bind(id, storedAt, receivedAt, mode),
-    ...bindQueries(db, history.after),
-  ]);
-  return 1;
+        OR excluded.last_success_received_at>finance_dataset_state.last_success_received_at`,
+      params:[id, storedAt, receivedAt, mode,JSON.stringify([row.key])]},
+    ...history.after,
+  ];
+  return {queries, rows:[row], id, receivedAt};
 }
 
-export async function persistDataset(db,id,envelope,ingestionMode) {
+export async function persistLiveKlineBar(db, interval, kline, sourceHost, ingestionMode='cloud-ws', options={}) {
+  const plan=await liveKlineWritePlan(db,interval,kline,sourceHost,ingestionMode,options);
+  if(plan.queries.length) await measuredBatch(db,plan.queries,{operation:'dataset',dataset:plan.id});
+  return plan.rows.length;
+}
+
+export async function datasetWritePlan(db,id,envelope,ingestionMode) {
   const definition = FINANCE_DATASETS[id];
   const normalized = normalizeDataset(id,envelope);
   let rows = normalized.rows;
-  if (definition && ['fred','sofr'].includes(definition.kind)) return persistMacroDataset(db,id,envelope,ingestionMode,normalized);
+  if (definition && ['fred','sofr'].includes(definition.kind)) throw new Error('macro_requires_receipt_transaction');
   if (definition?.kind === 'klines') {
-    const confirmed = await db.prepare(`SELECT DISTINCT observation_key FROM finance_dataset_observations
-      WHERE dataset_id=?1 AND received_at<=?2 AND json_extract(value_json,'$.finality')='exchange_closed'
+    const confirmed = await db.prepare(`SELECT CAST(j.value AS TEXT) AS observation_key FROM json_each(?3) j
+      WHERE EXISTS (SELECT 1 FROM finance_dataset_observations
+      WHERE dataset_id=?1 AND observation_key=CAST(j.value AS TEXT) AND received_at<=?2 AND json_extract(value_json,'$.finality')='exchange_closed'
+        ${deskHistoryKey(id) ? "AND dataset_id GLOB 'binance-perp-klines-*'" : ''}
         AND (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END)<=?2
-        AND observation_key IN (SELECT value FROM json_each(?3))`)
+        )`)
       .bind(id,normalized.receivedAt,JSON.stringify(rows.map(row=>row.key))).all();
     const closed = new Set((confirmed.results || []).map(row=>row.observation_key));
     for (const row of rows) if (closed.has(row.key) && row.values.closed===true) {
@@ -511,19 +575,37 @@ export async function persistDataset(db,id,envelope,ingestionMode) {
   rows = rows.filter(row => {
     const previous = existingReceipt.get(row.key);
     if (!previous) return true;
-    if (JSON.stringify(JSON.parse(previous.value_json)) !== JSON.stringify(row.values)
+    const priorValues=JSON.parse(previous.value_json);
+    const incomingValues={...row.values};
+    if (deskHistoryKey(id)) delete priorValues.supersededByWs;
+    if (deskHistoryKey(id) && ingestionMode==='cloud-readthrough') {
+      // Proof acquired between retries does not change the original REST body.
+      // Reuse that immutable receipt, including its original derived finality.
+      for(const field of ['finality','closureBasis']) {delete priorValues[field];delete incomingValues[field];}
+    }
+    if (JSON.stringify(priorValues) !== JSON.stringify(incomingValues)
       || JSON.stringify(previous.source_revision_json ? JSON.parse(previous.source_revision_json) : null) !== JSON.stringify(row.sourceRevision || null)) {
       throw new Error('dataset_identity_content_conflict');
     }
     return false;
   });
-  if (!rows.length) return 0;
+  if (!rows.length) return {queries:[], rows:[], id, receivedAt:normalized.receivedAt};
   const envelopeForWrite = envelope;
   const {queries} = datasetWriteQueries(id, envelopeForWrite, ingestionMode, rows);
-  if (!queries.length) return 0;
-  const history = canonicalHistoryStatements(id, rows, normalized.sourceHost, ingestionMode);
-  await db.batch(bindQueries(db, [...history.before, ...queries, ...history.after]));
-  return rows.length;
+  const history = canonicalHistoryStatements(id, rows, normalized.sourceHost, ingestionMode, {
+    receipt:normalized.receivedAt,
+    requestStartedAt:ingestionMode==='cloud-readthrough' ? envelope.requestedAt || normalized.receivedAt : null,
+  });
+  return {queries:[...history.before, ...queries, ...history.after], rows, id, receivedAt:normalized.receivedAt};
+}
+
+export async function persistDataset(db,id,envelope,ingestionMode='cloud-readthrough') {
+  if (['fred','sofr'].includes(FINANCE_DATASETS[id]?.kind)) {
+    return persistMacroDataset(db,id,envelope,ingestionMode,normalizeDataset(id,envelope));
+  }
+  const plan=await datasetWritePlan(db,id,envelope,ingestionMode);
+  if(plan.queries.length) await measuredBatch(db,plan.queries,{operation:'dataset',dataset:id});
+  return plan.rows.length;
 }
 
 export async function datasetFailure(db,id,http,error) {
@@ -606,7 +688,7 @@ async function persistMacroDataset(db,id,envelope,ingestionMode,normalized) {
     params:[id,receivedAt,new Date().toISOString(),normalized.sourceHost,ingestionMode || 'cloud-readthrough',JSON.stringify({digest,keys,queryWindow})]});
   const history=canonicalHistoryStatements(id, rows, normalized.sourceHost, ingestionMode || 'cloud-readthrough');
   const batchQueries=[...history.before, ...queries, ...history.after];
-  const committed=await db.batch(bindQueries(db, batchQueries));
+  const committed=await measuredBatch(db,batchQueries,{operation:'macro',dataset:id});
   const observationResults=committed.slice(history.before.length, history.before.length + queries.length - 2);
   return observationResults.reduce((sum,result)=>sum+(result.results?.length || 0),0);
 }
@@ -636,7 +718,7 @@ export async function readDataset(db,id,options={}) {
     // current reads. Historical reads cannot reconstruct an overwritten live
     // state; exclude that row when its actual receipt is later than knownAt.
     const effective = alias => `(CASE WHEN ${alias}.received_at=${alias}.observed_at THEN ${alias}.stored_at ELSE ${alias}.received_at END)`;
-    const eligible = alias => `${alias}.received_at<=?2${historical?` AND ${effective(alias)}<=?2`:''}`;
+    const eligible = alias => `${alias}.received_at<=?2 AND json_extract(${alias}.value_json,'$.supersededByWs') IS NOT 1${historical?` AND ${effective(alias)}<=?2`:''}`;
     const closed = alias => `(CASE WHEN json_extract(${alias}.value_json,'$.closed')=1 THEN 1 ELSE 0 END)`;
     selection=`o.dataset_id=?1 AND ${eligible('o')}
       AND NOT EXISTS (SELECT 1 FROM finance_dataset_observations v
@@ -657,7 +739,8 @@ export async function readDataset(db,id,options={}) {
   if(String(state?.last_error || '').startsWith('dataset_history_gap_pending:')) {
     try {const gap=JSON.parse(state.last_error.slice('dataset_history_gap_pending:'.length));unresolvedGap={from:new Date(gap.from).toISOString(),to:new Date(gap.to).toISOString(),retryAt:gap.retryAt?new Date(gap.retryAt).toISOString():null};}catch{}
   }
-  const collectionStale=!state?.last_success_received_at || Date.now()-Date.parse(state.last_success_received_at)>definition.refreshSeconds*1000;
+  const collectionStale=/^kline_commit_(pending|failed)$/.test(state?.last_error || '') || (deskHistoryKey(id) && Number(state?.last_http_status)>=400)
+    || !state?.last_success_received_at || Date.now()-Date.parse(state.last_success_received_at)>definition.refreshSeconds*1000;
   const latestObserved=Math.max(...observations.results.map(r=>Date.parse(r.observed_at)||0),0);
   const sourceLagSeconds=latestObserved?Math.max(0,(Date.parse(knownAt)-latestObserved)/1000):null;
   const intervals={'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400,'1w':604800};
@@ -731,6 +814,8 @@ export function prepareBoundedObservations(db, id, {limit=6000, fromMs=null, toM
     WHERE o.rowid=(SELECT v.rowid FROM finance_dataset_observations v
       WHERE v.dataset_id=?1 AND v.observation_key=k.observation_key
         AND v.time_precision<>'receipt' AND v.received_at<=?2
+        AND json_extract(v.value_json,'$.supersededByWs') IS NOT 1
+        ${deskHistoryKey(id) ? "AND v.dataset_id GLOB 'binance-perp-klines-*'" : ''}
         AND (?6=0 OR (CASE WHEN v.received_at=v.observed_at THEN v.stored_at ELSE v.received_at END)<=?2)
       ORDER BY (CASE WHEN json_extract(v.value_json,'$.closed')=1 THEN 1 ELSE 0 END) DESC,
         (CASE WHEN v.received_at=v.observed_at THEN v.stored_at ELSE v.received_at END) DESC,
@@ -764,7 +849,8 @@ export async function readDatasetSummary(db, id, options={}) {
   // Current poll status is not evidence of health at an earlier knowledge cutoff.
   const state = historical ? null : currentState;
   const observations = bounded.observations.map(row=>applyMacroReceipt(row,macroReceipt));
-  const collectionStale = historical ? null : !state?.last_success_received_at || Date.now() - Date.parse(state.last_success_received_at) > definition.refreshSeconds * 1000;
+  const collectionStale = historical ? null : /^kline_commit_(pending|failed)$/.test(state?.last_error || '') || (deskHistoryKey(id) && Number(state?.last_http_status)>=400)
+    || !state?.last_success_received_at || Date.now() - Date.parse(state.last_success_received_at) > definition.refreshSeconds * 1000;
   const latestObserved = Math.max(...observations.map((row) => Date.parse(row.observedAt) || 0), 0);
   const sourceLagSeconds = latestObserved ? Math.max(0, (Date.parse(knownAt) - latestObserved) / 1000) : null;
   const intervals = {'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400,'1w':604800};

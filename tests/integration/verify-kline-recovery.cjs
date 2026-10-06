@@ -36,11 +36,14 @@ module.exports = (async () => {
   const row = (t, c = 101) => [t, '100', '120', '90', String(c), '2', t + step - 1, '200', '4', '1', '100'];
   const msg = (t, c, E, x = false) => ({ e: 'kline', E, k: { i: '5m', t, T: t + step - 1, o: '100', h: '120', l: '90', c: String(c), v: '2', q: '200', n: 4, V: '1', Q: '100', x } });
   const receipts = [];
-  live.bindKlineLiveHooks({ persistKlines: h.persistKlines, readKlineCursor: h.d1QueryLatestMeta,
-    updateSyncStatus: async () => {}, persistLiveKlineBar: null,
-    persistRestKlineBatch: async (_db, interval, rows, host, options) => {
+  live.bindKlineLiveHooks({ readKlineCursor: h.d1QueryLatestMeta,
+    // This suite isolates the durable recovery state machine. The actual
+    // transactional writer and mid-statement failures have their own SQL suite.
+    persistKlineCommit: async (_env, symbol, interval, rows, host, _mode, options={}) => {
       if (failNormalized) throw new Error('injected normalized write failure');
-      receipts.push({ interval, rows, host, options });
+      const result=await h.persistKlines(_env,symbol,interval,rows);
+      if(options.restBatch) receipts.push({ interval, rows, host, options });
+      return result;
     },
   });
   try {

@@ -232,7 +232,26 @@ function pageHeatmap() {
       <span id="hm-kpi-15m">--</span>
     </div>
 
-    <section class="heatmap-cloud-window">
+
+    <div class="heatmap-layout heatmap-dashboard-layout">
+      <section class="heatmap-panel">
+        <div class="heatmap-panel-head">
+          <div>
+            <div class="card-title">分所强平记录</div>
+            <div class="heatmap-panel-sub" id="hm-range-label">等待 desk 分所桶</div>
+          </div>
+          <div class="heatmap-legend">
+            <span><i class="long"></i>多头被强平</span>
+            <span><i class="short"></i>空头被强平</span>
+          </div>
+        </div>
+        <div class="heatmap-buckets" id="hm-buckets">
+          <div class="heatmap-empty">等待 desk 分所强平桶...</div>
+        </div>
+      </section>
+
+      <aside class="heatmap-side-rail">
+    <details class="heatmap-cloud-window"><summary>补充核对：近 1 小时与 1 天的分所金额</summary>
       <div class="heatmap-cloud-head">
         <div>
           <div class="card-title">分所时间窗（禁止跨所合计）</div>
@@ -268,26 +287,8 @@ function pageHeatmap() {
         </div>
         <div class="heatmap-cloud-help">金额 = 已发生强平的名义金额（价格 × 数量，USDT 本位约等于 USD）；多/空 = 被强平的仓位方向；笔 = 交易所推送事件数。</div>
       </details>
-    </section>
+    </details>
 
-    <div class="heatmap-layout heatmap-dashboard-layout">
-      <section class="heatmap-panel">
-        <div class="heatmap-panel-head">
-          <div>
-            <div class="card-title">分所强平记录</div>
-            <div class="heatmap-panel-sub" id="hm-range-label">等待 desk 分所桶</div>
-          </div>
-          <div class="heatmap-legend">
-            <span><i class="long"></i>多头被强平</span>
-            <span><i class="short"></i>空头被强平</span>
-          </div>
-        </div>
-        <div class="heatmap-buckets" id="hm-buckets">
-          <div class="heatmap-empty">等待 desk 分所强平桶...</div>
-        </div>
-      </section>
-
-      <aside class="heatmap-side-rail">
         <section class="heatmap-health-card warn" id="hm-health-card" aria-label="分所说明">
           <div class="card-title">分所说明</div>
           <strong id="hm-health-status">已观察强平</strong>

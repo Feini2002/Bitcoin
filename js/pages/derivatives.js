@@ -780,23 +780,18 @@ function derivDisplayLine(line){
 }
 
 function derivFactCard(key, title, lines, card) {
-  const status = derivFactStatus(card);
-  const items = lines.map(derivDisplayLine).concat([
-    `观察时间：${fmtDeskMinute(card && card.referencePeriod)}`,
-    `接收时间：${fmtDeskMinute(card && card.receivedAt)}`,
-    `状态：${status}`,
-  ]);
-  const raw = String(lines[0] || '—');
-  const value = raw.match(/：(-?\d+(?:\.\d+)?)\s+(.*)/);
-  const period=value?.[2]||'';
-  const suffix=period.includes('year')?' / 年':period.includes('per-settlement')?' / 本次结算':period.includes('per-1h')?' / 1h':period.includes('per-8h')?' / 8h':'';
-  const headline = value ? (/^(decimal|percent)/.test(value[2]) ? (Number(value[1])*(value[2].startsWith('decimal')?100:1)).toLocaleString('en-US',{maximumFractionDigits:8})+'%'+suffix : Number(value[1]).toLocaleString('en-US',{maximumFractionDigits:2})+' '+value[2]) : raw;
+  const status = derivFactStatus(card),items=lines.map(derivDisplayLine);
+  const measures=items.filter(line=>!line.startsWith('参考期：')&&!line.startsWith('公开可得：'));
+  const clocks=items.filter(line=>line.startsWith('参考期：')||line.startsWith('公开可得：'));
+  if(!clocks.some(line=>line.startsWith('参考期：')))clocks.push('观察时间：'+fmtDeskMinute(card?.referencePeriod));
+  clocks.push('接收时间：'+fmtDeskMinute(card?.receivedAt));
+  if(!clocks.some(line=>line.startsWith('公开可得：')))clocks.push('公开可得：'+fmtDeskMinute(card?.publicAvailableAt));
   const note = card?.note ? ({
     premium: '交易所当前报告的费率与已结算资金费分别阅读。',
     funding: '按实际结算时点阅读；系统取得时间与结算时间分列，周期未知时不作推定。',
     basis: '基差、基差率和年化率各自独立；缺失值保留为空，不代为换算。',
   }[key] || card.note) : '';
-  return `<article class="desk-clock-card" data-deriv-card="${escapeDerivHtml(key)}"><h4>${escapeDerivHtml(title)}</h4><strong>${escapeDerivHtml(headline)}</strong><ul>${items.map((line) => `<li>${escapeDerivHtml(line)}</li>`).join("")}</ul><span class="${derivStatusClass(status)}">${escapeDerivHtml(status)}</span>${note?'<p class="muted">'+escapeDerivHtml(note)+'</p>':''}<details data-receipt="${escapeDerivHtml(key)}"><summary>查看原值与来源时钟</summary><pre class="team-raw">${escapeDerivHtml(JSON.stringify(card,null,2))}</pre></details></article>`;
+  return `<article class="desk-clock-card desk-fact-row" data-deriv-card="${escapeDerivHtml(key)}"><div class="desk-fact-name"><h4>${escapeDerivHtml(title)}</h4><span class="${derivStatusClass(status)}">${escapeDerivHtml(status)}</span></div><dl class="desk-fact-values">${measures.map(line=>{const colon=line.indexOf('：');return '<div><dt>'+escapeDerivHtml(colon<0?'原读数':line.slice(0,colon))+'：</dt><dd>'+escapeDerivHtml(colon<0?line:line.slice(colon+1))+'</dd></div>';}).join('')}</dl><div class="desk-fact-clock">${clocks.map(line=>'<p>'+escapeDerivHtml(line)+'</p>').join('')}</div><details class="desk-fact-original" data-receipt="${escapeDerivHtml(key)}"><summary>来源、原值与使用边界</summary>${note?'<p>'+escapeDerivHtml(note)+'</p>':''}<pre class="team-raw">${escapeDerivHtml(JSON.stringify(card,null,2))}</pre></details></article>`;
 }
 
 function derivValueLines(card, lines) {

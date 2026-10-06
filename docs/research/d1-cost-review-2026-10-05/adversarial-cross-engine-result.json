@@ -1,0 +1,430 @@
+{
+  "at": "2026-10-05T14:19:38.529Z",
+  "runtime": "v24.18.0",
+  "sqliteVersion": "3.53.1",
+  "comparedWith": "3.50.4",
+  "cases": 60,
+  "scope": "Same synthetic fixtures and both SQL forms match older SQLite results. Single connection, not D1 concurrency, no billed row measurement.",
+  "results": [
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS"
+    }
+  ]
+}

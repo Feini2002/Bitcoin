@@ -172,13 +172,6 @@ function pageOrderflow() {
   return html`
     <section class="orderflow-desk">
       <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">ORDER FLOW</div><h1>订单流与足迹</h1><p>观察主动成交在哪些价位聚集，区分量的方向与价格的响应。</p></div><a class="btn" href="#/news-analysis">复核市场叙事 ↗</a></header>
-      <div id="orderflow-empty-desk" class="desk-halt-overlay" hidden>
-        <div class="desk-halt-card">
-          <strong>成交资料暂不可用</strong>
-          <p class="desk-halt-reason">当前没有可靠的成交资料，请稍后重试。</p>
-          <p>主动量差值为成交方向的近似，不能视为逐笔累计量。</p>
-        </div>
-      </div>
       <div class="orderflow-data-strip">
         <div class="orderflow-data-main">
           <span class="orderflow-feed-dot"></span>
@@ -244,6 +237,14 @@ function pageOrderflow() {
       <div class="orderflow-main-grid">
         <div class="orderflow-canvas-col">
           <div class="orderflow-canvas-wrap">
+      <div id="orderflow-empty-desk" class="desk-halt-overlay" hidden>
+        <div class="desk-halt-card">
+          <strong>成交资料暂不可用</strong>
+          <p class="desk-halt-reason">当前没有可靠的成交资料，请稍后重试。</p>
+          <p>主动量差值为成交方向的近似，不能视为逐笔累计量。</p>
+        </div>
+      </div>
+
             <div class="team-actions"><button class="btn" id="of-first">最早</button><button class="btn" id="of-prev">前一屏</button><button class="btn" id="of-next">后一屏</button><button class="btn" id="of-latest">最近</button></div>
             <canvas id="of-footprint-canvas"></canvas>
             <div class="orderflow-tooltip" id="of-footprint-tip"></div>

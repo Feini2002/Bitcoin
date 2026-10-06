@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-05T14:17:35.852Z",
+  "runtime": "v24.18.0",
+  "sqliteVersion": "3.53.1",
+  "sourceSqlSnapshotCheck": "PASS",
+  "scope": "Actual repository collector, persistence SQL and chart assembly with a synthetic single-connection SQLite adapter; no network, remote writes or D1 cost measurement; injected failures are local only.",
+  "cases": [
+    {
+      "id": "canonical_failure_after_raw_commit",
+      "outcome": "COUNTEREXAMPLE_CONFIRMED",
+      "events": [
+        "raw_commit",
+        "sync_status_commit",
+        "canonical_rollback"
+      ],
+      "rawClose": 101,
+      "canonicalClose": 100,
+      "syncLastOk": 1,
+      "collectorSuccessCountAdvanced": false
+    },
+    {
+      "id": "desk_reads_old_canonical_after_partial_commit",
+      "outcome": "COUNTEREXAMPLE_CONFIRMED",
+      "displayedClose": 100,
+      "collectionStale": false,
+      "scope": "synthetic injected failure; not a historical production occurrence"
+    },
+    {
+      "id": "retry_same_mutable_receipt",
+      "outcome": "PASS",
+      "rawClose": 101,
+      "canonicalClose": 101,
+      "canonicalRows": 1
+    },
+    {
+      "id": "raw_batch_failure",
+      "outcome": "PASS",
+      "events": [
+        "raw_rollback"
+      ],
+      "canonicalAttempted": false
+    },
+    {
+      "id": "v4_fixture_budget",
+      "outcome": "COUNTEREXAMPLE_CONFIRMED",
+      "logicalObservationRows": 8000000,
+      "v4WholeRunWrittenRowLimit": 100000,
+      "lowerBoundFactorBeforeIndexes": 80
+    },
+    {
+      "id": "v4_universal_80_percent_gate",
+      "outcome": "COUNTEREXAMPLE_CONFIRMED",
+      "profile": {
+        "oldTargetRead": 50,
+        "oldOtherRead": 50,
+        "targetReduction": 0.99
+      },
+      "wholeReduction": 0.495
+    }
+  ]
+}

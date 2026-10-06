@@ -13,7 +13,7 @@
 
 根目录仅留 `research-context.cjs` 与 `run-bounded.cjs` 两个兼容入口，分别转入 `research/`、`dev/` 实现，已有命令和资料查询方式仍可直接使用。诊断目录不等于只读：包含快照写入等专项工具，下面继续逐项标明副作用。
 
-当前开发从[交接记录](../docs/operations/development-handoff-2026-09-30.md)与[四页工作台方案](../docs/research/repository-development-plan-2026-09-27.md)开始；`npm run build` 已包含研究路由、研究协议、共享读取、Pages 清理离线回归和云端开关模拟，不执行生产删除或暂停/恢复。生产开关仍用 `cloud:status` / `cloud:pause` / `cloud:resume`，遵从[开关说明](../docs/research/cloudflare-pause-resume-2026-09-27.md)。
+当前开发从[最新交接](../docs/operations/development-handoff-2026-10-07.md)、[Agent主方案](../docs/research/agent-team-product-plan-2026-10-02.md)和服从它的总纲开始，不重做旧四页计划。`npm run build`包含研究路由、Agent/共享读取、Pages离线回归、云端开关及读取检测器模拟，不执行生产删除、业务SQL或恢复；`cloud:reads`另查官方指标，异常须汇报。当前成本事故保持暂停，运维入口仍遵从[开关说明](../docs/research/cloudflare-pause-resume-2026-09-27.md)。
 
 | 用途 | 入口 | 副作用 |
 | --- | --- | --- |

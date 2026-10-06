@@ -2,9 +2,10 @@
    路由注册与启动
    ======================================================= */
 const ROUTES = {
-  "overview": { crumbs: ["工作台", "今日"], render: pageResearchOverview, afterMount: initResearchOverview },
+  "overview": { crumbs: ["首席决策台", "最新事实"], render: pageResearchOverview, afterMount: initResearchOverview },
+  "domains": { crumbs: ["研究", "领域研究"], render: () => pageAgentTeam('domains'), afterMount: initAgentTeam },
   "market": {}, "events": {}, "research": {},
-  "records": { crumbs: ["工作台", "记录"], render: pageResearchRecords, afterMount: initResearchRecords },
+  "records": { crumbs: ["研究", "研究报告"], render: pageResearchRecords, afterMount: initResearchRecords },
   "research-window": { crumbs: ["研究团队", "指定问题研究"], render: pageResearchTeam, afterMount: initResearchTeam },
   "team-record": { crumbs: ["记录", "岗位研究"], render: pageTeamRecord, afterMount: initTeamRecord },
   "premarket": { crumbs: ["核心", "盘前简报"], render: () => pagePlaceholder(PLACEHOLDERS.premarket) },
@@ -26,7 +27,7 @@ const ROUTES = {
   "agent-macro": { crumbs: ["智囊团", "宏观研究员"], render: () => pageAgentTeam('macro'), afterMount: initAgentTeam },
   "agent-events": { crumbs: ["智囊团", "事件与舆情研究员"], render: () => pageAgentTeam('events'), afterMount: initAgentTeam },
   "agent-risk": { crumbs: ["智囊团", "风控官"], render: () => pageAgentPlaceholder("risk") },
-  "archive": { crumbs: ["智囊团", "研究历史"], render: () => pageAgentTeam('archive'), afterMount: initAgentTeam },
+  "archive": { crumbs: ["研究", "研究报告"], render: pageResearchRecords, afterMount: initResearchRecords },
 
   "calc": { crumbs: ["交易执行", "仓位与风险计算器"], render: pageCalc },
   "templates": { crumbs: ["交易执行", "策略模板库"], render: () => pagePlaceholder(PLACEHOLDERS.templates) },
@@ -57,9 +58,10 @@ function resolveRoute() {
 // 只释放上一个页面；取消尚未执行的挂载，避免快速切页后启动旧订阅。
 const PAGE_DISPOSERS = {
   boardroom: () => disposeAgentTeam(),
+  domains: () => disposeAgentTeam(),
   'research-window': () => disposeResearchTeam(),
   'team-record': () => disposeTeamRecord(),
-  'agent-chief': () => disposeAgentTeam(), 'agent-env': () => disposeAgentTeam(), 'agent-flow': () => disposeAgentTeam(), 'agent-deriv': () => disposeAgentTeam(), 'agent-macro': () => disposeAgentTeam(), 'agent-events': () => disposeAgentTeam(), archive: () => disposeAgentTeam(),
+  'agent-chief': () => disposeAgentTeam(), 'agent-env': () => disposeAgentTeam(), 'agent-flow': () => disposeAgentTeam(), 'agent-deriv': () => disposeAgentTeam(), 'agent-macro': () => disposeAgentTeam(), 'agent-events': () => disposeAgentTeam(), archive: () => disposeResearchRecords(),
   overview: () => disposeResearchOverview(),
   records: () => disposeResearchRecords(),
   settings: () => {disposeUserSettings();disposeAgentTeam();},

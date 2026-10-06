@@ -1,0 +1,136 @@
+{
+  "sqliteVersion": "3.50.4",
+  "scope": "12 synthetic SQLite cases; no remote INSERT; not concurrent D1 transaction acceptance",
+  "results": [
+    {
+      "kind": "canonical",
+      "stateExists": false,
+      "historyExists": false,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": []
+    },
+    {
+      "kind": "canonical",
+      "stateExists": false,
+      "historyExists": true,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000600000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "stateExists": true,
+      "historyExists": false,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "stateExists": true,
+      "historyExists": true,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "stateExists": false,
+      "case": "rollback",
+      "result": "PASS"
+    },
+    {
+      "kind": "canonical",
+      "stateExists": true,
+      "case": "rollback",
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "stateExists": false,
+      "historyExists": false,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": []
+    },
+    {
+      "kind": "raw",
+      "stateExists": false,
+      "historyExists": true,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000600000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "stateExists": true,
+      "historyExists": false,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "stateExists": true,
+      "historyExists": true,
+      "case": "equivalence",
+      "result": "PASS",
+      "stateAfter": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "stateExists": false,
+      "case": "rollback",
+      "result": "PASS"
+    },
+    {
+      "kind": "raw",
+      "stateExists": true,
+      "case": "rollback",
+      "result": "PASS"
+    }
+  ]
+}

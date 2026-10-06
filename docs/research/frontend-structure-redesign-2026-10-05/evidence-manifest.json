@@ -1,0 +1,2480 @@
+{
+  "version": 1,
+  "date": "2026-10-05",
+  "timezone": "Asia/Shanghai",
+  "scope": "调查、审查、方案与模拟预览；无业务实现/模型调用/设置保存/部署",
+  "origin": "http://127.0.0.1:5173",
+  "browser": "147.0.7727.15",
+  "agentVersion": "bitdesk.agent-team.2026-10-05.27",
+  "beforeAfterUnchanged": true,
+  "rounds": [
+    {
+      "id": "r1",
+      "startedAt": "2026-10-05T02:52:36.348Z",
+      "completedAt": "2026-10-05T02:53:31.904Z",
+      "pages": 45,
+      "tasks": 8,
+      "pageErrors": 0,
+      "consoleErrors": 0,
+      "networkAborted": 19
+    },
+    {
+      "id": "r2",
+      "startedAt": "2026-10-05T02:57:29.012Z",
+      "completedAt": "2026-10-05T02:58:32.637Z",
+      "localCasesPass": 6,
+      "externalCasesPass": 2,
+      "reviewCases": 2,
+      "externalPageErrors": 3,
+      "externalAnalyticsWritesBlocked": 6
+    },
+    {
+      "id": "r3",
+      "startedAt": "2026-10-05T03:02:33.368Z",
+      "completedAt": "2026-10-05T03:03:07.355Z",
+      "cases": 4,
+      "pageErrors": 0,
+      "notes": [
+        "嵌套阅读无返回父报告",
+        "OpenBB文档已读、未取得产品图片",
+        "生产被Cloudflare Access登录拦截",
+        "360px真实触摸路径可走"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "caseId": "chief",
+      "route": "#/boardroom",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-chief-1440-light.png",
+      "textLength": 2066,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "首席决策台",
+          "y": 92
+        },
+        {
+          "text": "当前市场解读",
+          "y": 416
+        },
+        {
+          "text": "支撑解读的关键事实",
+          "y": 590
+        },
+        {
+          "text": "较上次的变化",
+          "y": 760
+        },
+        {
+          "text": "反证与分歧",
+          "y": 760
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 1342
+        },
+        {
+          "text": "各领域的最新研究",
+          "y": 1918
+        }
+      ],
+      "theses": [
+        {
+          "y": 495,
+          "height": 59
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "env",
+      "route": "#/agent-env",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-env-1440-light.png",
+      "textLength": 1231,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "环境评估员",
+          "y": 92
+        },
+        {
+          "text": "环境评估员 · 岗位判断",
+          "y": 469
+        },
+        {
+          "text": "较上次的变化",
+          "y": 679
+        },
+        {
+          "text": "反证与分歧",
+          "y": 679
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 1261
+        }
+      ],
+      "theses": [
+        {
+          "y": 547,
+          "height": 89
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "flow",
+      "route": "#/agent-flow",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-flow-1440-light.png",
+      "textLength": 1029,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "盘口流动性官",
+          "y": 92
+        },
+        {
+          "text": "盘口流动性官 · 岗位判断",
+          "y": 469
+        },
+        {
+          "text": "较上次的变化",
+          "y": 649
+        },
+        {
+          "text": "反证与分歧",
+          "y": 649
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 1072
+        }
+      ],
+      "theses": [
+        {
+          "y": 547,
+          "height": 59
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "deriv",
+      "route": "#/agent-deriv",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-deriv-1440-light.png",
+      "textLength": 1150,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "衍生品情报官",
+          "y": 92
+        },
+        {
+          "text": "衍生品情报官 · 岗位判断",
+          "y": 469
+        },
+        {
+          "text": "较上次的变化",
+          "y": 649
+        },
+        {
+          "text": "反证与分歧",
+          "y": 649
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 1166
+        }
+      ],
+      "theses": [
+        {
+          "y": 547,
+          "height": 59
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "macro",
+      "route": "#/agent-macro",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-macro-1440-light.png",
+      "textLength": 1142,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "宏观研究员",
+          "y": 92
+        },
+        {
+          "text": "宏观研究员 · 岗位判断",
+          "y": 469
+        },
+        {
+          "text": "较上次的变化",
+          "y": 679
+        },
+        {
+          "text": "反证与分歧",
+          "y": 679
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 1168
+        }
+      ],
+      "theses": [
+        {
+          "y": 547,
+          "height": 89
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "events",
+      "route": "#/agent-events",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-events-1440-light.png",
+      "textLength": 1113,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "事件与舆情研究员",
+          "y": 92
+        },
+        {
+          "text": "事件与舆情研究员 · 岗位判断",
+          "y": 469
+        },
+        {
+          "text": "较上次的变化",
+          "y": 649
+        },
+        {
+          "text": "反证与分歧",
+          "y": 649
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 1128
+        }
+      ],
+      "theses": [
+        {
+          "y": 547,
+          "height": 59
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "archive",
+      "route": "#/archive",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-archive-1440-light.png",
+      "textLength": 4604,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "研究历史",
+          "y": 92
+        },
+        {
+          "text": "研究轮次与状态",
+          "y": 373
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "chart-data",
+      "route": "#/market?view=chart",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-chart-data-1440-light.png",
+      "textLength": 1062,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "价格与结构",
+          "y": 165
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "orderflow-data",
+      "route": "#/market?view=orderflow",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-orderflow-data-1440-light.png",
+      "textLength": 521,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "订单流与足迹",
+          "y": 165
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "heatmap-data",
+      "route": "#/market?view=heatmap",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-heatmap-data-1440-light.png",
+      "textLength": 558,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "强平雷达",
+          "y": 165
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "leverage-data",
+      "route": "#/market?view=leverage",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-leverage-data-1440-light.png",
+      "textLength": 268,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "杠杆与定价",
+          "y": 165
+        },
+        {
+          "text": "合约",
+          "y": 422
+        },
+        {
+          "text": "持仓与主动量摘要",
+          "y": 544
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "macro-data",
+      "route": "#/market?view=macro",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-macro-data-1440-light.png",
+      "textLength": 2470,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "宏观与资金",
+          "y": 165
+        },
+        {
+          "text": "合约",
+          "y": 0
+        },
+        {
+          "text": "持仓与主动量摘要",
+          "y": 0
+        },
+        {
+          "text": "日终利率（CMT / SOFR，非可成交）",
+          "y": 438
+        },
+        {
+          "text": "周频美元与 H.4.1（禁止相减）",
+          "y": 914
+        },
+        {
+          "text": "月频 CPI 指数",
+          "y": 1474
+        },
+        {
+          "text": "加密背景（非币安成交、非流入）",
+          "y": 1949
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "events-materials",
+      "route": "#/events",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-events-materials-1440-light.png",
+      "textLength": 17813,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "事件",
+          "y": 117
+        },
+        {
+          "text": "团队最近发现的事件材料",
+          "y": 229
+        },
+        {
+          "text": "There's an election next month: State of Crypto",
+          "y": 540
+        },
+        {
+          "text": "Crypto poured years into new products. The next challenge is keeping users",
+          "y": 851
+        },
+        {
+          "text": "The Clarity Act stalled. Bankers aren’t hitting the brakes yet on crypto dealmaking",
+          "y": 1163
+        },
+        {
+          "text": "Payments firm OpenPayd targets year-end Nasdaq listing to fund U.S. expansion and acquisitions",
+          "y": 1474
+        },
+        {
+          "text": "Crypto job postings triple to over 1,200 in September, but applications fall",
+          "y": 1786
+        },
+        {
+          "text": "Cathie Wood says smart investors need to start watching where AI agents spend money",
+          "y": 2098
+        },
+        {
+          "text": "Crypto's Sisyphean struggle",
+          "y": 2409
+        },
+        {
+          "text": "BlackRock offers a glimpse of how tokenization may change your investment portfolio",
+          "y": 2721
+        },
+        {
+          "text": "Bank group sues U.S. regulator over granting crypto trust charters",
+          "y": 3032
+        },
+        {
+          "text": "Federal Reserve Board announces approval of application by Fleur Capital Corporation",
+          "y": 3344
+        },
+        {
+          "text": "Federal Reserve Board announces it will extend, until November 4, the comment period on its proposal to modernize Regulation O",
+          "y": 3629
+        },
+        {
+          "text": "BNY in talks with Kraken parent Payward over infrastructure partnership",
+          "y": 3968
+        },
+        {
+          "text": "Once a $2 billion Ethereum layer-2, Blast is shutting down after assets plunge 98%",
+          "y": 4279
+        },
+        {
+          "text": "Trump’s potential AI czar, Jay Clayton, helped pioneer the SEC’s crypto crackdown",
+          "y": 4591
+        },
+        {
+          "text": "Federal Reserve Board issues enforcement action with Ontario Bancorporation, Inc.",
+          "y": 4902
+        },
+        {
+          "text": "America at a crossroads: Commissioner Peirce’s parting challenge",
+          "y": 5188
+        },
+        {
+          "text": "U.S. added just 29,000 jobs in September, with unemployment rate rising to 4.2%",
+          "y": 5499
+        },
+        {
+          "text": "Cboe wants to turn VIX into a never-ending trade",
+          "y": 5785
+        },
+        {
+          "text": "Live updates: Bitcoin reverses big early gains following soft U.S. jobs data",
+          "y": 6071
+        },
+        {
+          "text": "Crypto traders are in risk-on mode as bitcoin dominance nears return to 60%",
+          "y": 6356
+        },
+        {
+          "text": "Bitcoin open interest jumps $2.3 billion as traders pay more for bullish positions",
+          "y": 6668
+        },
+        {
+          "text": "Tether's USDT is 'coming home' to Bitcoin after more than a decade",
+          "y": 6953
+        },
+        {
+          "text": "Bitcoin tops $86,000 ahead of U.S. jobs report",
+          "y": 7265
+        },
+        {
+          "text": "SEC proposes new crypto custody rules for investment advisers and funds",
+          "y": 7576
+        },
+        {
+          "text": "Another Trump memecoin dinner advertised for token's top investors",
+          "y": 7888
+        },
+        {
+          "text": "Crypto for Advisors: The CLARITY Act failed, but the rules came anyway",
+          "y": 8174
+        },
+        {
+          "text": "NEAR Intents hit by $3.8 million exploit as crypto's rough year of hacks continues",
+          "y": 8459
+        },
+        {
+          "text": "Live updates: Bitcoin posts tentative gains as rates drop ahead of Friday's jobs report",
+          "y": 8771
+        },
+        {
+          "text": "Federal Reserve Board finalizes changes to enhance the transparency and public accountability of its stress test and reduce volatility in its stress test-related capital requirements",
+          "y": 9082
+        },
+        {
+          "text": "Agencies publish resolution plan feedback letters for 15 banking organizations",
+          "y": 9421
+        },
+        {
+          "text": "Federal Reserve Board announces approval of application by Peoples Bancorp Inc.",
+          "y": 9706
+        },
+        {
+          "text": "Federal Reserve Board requests public comment on two proposals related to establishing a regulatory framework for Board-supervised payment stablecoin issuers under the GENIUS Act",
+          "y": 9992
+        },
+        {
+          "text": "Federal Reserve Board issues enforcement action with former employee of Sandy Spring Bank",
+          "y": 10331
+        },
+        {
+          "text": "U.S. regulator warns about cheating risks in 'mention markets' on prediction platforms",
+          "y": 10616
+        },
+        {
+          "text": "Democrats 'chose visceral hatred for' Donald Trump over crypto Clarity Act, Lummis says",
+          "y": 10902
+        },
+        {
+          "text": "Crypto market structure can't wait for shot at post-election Clarity Act surge: White House",
+          "y": 11187
+        },
+        {
+          "text": "Federal Reserve Board announces approval of application by BancFirst Corporation",
+          "y": 11473
+        },
+        {
+          "text": "Canada's 'Big Six' banks to launch interbank tokenized deposit initiative",
+          "y": 11759
+        },
+        {
+          "text": "Next for the U.S. SEC: Agency's chief crypto counsel illuminates path for custody",
+          "y": 12044
+        },
+        {
+          "text": "European central banks push to expand stablecoin yield ban to crypto lending and staking",
+          "y": 12330
+        },
+        {
+          "text": "Bitcoin, ether perpetual volumes on Kalshi are dominated by an unusual, repetitive trade, data shows",
+          "y": 12616
+        },
+        {
+          "text": "Why Payward-backed Reap is betting on non-USD stablecoins for 24/7 cross-border FX settlement",
+          "y": 12928
+        },
+        {
+          "text": "A $3.2 million 'bitcoin butterfly' option trade bets on $95,000 by the end of October",
+          "y": 13241
+        },
+        {
+          "text": "Binance buys $100 million Circle stake in five-year USDC promotion deal",
+          "y": 13526
+        },
+        {
+          "text": "Bitcoin recovers from Asian-session lows as falling oil price supports risk appetite",
+          "y": 13812
+        },
+        {
+          "text": "Live updates: Bitcoin trades near $86,000 as U.S. stocks post small gains",
+          "y": 14098
+        },
+        {
+          "text": "Binance probed by U.S. federal prosecutors for sanctions violations: Bloomberg",
+          "y": 14383
+        },
+        {
+          "text": "Animoca Brands delays IPO plans, suspends merger talks with Currenc",
+          "y": 14669
+        },
+        {
+          "text": "Spot bitcoin ETFs attracted nearly $1 billion on Monday, the 9th largest inflow ever",
+          "y": 14955
+        },
+        {
+          "text": "Whitehats move 52 bitcoin from the Coldcard hack to a recovery trust",
+          "y": 15240
+        },
+        {
+          "text": "Elon Musk's X brings crypto and stock trading via Coinbase, Kraken and Interactive Brokers partnership",
+          "y": 15526
+        },
+        {
+          "text": "Dogecoin leads market rebound with 15% pump, bitcoin steady above $85,000",
+          "y": 15838
+        },
+        {
+          "text": "Cardano joins Solana, XRP Ledger in race to power AI agent payments",
+          "y": 16124
+        },
+        {
+          "text": "Bitcoin could test $90,000 after shorts get squeezed, but traders warn leverage is building",
+          "y": 16410
+        },
+        {
+          "text": "Why this investment bank expects little demand for tokenized stocks despite SEC’s new trading rules",
+          "y": 16695
+        },
+        {
+          "text": "Crypto political group plans to spend $30 million against Sherrod Brown's Senate bid",
+          "y": 17008
+        },
+        {
+          "text": "ECB plans to buy tokenized bonds with its own funds",
+          "y": 17294
+        },
+        {
+          "text": "Why banks and offshore hubs like Dubai are winners of the Senate killing the Clarity Act",
+          "y": 17579
+        },
+        {
+          "text": "Bitmine bought $75 million ether as Tom Lee says institutions are still underweight crypto",
+          "y": 17865
+        },
+        {
+          "text": "Treasury Secretary Scott Bessent champions dollar dominance across global markets and stablecoins",
+          "y": 18150
+        },
+        {
+          "text": "Google and Apple seek crypto talent as Big Tech eyes stablecoin and tokenization rails",
+          "y": 18463
+        },
+        {
+          "text": "Strategy returns to bitcoin buys, adding $75 million of BTC last week",
+          "y": 18749
+        },
+        {
+          "text": "Bitcoin's 44% gain in third quarter teases full-blown crypto bull run",
+          "y": 19034
+        },
+        {
+          "text": "Perp futures linked to 'bitcoin VIX' debut on Hyperliquid",
+          "y": 19320
+        },
+        {
+          "text": "ECB deploys Pontes platform to settle wholesale tokenized assets in central-bank money",
+          "y": 19606
+        },
+        {
+          "text": "Bitcoin hits $85,000 as short squeeze forces out $648 million of bearish bets",
+          "y": 19891
+        },
+        {
+          "text": "X sues its own users for running a fake bitcoin news bot farm",
+          "y": 20177
+        },
+        {
+          "text": "Crypto enjoys bullish bounce post-Fed rate hike: Crypto Week Ahead",
+          "y": 20462
+        },
+        {
+          "text": "Hana Bank issues South Korea’s first digital bond using Euroclear’s blockchain",
+          "y": 20748
+        },
+        {
+          "text": "Live updates: Bitcoin hits $87,000, while traders pile into leveraged bets",
+          "y": 21034
+        },
+        {
+          "text": "Kalshi faces ‘fake crypto volume’ allegations as critic flags identical $5,500 trades",
+          "y": 21319
+        },
+        {
+          "text": "Bitcoin rises above $81,000, while NEAR jumps 23% on Zcash swap traffic",
+          "y": 21605
+        },
+        {
+          "text": "Bitcoin’s price has cleared a key hurdle that has historically preceded major bull runs",
+          "y": 21891
+        },
+        {
+          "text": "正在读取报告",
+          "y": 22465
+        },
+        {
+          "text": "从事实到观察",
+          "y": 22402
+        },
+        {
+          "text": "两种时钟，分开阅读",
+          "y": 22991
+        },
+        {
+          "text": "交叉核对",
+          "y": 23191
+        },
+        {
+          "text": "",
+          "y": 0
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "today",
+      "route": "#/overview",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-today-1440-light.png",
+      "textLength": 1188,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "今日",
+          "y": 92
+        },
+        {
+          "text": "BTCUSDT 永续",
+          "y": 204
+        },
+        {
+          "text": "值得留意的事件",
+          "y": 204
+        },
+        {
+          "text": "继续研究",
+          "y": 917
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "records",
+      "route": "#/records",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-records-1440-light.png",
+      "textLength": 26592,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "资料与旧记录",
+          "y": 92
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "question",
+      "route": "#/research?view=window",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-question-1440-light.png",
+      "textLength": 279,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "指定问题研究",
+          "y": 165
+        },
+        {
+          "text": "研究所选市场区间",
+          "y": 296
+        },
+        {
+          "text": "研究记录",
+          "y": 1373
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "narratives",
+      "route": "#/research?view=narratives",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-narratives-1440-light.png",
+      "textLength": 2191,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "叙事研究",
+          "y": 190
+        },
+        {
+          "text": "BTC 核心跨资产情报日报",
+          "y": 462
+        },
+        {
+          "text": "历史风险观察",
+          "y": 706
+        },
+        {
+          "text": "上游事件继续发酵",
+          "y": 834
+        },
+        {
+          "text": "历史条件观察",
+          "y": 1068
+        },
+        {
+          "text": "顺势确认",
+          "y": 1197
+        },
+        {
+          "text": "等待复核",
+          "y": 1426
+        },
+        {
+          "text": "历史事件记录",
+          "y": 1660
+        },
+        {
+          "text": "Binance probed by U.S. federal prosecutors for sanctions violations: Bloomberg",
+          "y": 1788
+        },
+        {
+          "text": "Crypto enjoys bullish bounce post-Fed rate hike: Crypto Week Ahead",
+          "y": 1983
+        },
+        {
+          "text": "Layer-2 and DeFi tokens lead broad crypto advance as post-Fed hike nerves fade",
+          "y": 2177
+        },
+        {
+          "text": "原始报告内容",
+          "y": 2376
+        },
+        {
+          "text": "从观点到验证",
+          "y": 413
+        },
+        {
+          "text": "两种时钟，分开阅读",
+          "y": 1023
+        },
+        {
+          "text": "交叉核对",
+          "y": 1223
+        },
+        {
+          "text": "",
+          "y": 0
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "settings",
+      "route": "#/settings",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-settings-1440-light.png",
+      "textLength": 455,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "设置",
+          "y": 92
+        },
+        {
+          "text": "智囊团研究节奏",
+          "y": 236
+        },
+        {
+          "text": "研究等待退出核对",
+          "y": 0
+        },
+        {
+          "text": "已保存设置 · 接下来三次计划时间",
+          "y": 726
+        },
+        {
+          "text": "外观",
+          "y": 954
+        },
+        {
+          "text": "资料读取",
+          "y": 1186
+        },
+        {
+          "text": "记录与备份",
+          "y": 1368
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "calc",
+      "route": "#/calc",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-calc-1440-light.png",
+      "textLength": 77,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "仓位与风险计算器",
+          "y": 224
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "chief-demo",
+      "route": "#/boardroom-demo",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-chief-demo-1440-light.png",
+      "textLength": 77,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "晨会 · 会议室演示",
+          "y": 224
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "legacy-events",
+      "route": "#/news?legacy=1",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-legacy-events-1440-light.png",
+      "textLength": 361,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "历史报告与费用",
+          "y": 28
+        },
+        {
+          "text": "事件一览设置",
+          "y": 28
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "legacy-analysis",
+      "route": "#/news-analysis?legacy=1",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-legacy-analysis-1440-light.png",
+      "textLength": 3452,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "历史 Risk-On / Risk-Off 分类",
+          "y": 457
+        },
+        {
+          "text": "只验证可被资金跟随的事件",
+          "y": 758
+        },
+        {
+          "text": "事件日报",
+          "y": 868
+        },
+        {
+          "text": "上游事件继续发酵",
+          "y": 1129
+        },
+        {
+          "text": "BTC 方向确认",
+          "y": 1390
+        },
+        {
+          "text": "固定输入简报（无模型）",
+          "y": 1630
+        },
+        {
+          "text": "价格、衍生品、强平、宏观代理",
+          "y": 758
+        },
+        {
+          "text": "只渲染确定 timestamp",
+          "y": 2067
+        },
+        {
+          "text": "触发、确认、失效分层",
+          "y": 2067
+        },
+        {
+          "text": "下游员工可直接读取的枚举",
+          "y": 2559
+        },
+        {
+          "text": "阻断 LLM 分析 LLM",
+          "y": 2559
+        },
+        {
+          "text": "AI / 工具 / 科技新闻如何进入风险偏好",
+          "y": 2997
+        },
+        {
+          "text": "历史报告与费用",
+          "y": 28
+        },
+        {
+          "text": "舆情分析设置",
+          "y": 28
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "premarket",
+      "route": "#/premarket",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-premarket-1440-light.png",
+      "textLength": 334,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "盘前简报",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "agent-risk",
+      "route": "#/agent-risk",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-agent-risk-1440-light.png",
+      "textLength": 77,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "风控官",
+          "y": 224
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "templates",
+      "route": "#/templates",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-templates-1440-light.png",
+      "textLength": 243,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "策略模板库",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "draft",
+      "route": "#/draft",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-draft-1440-light.png",
+      "textLength": 231,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "订单草稿台",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "positions",
+      "route": "#/positions",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-positions-1440-light.png",
+      "textLength": 218,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "当前持仓",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "journal",
+      "route": "#/journal",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-journal-1440-light.png",
+      "textLength": 220,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "交易日志",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "daily-review",
+      "route": "#/daily-review",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-daily-review-1440-light.png",
+      "textLength": 220,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "每日复盘",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "perf",
+      "route": "#/perf",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-perf-1440-light.png",
+      "textLength": 225,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "绩效统计",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "patterns",
+      "route": "#/patterns",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-patterns-1440-light.png",
+      "textLength": 210,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "错误模式",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "data-vault",
+      "route": "#/data-vault",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-data-vault-1440-light.png",
+      "textLength": 259,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "数据池",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "playbook",
+      "route": "#/playbook",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-playbook-1440-light.png",
+      "textLength": 254,
+      "documentWidth": 1440,
+      "headings": [
+        {
+          "text": "知识库 · Playbook",
+          "y": 157
+        },
+        {
+          "text": "该模块暂未上岗",
+          "y": 302
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "chief",
+      "route": "#/boardroom",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-chief-390-light.png",
+      "textLength": 2066,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "首席决策台",
+          "y": 84
+        },
+        {
+          "text": "当前市场解读",
+          "y": 498
+        },
+        {
+          "text": "支撑解读的关键事实",
+          "y": 779
+        },
+        {
+          "text": "较上次的变化",
+          "y": 1124
+        },
+        {
+          "text": "反证与分歧",
+          "y": 1721
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 2553
+        },
+        {
+          "text": "各领域的最新研究",
+          "y": 3475
+        }
+      ],
+      "theses": [
+        {
+          "y": 597,
+          "height": 148
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "env",
+      "route": "#/agent-env",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-env-390-light.png",
+      "textLength": 1231,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "环境评估员",
+          "y": 84
+        },
+        {
+          "text": "环境评估员 · 岗位判断",
+          "y": 578
+        },
+        {
+          "text": "较上次的变化",
+          "y": 893
+        },
+        {
+          "text": "反证与分歧",
+          "y": 1265
+        },
+        {
+          "text": "接下来核查什么",
+          "y": 2124
+        }
+      ],
+      "theses": [
+        {
+          "y": 676,
+          "height": 178
+        }
+      ],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "archive",
+      "route": "#/archive",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-archive-390-light.png",
+      "textLength": 4604,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "研究历史",
+          "y": 84
+        },
+        {
+          "text": "研究轮次与状态",
+          "y": 409
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "chart-data",
+      "route": "#/market?view=chart",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-chart-data-390-light.png",
+      "textLength": 1062,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "价格与结构",
+          "y": 149
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "orderflow-data",
+      "route": "#/market?view=orderflow",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-orderflow-data-390-light.png",
+      "textLength": 521,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "订单流与足迹",
+          "y": 134
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "heatmap-data",
+      "route": "#/market?view=heatmap",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-heatmap-data-390-light.png",
+      "textLength": 558,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "强平雷达",
+          "y": 149
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "leverage-data",
+      "route": "#/market?view=leverage",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-leverage-data-390-light.png",
+      "textLength": 268,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "杠杆与定价",
+          "y": 149
+        },
+        {
+          "text": "合约",
+          "y": 490
+        },
+        {
+          "text": "持仓与主动量摘要",
+          "y": 621
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "macro-data",
+      "route": "#/market?view=macro",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-macro-data-390-light.png",
+      "textLength": 2470,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "宏观与资金",
+          "y": 149
+        },
+        {
+          "text": "合约",
+          "y": 0
+        },
+        {
+          "text": "持仓与主动量摘要",
+          "y": 0
+        },
+        {
+          "text": "日终利率（CMT / SOFR，非可成交）",
+          "y": 506
+        },
+        {
+          "text": "周频美元与 H.4.1（禁止相减）",
+          "y": 2412
+        },
+        {
+          "text": "月频 CPI 指数",
+          "y": 3976
+        },
+        {
+          "text": "加密背景（非币安成交、非流入）",
+          "y": 4476
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "events-materials",
+      "route": "#/events",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-events-materials-390-light.png",
+      "textLength": 17813,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "事件",
+          "y": 109
+        },
+        {
+          "text": "团队最近发现的事件材料",
+          "y": 269
+        },
+        {
+          "text": "There's an election next month: State of Crypto",
+          "y": 706
+        },
+        {
+          "text": "Crypto poured years into new products. The next challenge is keeping users",
+          "y": 1109
+        },
+        {
+          "text": "The Clarity Act stalled. Bankers aren’t hitting the brakes yet on crypto dealmaking",
+          "y": 1563
+        },
+        {
+          "text": "Payments firm OpenPayd targets year-end Nasdaq listing to fund U.S. expansion and acquisitions",
+          "y": 2065
+        },
+        {
+          "text": "Crypto job postings triple to over 1,200 in September, but applications fall",
+          "y": 2493
+        },
+        {
+          "text": "Cathie Wood says smart investors need to start watching where AI agents spend money",
+          "y": 2947
+        },
+        {
+          "text": "Crypto's Sisyphean struggle",
+          "y": 3401
+        },
+        {
+          "text": "BlackRock offers a glimpse of how tokenization may change your investment portfolio",
+          "y": 3804
+        },
+        {
+          "text": "Bank group sues U.S. regulator over granting crypto trust charters",
+          "y": 4283
+        },
+        {
+          "text": "Federal Reserve Board announces approval of application by Fleur Capital Corporation",
+          "y": 4712
+        },
+        {
+          "text": "Federal Reserve Board announces it will extend, until November 4, the comment period on its proposal to modernize Regulation O",
+          "y": 5114
+        },
+        {
+          "text": "BNY in talks with Kraken parent Payward over infrastructure partnership",
+          "y": 5568
+        },
+        {
+          "text": "Once a $2 billion Ethereum layer-2, Blast is shutting down after assets plunge 98%",
+          "y": 5996
+        },
+        {
+          "text": "Trump’s potential AI czar, Jay Clayton, helped pioneer the SEC’s crypto crackdown",
+          "y": 6450
+        },
+        {
+          "text": "Federal Reserve Board issues enforcement action with Ontario Bancorporation, Inc.",
+          "y": 6904
+        },
+        {
+          "text": "America at a crossroads: Commissioner Peirce’s parting challenge",
+          "y": 7306
+        },
+        {
+          "text": "U.S. added just 29,000 jobs in September, with unemployment rate rising to 4.2%",
+          "y": 7760
+        },
+        {
+          "text": "Cboe wants to turn VIX into a never-ending trade",
+          "y": 8188
+        },
+        {
+          "text": "Live updates: Bitcoin reverses big early gains following soft U.S. jobs data",
+          "y": 8539
+        },
+        {
+          "text": "Crypto traders are in risk-on mode as bitcoin dominance nears return to 60%",
+          "y": 8967
+        },
+        {
+          "text": "Bitcoin open interest jumps $2.3 billion as traders pay more for bullish positions",
+          "y": 9395
+        },
+        {
+          "text": "Tether's USDT is 'coming home' to Bitcoin after more than a decade",
+          "y": 9797
+        },
+        {
+          "text": "Bitcoin tops $86,000 ahead of U.S. jobs report",
+          "y": 10251
+        },
+        {
+          "text": "SEC proposes new crypto custody rules for investment advisers and funds",
+          "y": 10680
+        },
+        {
+          "text": "Another Trump memecoin dinner advertised for token's top investors",
+          "y": 11134
+        },
+        {
+          "text": "Crypto for Advisors: The CLARITY Act failed, but the rules came anyway",
+          "y": 11536
+        },
+        {
+          "text": "NEAR Intents hit by $3.8 million exploit as crypto's rough year of hacks continues",
+          "y": 11887
+        },
+        {
+          "text": "Live updates: Bitcoin posts tentative gains as rates drop ahead of Friday's jobs report",
+          "y": 12341
+        },
+        {
+          "text": "Federal Reserve Board finalizes changes to enhance the transparency and public accountability of its stress test and reduce volatility in its stress test-related capital requirements",
+          "y": 12769
+        },
+        {
+          "text": "Agencies publish resolution plan feedback letters for 15 banking organizations",
+          "y": 13300
+        },
+        {
+          "text": "Federal Reserve Board announces approval of application by Peoples Bancorp Inc.",
+          "y": 13702
+        },
+        {
+          "text": "Federal Reserve Board requests public comment on two proposals related to establishing a regulatory framework for Board-supervised payment stablecoin issuers under the GENIUS Act",
+          "y": 14104
+        },
+        {
+          "text": "Federal Reserve Board issues enforcement action with former employee of Sandy Spring Bank",
+          "y": 14660
+        },
+        {
+          "text": "U.S. regulator warns about cheating risks in 'mention markets' on prediction platforms",
+          "y": 15089
+        },
+        {
+          "text": "Democrats 'chose visceral hatred for' Donald Trump over crypto Clarity Act, Lummis says",
+          "y": 15465
+        },
+        {
+          "text": "Crypto market structure can't wait for shot at post-election Clarity Act surge: White House",
+          "y": 15841
+        },
+        {
+          "text": "Federal Reserve Board announces approval of application by BancFirst Corporation",
+          "y": 16217
+        },
+        {
+          "text": "Canada's 'Big Six' banks to launch interbank tokenized deposit initiative",
+          "y": 16620
+        },
+        {
+          "text": "Next for the U.S. SEC: Agency's chief crypto counsel illuminates path for custody",
+          "y": 16970
+        },
+        {
+          "text": "European central banks push to expand stablecoin yield ban to crypto lending and staking",
+          "y": 17347
+        },
+        {
+          "text": "Bitcoin, ether perpetual volumes on Kalshi are dominated by an unusual, repetitive trade, data shows",
+          "y": 17723
+        },
+        {
+          "text": "Why Payward-backed Reap is betting on non-USD stablecoins for 24/7 cross-border FX settlement",
+          "y": 18099
+        },
+        {
+          "text": "A $3.2 million 'bitcoin butterfly' option trade bets on $95,000 by the end of October",
+          "y": 18475
+        },
+        {
+          "text": "Binance buys $100 million Circle stake in five-year USDC promotion deal",
+          "y": 18852
+        },
+        {
+          "text": "Bitcoin recovers from Asian-session lows as falling oil price supports risk appetite",
+          "y": 19228
+        },
+        {
+          "text": "Live updates: Bitcoin trades near $86,000 as U.S. stocks post small gains",
+          "y": 19604
+        },
+        {
+          "text": "Binance probed by U.S. federal prosecutors for sanctions violations: Bloomberg",
+          "y": 19981
+        },
+        {
+          "text": "Animoca Brands delays IPO plans, suspends merger talks with Currenc",
+          "y": 20357
+        },
+        {
+          "text": "Spot bitcoin ETFs attracted nearly $1 billion on Monday, the 9th largest inflow ever",
+          "y": 20708
+        },
+        {
+          "text": "Whitehats move 52 bitcoin from the Coldcard hack to a recovery trust",
+          "y": 21084
+        },
+        {
+          "text": "Elon Musk's X brings crypto and stock trading via Coinbase, Kraken and Interactive Brokers partnership",
+          "y": 21435
+        },
+        {
+          "text": "Dogecoin leads market rebound with 15% pump, bitcoin steady above $85,000",
+          "y": 21811
+        },
+        {
+          "text": "Cardano joins Solana, XRP Ledger in race to power AI agent payments",
+          "y": 22187
+        },
+        {
+          "text": "Bitcoin could test $90,000 after shorts get squeezed, but traders warn leverage is building",
+          "y": 22538
+        },
+        {
+          "text": "Why this investment bank expects little demand for tokenized stocks despite SEC’s new trading rules",
+          "y": 22914
+        },
+        {
+          "text": "Crypto political group plans to spend $30 million against Sherrod Brown's Senate bid",
+          "y": 23291
+        },
+        {
+          "text": "ECB plans to buy tokenized bonds with its own funds",
+          "y": 23667
+        },
+        {
+          "text": "Why banks and offshore hubs like Dubai are winners of the Senate killing the Clarity Act",
+          "y": 24018
+        },
+        {
+          "text": "Bitmine bought $75 million ether as Tom Lee says institutions are still underweight crypto",
+          "y": 24394
+        },
+        {
+          "text": "Treasury Secretary Scott Bessent champions dollar dominance across global markets and stablecoins",
+          "y": 24770
+        },
+        {
+          "text": "Google and Apple seek crypto talent as Big Tech eyes stablecoin and tokenization rails",
+          "y": 25146
+        },
+        {
+          "text": "Strategy returns to bitcoin buys, adding $75 million of BTC last week",
+          "y": 25523
+        },
+        {
+          "text": "Bitcoin's 44% gain in third quarter teases full-blown crypto bull run",
+          "y": 25874
+        },
+        {
+          "text": "Perp futures linked to 'bitcoin VIX' debut on Hyperliquid",
+          "y": 26224
+        },
+        {
+          "text": "ECB deploys Pontes platform to settle wholesale tokenized assets in central-bank money",
+          "y": 26575
+        },
+        {
+          "text": "Bitcoin hits $85,000 as short squeeze forces out $648 million of bearish bets",
+          "y": 26951
+        },
+        {
+          "text": "X sues its own users for running a fake bitcoin news bot farm",
+          "y": 27328
+        },
+        {
+          "text": "Crypto enjoys bullish bounce post-Fed rate hike: Crypto Week Ahead",
+          "y": 27678
+        },
+        {
+          "text": "Hana Bank issues South Korea’s first digital bond using Euroclear’s blockchain",
+          "y": 28029
+        },
+        {
+          "text": "Live updates: Bitcoin hits $87,000, while traders pile into leveraged bets",
+          "y": 28406
+        },
+        {
+          "text": "Kalshi faces ‘fake crypto volume’ allegations as critic flags identical $5,500 trades",
+          "y": 28756
+        },
+        {
+          "text": "Bitcoin rises above $81,000, while NEAR jumps 23% on Zcash swap traffic",
+          "y": 29133
+        },
+        {
+          "text": "Bitcoin’s price has cleared a key hurdle that has historically preceded major bull runs",
+          "y": 29509
+        },
+        {
+          "text": "正在读取报告",
+          "y": 30228
+        },
+        {
+          "text": "从事实到观察",
+          "y": 30351
+        },
+        {
+          "text": "两种时钟，分开阅读",
+          "y": 30871
+        },
+        {
+          "text": "交叉核对",
+          "y": 31041
+        },
+        {
+          "text": "",
+          "y": 0
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "today",
+      "route": "#/overview",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-today-390-light.png",
+      "textLength": 797,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "今日",
+          "y": -111
+        },
+        {
+          "text": "BTCUSDT 永续",
+          "y": 36
+        },
+        {
+          "text": "值得留意的事件",
+          "y": 433
+        },
+        {
+          "text": "继续研究",
+          "y": 1597
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "records",
+      "route": "#/records",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-records-390-light.png",
+      "textLength": 26592,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "资料与旧记录",
+          "y": 84
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    },
+    {
+      "caseId": "question",
+      "route": "#/research?view=window",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mechanicalStatus": "PASS",
+      "evidence": "browser-r1-question-390-light.png",
+      "textLength": 279,
+      "documentWidth": 390,
+      "headings": [
+        {
+          "text": "指定问题研究",
+          "y": 153
+        },
+        {
+          "text": "研究所选市场区间",
+          "y": 322
+        },
+        {
+          "text": "研究记录",
+          "y": 1788
+        }
+      ],
+      "theses": [],
+      "note": "坐标只描述初始阅读位置，不是用户耗时；PASS不代表易用性通过"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "name": "chief-bound-role",
+      "mechanicalStatus": "PASS"
+    },
+    {
+      "id": "T2",
+      "name": "chief-evidence",
+      "mechanicalStatus": "PASS"
+    },
+    {
+      "id": "T3",
+      "name": "failed-run",
+      "mechanicalStatus": "PASS"
+    },
+    {
+      "id": "T4",
+      "name": "date-query",
+      "mechanicalStatus": "PASS"
+    },
+    {
+      "id": "T5",
+      "name": "event-unsent-draft",
+      "mechanicalStatus": "PASS"
+    },
+    {
+      "id": "T6",
+      "name": "chart-unsent-draft",
+      "mechanicalStatus": "PASS"
+    },
+    {
+      "id": "T7",
+      "name": "settings-unsaved-draft",
+      "mechanicalStatus": "PASS"
+    },
+    {
+      "id": "T8",
+      "name": "touch-menu",
+      "mechanicalStatus": "PASS"
+    }
+  ],
+  "files": [
+    {
+      "file": "evidence/browser-r1-chief-1440-light.png",
+      "bytes": 137387,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chief-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-env-1440-light.png",
+      "bytes": 140370,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/env-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-flow-1440-light.png",
+      "bytes": 145148,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/flow-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-deriv-1440-light.png",
+      "bytes": 140673,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/deriv-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-macro-1440-light.png",
+      "bytes": 142949,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/macro-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-events-1440-light.png",
+      "bytes": 148449,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/events-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-archive-1440-light.png",
+      "bytes": 130662,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/archive-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-chart-data-1440-light.png",
+      "bytes": 136207,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chart-data-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-orderflow-data-1440-light.png",
+      "bytes": 86557,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/orderflow-data-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-heatmap-data-1440-light.png",
+      "bytes": 93967,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/heatmap-data-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-leverage-data-1440-light.png",
+      "bytes": 64069,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/leverage-data-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-macro-data-1440-light.png",
+      "bytes": 93939,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/macro-data-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-events-materials-1440-light.png",
+      "bytes": 107367,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/events-materials-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-today-1440-light.png",
+      "bytes": 105359,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/today-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-records-1440-light.png",
+      "bytes": 128103,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/records-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-question-1440-light.png",
+      "bytes": 79131,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/question-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-narratives-1440-light.png",
+      "bytes": 116250,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/narratives-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-settings-1440-light.png",
+      "bytes": 68256,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/settings-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-calc-1440-light.png",
+      "bytes": 38937,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/calc-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-chief-demo-1440-light.png",
+      "bytes": 38571,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chief-demo-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-legacy-events-1440-light.png",
+      "bytes": 95129,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/legacy-events-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-legacy-analysis-1440-light.png",
+      "bytes": 340861,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/legacy-analysis-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-premarket-1440-light.png",
+      "bytes": 154395,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/premarket-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-agent-risk-1440-light.png",
+      "bytes": 37694,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/agent-risk-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-templates-1440-light.png",
+      "bytes": 144633,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/templates-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-draft-1440-light.png",
+      "bytes": 142019,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/draft-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-positions-1440-light.png",
+      "bytes": 138805,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/positions-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-journal-1440-light.png",
+      "bytes": 139924,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/journal-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-daily-review-1440-light.png",
+      "bytes": 139286,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/daily-review-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-perf-1440-light.png",
+      "bytes": 141331,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/perf-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-patterns-1440-light.png",
+      "bytes": 140626,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/patterns-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-data-vault-1440-light.png",
+      "bytes": 143873,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/data-vault-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-playbook-1440-light.png",
+      "bytes": 144463,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/playbook-1440-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-chief-390-light.png",
+      "bytes": 55246,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chief-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-env-390-light.png",
+      "bytes": 59162,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/env-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-archive-390-light.png",
+      "bytes": 58614,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/archive-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-chart-data-390-light.png",
+      "bytes": 55701,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chart-data-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-orderflow-data-390-light.png",
+      "bytes": 39476,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/orderflow-data-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-heatmap-data-390-light.png",
+      "bytes": 41688,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/heatmap-data-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-leverage-data-390-light.png",
+      "bytes": 42309,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/leverage-data-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-macro-data-390-light.png",
+      "bytes": 45931,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/macro-data-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-events-materials-390-light.png",
+      "bytes": 53500,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/events-materials-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-today-390-light.png",
+      "bytes": 44447,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/today-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-records-390-light.png",
+      "bytes": 56262,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/records-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-question-390-light.png",
+      "bytes": 42481,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/question-390-light.png"
+    },
+    {
+      "file": "evidence/browser-r1-chief-1440-light-content.png",
+      "bytes": 170194,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chief-1440-light-content.png"
+    },
+    {
+      "file": "evidence/browser-r1-chief-390-light-content.png",
+      "bytes": 56392,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chief-390-light-content.png"
+    },
+    {
+      "file": "evidence/browser-r1-records-1440-light-content.png",
+      "bytes": 135915,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/records-1440-light-content.png"
+    },
+    {
+      "file": "evidence/browser-r1-records-390-light-content.png",
+      "bytes": 58010,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/records-390-light-content.png"
+    },
+    {
+      "file": "evidence/browser-r1-events-materials-1440-light-content.png",
+      "bytes": 107367,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/events-materials-1440-light-content.png"
+    },
+    {
+      "file": "evidence/browser-r1-macro-data-1440-light-content.png",
+      "bytes": 131337,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/macro-data-1440-light-content.png"
+    },
+    {
+      "file": "evidence/browser-r1-chart-data-1440-light-content.png",
+      "bytes": 136241,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/chart-data-1440-light-content.png"
+    },
+    {
+      "file": "evidence/browser-r1-T1-dispositions.png",
+      "bytes": 113201,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T1-dispositions.png"
+    },
+    {
+      "file": "evidence/browser-r1-T1-bound-role.png",
+      "bytes": 166514,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T1-bound-role.png"
+    },
+    {
+      "file": "evidence/browser-r1-T2-evidence.png",
+      "bytes": 108362,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T2-evidence.png"
+    },
+    {
+      "file": "evidence/browser-r1-T3-history-failed.png",
+      "bytes": 95407,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T3-history-failed.png"
+    },
+    {
+      "file": "evidence/browser-r1-T4-records-oct04.png",
+      "bytes": 134969,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T4-records-oct04.png"
+    },
+    {
+      "file": "evidence/browser-r1-T5-event-original.png",
+      "bytes": 120382,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T5-event-original.png"
+    },
+    {
+      "file": "evidence/browser-r1-T5-event-question.png",
+      "bytes": 98308,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T5-event-question.png"
+    },
+    {
+      "file": "evidence/browser-r1-T6-window-question.png",
+      "bytes": 88992,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T6-window-question.png"
+    },
+    {
+      "file": "evidence/browser-r1-T7-settings-draft.png",
+      "bytes": 70305,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T7-settings-draft.png"
+    },
+    {
+      "file": "evidence/browser-r1-T8-mobile-menu.png",
+      "bytes": 32677,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r1/T8-mobile-menu.png"
+    },
+    {
+      "file": "evidence/browser-r2-footprint-settled.png",
+      "bytes": 86542,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/footprint-settled.png"
+    },
+    {
+      "file": "evidence/browser-r2-heatmap-settled.png",
+      "bytes": 115797,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/heatmap-settled.png"
+    },
+    {
+      "file": "evidence/browser-r2-leverage-settled.png",
+      "bytes": 111146,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/leverage-settled.png"
+    },
+    {
+      "file": "evidence/browser-r2-today-settled.png",
+      "bytes": 119687,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/today-settled.png"
+    },
+    {
+      "file": "evidence/browser-r2-records-failed-task-detail.png",
+      "bytes": 94420,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/records-failed-task-detail.png"
+    },
+    {
+      "file": "evidence/browser-r2-records-role-detail.png",
+      "bytes": 155185,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/records-role-detail.png"
+    },
+    {
+      "file": "evidence/browser-r2-koyfin-reports.png",
+      "bytes": 154030,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/koyfin-reports.png"
+    },
+    {
+      "file": "evidence/browser-r2-alphasense-filters.png",
+      "bytes": 89598,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r2/alphasense-filters.png"
+    },
+    {
+      "file": "evidence/browser-r3-nested-evidence.png",
+      "bytes": 115890,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r3/nested-evidence.png"
+    },
+    {
+      "file": "evidence/browser-r3-openbb-observed.png",
+      "bytes": 107148,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r3/openbb-observed.png"
+    },
+    {
+      "file": "evidence/browser-r3-production-observed.png",
+      "bytes": 23024,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r3/production-observed.png"
+    },
+    {
+      "file": "evidence/browser-r3-touch-360-chief.png",
+      "bytes": 50888,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r3/touch-360-chief.png"
+    },
+    {
+      "file": "evidence/browser-r3-touch-360-records.png",
+      "bytes": 43286,
+      "original": ".artifacts/frontend-ia-review-20261005/browser-r3/touch-360-records.png"
+    }
+  ],
+  "limitations": [
+    "截图与Playwright不能证明真实用户理解",
+    "r2/r3的PASS只表示观察动作完成；生产产品页未验收",
+    "实时报价/数据覆盖是采样状态而非稳定性测试",
+    "私人研究原件、带参数登录URL和外站原始HTML未纳入公开文档证据"
+  ]
+}

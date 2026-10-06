@@ -1,0 +1,1635 @@
+{
+  "sqliteVersion": "3.50.4",
+  "cases": 60,
+  "scope": "60 synthetic single-connection SQL equivalence/rollback cases. Date/second/prefix tests preserve existing P1 SQL semantics; they do not endorse these as typed Kline inputs. No remote calls, no D1 concurrency or billed row measurement.",
+  "results": [
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "receipt",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "receipt",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "receipt",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "receipt_only",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "receipt",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "fixtureRows": [
+        [
+          "no-time",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "fixtureRows": [
+        [
+          "no-time",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "fixtureRows": [
+        [
+          "no-time",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "non_numeric_only",
+      "fixtureRows": [
+        [
+          "no-time",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "fixtureRows": [
+        [
+          "2026-10-04",
+          "day",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          2026,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          2026,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "fixtureRows": [
+        [
+          "2026-10-04",
+          "day",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          2026,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "fixtureRows": [
+        [
+          "2026-10-04",
+          "day",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "date_key",
+      "fixtureRows": [
+        [
+          "2026-10-04",
+          "day",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "fixtureRows": [
+        [
+          "1791203487",
+          "second",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203487,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203487,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "fixtureRows": [
+        [
+          "1791203487",
+          "second",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203487,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "fixtureRows": [
+        [
+          "1791203487",
+          "second",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "seconds_key",
+      "fixtureRows": [
+        [
+          "1791203487",
+          "second",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "milliseconds_key",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "fixtureRows": [
+        [
+          "1791203400000suffix",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "fixtureRows": [
+        [
+          "1791203400000suffix",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "fixtureRows": [
+        [
+          "1791203400000suffix",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "digit_prefix",
+      "fixtureRows": [
+        [
+          "1791203400000suffix",
+          "unknown",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "b",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "c",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "b",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "c",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "b",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "c",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "multiple_versions",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "b",
+          "target"
+        ],
+        [
+          "1791203400000",
+          "millisecond",
+          "c",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203700000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203700000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203700000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "1791203400000",
+          "millisecond",
+          "a",
+          "target"
+        ],
+        [
+          "1791203700000",
+          "millisecond",
+          "a",
+          "target"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "fixtureRows": [
+        [
+          "1791209999999",
+          "millisecond",
+          "a",
+          "foreign"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "fixtureRows": [
+        [
+          "1791209999999",
+          "millisecond",
+          "a",
+          "foreign"
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "fixtureRows": [
+        [
+          "1791209999999",
+          "millisecond",
+          "a",
+          "foreign"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "canonical",
+      "fixture": "foreign_dataset",
+      "fixtureRows": [
+        [
+          "1791209999999",
+          "millisecond",
+          "a",
+          "foreign"
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "empty",
+      "fixtureRows": [],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "one",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ],
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000,
+          0
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000,
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ],
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000,
+          0
+        ]
+      ],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ],
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "later_history",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "5m",
+          1791203400000
+        ],
+        [
+          "BTCUSDT",
+          "5m",
+          1791203700000
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "1h",
+          1791209999999
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "1h",
+          1791209999999
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "1h",
+          1791209999999
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_interval",
+      "fixtureRows": [
+        [
+          "BTCUSDT",
+          "1h",
+          1791209999999
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "fixtureRows": [
+        [
+          "ETHUSDT",
+          "5m",
+          1791209999999
+        ]
+      ],
+      "stateExists": false,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "fixtureRows": [
+        [
+          "ETHUSDT",
+          "5m",
+          1791209999999
+        ]
+      ],
+      "stateExists": false,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [],
+      "after": []
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "fixtureRows": [
+        [
+          "ETHUSDT",
+          "5m",
+          1791209999999
+        ]
+      ],
+      "stateExists": true,
+      "rollback": false,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    },
+    {
+      "kind": "raw",
+      "fixture": "foreign_symbol",
+      "fixtureRows": [
+        [
+          "ETHUSDT",
+          "5m",
+          1791209999999
+        ]
+      ],
+      "stateExists": true,
+      "rollback": true,
+      "result": "PASS",
+      "inside": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ],
+      "after": [
+        [
+          "BTCUSDT",
+          "5m",
+          1700000900000,
+          7
+        ]
+      ]
+    }
+  ]
+}

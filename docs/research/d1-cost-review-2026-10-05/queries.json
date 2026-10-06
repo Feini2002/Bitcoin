@@ -1,0 +1,26 @@
+{
+  "canonical": {
+    "sql": "INSERT INTO desk_history_state(symbol, interval, head_t, history_revision)\n        SELECT ?1, ?2, COALESCE((SELECT MAX(CAST(observation_key AS INTEGER)) FROM finance_dataset_observations\n          WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*'), 0), 0\n        WHERE NOT EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2)\n          AND EXISTS (SELECT 1 FROM finance_dataset_observations\n            WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*')",
+    "params": [
+      "BTCUSDT",
+      "5m",
+      "binance-perp-klines-5m"
+    ]
+  },
+  "raw": {
+    "sql": "INSERT INTO desk_history_state(symbol, interval, head_t, history_revision)\n        SELECT ?1, ?2, COALESCE((SELECT MAX(t) FROM klines WHERE symbol=?1 AND interval=?2), 0), 0\n        WHERE NOT EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2)\n          AND EXISTS (SELECT 1 FROM klines WHERE symbol=?1 AND interval=?2)",
+    "params": [
+      "BTCUSDT",
+      "5m"
+    ]
+  },
+  "baseline": {
+    "sql": "INSERT INTO desk_history_state(symbol, interval, head_t, history_revision)\n    SELECT ?1, ?2, COALESCE((SELECT MAX(v) FROM (\n      SELECT MAX(t) AS v FROM klines WHERE symbol=?1 AND interval=?2\n      UNION ALL\n      SELECT MAX(CAST(observation_key AS INTEGER)) AS v FROM finance_dataset_observations\n      WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*'\n    )), 0), 0\n    WHERE NOT EXISTS (SELECT 1 FROM desk_history_state WHERE symbol=?1 AND interval=?2)\n      AND (\n        EXISTS (SELECT 1 FROM klines WHERE symbol=?1 AND interval=?2)\n        OR EXISTS (SELECT 1 FROM finance_dataset_observations\n          WHERE dataset_id=?3 AND time_precision<>'receipt' AND observation_key GLOB '[0-9]*'))",
+    "params": [
+      "BTCUSDT",
+      "5m",
+      "binance-perp-klines-5m"
+    ]
+  },
+  "ddl": "CREATE TABLE IF NOT EXISTS desk_history_state (\n  symbol TEXT NOT NULL,\n  interval TEXT NOT NULL,\n  head_t INTEGER NOT NULL,\n  history_revision INTEGER NOT NULL,\n  PRIMARY KEY (symbol, interval)\n)"
+}

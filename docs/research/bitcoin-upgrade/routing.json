@@ -2,6 +2,95 @@
   "sourceRoot": "docs/research/bitcoin-upgrade/sources/2026-09-16",
   "routes": [
     {
+      "id": "development-handoff",
+      "title": "当前开发状态、README与换电脑接续",
+      "keywords": ["换电脑", "新电脑", "开发交接", "开发状态", "接续开发", "README", "Git备份", "commit push"],
+      "summary": "2026-10-07接续：中文日报四入口与D1成本修复已本地实施；Agent .27/P22、金融E未完成、恢复记录paused。源码/文档/候选SQL/恢复记录随Git，凭据与本机历史默认离线合并，不因换机部署、恢复或运行模型。",
+      "code": ["README.md", "docs/operations/development-handoff-2026-10-07.md", "docs/operations/new-computer.md", "docs/operations/github-backup.md"],
+      "primary": [{"id": "docs/research/market-first-frontend-master-plan-2026-10-02.md", "section": "2026-10-07开发快照"}],
+      "expand": ["docs/research/agent-team-implementation-2026-10-02.md", "docs/research/consumer-daily-frontend-implementation-2026-10-05.md", "docs/research/d1-cost-repair-implementation-2026-10-06.md"],
+      "graph": "TeamStore queryHistory",
+      "related": [{"id": "d1-cost-incident", "when": "涉及云端恢复或成本验收"}, {"id": "frontend-reading-redesign", "when": "继续完善中文阅读体验"}],
+      "checks": ["npm run verify:research", "npm run verify:dev", "npm run build", "npm run cloud:reads"],
+      "acceptance": "当前状态与实际源码/验收范围一致；不覆盖新电脑本地改动，不把Git备份或旧报告冒充部署、零用量或新研究。"
+    },
+    {
+      "id": "d1-cost-incident",
+      "title": "D1重复扫描、计费事故与暂停后修复",
+      "keywords": ["D1费用", "D1计费", "Rows Read", "rows_read", "重复扫描", "扫描成本", "计费事故", "云端读取费", "初始化扫描", "D1复盘", "云端异常读取", "开发告警", "读取检测"],
+      "summary": "六轮复盘后，2026-10-06按授权实现本地CASE短路、图表状态隔离、版本索引、有界清理、原子K线提交、真实胜出回执新鲜度与固定截止；开发检测持续必须汇报。用户明确暂不增加云端测试用量；生产暂停，实际D1成本/事务及24小时验收未完成，旧问题恢复版已阻止。",
+      "code": ["cloudflare/finance/dataset-store.mjs", "cloudflare/finance/desk.mjs", "cloudflare/kline-live-collector.mjs", "scripts/operations/cloud-control.cjs"],
+      "primary": [{"id": "docs/research/d1-cost-postmortem-repair-plan-2026-10-05.md"}],
+      "expand": ["docs/research/d1-cost-repair-implementation-2026-10-06.md", "docs/research/cloud-read-detection-2026-10-05.md", "docs/research/chart-read-performance-2026-09-30.md", "docs/research/cloudflare-pause-resume-2026-09-27.md"],
+      "graph": "canonicalHistoryStatements rawKlineHistoryStatements historyBaselineStatement",
+      "related": [{"id": "runtime", "when": "核对采集和发布契约"}, {"id": "chart-history", "when": "核对历史缓存与时间语义"}],
+      "checks": ["npm run cloud:reads", "npm run verify:cloud-reads", "node tests/integration/verify-finance-incremental.cjs", "node tests/integration/verify-desk-migration.cjs", "npm run verify:cloud-control"],
+      "acceptance": "本地修复与规模/故障回归见实施记录；实际ALERT/REVIEW/UNKNOWN必须汇报。仍需隔离D1完整事务与计费、候选登记/迁移及明确授权恢复后的24小时验收；不得用线上smoke唤醒暂停采集。"
+    },
+    {
+      "id": "frontend-reading-redesign",
+      "title": "C端中文日报、前端体验纠偏与阅读结构",
+      "keywords": [
+        "前端重设计",
+        "前端结构",
+        "信息架构",
+        "阅读路径",
+        "研究报告入口",
+        "日期报告",
+        "前端审查",
+        "C端",
+        "中文日报",
+        "消费者",
+        "前端噪音",
+        "日报可读性",
+        "新闻翻译",
+        "新闻精选",
+        "按钮质感"
+      ],
+      "summary": "2026-10-05用户随后授权开始修复，已本地实现中文日报文章、四主入口、消息精选与译读、同期图表、来源分层、日期标题查询和设置分层；6份真实阅读稿、73条标题译文保存在独立本机目录。三轮问题修订、CUX任务与精确验证状态见当前实施记录。自动编辑/翻译未启用，无真人理解结论；首席默认、五领域、原件、OFF及官方Codex渠道保持。",
+      "code": [
+        "js/nav.js",
+        "js/app.js",
+        "js/agent-team/ui.mjs",
+        "js/pages/research-records.js",
+        "js/user-workspace.js",
+        "js/research-desk.js",
+        "scripts/agent-team/store.mjs"
+      ],
+      "primary": [
+        {
+          "id": "docs/research/consumer-daily-frontend-implementation-2026-10-05.md"
+        },
+        {
+          "id": "docs/research/consumer-daily-frontend-adversarial-plan-2026-10-05.md"
+        },
+        {
+          "id": "docs/research/frontend-structure-redesign-implementation-2026-10-05.md"
+        }
+      ],
+      "expand": [
+        "docs/research/frontend-structure-redesign-review-2026-10-05.md",
+        "docs/research/frontend-visual-redesign-2026-10-05.md"
+      ],
+      "graph": "ResearchRecords reportCard runCard receiptCard UserWorkspace TeamStore",
+      "related": [
+        {
+          "id": "agent-architecture",
+          "when": "核对首席默认、五岗独立和分析/任务契约"
+        },
+        {
+          "id": "market-first-frontend",
+          "when": "核对数据、页面、读取和生命周期整合"
+        }
+      ],
+      "checks": [
+        "npm run verify:research",
+        "npm run verify:consumer-reading",
+        "npm run verify:consumer-reading-ui"
+      ],
+      "acceptance": "CUX01—CUX12助手任务核验与三轮自审见当前实施记录；真实保存资料和模拟异常分别记录，无真人理解与效率结论。原件、查询、返回隔离断言保留；不运行模型、远程D1写入或部署。自动编辑/翻译不冒充已交付。"
+    },
+    {
       "id": "agent-architecture",
       "title": "BTC Agent架构、首席与独立岗位研究",
       "keywords": [
@@ -39,6 +128,9 @@
         "js/pages/research-records.js"
       ],
       "primary": [
+        {
+          "id": "docs/research/frontend-structure-redesign-implementation-2026-10-05.md"
+        },
         {
           "id": "docs/research/agent-team-product-plan-2026-10-02.md"
         },
@@ -1294,7 +1386,7 @@
       ],
       "summary": "基础采集走 VPS 还是 Cloudflare，先读 LOCAL-COLLECT。刷新频率读 LOCAL-CADENCE。出口接线读 LOCAL-EGRESSCUTOVER；约束读 LOCAL-EGRESSADV；SSH 读 LOCAL-EGRESSVPS。Deribit 期权摘要走 VPS、6 小时一次。Alpha、BLS、GDELT 仍不进时钟，见 LOCAL-QUOTA。",
       "code": [
-        "docs/operations/development-handoff-2026-09-30.md",
+        "docs/operations/development-handoff-2026-10-07.md",
         "docs/operations/new-computer.md",
         "cloudflare/wrangler.toml",
         "cloudflare/wrangler.yuqing.toml",
@@ -1422,6 +1514,16 @@
     }
   ],
   "examples": [
+    {"query": "换电脑 README 开发交接", "expected": "development-handoff"},
+    {"query": "开发状态 Git备份", "expected": "development-handoff"},
+    {
+      "query": "前端重设计信息架构阅读路径与日期报告",
+      "expected": "frontend-reading-redesign"
+    },
+    {
+      "query": "前端审查研究报告入口",
+      "expected": "frontend-reading-redesign"
+    },
     {
       "query": "Agent 架构 首席 独立研究 记忆 审核 导航",
       "expected": "agent-architecture"
@@ -1565,6 +1667,22 @@
     {
       "query": "总纲修改方案前端整合",
       "expected": "market-first-frontend"
+    },
+    {
+      "query": "C端中文日报 前端噪音 阅读体验",
+      "expected": "frontend-reading-redesign"
+    },
+    {
+      "query": "新闻翻译 新闻精选 按钮质感",
+      "expected": "frontend-reading-redesign"
+    },
+    {
+      "query": "D1计费 Rows Read 重复扫描",
+      "expected": "d1-cost-incident"
+    },
+    {
+      "query": "初始化扫描 D1复盘",
+      "expected": "d1-cost-incident"
     }
   ]
 }

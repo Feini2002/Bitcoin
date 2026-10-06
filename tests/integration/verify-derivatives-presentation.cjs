@@ -185,7 +185,7 @@ async function main() {
         res.end();
         return;
       }
-      const type = { ".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".svg": "image/svg+xml" }[path.extname(file)] || "text/plain";
+      const type = { ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".html": "text/html", ".svg": "image/svg+xml" }[path.extname(file)] || "text/plain";
       res.setHeader("Content-Type", type);
       res.end(data);
     });
@@ -279,9 +279,9 @@ async function runDerivatives(origin) {
   await expect(page.locator("#deriv-status")).toContainText("环境资料已读取");
   await expect(page.locator("#deriv-status")).toContainText("正常");
   await assertContract(page, "正常");
-  await expect(page.locator('[data-deriv-card="premium"] > p')).toHaveText('交易所当前报告的费率与已结算资金费分别阅读。');
-  await expect(page.locator('[data-deriv-card="funding"] > p')).toContainText('系统取得时间与结算时间分列');
-  await expect(page.locator('[data-deriv-card="basis"] > p')).toContainText('缺失值保留为空');
+  await expect(page.locator('[data-deriv-card="premium"] .desk-fact-original > p')).toHaveText('交易所当前报告的费率与已结算资金费分别阅读。');
+  await expect(page.locator('[data-deriv-card="funding"] .desk-fact-original > p')).toContainText('系统取得时间与结算时间分列');
+  await expect(page.locator('[data-deriv-card="basis"] .desk-fact-original > p')).toContainText('缺失值保留为空');
   await expect(page.locator('[data-deriv-card="premium"] pre')).toContainText('lastFundingRate');
   await expect(page.locator('[data-deriv-card="funding"]')).toContainText("4 小时");
   await expect(page.locator('[data-deriv-card="funding"]')).toContainText("exchange-funding-info");
@@ -301,7 +301,7 @@ async function runDerivatives(origin) {
   const macro = exported.pages.derivatives.cards.find((card) => card.id === "fred-dgs10");
   if (macro) throw new Error("WB-13 leverage export included an undisplayed macro value");
   await page.locator('.user-view-tabs a[href="#/market?view=macro"]').click();
-  await expect(page.locator('[data-deriv-card="fred-dgs10"] strong')).toHaveText('4.2% / 年');
+  await expect(page.locator('[data-deriv-card="fred-dgs10"] dd').first()).toHaveText('4.2% / 年');
   await expect(page.locator('[data-deriv-card="fred-dgs10"]')).toContainText('参考值不等于可成交利率');
   await expect(page.locator('[data-deriv-card="fred-dgs10"]')).toBeVisible();
   const macroExport=await page.evaluate(()=>WorkbenchEvidence.capture().pages.derivatives);
@@ -407,7 +407,7 @@ async function runDerivatives(origin) {
 
   const left = state.counts.context;
   await page.evaluate(() => { location.hash = "#/archive"; });
-  await expect(page.getByRole("heading", { name: "研究历史", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "往期报告", exact: true })).toBeVisible();
   await page.clock.runFor(20000);
   if (state.counts.context !== left) throw new Error("left derivatives page kept polling");
   console.log("PASS WB-10 derivatives leave stops requests");
@@ -424,7 +424,7 @@ async function runDerivatives(origin) {
   await late.route.fulfill({ contentType: "application/json", body: JSON.stringify(contextDesk("wb07")) }).catch(() => {});
   await expect(page.locator('[data-deriv-card="premium"]')).toContainText("64250 USDT/BTC");
   await expect(page.locator('[data-deriv-card="funding"]')).toContainText("4 小时");
-  await expect(page.locator('[data-deriv-card="funding"] > ul')).not.toContainText("结算周期：未知");
+  await expect(page.locator('[data-deriv-card="funding"] .desk-fact-values')).not.toContainText("结算周期：未知");
   console.log("PASS WB-10 late derivatives response does not replace the new visit");
   if (errors.length) throw new Error(errors.join("; "));
   await session.context.close();
@@ -525,7 +525,7 @@ async function runHeatmap(origin) {
 
   const left = state.counts.heatmap;
   await page.evaluate(() => { location.hash = "#/archive"; });
-  await expect(page.getByRole("heading", { name: "研究历史", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "往期报告", exact: true })).toBeVisible();
   await page.clock.runFor(12000);
   if (state.counts.heatmap !== left) throw new Error("left heatmap kept requesting");
   console.log("PASS WB-10 heatmap leave stops requests");
@@ -581,7 +581,7 @@ async function runOrderflow(origin) {
 
   state.mode = "order-incomplete";
   await page.evaluate(() => { location.hash = "#/archive"; });
-  await expect(page.getByRole("heading", { name: "研究历史", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "往期报告", exact: true })).toBeVisible();
   await page.evaluate(() => { location.hash = "#/orderflow"; });
   await expect(page.locator("#of-status")).toContainText("不完整");
   await expect(page.locator("#of-status")).toContainText("组成 2/3");
@@ -625,7 +625,7 @@ async function runOrderflow(origin) {
 
   const left = state.counts.orderflow;
   await page.evaluate(() => { location.hash = "#/archive"; });
-  await expect(page.getByRole("heading", { name: "研究历史", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "往期报告", exact: true })).toBeVisible();
   await page.clock.runFor(12000);
   if (state.counts.orderflow !== left) throw new Error("left orderflow kept requesting");
   console.log("PASS WB-10 orderflow leave stops requests");

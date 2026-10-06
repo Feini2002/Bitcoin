@@ -2,6 +2,8 @@ import { accessCorsHeaders, requireCloudflareAccess } from "./access-auth.js";
 import { handleFinance } from "./finance/gateway.mjs";
 import { handleDesk } from "./finance/desk.mjs";
 import { persistLiveKlineBar, persistLiveSnapshot, persistRestKlineBatch, pruneExpiredDatasets, rawKlineHistoryStatements } from "./finance/dataset-store.mjs";
+import { persistKlineCommit } from "./finance/kline-commit.mjs";
+import { cloudTrialExpired } from './cloud-trial.mjs';
 import { syncFinanceDatasetsIfDue } from "./finance/scheduler.mjs";
 import { KlineLiveCollector, KlineLiveComponent, KLINE_LIVE_ALARM_MS, bindKlineLiveHooks } from "./kline-live-collector.mjs";
 import { LiquidationRecovery } from "./liquidation-recovery.mjs";
@@ -744,6 +746,17 @@ async function d1QueryLatestMeta(env, symbol, interval) {
   };
 }
 
+async function d1QueryCommittedMeta(env,symbol,interval) {
+  const raw=await d1QueryLatestMeta(env,symbol,interval);
+  const canonical=await env.DB.prepare(`SELECT observation_key FROM finance_dataset_observations
+    WHERE dataset_id=?1 AND observed_at IS NOT NULL
+    ORDER BY observed_at DESC,observation_key DESC LIMIT 1`).bind(`binance-perp-klines-${interval}`).first();
+  const canonicalT=Number(canonical?.observation_key) || 0;
+  // A former partial commit may have advanced only raw. Restart from the
+  // earlier representation; a missing representation requires full recovery.
+  return {...raw,maxT:raw.hasRows && canonicalT ? Math.min(raw.maxT,canonicalT):0,hasRows:raw.hasRows && canonicalT>0};
+}
+
 /** 同业务键只更新变化的 OHLCV；6000 根保留由每小时分片清理维护。 */
 async function persistKlines(env, symbol, interval, rawKlines, options = {}) {
   if (!Array.isArray(rawKlines) || rawKlines.length === 0) return { inserted: 0, pruned: 0 };
@@ -960,7 +973,8 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
   }
   // The live component owns forming bars. A slow hourly/history response cannot
   // overwrite a newer WS update for that same open timestamp.
-  if (collector || options.closedOnly) got.klines = got.klines.filter(row => Number(row[0]) + intervalMs(interval) <= requestStartedAt);
+  const atomicRest=env.FINANCE_D1_ENABLED==='true' && symbol==='BTCUSDT';
+  if (collector || options.closedOnly || atomicRest) got.klines = got.klines.filter(row => Number(row[0]) + intervalMs(interval) <= requestStartedAt);
 
   let persist;
   try {
@@ -974,7 +988,10 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
       if (!response.ok) throw new Error(`collector reconciliation HTTP ${response.status}`);
       persist = await response.json();
       if (persist.error) throw new Error(persist.error);
-    } else persist = await persistKlines(env, symbol, interval, got.klines);
+    } else if(atomicRest) persist=await persistKlineCommit(env,symbol,interval,got.klines,got.host,'cloud-readthrough',{
+      restBatch:true,requestStartedAt:new Date(requestStartedAt).toISOString(),receivedAt:new Date().toISOString(),transportHost:got.transportHost,
+    });
+    else persist = await persistKlines(env, symbol, interval, got.klines);
   } catch (e) {
     const err = "persist " + (e && e.message ? e.message : String(e)).slice(0, 160);
     await updateSyncStatus(env, symbol, interval, { ok: false, latestT: meta.maxT, error: err });
@@ -982,7 +999,7 @@ async function syncKlinesOne(env, symbol, interval, options = {}) {
   }
 
   const latestT = got.klines.length ? Number(got.klines[got.klines.length - 1][0]) : meta.maxT;
-  await updateSyncStatus(env, symbol, interval, {
+  if (!collector && !atomicRest) await updateSyncStatus(env, symbol, interval, {
     ok: true,
     inserted: persist.inserted,
     latestT,
@@ -4809,9 +4826,8 @@ async function repairKlineGaps(env, symbol, interval) {
       if (!got.ok) { reports.push({ from: gap.from, to: gap.to, ok: false, error: got.error }); break; }
       const rows = (got.klines || []).filter((row) => Number(row[0]) >= cursor && Number(row[0]) < gap.to && Number(row[6]) < requestStartedAt);
       if (!rows.length) { reports.push({ from: gap.from, to: gap.to, ok: true, inserted: wrote, absentUpstream: true }); break; }
-      await persistKlines(env, symbol, interval, rows);
-      await persistRestKlineBatch(env.DB, interval, rows, got.host, {
-        receivedAt, requestStartedAt: receivedAt, transportHost: got.transportHost,
+      await persistKlineCommit(env, symbol, interval, rows, got.host, 'cloud-readthrough', {
+        restBatch:true, receivedAt:new Date().toISOString(), requestStartedAt: receivedAt, transportHost: got.transportHost,
       });
       wrote += rows.length;
       const last = Number(rows[rows.length - 1][0]);
@@ -4828,9 +4844,8 @@ async function repairKlineGaps(env, symbol, interval) {
     const rows = (tail.klines || []).filter((row) => Number(row[6]) < requestStartedAt);
     tailRows = rows.length;
     if (rows.length) {
-      await persistKlines(env, symbol, interval, rows);
-      await persistRestKlineBatch(env.DB, interval, rows, tail.host, {
-        receivedAt, requestStartedAt: receivedAt, transportHost: tail.transportHost,
+      await persistKlineCommit(env, symbol, interval, rows, tail.host, 'cloud-readthrough', {
+        restBatch:true, receivedAt:new Date().toISOString(), requestStartedAt: receivedAt, transportHost: tail.transportHost,
       });
     }
   }
@@ -5516,7 +5531,24 @@ export class LiquidationCollector {
     };
   }
 
+  async stopExpiredTrial() {
+    if(!this.trialStopped && !cloudTrialExpired(this.env)) return false;
+    this.trialStopped=true;
+    this.kline.stopExpiredTrial();
+    for(const field of ['binanceWs','binanceProbeWs','bybitWs']) {
+      const ws=this[field];this[field]=null;
+      if(ws) {try{ws.close(1000,'cost trial expired');}catch{}}
+    }
+    if(this.bybitPingTimer) clearInterval(this.bybitPingTimer);
+    this.bybitPingTimer=null;
+    // Serialize after any outstanding setAlarm so expiry cannot be re-armed.
+    this.alarmChain=this.alarmChain.catch(()=>{}).then(()=>this.state.storage.deleteAlarm());
+    await this.alarmChain;this.alarmAt=0;
+    return true;
+  }
+
   async fetch(request) {
+    if(await this.stopExpiredTrial()) return json({ok:false,error:'cloud_trial_expired'},503);
     const url = new URL(request.url);
     if (url.pathname === "/kline/reconciled" && request.method === "POST") {
       // Old clients must not clear a checkpoint without verified persisted rows.
@@ -5552,6 +5584,7 @@ export class LiquidationCollector {
   }
 
   async ensureStarted() {
+    if(await this.stopExpiredTrial()) return;
     if (!this.startedAt) this.startedAt = Date.now();
     const now = Date.now();
     // Network jobs never own blockConcurrencyWhile or the shared alarm handler.
@@ -5575,6 +5608,7 @@ export class LiquidationCollector {
   }
 
   async scheduleAlarm() {
+    if(await this.stopExpiredTrial()) return;
     // Only this owner touches the platform's single alarm; concurrent wake/status
     // requests can bring it forward, never replace 1s with a 60s component deadline.
     const nextAt = Math.min(Date.now() + KLINE_LIVE_ALARM_MS, this.nextLiquidationAt || Infinity);
@@ -5657,6 +5691,7 @@ export class LiquidationCollector {
   }
 
   bindBinanceForceOrder(ws) {
+    if(this.trialStopped || cloudTrialExpired(this.env)) {try{ws.close();}catch{}return;}
     const origin = parseCustomFapiOrigin(this.env && this.env.BINANCE_FSTREAM_ORIGIN);
     const markOpen = () => {
       if (ws !== this.binanceWs) return;
@@ -5700,6 +5735,7 @@ export class LiquidationCollector {
   }
 
   connectBinance() {
+    if(this.trialStopped || cloudTrialExpired(this.env)) return Promise.resolve();
     if (this.binanceWs || this.binanceConnecting) return Promise.resolve();
     if (Number(this.sources.binance?.reconnectAt) > Date.now()) return Promise.resolve();
     if (typeof WebSocket === "undefined") {
@@ -5739,6 +5775,7 @@ export class LiquidationCollector {
   }
 
   bindBinanceProbe(ws) {
+    if(this.trialStopped || cloudTrialExpired(this.env)) {try{ws.close();}catch{}return;}
     const origin = parseCustomFapiOrigin(this.env && this.env.BINANCE_FSTREAM_ORIGIN);
     const markOpen = () => {
       if (ws !== this.binanceProbeWs) return;
@@ -5786,6 +5823,7 @@ export class LiquidationCollector {
   }
 
   connectBinanceProbe() {
+    if(this.trialStopped || cloudTrialExpired(this.env)) return Promise.resolve();
     if (this.binanceProbeWs || this.binanceProbeConnecting) return Promise.resolve();
     if (Number(this.sources.binance?.reconnectAt) > Date.now()) return Promise.resolve();
     if (typeof WebSocket === "undefined") return Promise.resolve();
@@ -5822,6 +5860,7 @@ export class LiquidationCollector {
   }
 
   bindBybit(ws) {
+    if(this.trialStopped || cloudTrialExpired(this.env)) {try{ws.close();}catch{}return;}
     const origin = parseCustomOriginBase(this.env && this.env.BYBIT_STREAM_ORIGIN);
     const markOpen = () => {
       if (ws !== this.bybitWs) return;
@@ -5901,6 +5940,7 @@ export class LiquidationCollector {
   }
 
   connectBybit() {
+    if(this.trialStopped || cloudTrialExpired(this.env)) return Promise.resolve();
     if (this.bybitWs || this.bybitConnecting) return Promise.resolve();
     if (Number(this.sources.bybit?.reconnectAt) > Date.now()) return Promise.resolve();
     if (typeof WebSocket === "undefined") {
@@ -5940,6 +5980,7 @@ export class LiquidationCollector {
   }
 
   scheduleReconnect(exchange) {
+    if(this.trialStopped || cloudTrialExpired(this.env)) return;
     const reconnectAt = Date.now() + LIQUIDATION_RECONNECT_MS;
     const sourceName = exchange === "binance-probe" ? "binance" : exchange;
     const current = this.sources[sourceName] || this.emptySource(sourceName);
@@ -5976,6 +6017,7 @@ export class LiquidationCollector {
   }
 
   ingest(event) {
+    if(this.trialStopped || cloudTrialExpired(this.env)) return;
     if (!event || event.symbol !== this.symbol) return;
     if (Number(event.ts) < Date.now() - LIQUIDATION_RETENTION_MS) return;
     const eventId = `${event.exchange}:${event.symbol}:${event.ts}:${event.side}:${event.price}:${event.qty}`;
@@ -5993,6 +6035,7 @@ export class LiquidationCollector {
   }
 
   async flushClosedBuckets(now = Date.now()) {
+    if(await this.stopExpiredTrial()) return {written:0,pruned:0,stopped:true};
     if (this.flushTask) return this.flushTask;
     this.flushTask = (async () => {
       const currentStart = liquidationBucketStart(now);
@@ -6026,6 +6069,7 @@ export class LiquidationCollector {
         if (seeded) this.buckets.set(key, seeded);
       }
       const closed = candidates.map(([key]) => [key, { ...this.buckets.get(key) }]);
+      if(await this.stopExpiredTrial()) return {written:0,pruned:0,stopped:true};
       const out = await persistLiquidationBuckets(this.env, closed.map(([, bucket]) => bucket));
       if (out.written !== closed.length) throw new Error("liquidation snapshot write not acknowledged");
       for (const [key, bucket] of closed) {
@@ -6121,6 +6165,7 @@ export const __footprintTestHooks = {
 };
 
 bindKlineLiveHooks({
+  persistKlineCommit,
   persistKlines,
   updateSyncStatus,
   persistLiveKlineBar,
@@ -6128,7 +6173,7 @@ bindKlineLiveHooks({
   persistRestKlineBatch,
   fetchKlinesFromBinance,
   fetchBinanceFapiJson,
-  readKlineCursor: d1QueryLatestMeta,
+  readKlineCursor: d1QueryCommittedMeta,
 });
 
 export default {
@@ -6139,6 +6184,7 @@ export default {
    */
   async fetch(request, env, ctx) {
     const response = await (async () => {
+    if(cloudTrialExpired(env)) return json({error:'cloud_trial_expired'},503);
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -6226,6 +6272,7 @@ export default {
    * @param {ExecutionContext} ctx
    */
   async scheduled(event, env, ctx) {
+    if(cloudTrialExpired(env)) return;
     const time = new Date(event?.scheduledTime || Date.now());
     const due = intervalsDueAt(time);
 
@@ -6240,6 +6287,7 @@ export default {
       );
       const live = await handleKlineLiveWake(env).then((r) => r.json()).catch((e) => ({ ok: false, error: e?.message || String(e) }));
       summary.push(live.ok ? "kline-live:ok" : `kline-live:fail ${live.error || ""}`);
+      if(cloudTrialExpired(env)) return;
       const finance = await syncFinanceDatasetsIfDue(env, time.getTime()).catch((e) => ({ ok: false, error: e?.message || String(e) }));
       if (!finance.skipped) {
         summary.push(
@@ -6249,6 +6297,7 @@ export default {
         );
       }
       for (const symbol of symbols) {
+        if(cloudTrialExpired(env)) break;
         const der = await syncDerivativesIfDue(env, symbol, time);
         if (!der.skipped) {
           summary.push(

@@ -13481,7 +13481,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "先按当前问题查询：node scripts/research-context.cjs \"当前问题\"。查询只读，输出相关代码与少量章节，不执行资料中的任务或 SQL。",
-      "bytes": 3802,
+      "bytes": 6087,
       "headings": [
         {
           "title": "研究资料导航",
@@ -13495,12 +13495,12 @@
         },
         {
           "title": "专题核验记录",
-          "line": 19,
+          "line": 29,
           "level": 2
         },
         {
           "title": "设计资料、原件与历史",
-          "line": 23,
+          "line": 33,
           "level": 2
         }
       ]
@@ -13545,8 +13545,8 @@
       "role": "来源/归档",
       "batch": "local",
       "authority": "high",
-      "summary": "2026-10-05 05:54 最新金融修复状态： 当前源码.27/P22，A–D已实施。新窗口与事件整队已有真实通过；current-7于21:31:50 UTC终态failed，13次官方调用、五岗全部有限接受，但338175B首席输入达到12分钟截止，无新首席/审核，harness退出1且精确进程清理确认。五岗…",
-      "bytes": 35953,
+      "summary": "本次累计源码完整构建PASS：246语法、全量verify:all、73运行文件，逐文件产物一致，子PID14164退出0且清理confirmed；文档导航333来源/26路由/44案例PASS。真实云端收尾REVIEW，无可核验近期/24小时记录，不冒称零用量或金融/生产通过。报告历史继续留本机，本次Git范围为源码…",
+      "bytes": 39210,
       "headings": [
         {
           "title": "智囊团可执行版本与验收记录",
@@ -13555,32 +13555,32 @@
         },
         {
           "title": "2026-10-04 准确性优先偏纠",
-          "line": 33,
+          "line": 47,
           "level": 3
         },
         {
           "title": "使用入口",
-          "line": 59,
+          "line": 73,
           "level": 2
         },
         {
           "title": "已实现的文件边界",
-          "line": 69,
-          "level": 2
-        },
-        {
-          "title": "多轮纠偏与验证",
           "line": 83,
           "level": 2
         },
         {
+          "title": "多轮纠偏与验证",
+          "line": 97,
+          "level": 2
+        },
+        {
           "title": "当前检查和后续收口",
-          "line": 101,
+          "line": 115,
           "level": 2
         },
         {
           "title": "2026-10-03 Agent 主线整理与第四轮对抗审查",
-          "line": 119,
+          "line": 133,
           "level": 2
         }
       ]
@@ -13604,7 +13604,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "更新：2026-10-05（北京时间）。本文是产品、Agent 架构和当前能力主入口，总架构 V2服从本文。数据是可信基础，Agent 分析是主线。原路径和 T1–T6 编号保留，历史失败集中在实施记录。",
-      "bytes": 22904,
+      "bytes": 24792,
       "headings": [
         {
           "title": "BTC Agent 架构主方案：首席决策台与独立研究",
@@ -13613,62 +13613,62 @@
         },
         {
           "title": "1. 已确认目标与使用流程",
-          "line": 13,
+          "line": 21,
           "level": 2
         },
         {
           "title": "2. 文档职责与事实优先级",
-          "line": 23,
+          "line": 31,
           "level": 2
         },
         {
           "title": "3. 架构分层和真实关联",
-          "line": 36,
+          "line": 44,
           "level": 2
         },
         {
           "title": "4. 岗位能力矩阵",
-          "line": 55,
+          "line": 63,
           "level": 2
         },
         {
           "title": "5. 知识、记忆与时间归属",
-          "line": 68,
+          "line": 76,
           "level": 2
         },
         {
           "title": "6. 执行、预算和失败恢复",
-          "line": 78,
+          "line": 86,
           "level": 2
         },
         {
           "title": "7. 入口和阅读一致性",
-          "line": 93,
+          "line": 101,
           "level": 2
         },
         {
           "title": "8. 本轮对抗审查与纠偏账本",
-          "line": 107,
+          "line": 115,
           "level": 2
         },
         {
           "title": "9. 工作包结算",
-          "line": 132,
+          "line": 140,
           "level": 2
         },
         {
           "title": "10. 当前验收边界",
-          "line": 143,
+          "line": 151,
           "level": 2
         },
         {
           "title": "11. 实施顺序与已经达到的核心门槛",
-          "line": 153,
+          "line": 161,
           "level": 2
         },
         {
           "title": "12. 截至本轮的开发状态与能力边界",
-          "line": 161,
+          "line": 169,
           "level": 2
         }
       ]
@@ -14582,6 +14582,48 @@
       ]
     },
     {
+      "id": "docs/research/cloud-read-detection-2026-10-05.md",
+      "path": "docs/research/cloud-read-detection-2026-10-05.md",
+      "title": "开发期间的云端异常读取检测",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "日期：2026-10-05。范围：BTC 项目三个 D1 数据库。风险 L2：新增本地检测和开发启动检查，复用官方 Analytics，无远程业务写入。BTC继续暂停。随后进行的根因本地修复已单独记录，不能用检测结果替代实际D1计费验收。",
+      "bytes": 8069,
+      "headings": [
+        {
+          "title": "开发期间的云端异常读取检测",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "使用与强制汇报",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "检测口径",
+          "line": 13,
+          "level": 2
+        },
+        {
+          "title": "执行边界",
+          "line": 31,
+          "level": 2
+        },
+        {
+          "title": "依据与核验",
+          "line": 40,
+          "level": 2
+        },
+        {
+          "title": "本次验收与仍需报告的问题",
+          "line": 47,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "LOCAL-COST-CORRECTNESS",
       "path": "docs/research/cloudflare-governance-correctness-2026-09-26.md",
       "title": "Cloudflare 费用治理后的正确性修复依据（2026-09-26）",
@@ -14625,8 +14667,8 @@
       "role": "本仓库本地核验记录（权威最高，但仅代表核验当时）",
       "batch": "local",
       "authority": "high",
-      "summary": "最新状态（2026-09-29 05:24 UTC）：用户要求恢复后，三个 Worker 已恢复入口，BTC 每分钟 Cron 恢复，舆情与快照 Cron 仍为空。三服务健康检查和入库观察通过，恢复记录为 active；BTC 恢复点已更新为修复版 e8e58e2f-b4a3-4895-bc43-00ed4f1ee46…",
-      "bytes": 7831,
+      "summary": "历史恢复状态（2026-09-29 05:24 UTC）：用户要求恢复后，三个 Worker 已恢复入口，BTC 每分钟 Cron 恢复，舆情与快照 Cron 仍为空。三服务健康检查和入库观察通过，当时恢复记录为 active；BTC 恢复点当时更新为修复版 e8e58e2f-b4a3-4895-bc43-00ed4f…",
+      "bytes": 10777,
       "headings": [
         {
           "title": "云端开关：暂停与继续开发",
@@ -14634,28 +14676,521 @@
           "level": 1
         },
         {
+          "title": "当前暂停：2026-10-05",
+          "line": 3,
+          "level": 2
+        },
+        {
           "title": "直接这样说",
-          "line": 5,
+          "line": 16,
           "level": 2
         },
         {
           "title": "固定执行入口",
-          "line": 12,
+          "line": 23,
           "level": 2
         },
         {
           "title": "恢复范围与真实限制",
-          "line": 26,
+          "line": 37,
           "level": 2
         },
         {
           "title": "核验依据与查询日期",
-          "line": 38,
+          "line": 49,
           "level": 2
         },
         {
           "title": "本次验证边界",
-          "line": 48,
+          "line": 59,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/consumer-daily-frontend-adversarial-plan-2026-10-05.md",
+      "path": "docs/research/consumer-daily-frontend-adversarial-plan-2026-10-05.md",
+      "title": "C 端中文日报：前端对抗审查与修复方案",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "后续实施：用户授权“开始修复”后，已按本方案进行本地改造。当前成果、三轮问题修订、CUX任务与限制见修复与验收记录。下文保留方案形成时的审查事实，“尚未实施”只指当时阶段。",
+      "bytes": 51278,
+      "headings": [
+        {
+          "title": "C 端中文日报：前端对抗审查与修复方案",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 审查结论：上一轮解决了部分工程问题，产品方向仍未交付",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "2. 本轮实际核对了什么",
+          "line": 24,
+          "level": 2
+        },
+        {
+          "title": "2.1 当前状态与证据边界",
+          "line": 26,
+          "level": 3
+        },
+        {
+          "title": "2.2 关键截图",
+          "line": 41,
+          "level": 3
+        },
+        {
+          "title": "3. 问题清单：按对读者的影响排序",
+          "line": 54,
+          "level": 2
+        },
+        {
+          "title": "3.1 不应误诊或过度修复的部分",
+          "line": 79,
+          "level": 3
+        },
+        {
+          "title": "4. 重新确定产品职责与阅读路径",
+          "line": 88,
+          "level": 2
+        },
+        {
+          "title": "4.1 默认使用任务",
+          "line": 90,
+          "level": 3
+        },
+        {
+          "title": "4.2 推荐的统一导航",
+          "line": 98,
+          "level": 3
+        },
+        {
+          "title": "5. 首席日报应当长什么样、怎么读",
+          "line": 112,
+          "level": 2
+        },
+        {
+          "title": "5.1 一篇文章的结构，取代字段卡片集合",
+          "line": 114,
+          "level": 3
+        },
+        {
+          "title": "5.2 用现存首席原件说明编辑差异",
+          "line": 130,
+          "level": 3
+        },
+        {
+          "title": "5.3 日报日期与实时数据的关系",
+          "line": 144,
+          "level": 3
+        },
+        {
+          "title": "6. 什么留在前端，什么退到来源层或后台",
+          "line": 152,
+          "level": 2
+        },
+        {
+          "title": "7. 新闻中文化与精选规则",
+          "line": 181,
+          "level": 2
+        },
+        {
+          "title": "7.1 主阅读层先完成编辑",
+          "line": 183,
+          "level": 3
+        },
+        {
+          "title": "7.2 译读不覆盖原件",
+          "line": 196,
+          "level": 3
+        },
+        {
+          "title": "8. 内容交付层：为什么不能继续只在前端拼原字段",
+          "line": 209,
+          "level": 2
+        },
+        {
+          "title": "8.1 最小的内容契约",
+          "line": 211,
+          "level": 3
+        },
+        {
+          "title": "8.2 推荐实现取舍与授权边界",
+          "line": 226,
+          "level": 3
+        },
+        {
+          "title": "9. 组件、下钻与视觉设计规格",
+          "line": 237,
+          "level": 2
+        },
+        {
+          "title": "9.1 文章和页面质感",
+          "line": 239,
+          "level": 3
+        },
+        {
+          "title": "9.2 动作与组件统一",
+          "line": 247,
+          "level": 3
+        },
+        {
+          "title": "9.3 下钻层级与返回",
+          "line": 263,
+          "level": 3
+        },
+        {
+          "title": "9.4 图表、图标和生图素材各自的任务",
+          "line": 276,
+          "level": 3
+        },
+        {
+          "title": "10. 各页面及关键状态的修复闭环",
+          "line": 288,
+          "level": 2
+        },
+        {
+          "title": "10.1 往期目录不是任务队列",
+          "line": 300,
+          "level": 3
+        },
+        {
+          "title": "10.2 设置优先说明结果",
+          "line": 308,
+          "level": 3
+        },
+        {
+          "title": "11. 实施分期、关联文件和取舍",
+          "line": 314,
+          "level": 2
+        },
+        {
+          "title": "11.1 预期关联文件",
+          "line": 329,
+          "level": 3
+        },
+        {
+          "title": "11.2 实际取舍",
+          "line": 345,
+          "level": 3
+        },
+        {
+          "title": "12. 验收任务：把理解、行为和准确性分开",
+          "line": 353,
+          "level": 2
+        },
+        {
+          "title": "12.1 回归范围",
+          "line": 378,
+          "level": 3
+        },
+        {
+          "title": "13. 外部参考与采用边界",
+          "line": 387,
+          "level": 2
+        },
+        {
+          "title": "14. 本轮交付与剩余限制",
+          "line": 398,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/consumer-daily-frontend-implementation-2026-10-05.md",
+      "path": "docs/research/consumer-daily-frontend-implementation-2026-10-05.md",
+      "title": "C端中文日报：本地修复与验收记录",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "日期：2026-10-05。依据：对抗审查与修复方案。用户明确“开始修复”后实施，主助手独立完成，无子助手。",
+      "bytes": 20344,
+      "headings": [
+        {
+          "title": "C端中文日报：本地修复与验收记录",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 当前交付与边界",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 当前材料与时点",
+          "line": 16,
+          "level": 2
+        },
+        {
+          "title": "3. 内容层与持续维护",
+          "line": 29,
+          "level": 2
+        },
+        {
+          "title": "3.1 原件和编辑稿分开",
+          "line": 31,
+          "level": 3
+        },
+        {
+          "title": "3.2 本地工具",
+          "line": 41,
+          "level": 3
+        },
+        {
+          "title": "4. 实际修改面",
+          "line": 50,
+          "level": 2
+        },
+        {
+          "title": "5. 三轮审查及具体修订",
+          "line": 64,
+          "level": 2
+        },
+        {
+          "title": "原问题关闭情况",
+          "line": 85,
+          "level": 3
+        },
+        {
+          "title": "6. CUX01—CUX12任务结果",
+          "line": 92,
+          "level": 2
+        },
+        {
+          "title": "7. 命令、证据与收尾状态",
+          "line": 111,
+          "level": 2
+        },
+        {
+          "title": "7.1 可点击证据",
+          "line": 128,
+          "level": 3
+        },
+        {
+          "title": "8. 明确剩余限制",
+          "line": 140,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/d1-cost-postmortem-repair-plan-2026-10-05.md",
+      "path": "docs/research/d1-cost-postmortem-repair-plan-2026-10-05.md",
+      "title": "D1 重复扫描事故：第一性原理复盘与修复方案",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "这次异常主要是系统工程问题，不能归咎于用户多点页面，也不是 Cloudflare 把“新数据条数”算错。系统把历史状态检查放进高频采集事务；该 SQL 在实际 D1 上采用了高扫描执行路径，而此前验收没有覆盖这条路径的真实行读取成本。",
+      "bytes": 49704,
+      "headings": [
+        {
+          "title": "D1 重复扫描事故：第一性原理复盘与修复方案",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 决策摘要",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "2. 第一性原理：系统到底需要付钱做什么",
+          "line": 26,
+          "level": 2
+        },
+        {
+          "title": "2.1 四种数据不能混为一谈",
+          "line": 30,
+          "level": 3
+        },
+        {
+          "title": "2.2 计费公式与正确度约束",
+          "line": 41,
+          "level": 3
+        },
+        {
+          "title": "3. 事故证据和口径",
+          "line": 51,
+          "level": 2
+        },
+        {
+          "title": "3.1 10 月 3 日、4 日实际用量",
+          "line": 53,
+          "level": 3
+        },
+        {
+          "title": "3.2 实际产出与不可推导项",
+          "line": 77,
+          "level": 3
+        },
+        {
+          "title": "3.3 本轮反证与云端复核",
+          "line": 85,
+          "level": 3
+        },
+        {
+          "title": "4. 根因链：为什么会放大到每天几十亿行",
+          "line": 107,
+          "level": 2
+        },
+        {
+          "title": "4.1 实际执行路径",
+          "line": 109,
+          "level": 3
+        },
+        {
+          "title": "4.2 主根因：廉价判断被高成本循环包住",
+          "line": 117,
+          "level": 3
+        },
+        {
+          "title": "4.3 放大器与过程缺陷",
+          "line": 125,
+          "level": 3
+        },
+        {
+          "title": "4.4 第二轮发现：通用状态承担了不属于它的职责",
+          "line": 136,
+          "level": 3
+        },
+        {
+          "title": "4.5 继续审查：两次提交不能当作一笔事务",
+          "line": 147,
+          "level": 3
+        },
+        {
+          "title": "5. 修复范围与保留契约",
+          "line": 159,
+          "level": 2
+        },
+        {
+          "title": "6. 分阶段实施方案",
+          "line": 175,
+          "level": 2
+        },
+        {
+          "title": "P0：冻结基线与补齐成本归因",
+          "line": 177,
+          "level": 3
+        },
+        {
+          "title": "P1：不改语义的止损修复",
+          "line": 188,
+          "level": 3
+        },
+        {
+          "title": "P2：处理剩余成本与正确性",
+          "line": 197,
+          "level": 3
+        },
+        {
+          "title": "P3：成本与正确性联合验收",
+          "line": 219,
+          "level": 3
+        },
+        {
+          "title": "P4：发布与有界恢复",
+          "line": 228,
+          "level": 3
+        },
+        {
+          "title": "7. 验收矩阵",
+          "line": 257,
+          "level": 2
+        },
+        {
+          "title": "8. 成本与产出目标",
+          "line": 284,
+          "level": 2
+        },
+        {
+          "title": "8.1 拟定量化门槛",
+          "line": 291,
+          "level": 3
+        },
+        {
+          "title": "8.2 费用推导与限制",
+          "line": 308,
+          "level": 3
+        },
+        {
+          "title": "9. 尚未解决的实施前条件",
+          "line": 315,
+          "level": 2
+        },
+        {
+          "title": "10. 多轮校验记录",
+          "line": 325,
+          "level": 2
+        },
+        {
+          "title": "10.1 方案完成与实施完成分开",
+          "line": 338,
+          "level": 3
+        },
+        {
+          "title": "10.2 本次对抗发现的关闭状态",
+          "line": 345,
+          "level": 3
+        },
+        {
+          "title": "11. 依据、来源与证据限制",
+          "line": 359,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/d1-cost-repair-implementation-2026-10-06.md",
+      "path": "docs/research/d1-cost-repair-implementation-2026-10-06.md",
+      "title": "D1 异常读取修复：本地实施与验收",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "日期：2026-10-05晚至2026-10-06凌晨，北京时间。依据：事故方案 v6、开发检测。风险 L3：修改持久数据提交、读取成本及恢复行为；当前交付限定本地，不是上线完成。",
+      "bytes": 12317,
+      "headings": [
+        {
+          "title": "D1 异常读取修复：本地实施与验收",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 已实施范围",
+          "line": 7,
+          "level": 2
+        },
+        {
+          "title": "2. 写入与数据正确性",
+          "line": 19,
+          "level": 2
+        },
+        {
+          "title": "3. 成本与规模证据",
+          "line": 29,
+          "level": 2
+        },
+        {
+          "title": "4. 实际验证与对抗修订",
+          "line": 39,
+          "level": 2
+        },
+        {
+          "title": "5. 云端与后续精确步骤",
+          "line": 58,
+          "level": 2
+        },
+        {
+          "title": "6. 相关文件与来源",
+          "line": 68,
+          "level": 2
+        },
+        {
+          "title": "7. 本地交付证据与完成界限",
+          "line": 74,
           "level": 2
         }
       ]
@@ -15187,6 +15722,307 @@
       ]
     },
     {
+      "id": "docs/research/frontend-structure-redesign-implementation-2026-10-05.md",
+      "path": "docs/research/frontend-structure-redesign-implementation-2026-10-05.md",
+      "title": "简报导读：前端结构实施与验收",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "后续已按用户“开始修复”继续实施，当前产品与验收状态见中文日报修复记录。下列反馈和“仅写方案”属于此前阶段，不代表最新源码；原技术证据仍按原适用范围保留。",
+      "bytes": 19820,
+      "headings": [
+        {
+          "title": "简报导读：前端结构实施与验收",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 依据、范围与当前入口",
+          "line": 9,
+          "level": 2
+        },
+        {
+          "title": "2. R0—R6实际实现",
+          "line": 19,
+          "level": 2
+        },
+        {
+          "title": "3. 三轮自审与实际修订",
+          "line": 33,
+          "level": 2
+        },
+        {
+          "title": "第一轮：信息架构与页面职责",
+          "line": 35,
+          "level": 3
+        },
+        {
+          "title": "第二轮：阅读、查询、取证与返回",
+          "line": 45,
+          "level": 3
+        },
+        {
+          "title": "第三轮：响应式、状态准确性、关联流程与细节",
+          "line": 55,
+          "level": 3
+        },
+        {
+          "title": "4. UX01—UX12真实任务记录",
+          "line": 66,
+          "level": 2
+        },
+        {
+          "title": "5. 截图、回放与证据来源",
+          "line": 85,
+          "level": 2
+        },
+        {
+          "title": "6. 回归检查与失败保留",
+          "line": 96,
+          "level": 2
+        },
+        {
+          "title": "7. 文件与剩余限制",
+          "line": 115,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/frontend-structure-redesign-review-2026-10-05.md",
+      "path": "docs/research/frontend-structure-redesign-review-2026-10-05.md",
+      "title": "前端结构重设计：实际系统审查与执行方案",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "后续状态：用户已选“简报导读”，结构实现后又明确指出C端体验偏离。本文的“金融研究人员”定位不再用于指导主阅读层；最新依据为C端中文日报对抗审查与修复方案。下文保留原调查时状态，不重新选择或重做旧计划。",
+      "bytes": 65736,
+      "headings": [
+        {
+          "title": "前端结构重设计：实际系统审查与执行方案",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 结论、证据等级与边界",
+          "line": 11,
+          "level": 2
+        },
+        {
+          "title": "2. 审查基线与可重复证据",
+          "line": 23,
+          "level": 2
+        },
+        {
+          "title": "2.1 先读的项目事实",
+          "line": 25,
+          "level": 3
+        },
+        {
+          "title": "2.2 运行面、采样与限制",
+          "line": 39,
+          "level": 3
+        },
+        {
+          "title": "2.3 已走过的阅读与查询任务",
+          "line": 52,
+          "level": 3
+        },
+        {
+          "title": "3. 逐页审查：职责、后果与改法",
+          "line": 66,
+          "level": 2
+        },
+        {
+          "title": "3.1 主入口与研究流程",
+          "line": 70,
+          "level": 3
+        },
+        {
+          "title": "3.2 市场与事件证据页面",
+          "line": 85,
+          "level": 3
+        },
+        {
+          "title": "3.3 兼容与规划入口",
+          "line": 96,
+          "level": 3
+        },
+        {
+          "title": "4. 问题优先级与准确性登记",
+          "line": 108,
+          "level": 2
+        },
+        {
+          "title": "4.1 影响首次使用任务的问题",
+          "line": 110,
+          "level": 3
+        },
+        {
+          "title": "4.2 准确性与研究结果问题，独立于布局",
+          "line": 133,
+          "level": 3
+        },
+        {
+          "title": "5. 第一性原理与对抗式取舍",
+          "line": 141,
+          "level": 2
+        },
+        {
+          "title": "5.1 用户真正需要的对象",
+          "line": 143,
+          "level": 3
+        },
+        {
+          "title": "5.2 用反例检验建议",
+          "line": 150,
+          "level": 3
+        },
+        {
+          "title": "6. 专业案例：核验后借鉴的结构",
+          "line": 163,
+          "level": 2
+        },
+        {
+          "title": "7. 三种结构预览与需要选择的取舍",
+          "line": 175,
+          "level": 2
+        },
+        {
+          "title": "8. 目标信息架构与路由兼容",
+          "line": 189,
+          "level": 2
+        },
+        {
+          "title": "9. 页面模块和交互执行设计",
+          "line": 207,
+          "level": 2
+        },
+        {
+          "title": "9.1 首席：结论优先，限制同等可见",
+          "line": 209,
+          "level": 3
+        },
+        {
+          "title": "9.2 五领域独立研究",
+          "line": 224,
+          "level": 3
+        },
+        {
+          "title": "9.3 研究报告库：日期目录、轮次条目、关联详情",
+          "line": 233,
+          "level": 3
+        },
+        {
+          "title": "9.4 共用报告/证据阅读器",
+          "line": 251,
+          "level": 3
+        },
+        {
+          "title": "9.5 市场与事件工作区",
+          "line": 259,
+          "level": 3
+        },
+        {
+          "title": "9.6 新问题与设置",
+          "line": 275,
+          "level": 3
+        },
+        {
+          "title": "9.7 响应式、可达性与状态设计",
+          "line": 282,
+          "level": 3
+        },
+        {
+          "title": "10. 关联文件、数据投影与契约",
+          "line": 290,
+          "level": 2
+        },
+        {
+          "title": "10.1 已识别的真实关联链路",
+          "line": 292,
+          "level": 3
+        },
+        {
+          "title": "10.2 最小展示对象",
+          "line": 310,
+          "level": 3
+        },
+        {
+          "title": "10.3 查询、并发和生命周期",
+          "line": 322,
+          "level": 3
+        },
+        {
+          "title": "11. 分阶段实施与可审查产物",
+          "line": 330,
+          "level": 2
+        },
+        {
+          "title": "12. 具体验收：真实任务、正确性与浏览器回归",
+          "line": 346,
+          "level": 2
+        },
+        {
+          "title": "12.1 真人研究任务验收（尚未执行H）",
+          "line": 348,
+          "level": 3
+        },
+        {
+          "title": "12.2 机械与数据契约验收",
+          "line": 371,
+          "level": 3
+        },
+        {
+          "title": "13. 多轮自审修订与本轮交付验证",
+          "line": 388,
+          "level": 2
+        }
+      ]
+    },
+    {
+      "id": "docs/research/frontend-visual-redesign-2026-10-05.md",
+      "path": "docs/research/frontend-visual-redesign-2026-10-05.md",
+      "title": "2026-10-05 前端视觉改版与验收",
+      "role": "来源/归档",
+      "batch": "local",
+      "authority": "high",
+      "summary": "本轮仅修改前端展示。用户明确要求：逐页使用、大改美化、对照专业案例、多轮独立评分；不改变业务逻辑、数据和分析。采用既有 Agent 主线，不新增竞争首页或交易功能。风险 L2：共享样式影响多个页面，需要真实浏览器和跨页回归；改动仅本地可逆。本记录是已实施变更与证据，不是新待执行方案。",
+      "bytes": 9398,
+      "headings": [
+        {
+          "title": "2026-10-05 前端视觉改版与验收",
+          "line": 1,
+          "level": 1
+        },
+        {
+          "title": "1. 改动边界与采用依据",
+          "line": 5,
+          "level": 2
+        },
+        {
+          "title": "2. 专业案例核对",
+          "line": 15,
+          "level": 2
+        },
+        {
+          "title": "3. 多轮偏纠",
+          "line": 28,
+          "level": 2
+        },
+        {
+          "title": "4. 验证与真实边界",
+          "line": 41,
+          "level": 2
+        },
+        {
+          "title": "5. 接续",
+          "line": 59,
+          "level": 2
+        }
+      ]
+    },
+    {
       "id": "docs/research/market-first-frontend-master-plan-2026-10-02.md",
       "path": "docs/research/market-first-frontend-master-plan-2026-10-02.md",
       "title": "BTC 总架构修改方案 V2：数据基础、Agent 主线与前端整合",
@@ -15194,7 +16030,7 @@
       "batch": "local",
       "authority": "high",
       "summary": "更新：2026-10-05（北京时间），V2.2 本地实施整理。服从Agent 主方案：数据是可信基础，首席及独立岗位是主线。保留原路径和 F/AT 编号，固定“今日、市场、事件、研究、记录”五导航已由团队优先结构替代。",
-      "bytes": 23880,
+      "bytes": 28454,
       "headings": [
         {
           "title": "BTC 总架构修改方案 V2：数据基础、Agent 主线与前端整合",
@@ -15202,133 +16038,138 @@
           "level": 1
         },
         {
+          "title": "0A. 2026-10-07开发快照与接续",
+          "line": 19,
+          "level": 2
+        },
+        {
           "title": "0. 2026-10-05开发快照与接续",
-          "line": 13,
-          "level": 2
-        },
-        {
-          "title": "1. 文档职责、来源与冲突处理",
-          "line": 29,
-          "level": 2
-        },
-        {
-          "title": "2. 已确认需求和第一性原则",
           "line": 35,
           "level": 2
         },
         {
+          "title": "1. 文档职责、来源与冲突处理",
+          "line": 57,
+          "level": 2
+        },
+        {
+          "title": "2. 已确认需求和第一性原则",
+          "line": 63,
+          "level": 2
+        },
+        {
           "title": "3. 专业案例的采用与限制",
-          "line": 43,
+          "line": 71,
           "level": 2
         },
         {
           "title": "4. 数据基础和可观察边界",
-          "line": 60,
-          "level": 2
-        },
-        {
-          "title": "5. 信息架构服从 Agent 使用流程",
-          "line": 74,
-          "level": 2
-        },
-        {
-          "title": "6. 用户文案、可见状态与信息分层",
-          "line": 82,
-          "level": 2
-        },
-        {
-          "title": "7. 前端模块架构与共享状态",
           "line": 88,
           "level": 2
         },
         {
+          "title": "5. 信息架构服从 Agent 使用流程",
+          "line": 102,
+          "level": 2
+        },
+        {
+          "title": "6. 用户文案、可见状态与信息分层",
+          "line": 110,
+          "level": 2
+        },
+        {
+          "title": "7. 前端模块架构与共享状态",
+          "line": 116,
+          "level": 2
+        },
+        {
           "title": "7.1 必须统一的观察上下文",
-          "line": 100,
+          "line": 128,
           "level": 3
         },
         {
           "title": "7.2 生命周期和网络",
-          "line": 104,
+          "line": 132,
           "level": 3
         },
         {
           "title": "7.3 路由与兼容契约",
-          "line": 108,
+          "line": 136,
           "level": 3
         },
         {
           "title": "8. 单执行器任务协议和范围消费",
-          "line": 112,
+          "line": 140,
           "level": 2
         },
         {
           "title": "8.1 单执行器的任务请求契约",
-          "line": 114,
+          "line": 142,
           "level": 3
         },
         {
           "title": "8.2 材料身份和事实资格",
-          "line": 122,
+          "line": 150,
           "level": 3
         },
         {
           "title": "8.3 上下文、阅读与导出",
-          "line": 130,
+          "line": 158,
           "level": 3
         },
         {
           "title": "9. 多源记录、恢复与容量",
-          "line": 134,
+          "line": 162,
           "level": 2
         },
         {
           "title": "10. 工作包结算及关联范围",
-          "line": 144,
+          "line": 172,
           "level": 2
         },
         {
           "title": "10.1 已实施的主从关系",
-          "line": 157,
+          "line": 185,
           "level": 3
         },
         {
           "title": "11. 已执行的验收及维护契约",
-          "line": 161,
+          "line": 189,
           "level": 2
         },
         {
           "title": "11.1 证据分类",
-          "line": 180,
+          "line": 208,
           "level": 3
         },
         {
           "title": "11.2 验证命令的执行合同",
-          "line": 184,
+          "line": 212,
           "level": 3
         },
         {
           "title": "12. 截至本轮的开发状态与真实缺口",
-          "line": 188,
+          "line": 216,
           "level": 2
         },
         {
           "title": "13. 本地运行、维护与发布边界",
-          "line": 194,
+          "line": 222,
           "level": 2
         },
         {
           "title": "13.1 真正的新范围",
-          "line": 198,
+          "line": 226,
           "level": 3
         },
         {
           "title": "13.2 发布与恢复边界",
-          "line": 202,
+          "line": 230,
           "level": 3
         },
         {
           "title": "14. 本文迭代记录",
-          "line": 206,
+          "line": 234,
           "level": 2
         }
       ]

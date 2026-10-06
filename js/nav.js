@@ -3,15 +3,11 @@
    ======================================================= */
 const NAV_GROUP_STATE_KEY = "bit-platform-nav-groups";
 const WORKSPACE_NAV = [
-  {group:"研究团队",items:[
-    {id:"boardroom",label:"首席决策台",icon:"ph-users-three"},
-    {id:"archive",label:"团队研究历史",icon:"ph-notebook"},
-  ]},
-  {group:"证据工作区",items:[
-    {id:"market",label:"市场数据",icon:"ph-chart-line"},
-    {id:"events",label:"事件资料",icon:"ph-calendar-blank"},
-    {id:"overview",label:"今日资料",icon:"ph-sun"},
-    {id:"records",label:"资料与旧记录",icon:"ph-folder"},
+  {group:"阅读与探索",items:[
+    {id:"boardroom",label:"首席日报",icon:"ph-newspaper"},
+    {id:"domains",label:"深度解读",icon:"ph-book-open"},
+    {id:"market",label:"市场",icon:"ph-chart-line"},
+    {id:"records",label:"往期",icon:"ph-calendar-blank"},
   ]},
   {group:"偏好",items:[{id:"settings",label:"设置",icon:"ph-gear"}]},
 ];
@@ -42,7 +38,7 @@ function buildSidebar() {
   const groups = WORKSPACE_NAV;
   groups.forEach((grp, gi) => {
     const group = el("div", { class: "nav-group", "data-gi": gi, "data-group": grp.group });
-    const collapsed = grp.group === "研究团队" ? false : !!saved[grp.group];
+    const collapsed = false;
     if (collapsed) group.classList.add("collapsed");
     const head = el("button", { class: "nav-group-head",
       onclick: () => {
@@ -98,7 +94,7 @@ function setBreadcrumb(crumbs) {
 }
 
 function highlightNav(id) {
-  id = ["chart","orderflow","heatmap","derivatives"].includes(id) ? "market" : id === "news" ? "events" : ["boardroom","research","agent-chief","agent-env","agent-flow","agent-deriv","agent-macro","agent-events"].includes(id) ? "boardroom" : id==='research-window' ? (globalThis.UserWorkspace?.query().get('runId')?'records':'boardroom') : ['team-record','news-analysis'].includes(id) ? "records" : id;
+  id = ["chart","orderflow","heatmap","derivatives","news","events"].includes(id) ? "market" : ['agent-env','agent-flow','agent-deriv','agent-macro','agent-events'].includes(id) ? 'domains' : ["boardroom","research","agent-chief","overview"].includes(id) ? "boardroom" : id==='research-window' ? (globalThis.UserWorkspace?.query().get('runId')||globalThis.UserWorkspace?.query().get('taskId')?'records':'boardroom') : ['team-record','news-analysis','archive'].includes(id) ? "records" : id;
   $$(".nav-item").forEach(n => {const active=n.getAttribute("data-id") === id;n.classList.toggle("active",active);if(active)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
 }
 

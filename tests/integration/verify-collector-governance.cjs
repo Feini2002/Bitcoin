@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '../..');
 const suiteWallClock = Date.now;
 const sql = new DatabaseSync(':memory:');
 sql.exec(fs.readFileSync(path.join(root, 'cloudflare/schema.sql'), 'utf8'));
+sql.exec(fs.readFileSync(path.join(root, 'cloudflare/finance/dataset-schema.sql'), 'utf8'));
 let failure = '', beforeBatch = null;
 const DB = {
   prepare(query) {
@@ -168,9 +169,12 @@ const progress = () => new Promise(r => setImmediate(r));
   const persisted = [], metadata = []; let failLive = true, blockWrite = null;
   live.bindKlineLiveHooks({
     readKlineCursor: null,
-    persistKlines: async (_env, _symbol, interval, rows) => { if (blockWrite) await blockWrite.promise; persisted.push(...rows.map(row => ({ interval, row }))); },
-    updateSyncStatus: async () => {},
-    persistLiveKlineBar: async (_db, _interval, _row, _host, _mode, meta) => { if (failLive) throw Error('normalized write failed'); metadata.push(meta); },
+    persistKlineCommit: async (_env, _symbol, interval, rows, _host, _mode, meta) => {
+      if (blockWrite) await blockWrite.promise;
+      if (failLive) throw Error('normalized write failed');
+      persisted.push(...rows.map(row => ({ interval, row }))); metadata.push(meta);
+      return {inserted:rows.length};
+    },
     persistLiveSnapshot: async () => {},
   });
   const component = new live.KlineLiveComponent(state(), { DB: {} });
@@ -235,14 +239,15 @@ const progress = () => new Promise(r => setImmediate(r));
   const waitingWrites = [], activeIntervals = new Set(), writeLog = [];
   let activeWrites = 0, maximumWrites = 0, fail15m = true;
   live.bindKlineLiveHooks({
-    persistKlines: async (_env, _symbol, interval) => {
+    persistKlineCommit: async (_env, _symbol, interval, rows, _host, _mode, meta) => {
       assert.equal(activeIntervals.has(interval), false, 'same interval must have only one writer');
       activeIntervals.add(interval); activeWrites++; maximumWrites = Math.max(maximumWrites, activeWrites);
       const wait = gate(); waitingWrites.push(wait); await wait.promise;
       activeIntervals.delete(interval); activeWrites--;
       if (interval === '15m' && fail15m) { fail15m = false; throw Error('one period failed'); }
+      writeLog.push(...rows.map(row=>({interval,t:row[0],closed:meta.closed})));
+      return {inserted:rows.length};
     },
-    persistLiveKlineBar: async (_db, interval, row, _host, _mode, meta) => writeLog.push({ interval, t: row[0], closed: meta.closed }),
     persistLiveSnapshot: async () => {},
   });
   for (const interval of live.KLINE_LIVE_INTERVALS) {

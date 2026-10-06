@@ -202,6 +202,8 @@ class CloudControl {
     return { status: 'paused', observation, restoreVersion: this.state.restore.workers.btc.versionId };
   }
   async resume(dryRun = false) {
+    need(!this.state.costIncident?.blockedVersions?.includes(this.state.restore.workers.btc.versionId),
+      '恢复点仍是已确认异常计费的 BTC 旧版本；必须先验证并登记修复候选，当前保持暂停。');
     let live = await this.snapshot();
     if (this.state.phase === 'active') {
       need(this.classify(live) === 'active', '已运行记录与入口不一致；先核对状态，不回退新代码。');
@@ -323,8 +325,7 @@ async function main(args = process.argv.slice(2)) {
     const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); validateState(state);
     let auth;
     try {
-      auth = JSON.parse(execFileSync(process.execPath, [path.join(ROOT, 'node_modules/wrangler/bin/wrangler.js'), 'auth', 'token', '--json'],
-        { encoding: 'utf8', timeout: 15000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, WRANGLER_SEND_METRICS: 'false', WRANGLER_LOG_PATH: path.join(artifacts, 'wrangler.log') } }));
+      auth = require('../diagnostics/cloud-read-check.cjs').officialAuth(ROOT);
       need(auth.token || (auth.key && auth.email), 'missing auth');
     } catch { throw new Error('Cloudflare 登录不可用；请运行 npm run cf -- login 完成官方登录后重试，无需提供密钥。'); }
     const controller = new CloudControl({ state, api: makeApi(auth), log: message => console.log(`[${stamp()}] ${message}`),

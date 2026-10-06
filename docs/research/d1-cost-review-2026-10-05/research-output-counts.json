@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-05T13:50:59.763Z",
+  "source": "local persisted run/report records; metadata only",
+  "timezone": "Asia/Shanghai",
+  "scope": "report generatedAt vs run endedAt; includes real development acceptance research; not economic value",
+  "rows": [
+    {
+      "date": "2026-10-03",
+      "reportVersions": 26,
+      "committed": 26,
+      "chiefs": 1,
+      "chiefStatuses": [
+        "limited"
+      ],
+      "runsByEndDate": {
+        "failed": 4,
+        "limited": 1
+      }
+    },
+    {
+      "date": "2026-10-04",
+      "reportVersions": 32,
+      "committed": 32,
+      "chiefs": 5,
+      "chiefStatuses": [
+        "limited",
+        "limited",
+        "limited",
+        "limited",
+        "limited"
+      ],
+      "runsByEndDate": {
+        "interrupted": 1,
+        "cancelled": 4,
+        "cleanup_uncertain": 2,
+        "limited": 5
+      }
+    }
+  ]
+}

@@ -20,6 +20,7 @@ function assert(name, cond, detail) {
   assert("bybit stream keeps official fallback URL", src.includes("wss://stream.bybit.com/v5/public/linear"));
   assert("bybit stream origin is a separate prefixed env", src.includes("BYBIT_STREAM_ORIGIN") && src.includes("parseCustomOriginBase"));
   src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
+  src = fs.readFileSync(path.join(__dirname,'../../cloudflare/cloud-trial.mjs'),'utf8').replace('export function','function')+'\n'+src;
   src = src.replace(/\bexport\s*\{\s*KlineLiveCollector\s*\}\s*;?/, "");
   src = src.replace(/\bbindKlineLiveHooks\s*\([\s\S]*?\);\s*/, "");
   src = src.replace(/export default\s*\{/, "const __workerDefault = {");

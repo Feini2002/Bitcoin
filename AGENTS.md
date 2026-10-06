@@ -4,6 +4,8 @@
 
 ## Current Development Entry
 
+- 2026-10-07 换电脑与继续开发先读[最新开发状态](docs/operations/development-handoff-2026-10-07.md)。首席日报/深度解读/市场/往期和中文阅读已本地实施；D1成本修复限本地，恢复记录paused，金融E与真实D1成本/生产迁移未完成。旧日期段落保留当时范围；Git备份不授权恢复、部署或模型运行。
+
 - 2026-10-04 当前产品与本地架构以 [Agent 主方案](docs/research/agent-team-product-plan-2026-10-02.md) 为首读，[总架构 V2](docs/research/market-first-frontend-master-plan-2026-10-02.md) 服从它；实际迭代/失败/验证见 [实施记录](docs/research/agent-team-implementation-2026-10-02.md)。首席默认、五领域独立研究、数据证据工作区与专题任务已接入本地开发版。继续前核对这三份当前状态，不从旧四页或第二批总计划重新开发。
 
 - 2026-10-05 换电脑接续先读 [当前开发快照](docs/operations/development-handoff-2026-10-05.md) 和 [新电脑说明](docs/operations/new-computer.md)。Agent .27/P22与金融修复A–D本地build通过，窗口/事件真研究通过，修后当前市场整队E未完成；精确状态以实施记录顶部为准。两轮读取性能修复已发布；源码以Git为准，不覆盖旧SOURCE包，本机研究历史和私密文件离线恢复，不进入Git。[旧交接](docs/operations/development-handoff-2026-09-30.md)保留历史背景。
@@ -51,6 +53,9 @@
 
 ## Validation Loop
 
+- **云端异常读取必须汇报（2026-10-05 用户要求）**：开发任务开始及交付前运行 `npm run cloud:reads`，读取本次 `.artifacts/cloud-read-monitor/latest.md`。开发服务器也在启动后及运行期间每 5 分钟检查；结果在开发终端显示。发现 `ALERT`、`REVIEW` 或 `UNKNOWN`，必须立即在当前对话用中文向用户说明影响数据库、时间窗口、读取量/异常规则及下一步；已有已知问题仍须明确说明，不能因为测试通过、页面快或云端暂停而隐瞒。检查执行失败、登录/网络/权限失效、指标缺失或报告过期也必须汇报，不能当作正常或零用量。
+- 该检查只查询官方已有 Analytics/Query Insights，并检查本地已知 SQL 风险，不执行业务 SQL、生产 API、部署或恢复。只限本项目三个 D1 库；告警线不是账单硬上限，也不覆盖账号固定月费等其他费用。`npm run verify:cloud-reads` 是离线检测器回归，不能冒充真实云端正常；离线工作可运行 `npm run cloud:reads -- --offline`，但必须说明云端未核验。详见[检测说明](docs/research/cloud-read-detection-2026-10-05.md)。
+
 - `npm run build` 运行全量本地验证并生成 `dist/pages/`，发布仅使用该目录。
 - 通用改动后运行 `npm run lint`。
 - 指标数学或行情图表改动后运行 `node tests/unit/verify-indicator-math.cjs`。
@@ -76,6 +81,8 @@
 - 若默认部署因登录、权限、网络或 Cloudflare 状态失败，须明确说明原因和未上线的影响面。
 
 ## Cloudflare Pause / Restore Runbook
+
+- 2026-10-06 成本事故本地修复见[实施记录](docs/research/d1-cost-repair-implementation-2026-10-06.md)。用户选择仅本地、暂不增加云测试用量；维护版保持暂停。`costIncident.blockedVersions`标识已确认异常的旧业务版，不能删除标记或普通deploy绕过；后续恢复先完成修复候选登记、迁移与真实计费验收。本地PASS不证明生产已修复。
 
 - 固定入口见 [云端开关说明](docs/research/cloudflare-pause-resume-2026-09-27.md)，恢复记录是 `cloudflare/cloud-control-state.json`。2026-09-29 04:46 UTC 已恢复 `btc`、`yuqing`、`market-snapshot`，五次采样确认实时入库推进；实际状态始终用 `npm run cloud:status` 核对，不能只读日期判断。
 - 用户在本仓库说 **“开起来 / 恢复云端 / 重新启用系统”**，即授权执行 `npm run cloud:resume` 并完成读回、入口健康和行情入库验证，然后继续开发；不要求用户重复提供账号、域名或版本号。只是讨论恢复方案或要求只读预检时不执行开启。

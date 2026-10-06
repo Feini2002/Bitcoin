@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from "vite";
 import fullReload from "vite-plugin-full-reload";
 import { agentTeamBridge } from './scripts/agent-team/service.mjs';
 import { createTools } from './scripts/agent-team/tools.mjs';
+import { cloudReadMonitor } from './scripts/dev/cloud-read-monitor.mjs';
 
 /**
  * 本地静态前端开发：监听文件变更并全页刷新（经典 script 标签无 ESM HMR）。
@@ -29,6 +30,7 @@ export default defineConfig(({ mode }) => {
     watch: { usePolling: process.platform === 'win32', interval: 300, ignored:['**/.local/**','**/.artifacts/**','**/dist/**','**/.codex/**'] },
   },
   plugins: [
+    cloudReadMonitor(),
     agentTeamBridge({toolsFactory:()=>createTools({marketOrigin:overrides.BIT_DATA_API_BASE||'https://btc.feiniwork.com',eventsOrigin:overrides.BIT_YUQING_API_BASE||'https://yuqing.feiniwork.com'})}),
     {
       name: "live-cache-buster",

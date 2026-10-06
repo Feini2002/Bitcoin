@@ -6,6 +6,7 @@ import {ROLES,VERSION,TASK_VERSION,TASK_CAPABILITIES,normalizeTaskRequest,roleDa
 import {PROMPT_VERSION,specialistPrompt,chiefPrompt,reviewPrompt} from '../../js/agent-team/prompts.mjs';
 import {createTools,hash} from './tools.mjs';
 import {eventReading,eventMaterial} from './event-reading.mjs';
+import {readingContent,translatedEvents} from './reading-content.mjs';
 import {TeamStore} from './store.mjs';
 import {Presence,scheduleSlot,nextSlots,localDay} from './schedule.mjs';
 import {authStatus,runStructured} from '../research/codex-provider.mjs';
@@ -275,9 +276,10 @@ export function agentTeamBridge(options={}){
           const ping=()=>{res.write('data: '+JSON.stringify({nonce,instanceId:service.store.instanceId})+'\n\n');};ping();const stream=setInterval(ping,30000);res.once('close',()=>{clearInterval(stream);service.presence.disconnect(id,nonce);});return;
         }
         if(req.method==='GET'&&tail==='status')return send({...service.status(),backgroundError:service.backgroundError||null});
-        if(req.method==='GET'&&tail==='events')return send(service.events());
+        if(req.method==='GET'&&tail==='events')return send(translatedEvents(service.store,service.events()));
+        if(req.method==='GET'&&/^reading\/[a-f0-9-]{36}$/.test(tail))return send(readingContent(service.store,tail.slice(8)));
         if(req.method==='GET'&&tail==='config')return send({config:service.store.config,capabilities:TASK_CAPABILITIES,nextSlots:nextSlots(service.store.config,service.clock())});
-        if(req.method==='GET'&&tail==='runs')return send(service.store.historyPage({offset:Number(url.searchParams.get('offset')||0),limit:Number(url.searchParams.get('limit')||50),contextId:url.searchParams.get('contextId')}));
+        if(req.method==='GET'&&tail==='runs')return send(url.searchParams.get('query')==='1'?service.store.queryHistory({offset:Number(url.searchParams.get('offset')||0),limit:Number(url.searchParams.get('limit')||50),q:url.searchParams.get('q')||'',type:url.searchParams.get('type')||'all',from:url.searchParams.get('from')||'',to:url.searchParams.get('to')||'',dateBasis:url.searchParams.get('dateBasis')||'completed',snapshot:url.searchParams.get('snapshot')}):service.store.historyPage({offset:Number(url.searchParams.get('offset')||0),limit:Number(url.searchParams.get('limit')||50),contextId:url.searchParams.get('contextId')}));
         if(req.method==='GET'&&/^contexts\/task:[a-f0-9-]{36}$/.test(tail)){const contextId=tail.slice(9);return send({contextId,chief:service.store.accepted('chief',contextId),specialists:Object.fromEntries(Object.keys(ROLES).map(role=>[role,service.store.accepted(role,contextId)]))});}
         if(req.method==='GET'&&/^runs\/[a-f0-9-]{36}\/export$/.test(tail)){const id=tail.split('/')[1],run=service.store.read('run-'+id+'.json');if(!run)throw Error('run_not_found');const reports={};for(const {id:reportId}of run.row.commits||Object.entries(run.row.accepted||{}).map(([role,id])=>({role,id}))){const record=service.store.read('report-'+reportId+'.json');if(!record||record.hash!==hash(record.payload))throw Error('invalid_report');reports[reportId]=record.payload;}const bundle={version:VERSION,source:'local-agent-team',run,reports};return send({...bundle,contentHash:globalThis.BitContentIdentity.contentId(bundle)});}
         if(req.method==='GET'&&/^runs\/[a-f0-9-]{36}$/.test(tail))return send(service.store.read('run-'+tail.slice(5)+'.json')||{error:'run_not_found'});

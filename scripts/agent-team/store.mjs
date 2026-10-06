@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {processSnapshot} from '../dev/process-tree.mjs';
 import {hash} from './tools.mjs';
+import {queryHistory} from './history-query.mjs';
 import {DEFAULT_CONFIG,validateConfig,CONDITION_VERSION,conditionTiming} from '../../js/agent-team/contract.mjs';
 export class TeamStore {
   constructor(directory,{snapshot=processSnapshot,clock=()=>Date.now()}={}){this.directory=path.resolve(directory);this.instanceId=crypto.randomUUID();this.pid=process.pid;this.owned=false;this.snapshot=snapshot;this.clock=clock;}
@@ -136,6 +137,7 @@ export class TeamStore {
   saveConditionCheck(check){if(check.kind!=='deterministic')return;this.write(this.conditionFile(check.id),check);if(['triggered','expired'].includes(check.state))delete this.conditions.pending[check.id];this.write('conditions-index.json',this.conditions);}
   summary({id,requestId,requestHash,question,asOf,startedAt,endedAt,terminal,status,reason,calls,callTimes,accepted,commits,source,task,contextId,taskMode,observation}){return {id,requestId,requestHash,question:question||'',asOf,startedAt,endedAt,status:terminal||status||'running',terminal:terminal||status||null,reason,calls,callTimes,accepted,commits,source,contextId:task?.contextId||contextId||'current',taskMode:task?.taskMode||taskMode||'current',observation:task?.observation??observation??null};}
   history(options){return this.historyPage(options||{limit:100}).runs;}
+  queryHistory(options){return queryHistory(this,options);}
   historyPage({offset=0,limit=100,contextId=null}={}){if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(limit)||limit<1||limit>200||contextId!==null&&!/^(current|task:[a-f0-9-]{36})$/.test(contextId))throw Error('invalid_history_page');
     let rows=this.journal.runs.slice().reverse().map(row=>this.summary(row));const ids=new Set(rows.map(row=>row.id));let total=rows.length;
     // Read only enough index pages for the requested slice unless filtering a context.

@@ -2,14 +2,15 @@
 
 | 分类 | 阅读入口 |
 | --- | --- |
-| 当前开发与安装 | [当前开发快照与交接](operations/development-handoff-2026-10-05.md)、[新电脑初始化](operations/new-computer.md)、[开发导航](operations/development-guide.md) |
+| 当前开发与安装 | [当前开发快照与交接](operations/development-handoff-2026-10-07.md)、[新电脑初始化](operations/new-computer.md)、[开发导航](operations/development-guide.md) |
 | 当前架构与文件职责 | [仓库布局](architecture/repository-layout.md)、architecture/ |
 | 研究与实现依据 | [研究资料导航](research/README.md)、[按问题定位](research/bitcoin-upgrade/QUICK_ROUTER.md) |
 | 历史记录与早期参考 | reference/history/、reference/archive/、reference/project-skills/ |
 
 操作说明放在 operations/，历史材料保留其当时的结论；研究原始快照和 ZIP 继续保存原内容。
 
-- [2026-10-05开发快照](operations/development-handoff-2026-10-05.md)：Agent、数据、前端与目录整理的当前实现、真实通过/失败、未完成E、模型调用预算和Git备份边界。
+- [2026-10-07开发快照](operations/development-handoff-2026-10-07.md)：中文阅读产品、D1本地成本修复、暂停状态、金融E与真实计费未完成项、换机和本次Git备份边界。
+- [2026-10-05开发快照](operations/development-handoff-2026-10-05.md)：此前Agent真实通过/失败、金融修复与预算历史；不替代最新快照。
 - [Agent主方案](research/agent-team-product-plan-2026-10-02.md)、[服从Agent的总架构V2](research/market-first-frontend-master-plan-2026-10-02.md)、[实施记录](research/agent-team-implementation-2026-10-02.md)：当前架构与精确状态入口。
 - [2026-09-30开发交接](operations/development-handoff-2026-09-30.md)：当时已发布主线、发布状态、性能验证与换电脑背景，不替代当前快照。
 - [研究工作台改版](research/product-redesign-2026-09-29.md) 与 [AI 对话研究流程](research/ai-research-workflow.md)：事件/舆情模块及无模型 Key 的研究、预览和显式导入。

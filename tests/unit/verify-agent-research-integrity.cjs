@@ -35,11 +35,12 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
  const html=reportCard({role:'macro',report:{status:'limited',summary:'原待办仍需复核',claims:[],viewChange:{previousReportId:intermediate},researchProgress:[{todoId:origin+':manual:0',state:'unresolved',reason:'本轮未完成',evidenceIds:[]}]}});
  assert(html.includes('data-previous="'+origin+'">原待办报告'),'inherited todo opens its actual ancestor instead of the intervening report');
  assert(html.includes('data-previous="'+intermediate+'">打开上一版观点'),'ordinary previous-view navigation remains separate');
- assert(html.includes('宏观研究员 · 岗位判断'),'role report identifies its actual professional role');
+ assert(html.includes('宏观研究 · 最新独立稿')&&html.includes('独立判断 · 宏观研究员'),'role report identifies its domain, original professional role and current independent version');
  assert.equal(friendlyError('research_progress_without_current_evidence'),'研究待办引用未通过本轮依据校验，未接受新报告');
  assert.equal(friendlyError('research_progress_baseline_mismatch'),'研究待办的历史依据未对应明确的跨轮比较，未接受新报告');
  assert.equal(friendlyError('research_completion_without_evidence'),'研究待办未提供完成依据，未接受新报告');
- assert(reportCard({role:'events',report:{status:'limited',summary:'真实岗位',claims:[],viewChange:{}}},{historical:true}).includes('事件与舆情研究员 · 当时岗位判断'));
+ const historical=reportCard({role:'events',report:{status:'limited',summary:'真实岗位',claims:[],viewChange:{}}},{historical:true});assert(historical.includes('事件研究 · 当时稿')&&historical.includes('历史时点，不随实时资料更新'));
+ const topic=reportCard({role:'chief',task:{taskMode:'window',observation:{symbol:'BTCUSDT',product:'perpetual',view:'chart',timeframe:'1h',from:1791017100000,to:1791103499999}},report:{status:'limited',summary:'仅限指定窗口',claims:[],viewChange:{}}},{chief:true});assert(topic.includes('本次问题 · 观察范围见下文')&&!topic.includes('当前市场 · 各源范围见引用'),'a saved topic cannot be labeled as the current market judgment');
  const frozenWindow='.local/agent-team/run-b46ce453-7574-4716-b2a5-40ce056bbe07.json';{
   const {ROLES}=await import('../../js/agent-team/contract.mjs'),real=fs.existsSync(frozenWindow)?JSON.parse(fs.readFileSync(frozenWindow)):{row:{task:{taskMode:'window',observation:{from:1791047700000,to:1791134099999}}},receipts:ROLES.macro.datasets.map(dataset=>({role:'macro',request:{dataset},ok:true,usable:false,coverage:{referencePeriodContext:true,windowAppliedToReferencePeriods:true,returnedInWindow:0}}))},seeds=real.receipts.filter(r=>r.role==='macro'&&!r.historicalBaseline),probe=Object.create(TeamService.prototype);probe.persist=()=>{};probe.provider=()=>{throw Error('missing evidence must not call model');};
   const check=async(materials,task)=>{const job={baselines:{macro:null},roles:{},row:{task},receipts:[]};await probe.specialist(job,{},'macro',materials);assert.equal(job.roles.macro.status,'insufficient');assert.deepEqual(job.roles.macro.report.claims,[]);return job.roles.macro.report;};

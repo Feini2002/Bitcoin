@@ -130,7 +130,7 @@ async function verify(db, backend) {
   assert.equal((await rows(db, "SELECT history_revision FROM desk_history_state WHERE symbol='BTCUSDT' AND interval='5m'"))[0].history_revision, 8);
   await applyQueries([...change.before, write, ...change.after]);
   assert.equal((await rows(db, "SELECT history_revision FROM desk_history_state WHERE symbol='BTCUSDT' AND interval='5m'"))[0].history_revision, 8, 'reused persistent helper must reset and not bump identical data');
-  const canonical = canonicalHistoryStatements('binance-perp-funding', [{ key:'1700000000000', observedAt:'2023-11-14T22:13:20.000Z', values:{ fundingRate:0.0001 } }], 'fixture.invalid', 'cloud-readthrough');
+  const canonical = canonicalHistoryStatements('binance-perp-klines-5m', [{ key:'1700000000000', observedAt:'2023-11-14T22:13:20.000Z', values:{ close:100 } }], 'fixture.invalid', 'cloud-readthrough');
   assert(canonical.before.length > 0, 'canonical fixture must resolve a real dataset');
   await applyQueries([...canonical.before, ...canonical.after]);
   console.log(`PASS DESK-MIGRATION ${backend}: actual raw/canonical history SQL executes; persistent helper resets between identical batches`);

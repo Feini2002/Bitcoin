@@ -3,10 +3,15 @@
   "accountId": "5c7e14191f8b616a07f03f767ec48bb8",
   "zoneId": "3054bed2326bd0cbb301660b2c636c8e",
   "accountSubdomain": "cmw1196466375",
-  "phase": "active",
-  "verifiedAt": "2026-09-29T04:46:04.529Z",
+  "phase": "paused",
+  "costIncident": {
+    "id": "d1-repeat-read-2026-10-05",
+    "blockedVersions": ["e42aa488-463f-4505-9096-d9bcebe3eef3"],
+    "reason": "旧 BTC 业务版包含已证实的重复扫描；保持暂停，验证修复候选后再登记恢复版本。"
+  },
+  "verifiedAt": "2026-10-05T12:39:32.098Z",
   "restore": {
-    "capturedAt": "2026-09-27T15:53:28.186Z",
+    "capturedAt": "2026-10-05T12:33:41.102Z",
     "workers": {
       "market-snapshot": {
         "versionId": "96fb1e5d-1b64-406f-a68c-fe0873c508ec",
@@ -32,8 +37,35 @@
           }
         ]
       },
+      "yuqing": {
+        "versionId": "11de84c8-ccfe-4614-8ed8-f9b27e02fdf0",
+        "crons": [],
+        "subdomain": {
+          "enabled": true,
+          "previews_enabled": true
+        },
+        "bindings": [
+          {
+            "name": "ACCESS_ALLOWED_ORIGINS",
+            "type": "plain_text"
+          },
+          {
+            "name": "CODEX_BRIDGE_TOKEN",
+            "type": "secret_text"
+          },
+          {
+            "name": "FINNHUB_API_KEY",
+            "type": "secret_text"
+          },
+          {
+            "name": "YUQING_DB",
+            "type": "d1",
+            "id": "e89cfebb-2d98-4f10-ae94-4f5f4fe52a8f"
+          }
+        ]
+      },
       "btc": {
-        "versionId": "e8e58e2f-b4a3-4895-bc43-00ed4f1ee461",
+        "versionId": "e42aa488-463f-4505-9096-d9bcebe3eef3",
         "crons": [
           "* * * * *"
         ],
@@ -144,33 +176,6 @@
             "type": "plain_text"
           }
         ]
-      },
-      "yuqing": {
-        "versionId": "11de84c8-ccfe-4614-8ed8-f9b27e02fdf0",
-        "crons": [],
-        "subdomain": {
-          "enabled": true,
-          "previews_enabled": true
-        },
-        "bindings": [
-          {
-            "name": "ACCESS_ALLOWED_ORIGINS",
-            "type": "plain_text"
-          },
-          {
-            "name": "CODEX_BRIDGE_TOKEN",
-            "type": "secret_text"
-          },
-          {
-            "name": "FINNHUB_API_KEY",
-            "type": "secret_text"
-          },
-          {
-            "name": "YUQING_DB",
-            "type": "d1",
-            "id": "e89cfebb-2d98-4f10-ae94-4f5f4fe52a8f"
-          }
-        ]
       }
     },
     "domains": [
@@ -194,8 +199,8 @@
     ]
   },
   "maintenance": {
-    "versionId": "be22bb8a-0d6b-4ce6-be08-5ce2038fe95c",
-    "sha256": "ab8fbee4228b56ea9aada8e86947b76aa64081c42384d8142736300c3b867436"
+    "versionId": "9180e712-a75f-411b-8f14-02e68ec90663",
+    "sha256": "b49fce88b5004604a2e5927e5719324b89c87368bf15dad56fd5e087bef841ff"
   },
-  "updatedAt": "2026-09-29T04:46:04.529Z"
+  "updatedAt": "2026-10-05T12:39:32.098Z"
 }

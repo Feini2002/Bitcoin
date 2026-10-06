@@ -214,6 +214,7 @@ async function goto(page, route, query = '') {
   await page.goto(origin + '/' + query + '#/' + (route==='derivatives'?'market?view=macro':route==='boardroom'?'research?view=window':route), { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#outlet h1')).toBeVisible();
   if(route==='boardroom')await openLegacy(page);
+  if(route==='news'){const history=page.locator('.rd-saved-history');if(await history.count()&&!await history.evaluate(e=>e.open))await history.locator(':scope>summary').click();}
 }
 async function openLegacy(page){
   // The page heading precedes the async legacy mount. Wait for its input before inspecting details.
@@ -552,6 +553,7 @@ async function main() {
   result.browserPid = browserServer.process().pid; result.origin = origin;
   browser = await chromium.connect(browserServer.wsEndpoint());
   console.log(JSON.stringify({ task: 'verify-reading-ui', pid: process.pid, browserPid: result.browserPid, origin, deadline: result.deadline }));
+  if(process.env.BIT_READING_SCOPE==='preview'){result.scope='preview-only';const context=await makeContext({width:1440,height:1000},'light'),page=await makePage(context);try{await previewRaces(context,page);}finally{await context.close();}}else
   for (const [device, viewport] of [['desktop', { width: 1440, height: 1000 }], ['mobile', { width: 390, height: 844 }]]) {
     for (const theme of ['light', 'dark']) {
       const context = await makeContext(viewport, theme); const page = await makePage(context);

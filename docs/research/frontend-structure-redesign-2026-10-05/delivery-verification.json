@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-05T03:57:44.986Z",
+  "documents": [
+    {
+      "file": "docs/research/frontend-structure-redesign-review-2026-10-05.md",
+      "bytes": 65071,
+      "localLinks": 67,
+      "referenceDefinitions": 57
+    },
+    {
+      "file": "docs/research/frontend-structure-redesign-2026-10-05/sources.md",
+      "bytes": 2545,
+      "localLinks": 4,
+      "referenceDefinitions": 0
+    }
+  ],
+  "issues": [],
+  "evidenceFiles": 75,
+  "simulatedPreviewScreens": 6,
+  "previewCases": 12,
+  "businessChanges": false,
+  "deployment": false,
+  "limitations": [
+    "该检查验证产物连接/原图复制/模拟交互证据，不能证明真人效率、生产产品或金融E完成"
+  ]
+}

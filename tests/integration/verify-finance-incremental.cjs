@@ -462,7 +462,8 @@ function database() {
   const {canonicalHistoryStatements}=await load('dataset-store.mjs');
   const headUpdate=canonicalHistoryStatements('binance-perp-klines-5m',[{key:String(headOpen),observedAt:new Date(headOpen).toISOString(),values:{}}],'fstream.binance.com','cloud-ws').after[1];
   const headPlan=headDb.sqlite.prepare('EXPLAIN QUERY PLAN '+headUpdate.sql).all(...headUpdate.params);
-  assert.ok(headPlan.every(row=>!/finance_dataset_observations|SCAN/i.test(row.detail)),JSON.stringify(headPlan));
+  assert.ok(headPlan.every(row=>!/SCAN finance_dataset_observations/i.test(row.detail)),JSON.stringify(headPlan));
+  assert.ok(headPlan.some(row=>/SEARCH finance_dataset_observations.+observation_key=/.test(row.detail)),JSON.stringify(headPlan));
   headDb.sqlite.close();
   pass('live canonical head advances without a history scan; older backfill cannot move the head backwards');
 

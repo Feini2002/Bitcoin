@@ -1286,14 +1286,6 @@ function pageChart() {
   return html`
     <header class="rd-page-head rd-data-head"><div><div class="rd-eyebrow">MARKET STRUCTURE</div><h1>价格与结构</h1><p>BTCUSDT 永续 · 价格路径、指标与多周期结构。</p></div><a class="btn" href="#/news-analysis">带着证据分析 ↗</a></header>
     <div class="chart-desk">
-      <div id="chart-empty-desk" class="desk-halt-overlay" hidden>
-        <div class="desk-halt-card">
-          <strong>行情暂时读取失败</strong>
-          <p class="desk-halt-reason">币安主源未恢复，主图不可当作行情使用。</p>
-          <p>读取恢复前，暂不据此判断当前走势。</p>
-          <button type="button" class="btn" id="chart-read-retry">重新读取行情</button>
-        </div>
-      </div>
       <div class="chart-toolbar">
         <div class="chart-tf-group" aria-label="周期切换">
           ${tfButtons}
@@ -1316,6 +1308,15 @@ function pageChart() {
         </div>
         <div id="chart-stack" class="chart-stack">
           <div id="chart-main-wrap" class="chart-main-wrap">
+      <div id="chart-empty-desk" class="desk-halt-overlay" hidden>
+        <div class="desk-halt-card">
+          <strong>行情暂时读取失败</strong>
+          <p class="desk-halt-reason">币安主源未恢复，主图不可当作行情使用。</p>
+          <p>读取恢复前，暂不据此判断当前走势。</p>
+          <button type="button" class="btn" id="chart-read-retry">重新读取行情</button>
+        </div>
+      </div>
+
             <div id="chart-container" class="chart-container"></div>
           </div>
           <div id="indicator-subcharts" class="indicator-subcharts">

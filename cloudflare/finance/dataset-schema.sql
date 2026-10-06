@@ -19,6 +19,18 @@ CREATE INDEX IF NOT EXISTS idx_finance_dataset_receipt
 -- because chart tail and context summary run on every read.
 CREATE INDEX IF NOT EXISTS idx_finance_dataset_observed
   ON finance_dataset_observations(dataset_id, observed_at DESC, observation_key);
+-- Bounded winner seeks. The partial index excludes receipts superseded by a
+-- newer WS message; historical eligibility remains checked by the query.
+CREATE INDEX IF NOT EXISTS idx_finance_kline_winner
+  ON finance_dataset_observations(dataset_id,observation_key,
+    (CASE WHEN json_extract(value_json,'$.closed')=1 THEN 1 ELSE 0 END) DESC,
+    (CASE WHEN received_at=observed_at THEN stored_at ELSE received_at END) DESC,
+    received_at DESC)
+  WHERE dataset_id GLOB 'binance-perp-klines-*' AND time_precision<>'receipt'
+    AND json_extract(value_json,'$.supersededByWs') IS NOT 1;
+CREATE INDEX IF NOT EXISTS idx_finance_kline_confirmed
+  ON finance_dataset_observations(dataset_id,observation_key,received_at DESC)
+  WHERE dataset_id GLOB 'binance-perp-klines-*' AND json_extract(value_json,'$.finality')='exchange_closed';
 CREATE TABLE IF NOT EXISTS finance_dataset_state (
   dataset_id TEXT PRIMARY KEY,
   attempted_at TEXT NOT NULL,

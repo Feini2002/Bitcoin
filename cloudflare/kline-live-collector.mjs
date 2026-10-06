@@ -2,6 +2,7 @@
 
 import { parseOriginOnly, toWebSocketUrl, openEgressWebSocket, marketTransportProvenance } from "./finance/egress.mjs";
 import { KlineRecovery, KLINE_STEPS, klineOpenAt } from "./kline-recovery.mjs";
+import { cloudTrialExpired } from './cloud-trial.mjs';
 
 export const KLINE_LIVE_INTERVALS = ["5m", "15m", "1h", "4h", "1d", "3d", "1w"];
 export const KLINE_LIVE_SYMBOL = "BTCUSDT";
@@ -19,6 +20,7 @@ export const KLINE_LIVE_RESTRICTED_COOL_MS = 15 * 60 * 1000;
 export const KLINE_LIVE_COMBINED_BASE = "wss://fstream.binance.com/market/stream";
 
 let hooks = {
+  persistKlineCommit: async () => { throw new Error('atomic kline writer unavailable'); },
   persistKlines: async () => ({ inserted: 0 }),
   updateSyncStatus: async () => {},
   persistLiveKlineBar: null,
@@ -154,6 +156,7 @@ export class KlineLiveComponent {
   }
 
   tick(now = Date.now()) {
+    if(this.stopExpiredTrial(now)) return;
     if (this.stopped) return;
     this.startTask("connect", () => this.ensureStarted());
     // OI/book due times are independent of the seven-period D1 flush. This task
@@ -182,6 +185,7 @@ export class KlineLiveComponent {
   }
 
   async ensureStarted() {
+    if(this.stopExpiredTrial()) return;
     if (this.stopped) return;
     if (!this.startedAt) this.startedAt = Date.now();
     if (!this.ws && !this.connecting && !this.reconnectTimer) await this.connect();
@@ -194,6 +198,7 @@ export class KlineLiveComponent {
   }
 
   async connect() {
+    if(this.stopExpiredTrial()) return;
     if (this.stopped || this.ws || this.connecting) return;
     if (typeof WebSocket === "undefined") {
       this.status = "unavailable";
@@ -207,7 +212,7 @@ export class KlineLiveComponent {
     let ws;
     try {
       ws = await openEgressWebSocket(this.env, url);
-      if (this.stopped) { try { ws.close(); } catch (_) {} return; }
+      if (this.stopExpiredTrial() || this.stopped) { try { ws.close(); } catch (_) {} return; }
       this.ws = ws;
     } catch (e) {
       this.connecting = false;
@@ -251,6 +256,7 @@ export class KlineLiveComponent {
   }
 
   scheduleReconnect() {
+    if(this.stopExpiredTrial()) return;
     if (this.stopped || this.reconnectTimer || this.ws || this.connecting) return;
     this.reconnectCount += 1;
     const delay = Math.min(30000, KLINE_LIVE_RECONNECT_MS * Math.min(8, Math.max(1, this.reconnectCount)));
@@ -261,6 +267,7 @@ export class KlineLiveComponent {
   }
 
   receive(data, now = Date.now()) {
+    if(this.stopExpiredTrial()) return;
     if (this.stopped) return;
     const k = data?.k;
     if (data?.e !== "markPriceUpdate" && (!k || data.e !== "kline" || !KLINE_LIVE_INTERVALS.includes(k.i))) return;
@@ -351,19 +358,11 @@ export class KlineLiveComponent {
   }
 
   async persistOne(interval, klines, sourceHost, ingestionMode, metadata) {
+    if(this.stopExpiredTrial()) throw new Error('cloud_trial_expired');
     const rows = Array.isArray(klines) ? klines : [klines];
     if (!rows.length || !this.env || !this.env.DB) throw new Error("live tape D1 binding missing");
-    await hooks.persistKlines(this.env, this.symbol, interval, rows, { skipPrune: true });
+    await hooks.persistKlineCommit(this.env, this.symbol, interval, rows, sourceHost, ingestionMode, metadata);
     const latestT = Number(rows[rows.length - 1][0]);
-    await hooks.updateSyncStatus(this.env, this.symbol, interval, {
-      ok: true,
-      inserted: rows.length,
-      latestT,
-      strict: true,
-    });
-    if (typeof hooks.persistLiveKlineBar === "function") {
-      for (const row of rows) await hooks.persistLiveKlineBar(this.env.DB, interval, row, sourceHost, ingestionMode, metadata);
-    }
     this.writeCount += 1;
     this.lastWriteAt = Date.now();
     this.lastKlineWriteAt[interval] = this.lastWriteAt;
@@ -437,6 +436,7 @@ export class KlineLiveComponent {
   }
 
   async restFallback(reason) {
+    if(this.stopExpiredTrial()) return;
     if (this.restrictedCooling()) return;
     if (Date.now() - this.lastRestAt < KLINE_LIVE_REST_MS) return;
     this.lastRestAt = Date.now();
@@ -462,7 +462,9 @@ export class KlineLiveComponent {
         if (this.stopped || (this.lastKlineMessageAt[interval] || 0) !== messageAtStart) return;
         const rows = got.klines.filter(row => Number(row[0]) + KLINE_STEPS[interval] <= requestStartedAt || Number(row[0]) === klineOpenAt(interval, Date.now()));
         if (!rows.length) return;
-        await this.persistOne(interval, rows, this.sourceHost, "cloud-readthrough", { closed: null });
+        await this.persistOne(interval, rows, this.sourceHost, "cloud-readthrough", {
+          closed:null, receivedAt:new Date().toISOString(), requestStartedAt:new Date(requestStartedAt).toISOString(),
+        });
         for (const row of rows) {
           const key = `${interval}:${row[0]}`;
           if ((this.pending.get(key)?.eventAt || Infinity) <= requestStartedAt) this.pending.delete(key);
@@ -473,6 +475,7 @@ export class KlineLiveComponent {
   }
 
   async snapshotRest() {
+    if(this.stopExpiredTrial()) return;
     if (this.restrictedCooling()) return;
     if (Date.now() - this.lastSnapshotAt < KLINE_LIVE_SNAPSHOT_MS) return;
     if (typeof hooks.fetchBinanceFapiJson !== "function" || typeof hooks.persistLiveSnapshot !== "function") return;
@@ -487,6 +490,7 @@ export class KlineLiveComponent {
     }
     const results = await Promise.allSettled(jobs.map(async ([id, path, params]) => {
       const got = await hooks.fetchBinanceFapiJson(this.env, path, params, "LiveTape");
+      if(this.stopExpiredTrial()) return;
       if (got && got.skipped) return;
       if (!got.ok) {
         this.lastError = `snapshot:${id}:${got.error || "empty"}`.slice(0, 160);
@@ -556,6 +560,7 @@ export class KlineLiveComponent {
   }
 
   async applyReconciliation({ interval, rows, sourceHost, transportHost = null, requestStartedAt, receivedAt, generation, requestSequence, historyExhausted = false }) {
+    if(this.stopExpiredTrial()) throw new Error('cloud_trial_expired');
     if (!KLINE_LIVE_INTERVALS.includes(interval) || !Array.isArray(rows) || rows.length > 6000 || !Number.isFinite(requestStartedAt) || !Number.isInteger(requestSequence) || requestSequence < 1) throw new Error('invalid kline reconciliation');
     await this.captureRecoveryCursors();
     return this.runExclusive(async () => {
@@ -573,11 +578,10 @@ export class KlineLiveComponent {
         return !latest || latest.eventAt <= requestStartedAt;
       });
       if (accepted.length) {
-        const persisted = await hooks.persistKlines(this.env, this.symbol, interval, accepted, { skipPrune: true });
-        if (persisted?.inserted !== accepted.length) throw new Error('kline coverage contains unwritten rows');
-        if (typeof hooks.persistRestKlineBatch === 'function') await hooks.persistRestKlineBatch(this.env.DB, interval, accepted, sourceHost, {
-          receivedAt, requestStartedAt: new Date(requestStartedAt).toISOString(), transportHost,
+        const persisted = await hooks.persistKlineCommit(this.env, this.symbol, interval, accepted, sourceHost, 'cloud-readthrough', {
+          restBatch:true, receivedAt, requestStartedAt:new Date(requestStartedAt).toISOString(), transportHost,
         });
+        if (persisted?.inserted !== accepted.length) throw new Error('kline coverage contains unwritten rows');
         for (const row of accepted) {
           const key = `${interval}:${row[0]}`;
           const pending = this.pending.get(key);
@@ -595,11 +599,19 @@ export class KlineLiveComponent {
       let complete = from > 0 && from <= end;
       for (let t = from; complete && t < end; t += step) if (!available.has(t)) complete = false;
       const reconciled = complete && this.confirmReconciled(interval, generation, end);
-      if (accepted.length) await hooks.updateSyncStatus(this.env, this.symbol, interval, { ok: true, inserted: accepted.length, latestT: Number(accepted.at(-1)[0]), strict: true });
       return { inserted: accepted.length, reconciled, coveredThrough: complete ? end : null };
     });
   }
 
+  stopExpiredTrial(now=Date.now()) {
+    if(!cloudTrialExpired(this.env,now)) return false;
+    this.stopped=true;this.status='trial_expired';
+    if(this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer=null;
+    const ws=this.ws;this.ws=null;this.connecting=false;
+    if(ws) {try {ws.close(1000,'cost trial expired');}catch{}}
+    return true;
+  }
 }
 
 /** Compatibility namespace only. Every legacy entry is terminal and never reconnects. */

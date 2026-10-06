@@ -4,6 +4,16 @@
 
 ## 当前开发入口
 
+- [2026-10-07开发状态与换电脑接续](../operations/development-handoff-2026-10-07.md)：最新中文产品与D1本地修复、验收边界、云端读数、精确剩余项及Git范围；总纲与README已同步，不按旧日期的未实施描述重做。
+
+- [开发期间的云端异常读取检测](cloud-read-detection-2026-10-05.md)：`cloud:reads` 查询项目 D1 已有用量指标，开发服务启动及每 5 分钟检查；异常、缺失与检测失败必须在当前开发对话汇报。工程告警不代替根因修复或账单硬上限，BTC 保持暂停。
+
+- [D1 重复扫描事故方案](d1-cost-postmortem-repair-plan-2026-10-05.md)保留六轮审查与[原始证据](d1-cost-review-2026-10-05/sources.md)；最新[本地实施与验收](d1-cost-repair-implementation-2026-10-06.md)包含短路、图表状态隔离、版本索引、事务提交、新鲜度和固定截止。用户选择暂不增加云测试用量，生产继续暂停；不能恢复旧问题版本，也不能把本地规模结果当作D1计费达标。
+
+- [C端中文日报：本地修复与验收记录](consumer-daily-frontend-implementation-2026-10-05.md)：用户随后授权“开始修复”，现已实现中文文章、四主入口、消息精选与译读、日期标题查询和共用来源阅读；三轮审查、真实任务与模拟回归的状态以此记录为准。六份编辑稿已保存，自动编辑/翻译及真人理解验证未完成；不部署或运行真实研究。
+
+- [C端中文日报：对抗审查与修复方案](consumer-daily-frontend-adversarial-plan-2026-10-05.md)：保留此前真实页面18项问题和设计依据。随后已按授权本地修复，当前实现以相邻实施记录和最新快照为准；审查阶段的“尚未实施”不再是当前待办，旧技术PASS也不代替真人体验验证。
+- [简报导读结构实施与验收](frontend-structure-redesign-implementation-2026-10-05.md)：R0—R6本地交付完成，首席与五领域、共用阅读器、日期报告库/完整索引、市场事件及设置已接入；三轮自审、UX任务与全量构建结果，真实材料与模拟证据分列，无真人反馈，未部署。[原审查及模拟预览](frontend-structure-redesign-review-2026-10-05.md)保留历史依据。
 - [首次使用金融研究审查与修复记录](first-look-financial-review-2026-10-04.md)：三轮初诊与随后真实模型多轮偏纠；A–D已实施、最终.27/P22全量build通过，窗口/事件整队通过，当前五岗接受但首席超时，修后新整队E未完成。精确失败和输入修复见第10.8节，不把此前技术验收读成新金融通过。
 - [Agent 架构主方案](agent-team-product-plan-2026-10-02.md)：当前产品与架构第一入口；首席默认、五领域独立研究、背景与市场证据、有限记忆、条件及能力边界。准确性优先，不以模型渠道或权限流程作页面主角。
 - [实施与验收记录](agent-team-implementation-2026-10-02.md)：真实当前/窗口/事件轮次、首席审核、独立数值/分析复核、后台截图、修复与原失败。最新.27/P22、金融修复A–D及E未完成以顶部为准；旧current-9等记录保留其当时范围，合成回归与生产分开。
@@ -14,7 +24,7 @@
 - [架构核对](repository-architecture-review-2026-09-27.md)：现有链路与复用依据。
 - [研究工作台](product-redesign-2026-09-29.md)、[AI 对话研究流程](ai-research-workflow.md)：事件/舆情、证据准备、预览与显式导入。
 - [读取性能记录](chart-read-performance-2026-09-30.md)、[数据恢复记录](workbench-recovery-2026-09-29.md)：最近已完成的修复与历史验收证据。
-- [当前开发快照与交接](../operations/development-handoff-2026-10-05.md)、[仓库布局](../architecture/repository-layout.md)：当前实现、剩余验收、本机原件与Git边界、新电脑接续和文件位置。
+- [当前开发快照与交接](../operations/development-handoff-2026-10-07.md)、[仓库布局](../architecture/repository-layout.md)：当前实现、剩余验收、本机原件与Git边界、新电脑接续和文件位置。
 
 ## 专题核验记录
 

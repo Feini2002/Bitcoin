@@ -1,7 +1,8 @@
 import { FINANCE_DATASETS, datasetRequest, datasetSupportsIncremental, normalizeDataset } from "./datasets.mjs";
-import { persistDataset, datasetFailure, datasetStates, gapHistoryStatements } from "./dataset-store.mjs";
+import { persistDataset, datasetFailure, datasetStates, gapHistoryStatements, deskHistoryKey, observationKeyWalkSql } from "./dataset-store.mjs";
 import { handleFinance } from "./gateway.mjs";
 import { financeChannelKey } from "./store.mjs";
+import { cloudTrialExpired } from '../cloud-trial.mjs';
 
 export const DATASET_AUTO_SKIP = new Set();
 export const DATASET_SCHEDULER_MAX_PER_TICK = 8;
@@ -90,6 +91,10 @@ async function fullAuditTimes(db) {
 }
 
 async function latestDatasetPoints(db, id) {
+  if(deskHistoryKey(id)) {
+    const result=await db.prepare(observationKeyWalkSql()).bind(id,'9999-12-31T23:59:59.999Z',null,null,2,0).all();
+    return result.results || [];
+  }
   const result = await db.prepare(`SELECT observation_key,MAX(observed_at) AS observed_at
     FROM finance_dataset_observations WHERE dataset_id=?1
     GROUP BY observation_key ORDER BY observed_at DESC LIMIT 2`).bind(id).all();
@@ -123,6 +128,7 @@ export function datasetDueForCollection(id, definition, state, now = Date.now())
 }
 
 export async function refreshFinanceDataset(env, id, {now=Date.now(),forceFull=false,dependencies={},skipGap=false}={}) {
+  if(cloudTrialExpired(env)) return {id,ok:false,skipped:true,reason:'cloud_trial_expired',written:0,requests:0};
   const definition = FINANCE_DATASETS[id];
   const incremental = datasetSupportsIncremental(id);
   let gap=incremental ? await pendingGap(env.DB,id):null;
@@ -227,6 +233,7 @@ export async function syncFinanceDatasetsIfDue(env, now = Date.now()) {
   const picked = pickDatasetsToRefresh(due);
   const results = [];
   for (const item of picked) {
+    if(cloudTrialExpired(env)) break;
     const started = Date.now();
     try {
       results.push(await refreshFinanceDataset(env, item.id, {now,forceFull:item.reason==='history_audit'}));

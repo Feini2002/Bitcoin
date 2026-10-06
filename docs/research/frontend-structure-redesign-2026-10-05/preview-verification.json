@@ -1,0 +1,169 @@
+{
+  "status": "PASS_WITH_HARNESS_REVIEW",
+  "originalAggregate": "FAIL",
+  "originalPreserved": true,
+  "reason": "原汇总断言要求零网络；封装预览实际加载三个允许的固定版本静态UI库。12项交互全部PASS、运行错误0；复核原URL均为unpkg静态脚本，未以重试掩盖失败。",
+  "startedAt": "2026-10-05T03:22:36.008Z",
+  "completedAt": "2026-10-05T03:23:03.989Z",
+  "viewports": [
+    1024,
+    736,
+    390,
+    320
+  ],
+  "cases": [
+    {
+      "id": "brief-1024",
+      "status": "PASS",
+      "width": {
+        "width": 992,
+        "scroll": 990
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "linked-1024",
+      "status": "PASS",
+      "width": {
+        "width": 992,
+        "scroll": 990
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "dossier-1024",
+      "status": "PASS",
+      "width": {
+        "width": 992,
+        "scroll": 990
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "brief-736",
+      "status": "PASS",
+      "width": {
+        "width": 704,
+        "scroll": 702
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "linked-736",
+      "status": "PASS",
+      "width": {
+        "width": 704,
+        "scroll": 702
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "dossier-736",
+      "status": "PASS",
+      "width": {
+        "width": 704,
+        "scroll": 702
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "brief-390",
+      "status": "PASS",
+      "width": {
+        "width": 358,
+        "scroll": 356
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "linked-390",
+      "status": "PASS",
+      "width": {
+        "width": 358,
+        "scroll": 356
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "dossier-390",
+      "status": "PASS",
+      "width": {
+        "width": 358,
+        "scroll": 356
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "brief-320",
+      "status": "PASS",
+      "width": {
+        "width": 288,
+        "scroll": 286
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "linked-320",
+      "status": "PASS",
+      "width": {
+        "width": 288,
+        "scroll": 286
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    },
+    {
+      "id": "dossier-320",
+      "status": "PASS",
+      "width": {
+        "width": 288,
+        "scroll": 286
+      },
+      "noMatchNoFallback": true,
+      "exactRoundRoles": true,
+      "choiceManualFallback": true
+    }
+  ],
+  "runtimeErrors": 0,
+  "staticAssets": [
+    "https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js",
+    "https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js",
+    "https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js",
+    "https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js",
+    "https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js",
+    "https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js",
+    "https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js",
+    "https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js",
+    "https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js",
+    "https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js",
+    "https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js",
+    "https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"
+  ],
+  "limitations": [
+    "原件只记录URL，未记录method；不以此单独证明全部网络方法",
+    "应用片段无fetch/XHR/接口调用；选择在独立文件只显示可复制文字，不发起真实实现",
+    "未测试Codex宿主选择消息提交；只验证独立预览后备行为",
+    "未证明用户任务效率或生产实现"
+  ]
+}

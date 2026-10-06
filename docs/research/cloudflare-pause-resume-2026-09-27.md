@@ -1,6 +1,17 @@
 # 云端开关：暂停与继续开发
 
-最新状态（2026-09-29 05:24 UTC）：用户要求恢复后，三个 Worker 已恢复入口，BTC 每分钟 Cron 恢复，舆情与快照 Cron 仍为空。三服务健康检查和入库观察通过，恢复记录为 active；BTC 恢复点已更新为修复版 `e8e58e2f-b4a3-4895-bc43-00ed4f1ee461`。足迹已追至当前且正常调度继续推进；详见[持续采集核验](workbench-recovery-2026-09-29.md)。下文 2026-09-27 暂停结果仅作历史。
+## 当前暂停：2026-10-05
+
+- 后续成本复盘见 [D1 重复扫描事故与修复方案](d1-cost-postmortem-repair-plan-2026-10-05.md)，最新[本地实施](d1-cost-repair-implementation-2026-10-06.md)已修正短路、版本选择和原子提交。旧业务恢复版仍含高扫描路径，已由costIncident阻止resume与预检误报可恢复；未替换远程恢复点。用户选择暂不增加云测试用量，候选登记/迁移与真实计费验收留待明确恢复准备，不得删除标记直接恢复旧版。
+- 用户要求暂时关闭 BTC 系统以停止持续使用费用；核对账号还有其他项目后，用户明确选择“只关闭 BTC，保留其他系统及账号共用订阅”。Workers Paid、R2 Paid、Images Stream Basic 未取消，其他项目未修改。
+- 北京时间 2026-10-05 20:39:32 完成暂停验证。三个 Worker 的 Cron、workers.dev 和预览入口全部关闭，BTC/舆情自定义 API 域解绑，舆情 route 不再绑定 Worker；BTC 切到无外连、取消 alarm 的维护版。三个 D1、两个 SQLite DO 命名空间和 Pages 静态文件保留。
+- 本周期正式恢复点：BTC `e42aa488-463f-4505-9096-d9bcebe3eef3`；维护版 `9180e712-a75f-411b-8f14-02e68ec90663`。恢复以 `cloudflare/cloud-control-state.json` 为准，不使用下文历史版本。
+- 首轮观察仍有收尾写入，未宣称成功；状态读回确认开关和维护版一致后，续做同一暂停流程。第二轮 12:37:24–12:39:32 UTC 五次采样相同，stable=true、advanced=false；行情最新存储时点停在 12:34:34.481 UTC。公网状态/健康地址分别返回 BTC 530、舆情 530、快照 404。进程监督器确认退出和清理完成。
+- 本机证据：`.artifacts/cloud-control/1791203822386-pause.json`、`1791203800235-status.json`、`btc-resources-2026-10-05.json`。三个 D1 合计 468,504,576 字节；当时账户账单显示 D1 存储费用 $0，已累计用量费约 $14.51（账号总额，不等于 BTC 独立账单，也不含完整未来账单）。
+- 费用边界：本次停止 BTC 采集与业务接口，不保证账号未来账单为零；已发生费用仍可能后续结算，共用付费订阅继续生效，保留存储仍占账号额度。D1 存储按账号总量计算，不能把当前 $0 推断为永久免费。Pages 静态资产请求免费，静态壳仍可访问，但不再提供已关闭的后端服务。VPS 不在本次 CF 关停范围内。
+- 官方依据（查询 2026-10-05）：[D1 计费](https://developers.cloudflare.com/d1/platform/pricing/)、[Pages 静态资产计费](https://developers.cloudflare.com/pages/functions/pricing/)、[取消订阅及生效时间](https://developers.cloudflare.com/billing/manage/cancel-subscription/)。本次未发布本地业务改动，未删除历史数据，未执行远程迁移，未 commit/push。未经用户明确恢复，不部署业务 Worker 或重新开启采集。
+
+历史恢复状态（2026-09-29 05:24 UTC）：用户要求恢复后，三个 Worker 已恢复入口，BTC 每分钟 Cron 恢复，舆情与快照 Cron 仍为空。三服务健康检查和入库观察通过，当时恢复记录为 active；BTC 恢复点当时更新为修复版 `e8e58e2f-b4a3-4895-bc43-00ed4f1ee461`。足迹已追至当时且正常调度继续推进；详见[持续采集核验](workbench-recovery-2026-09-29.md)。下文 2026-09-27 暂停结果仅作历史。
 
 ## 直接这样说
 

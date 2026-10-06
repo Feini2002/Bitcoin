@@ -1,0 +1,64 @@
+{
+  "observedOn": "2026-10-05",
+  "source": "Cloudflare dashboard BTC D1 Metrics; UI transcription, rounded values not raw integer export",
+  "timezone": "Asia/Shanghai",
+  "regionFilter": "none",
+  "days": [
+    {
+      "date": "2026-10-03",
+      "utcStart": "2026-10-02T16:00:00Z",
+      "utcEnd": "2026-10-03T16:00:00Z",
+      "queriesDisplay": "3.31M",
+      "readDisplay": "4.78B",
+      "writtenDisplay": "1.28M",
+      "canonicalInit": {
+        "count": 174235,
+        "rowsReadDisplay": "3.64B",
+        "rowsWrittenDisplay": "0"
+      },
+      "rawInit": {
+        "count": 121359,
+        "rowsReadDisplay": "473.98M",
+        "rowsWrittenDisplay": "0"
+      },
+      "headUpdate": {
+        "count": 55805,
+        "rowsReadDisplay": "331.83M",
+        "rowsWrittenDisplay": "53.5k"
+      },
+      "versionSelect": {
+        "count": 78,
+        "rowsReadDisplay": "133.72M",
+        "rowsWrittenDisplay": "0"
+      }
+    },
+    {
+      "date": "2026-10-04",
+      "utcStart": "2026-10-03T16:00:00Z",
+      "utcEnd": "2026-10-04T16:00:00Z",
+      "queriesDisplay": "3.32M",
+      "readDisplay": "6.18B",
+      "writtenDisplay": "1.36M",
+      "canonicalInit": {
+        "count": 178462,
+        "rowsReadDisplay": "5.01B",
+        "rowsWrittenDisplay": "0"
+      },
+      "rawInit": {
+        "count": 123190,
+        "rowsReadDisplay": "491.22M",
+        "rowsWrittenDisplay": "0"
+      },
+      "headUpdate": {
+        "count": 52351,
+        "rowsReadDisplay": "313.39M",
+        "rowsWrittenDisplay": "49.8k"
+      },
+      "versionSelect": {
+        "count": 9,
+        "rowsReadDisplay": "69.99M",
+        "rowsWrittenDisplay": "0"
+      }
+    }
+  ]
+}

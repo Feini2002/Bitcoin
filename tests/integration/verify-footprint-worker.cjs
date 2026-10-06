@@ -18,6 +18,7 @@ function assert(name, cond, detail) {
   const file = path.join(__dirname, "../..", "cloudflare", "binance-klines-worker.js");
   let src = fs.readFileSync(file, "utf8");
   src = src.replace(/^\s*import\s+[\s\S]*?from\s+["'][^"']+["']\s*;?\s*/gm, "");
+  src = fs.readFileSync(path.join(__dirname,'../../cloudflare/cloud-trial.mjs'),'utf8').replace('export function','function')+'\n'+src;
   src = src.replace(/\bexport\s*\{\s*KlineLiveCollector\s*\}\s*;?/, "");
   src = src.replace(/\bbindKlineLiveHooks\s*\([\s\S]*?\);\s*/, "");
   src = src.replace(/export default\s*\{/, "const __workerDefault = {");

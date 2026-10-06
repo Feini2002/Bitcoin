@@ -1,6 +1,6 @@
 # 新电脑开发与敏感配置迁移
 
-当前开发状态先读[2026-10-05开发快照](development-handoff-2026-10-05.md)。Git克隆包含源码和验证结论；本机Agent历史原件与设置在.local/agent-team/，如需保留需另行离线迁移，不会随Git自动恢复。
+当前开发状态先读[2026-10-07开发快照](development-handoff-2026-10-07.md)。Git克隆包含源码和验证结论；研究原件与设置在`.local/agent-team/`，中文阅读稿/译文/目录在`.local/reader-content/`，默认另行离线迁移。[10月5日快照](development-handoff-2026-10-05.md)保留此前研究细节。成本事故暂停策略保持，换机不自动恢复云端。
 
 ## 安装和启动
 
@@ -9,9 +9,9 @@
 3. 执行 `npm ci --include=dev`，按 package-lock.json 安装完整开发依赖。无需全局安装 Vite、Playwright 或 Wrangler。
 4. 执行 `npm run setup:browser` 安装测试使用的 Chromium。完整 build 包含浏览器检查，应先完成这一步；仅查看页面不依赖测试浏览器。
 5. 按下节恢复旧电脑私密配置，再执行 `npm run dev:local`。Windows 也可双击 start-local-cloud.bat；依赖缺失时会按锁文件安装。
-6. 默认在本机 http://127.0.0.1:5173/#/chart 打开页面。端口占用时以终端显示为准，Ctrl+C 结束。
+6. 默认在本机 http://127.0.0.1:5173/#/boardroom 打开首席日报。端口占用时以终端显示为准，Ctrl+C 结束。
 
-源码、页面壳和离线回归无需 API 密钥；真实行情与报告读取依赖现有云端服务，网站模型执行已退役，不需要模型 Key。克隆源码不会复制远程 D1 数据；更换开发电脑也不会搬走或停止云端历史与采集。当前代码和接续方向见 [开发交接记录](development-handoff-2026-09-30.md)。
+源码、页面壳和离线回归无需API密钥；真实事实读取依赖云端，当前按成本事故保持暂停，不承诺有新数据。旧云端模型执行退役；新本地Agent使用官方Codex CLI登录渠道，初始自动OFF。克隆不会复制远程D1，更换电脑不改变云端开关。接续见[最新开发交接](development-handoff-2026-10-07.md)。
 
 ## 桌面私密包恢复
 
